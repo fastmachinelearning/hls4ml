@@ -31,8 +31,8 @@ from hls4ml.utils.einsum_utils import parse_einsum
 
 
 class OneAPIBackend(FPGABackend):
-    def __init__(self):
-        super().__init__('oneAPI')
+    def __init__(self, name='oneAPI'):  # the default name should be used in most cases
+        super().__init__(name)
         self._register_layer_attributes()
         self._register_flows()
 
@@ -145,7 +145,14 @@ class OneAPIBackend(FPGABackend):
         return self._writer_flow
 
     def create_initial_config(
-        self, part='Agilex7', clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, **_
+        self,
+        part='Agilex7',
+        clock_period=5,
+        hyperopt_handshake=False,
+        io_type='io_parallel',
+        max_parallel=10,
+        write_tar=False,
+        **_,
     ):
         """Create initial configuration of the oneAPI backend.
 
@@ -155,6 +162,7 @@ class OneAPIBackend(FPGABackend):
             hyperopt_handshake (bool, optional): Should hyper-optimized handshaking be used? Defaults to False
             io_type (str, optional): Type of implementation used. One of
                 'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+            max_parallel(int, optional): The maximum invocations (events) processed in parallel, io_stream only.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
 
         Returns:
@@ -167,6 +175,7 @@ class OneAPIBackend(FPGABackend):
         config['ClockPeriod'] = clock_period
         config['HyperoptHandshake'] = hyperopt_handshake
         config['IOType'] = io_type
+        config['MaxParallelInvocations'] = max_parallel
         config['HLSConfig'] = {}
         config['WriterConfig'] = {
             # TODO:  add namespace

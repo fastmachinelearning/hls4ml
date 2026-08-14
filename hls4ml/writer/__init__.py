@@ -1,5 +1,6 @@
 from hls4ml.writer.catapult_writer import CatapultWriter
 from hls4ml.writer.libero_writer import LiberoWriter
+from hls4ml.writer.oneapi_accelerator_writer import OneAPIAcceleratorWriter
 from hls4ml.writer.oneapi_writer import OneAPIWriter
 from hls4ml.writer.quartus_writer import QuartusWriter
 from hls4ml.writer.symbolic_writer import SymbolicExpressionWriter
@@ -13,6 +14,7 @@ register_writer('VivadoAccelerator', VivadoAcceleratorWriter)
 register_writer('Vitis', VitisWriter)
 register_writer('Quartus', QuartusWriter)
 register_writer('oneAPI', OneAPIWriter)
+register_writer('oneAPIAccelerator', OneAPIAcceleratorWriter)
 register_writer('Catapult', CatapultWriter)
 register_writer('Libero', LiberoWriter)
 register_writer('SymbolicExpression', SymbolicExpressionWriter)

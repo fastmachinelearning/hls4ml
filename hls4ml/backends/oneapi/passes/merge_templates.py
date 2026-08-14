@@ -16,7 +16,8 @@ merge_config_template = """struct config{index} : nnet::merge_config {{
 merge_function_template = 'nnet::{merge}<{input1_t}, {input2_t}, {output_t}, {config}>({input1}, {input2}, {output});'
 
 merge_task_sequence_template = (
-    'task_sequence<nnet::{merge}_stream<{input1_pipe}, {input2_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::{merge}_stream<{input1_pipe}, {input2_pipe}, {output_pipe}, {config}>, '
+    'MAX_INVOC, MAX_INVOC> {name};'
 )
 
 merge_stream_function_template = '{name}.async();'

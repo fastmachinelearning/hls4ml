@@ -5,7 +5,7 @@
 
 // This file defines the interface to the kernel
 
-// currently this is fixed
+// this is for both the internal pipes and the interface for the HLS (ip) flow
 using PipeProps = decltype(sycl::ext::oneapi::experimental::properties(sycl::ext::intel::experimental::ready_latency<0>));
 
 // Need to declare the input and output pipes

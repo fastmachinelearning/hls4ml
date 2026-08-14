@@ -8,6 +8,8 @@
 #include <tuple>
 #include <utility>
 
+#include <sycl/ext/intel/prototype/pipes_ext.hpp> // Streaming Beat and pipe properties.
+
 namespace nnet {
 
 // Define the pipe type that we use
@@ -32,6 +34,15 @@ struct ExtractPipeType<PipeClass<PipeName, PipeDataT, kPipeMinCapacity, PipeProp
                                  Args...>> // specialization
 {
     typedef PipeDataT value_type;
+};
+
+// Helper template for extracting datatype from oneAPI StreamingBeat type.
+template <typename T> struct ExtractDataType { typedef T value_type; };
+
+// Specialization on oneAPI StreamingBeat type.
+template <typename DataT, bool EnableSOP, bool EnableEmpty>
+struct ExtractDataType<sycl::ext::intel::experimental::StreamingBeat<DataT, EnableSOP, EnableEmpty>> {
+    typedef DataT value_type;
 };
 
 /*
