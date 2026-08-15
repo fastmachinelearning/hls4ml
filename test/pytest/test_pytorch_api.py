@@ -673,6 +673,50 @@ def test_squeeze(test_case_id, backend, io_type):
         assert list(hls_model.get_layers())[3].attributes['target_shape'] == [3]
 
 
+class UnsqueezeModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(5, 4, bias=False)
+        nn.init.ones_(self.linear.weight)  # This test is not about precision, so put 1's here
+
+    def forward(self, x):
+        x = self.linear(x)  # (1, 5) -> (1, 4)
+        x = torch.unsqueeze(x, dim=-1)  # (1, 4) -> (1, 4, 1)
+        x = torch.relu(x)  # (1, 4, 1)
+        return x
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_unsqueeze(test_case_id, backend, io_type):
+    # Regression test: torch.unsqueeze(x, dim=-1) must insert the size-1 axis as the *last*
+    # dimension. The previous parser located the new axis with list.index() on the dimension
+    # value, which placed it at the wrong position for negative dims (or whenever the indexed
+    # dimension shared its size with an earlier one).
+    model = UnsqueezeModel()
+    model.eval()
+
+    X_input = np.random.rand(1, 5)
+
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
+
+    config = config_from_pytorch_model(model, (5,))
+    del config['Model']['ChannelsLastConversion']  # We don't want anything touched for this test
+    output_dir = str(test_root_path / test_case_id)
+
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(X_input).flatten()
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+
+    # The reshape (or its io_stream Repack counterpart) must report (4, 1), not (1, 4).
+    reshape_layer = next(layer for layer in hls_model.get_layers() if 'unsqueeze' in layer.name)
+    assert reshape_layer.attributes['target_shape'] == [4, 1]
+
+
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 def test_flatten(test_case_id, backend):
     input = torch.randn(1, 1, 5, 5)
