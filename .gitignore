@@ -16,3 +16,9 @@ hls4mlprj_*
 *.ipynb
 *.ipynb_checkpoints/
 *.bak
+
+# Assistant-specific views generated from .agents/ by .agents/agent_adapters.py
+/.claude/
+/.cursor/
+/.github/instructions/
+/agent-docs.md

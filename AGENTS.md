@@ -13,6 +13,25 @@ frontend converter  ->  model graph  ->  optimizer passes  ->  code templates  -
 hls4ml/converters/      hls4ml/model/    hls4ml/model/optimizer/, hls4ml/backends/*/passes/    hls4ml/writer/
 ```
 
+## Where to read before you work
+
+Detailed notes live in [`.agents/`](.agents/README.md). Open the one that matches the task rather than
+exploring the tree from scratch:
+
+| Task | Document |
+| --- | --- |
+| convert a model, run `predict()`, check a change works | [.agents/running-hls4ml.md](.agents/running-hls4ml.md) |
+| anything inside the Python tree — what runs when, which file to open | [.agents/architecture-map.md](.agents/architecture-map.md) |
+| add support for a layer or operator; a model fails to parse | [.agents/frontends.md](.agents/frontends.md) |
+| change the graph, add a Strategy, an initializer or a config attribute | [.agents/optimizer-passes.md](.agents/optimizer-passes.md) |
+| write or modify a C++ compute kernel | [.agents/kernels.md](.agents/kernels.md) |
+| choose fixed-point types, or the numbers are wrong | [.agents/precision-and-debugging.md](.agents/precision-and-debugging.md) |
+| claim one implementation is faster or smaller than another | [.agents/evaluating-implementations.md](.agents/evaluating-implementations.md) |
+| stand up a backend for a new toolchain | [.agents/new-backend.md](.agents/new-backend.md) |
+| synthesize, pick a tool version, or a build cannot find its tool | [.agents/toolchain-access.md](.agents/toolchain-access.md) |
+| shape a change, and before opening a pull request | [.agents/contributing-changes.md](.agents/contributing-changes.md) |
+| report a bug or a performance problem, or propose a feature | [.agents/reporting-issues.md](.agents/reporting-issues.md) |
+
 ## Ground rules
 
 **Verify, do not assume.** hls4ml has several backends and they do not share conventions. A pragma, config

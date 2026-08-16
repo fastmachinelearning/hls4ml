@@ -1,0 +1,166 @@
+---
+name: contributing-changes
+description: >-
+  Shape, finish and submit a change to hls4ml — the scope rules that decide whether something is a pass, a
+  Strategy or a new backend, pre-commit, the test conventions, and how to fill in the pull request template
+  honestly. Use when deciding up front how a feature should be shaped, and again when the work is done and
+  the next step is opening a pull request. Includes the pre-submission cleanup sweep.
+globs:
+  - "test/pytest/**"
+  - "CONTRIBUTING.md"
+---
+
+# Contributing a change to hls4ml
+
+Read [CONTRIBUTING.md](../CONTRIBUTING.md) and [AGENTS.md](../AGENTS.md) first; this document is the working
+detail behind them.
+
+`main` moves quickly, so branch from an up-to-date `main` and rebase again before opening the pull request.
+Pull requests are squash-merged, so commit granularity does not matter — the pull request title and
+description become the permanent record.
+
+## Shape the change before writing it
+
+`CONTRIBUTING.md` asks for a GitHub issue or discussion first for anything non-trivial. Beyond that, the
+scope rules that decide how a feature is received:
+
+- **Prefer a Strategy or a pass inside an existing backend over a new backend.** If the change could be
+  expressed as a strategy plus a kernel plus a few passes in Vitis or Vivado, that is what it should be. A
+  new backend is justified only by genuinely different structure, such as a different toolchain or a
+  different memory model.
+- **Keep backend-specific code out of `hls4ml/model/`.** Anything that names a toolchain, a pragma, or an
+  FPGA part belongs in `hls4ml/backends/<backend>/`.
+- **Do not change defaults for existing users.** New attributes need defaults; new strategies must be opt-in.
+  A model that converted before must convert identically afterwards unless the change is explicitly a fix.
+- **Fail loudly on unsupported combinations.** The patterns in the tree are a validation pass that warns and
+  corrects the attribute (`backends/vitis/passes/feature_check.py`), or a check at the point the attribute is
+  set that raises naming the conflict — as `VivadoBackend.init_dense` does when a strategy is combined with a
+  reuse factor it cannot support.
+- **Every backend that shares the code path has to keep working.** Vitis inherits from Vivado, so a change in
+  `backends/vivado/` affects both. Changes to `model/` affect all backends including Quartus, oneAPI,
+  Catapult and Libero.
+
+## Formatting: pre-commit is required
+
+`.pre-commit-config.yaml` runs ruff (with `--fix`) and ruff-format, flake8 with a 125-character line limit
+plus bugbear and print checks, pyupgrade targeting Python 3.10, pyproject-fmt, the standard whitespace and
+YAML hooks, and `p-clang-format` for C and C++ — so edited `nnet_utils` headers are reformatted too.
+
+```
+pre-commit run --files <the files you changed>
+```
+
+The first run of a hook installs its own environment and needs network access. Commit the reformatting the
+hooks apply; pull requests that fail these checks are not reviewed.
+
+## Tests
+
+`CONTRIBUTING.md` requires a unit test under `test/` for new functionality, and for a bug fix a test that
+fails on `main` and passes on the branch. Tests live in `test/pytest/test_*.py`.
+
+One test is the floor, not the target. **Cover a reasonable set of the configurations your feature supports**,
+because a feature that works in one configuration and silently misbehaves in another is the usual way
+regressions reach users. Parametrize over the axes your change is actually keyed on:
+
+- `backend` — every backend the change reaches. A change under `backends/vivado/` reaches Vitis too.
+- `io_type` — both `io_parallel` and `io_stream` when the feature exists in both; for several layer families
+  these are separate implementations rather than a shared one.
+- `strategy`, `reuse_factor`, precision, layer shapes — whichever your feature is keyed on, including the
+  boundary cases. For reuse factor those are the values around `n_in`.
+
+The point is coverage of what the feature claims to support, not a combinatorial sweep. State the axes you
+chose in the pull request, and say which combinations you deliberately left out.
+
+`test/pytest/test_keras_api.py` and `conftest.py` show the conventions to copy:
+
+- Build a small model in the test, convert it, `compile()`, `predict()`, and compare against the framework
+  prediction with `np.testing.assert_allclose` at a tolerance appropriate to the precision. Where the test is
+  about an implementation rather than about quantization, use a wide type so the tolerance can be tight.
+- Use the `test_case_id` fixture for the output directory so parametrized runs do not collide:
+  `output_dir = str(test_root_path / test_case_id)`.
+- Assert on attributes as well as numbers where the feature is a configuration path — that a strategy written
+  in several spellings resolves to the expected attribute, that a layer count or shape is what you expect.
+- CI runs one job per test file, generated by `test/pytest/generate_ci_yaml.py`. Keeping a new feature's
+  tests in their own file keeps the job self-contained.
+
+### Synthesis in tests
+
+Synthesis is **optional but recommended**: C simulation proves the arithmetic, and only a build proves the
+generated code is synthesizable at all. It is off by default and must stay that way — the `synthesis_config`
+fixture reads the `RUN_SYNTHESIS` environment variable and the per-backend tool versions, and
+`run_synthesis_test` in `test/pytest/synthesis_helpers.py` returns immediately when it is disabled. Never
+make a test depend on a toolchain being present.
+
+**Keep a synthesized test as small as it can be while still exercising the feature.** Build time grows quickly
+with model size, and these runs are on shared CI. One or two layers with small shapes is enough to catch what
+this level catches: code that does not build, a pragma that does not apply, a scheduling failure. Depth and
+realism belong in C simulation tests, which cost seconds. `test_keras_api.py::test_dense` is the model to
+follow — a single `Dense(2)` on a one-element input, with an activation.
+
+`run_synthesis_test` compares the resulting report against a stored baseline under
+`test/pytest/baselines/<backend>/<version>/`, so a synthesized test needs a baseline file committed for the
+backends and tool versions it runs on.
+
+## Documentation
+
+- User-facing features get a page under `docs/advanced/` (see `da.rst`, `auto.rst`, `bramfactor.rst` for the
+  expected length and tone) and a link from the relevant index.
+- New layer attributes should carry a `description=` taken from `hls4ml/utils/attribute_descriptions.py`;
+  `docs/attr_doc_gen.py` turns those into the attribute tables in the documentation.
+- The PR description itself must document the change and the expected behaviour — that is item one of the
+  contribution guidelines.
+
+## The cleanup sweep
+
+Run this over your own diff before anyone else sees it. Most review comments on generated contributions come
+from this list, and the linters catch almost none of it.
+
+- **Debug output.** `flake8-print` is configured but `T201` is in `extend-ignore`, so stray `print()` calls
+  pass CI. hls4ml prints deliberately in some passes to warn users; your debugging does not belong there.
+- **Commented-out code and dead branches.** Delete them. A reviewer cannot tell your leftovers from
+  deliberate ones.
+- **Dead copied code.** When a backend, pass or kernel was copied as a starting point, remove everything the
+  new code does not use — unused headers, unreferenced passes, config fields no kernel reads.
+- **Unrelated changes.** No reformatting sweeps mixed into a functional change, no drive-by edits to files
+  the change does not need, no `.gitignore` or editor settings that only matter on your machine.
+- **New dependencies.** The runtime dependency list is deliberately small and nearly everything else is an
+  optional extra in `pyproject.toml`. A new hard dependency needs a justification in the pull request; the
+  default answer is an extra.
+- **Local paths and machine specifics.** No absolute paths from your filesystem, tool install locations or
+  scratch directories in code, tests or documentation.
+- **Generated artifacts.** Do not commit HLS projects, build directories, reports or model files. Several
+  patterns are ignored already, but a project written to a different name is not.
+- **C++ formatting.** Run pre-commit on edited headers too, not only Python; `p-clang-format` handles them.
+- **Invented interfaces.** Every API, config key, attribute and pragma you used must exist — check it in the
+  tree rather than trusting recall. This is what the template's attestation is about.
+- **TODOs.** Either fix it, or open an issue and reference it. A bare `TODO` in a contribution is noise.
+
+## Filling in the pull request
+
+The template asks for specific things, and half-filling it is worse than leaving a section out:
+
+- **Describe the change, not the process.** What it does, why, and what a user notices. No narration of how
+  the work went.
+- **Configuration table:** one row per configuration you actually exercised. Where an axis does not apply to
+  a backend, write `n/a` rather than guessing a plausible value.
+- **Verification column and the generated-HLS table:** enter only what you ran. A blank cell is honest; an
+  invented number is not. C synthesis estimates are labelled as such, never as measured latency or resources.
+- **AI assistance disclosure:** fill in the tool, the model and where it was used.
+- **Do not tick the attestations.** Those are statements the human contributor makes about their own review,
+  rights and understanding. An agent filling in the rest of the template should leave them blank and tell the
+  contributor which ones remain.
+- **Do not credit an AI tool as a commit author.** No `Co-authored-by` trailers for tools, in any commit on
+  the branch.
+- **Release note:** one user-facing sentence, or the word `none`.
+
+## Before opening the pull request
+
+1. Rebased on current `main`, and the branch contains only intended changes.
+2. Correctness verified by C simulation against the reference model, on every io_type and backend touched.
+3. Performance claims backed by co-simulation for latency and logic synthesis for resources, not by C
+   synthesis estimates. See [evaluating implementations](evaluating-implementations.md).
+4. Tests added and passing, including the existing tests for the layers that share the code path being
+   changed. Say which command you ran.
+5. `pre-commit` clean on all edited files.
+6. The cleanup sweep above, done against the actual diff, hunk by hunk.
+7. The template filled in honestly, with the attestations left for the human contributor.
