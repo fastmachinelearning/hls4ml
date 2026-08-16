@@ -53,6 +53,21 @@ pre-commit run --files <the files you changed>
 The first run of a hook installs its own environment and needs network access. Commit the reformatting the
 hooks apply; pull requests that fail these checks are not reviewed.
 
+**That command does not run everything CI runs.** Hooks marked `stages: [manual]` in
+`.pre-commit-config.yaml` are skipped by default, and the Format workflow runs pre-commit with
+`--hook-stage manual --all-files`. `check-manifest` is one of those hooks: it builds an sdist and compares it
+against the files git tracks, so **adding, moving or renaming anything outside the packaged directories can
+fail CI while every local check passes**. If your change touches the repository layout, run what CI runs:
+
+```
+pre-commit run --hook-stage manual --all-files
+```
+
+When `check-manifest` reports files "missing from sdist", decide which is right: content that ships with the
+package belongs in `MANIFEST.in`, while documentation and repository furniture belong in the
+`[tool.check-manifest] ignore` list in `pyproject.toml`, where `docs/**` and `.agents/**` already are.
+Note that this hook needs the submodules checked out to give a meaningful answer.
+
 ## Tests
 
 `CONTRIBUTING.md` requires a unit test under `test/` for new functionality, and for a bug fix a test that
