@@ -69,9 +69,7 @@ class CoyoteOverlay:
         if len(X) < batch_size:
             raise ValueError(f'Number of input samples ({len(X)}) must be at least batch_size ({batch_size})')
         if len(X) % batch_size != 0:
-            logging.warning(
-                f'Input count ({len(X)}) not a multiple of batch ({batch_size}); dropping remainder'
-            )
+            logging.warning(f'Input count ({len(X)}) not a multiple of batch ({batch_size}); dropping remainder')
         y = np.empty((len(X), *y_shape))
         np_pointer_nd = np.ctypeslib.ndpointer(dtype=np.float32, ndim=len(X[0].shape), flags='C')
         self.coyote_lib.set_inference_data.argtypes = [ctypes.POINTER(ctypes.c_void_p), np_pointer_nd, ctypes.c_uint]
