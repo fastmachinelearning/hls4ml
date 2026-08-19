@@ -1,5 +1,3 @@
-import warnings
-
 from hls4ml.model.layers import Layer, Softmax
 from hls4ml.model.optimizer import OptimizerPass
 
@@ -31,7 +29,6 @@ class FixSoftmaxTableSize(OptimizerPass):
             node.set_attr('inv_table_size', min(2**inv_inp_bw, inv_table_size))
 
         elif implemenation == 'latency':
-
             input_bw = inp_layer.get_attr('result_t').precision.width
             node.set_attr('exp_table_size', min(2**input_bw, exp_table_size))
 
