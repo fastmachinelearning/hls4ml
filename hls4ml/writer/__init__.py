@@ -1,4 +1,5 @@
 from hls4ml.writer.catapult_writer import CatapultWriter
+from hls4ml.writer.coyote_writer import CoyoteWriter
 from hls4ml.writer.libero_writer import LiberoWriter
 from hls4ml.writer.oneapi_writer import OneAPIWriter
 from hls4ml.writer.quartus_writer import QuartusWriter
@@ -16,3 +17,4 @@ register_writer('oneAPI', OneAPIWriter)
 register_writer('Catapult', CatapultWriter)
 register_writer('Libero', LiberoWriter)
 register_writer('SymbolicExpression', SymbolicExpressionWriter)
+register_writer('Coyote', CoyoteWriter)
