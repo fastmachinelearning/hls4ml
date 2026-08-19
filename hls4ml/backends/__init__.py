@@ -12,9 +12,8 @@ from hls4ml.backends.vivado_accelerator.vivado_accelerator_config import VivadoA
 from hls4ml.backends.catapult.catapult_backend import CatapultBackend  # isort: skip
 
 from hls4ml.backends.vitis.vitis_backend import VitisBackend  # isort: skip
-from hls4ml.backends.xls.xls_backend import XLSBackend
-
 from hls4ml.backends.coyote.coyote_backend import CoyoteBackend
+from hls4ml.backends.xls.xls_backend import XLSBackend
 
 
 def _register_builtin_backends():
