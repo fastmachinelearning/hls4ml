@@ -76,6 +76,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
@@ -876,6 +877,159 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.xls.html">hls4ml.backends.xls package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.xls.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_backend">hls4ml.backends.xls.xls_backend module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend"><code class="docutils literal notranslate"><span class="pre">XLSBackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.build"><code class="docutils literal notranslate"><span class="pre">XLSBackend.build()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.compile"><code class="docutils literal notranslate"><span class="pre">XLSBackend.compile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.create_initial_config"><code class="docutils literal notranslate"><span class="pre">XLSBackend.create_initial_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.get_default_flow"><code class="docutils literal notranslate"><span class="pre">XLSBackend.get_default_flow()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.get_top_function"><code class="docutils literal notranslate"><span class="pre">XLSBackend.get_top_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.get_writer_flow"><code class="docutils literal notranslate"><span class="pre">XLSBackend.get_writer_flow()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_layer_util">hls4ml.backends.xls.xls_layer_util module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_bias"><code class="docutils literal notranslate"><span class="pre">xls_bias()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_extra_func_args"><code class="docutils literal notranslate"><span class="pre">xls_extra_func_args()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_extra_func_params"><code class="docutils literal notranslate"><span class="pre">xls_extra_func_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_func_call"><code class="docutils literal notranslate"><span class="pre">xls_func_call()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_func_name"><code class="docutils literal notranslate"><span class="pre">xls_func_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_input_variables"><code class="docutils literal notranslate"><span class="pre">xls_input_variables()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_min_input_rank"><code class="docutils literal notranslate"><span class="pre">xls_min_input_rank()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_module_name"><code class="docutils literal notranslate"><span class="pre">xls_module_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_weights"><code class="docutils literal notranslate"><span class="pre">xls_weights()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_weights_definitions"><code class="docutils literal notranslate"><span class="pre">xls_weights_definitions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_weights_key"><code class="docutils literal notranslate"><span class="pre">xls_weights_key()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_types">hls4ml.backends.xls.xls_types module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayDefinition"><code class="docutils literal notranslate"><span class="pre">XLSArrayDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSArrayDefinition.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition"><code class="docutils literal notranslate"><span class="pre">XLSArrayTypeDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.inner_type"><code class="docutils literal notranslate"><span class="pre">XLSArrayTypeDefinition.inner_type()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.rank"><code class="docutils literal notranslate"><span class="pre">XLSArrayTypeDefinition.rank</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSArrayTypeDefinition.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSConstDefinition"><code class="docutils literal notranslate"><span class="pre">XLSConstDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSConstDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSConstDefinition.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSDefinitionBase.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSDefinitionBase.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointArrayDefinition"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointArrayDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointArrayDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointArrayDefinition.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.from_float"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointDefinition.from_float()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.max_value"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointDefinition.max_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.min_value"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointDefinition.min_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointDefinition.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointExponentPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointExponentPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointExponentPrecisionDefinition.xls_binary_exponent"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointExponentPrecisionDefinition.xls_binary_exponent</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointFixedPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointFixedPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointFixedPrecisionDefinition.xls_binary_exponent"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointFixedPrecisionDefinition.xls_binary_exponent</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointIntegerPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointIntegerPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointIntegerPrecisionDefinition.xls_binary_exponent"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointIntegerPrecisionDefinition.xls_binary_exponent</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.significand_type"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase.significand_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_binary_exponent"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase.xls_binary_exponent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase.xls_definition()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_num_bits"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase.xls_num_bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_rounding_mode"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase.xls_rounding_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_saturation_mode"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase.xls_saturation_mode</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointXnorPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointXnorPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointXnorPrecisionDefinition.xls_binary_exponent"><code class="docutils literal notranslate"><span class="pre">XLSFixedPointXnorPrecisionDefinition.xls_binary_exponent</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition"><code class="docutils literal notranslate"><span class="pre">XLSFunctionCallDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.namespace"><code class="docutils literal notranslate"><span class="pre">XLSFunctionCallDefinition.namespace</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSFunctionCallDefinition.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition"><code class="docutils literal notranslate"><span class="pre">XLSIntegerPrecisionDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSIntegerPrecisionDefinition.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSInterfaceVarConverter"><code class="docutils literal notranslate"><span class="pre">XLSInterfaceVarConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSInterfaceVarConverter.convert"><code class="docutils literal notranslate"><span class="pre">XLSInterfaceVarConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSLookupTableDefinition"><code class="docutils literal notranslate"><span class="pre">XLSLookupTableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSLookupTableDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSLookupTableDefinition.xls_definition()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSLookupTableDefinition.xls_definitions"><code class="docutils literal notranslate"><span class="pre">XLSLookupTableDefinition.xls_definitions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSPrecisionConverter"><code class="docutils literal notranslate"><span class="pre">XLSPrecisionConverter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSQualifiedName"><code class="docutils literal notranslate"><span class="pre">XLSQualifiedName</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSQualifiedName.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSQualifiedName.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_binary_exponent"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_binary_exponent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_definition()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_definitions"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_definitions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_dims"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name_camel"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_name_camel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name_upper"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_name_upper</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_num_bits"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_num_bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_overflow_mode"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_overflow_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_rounding_mode"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_rounding_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_type_alias"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_type_alias()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_type_alias_bits"><code class="docutils literal notranslate"><span class="pre">XLSTensorVariableDefinition.xls_type_alias_bits</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition"><code class="docutils literal notranslate"><span class="pre">XLSTypeAliasDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition.xls_definition"><code class="docutils literal notranslate"><span class="pre">XLSTypeAliasDefinition.xls_definition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeConverter"><code class="docutils literal notranslate"><span class="pre">XLSTypeConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeConverter.convert"><code class="docutils literal notranslate"><span class="pre">XLSTypeConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSVarConverter"><code class="docutils literal notranslate"><span class="pre">XLSVarConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSVarConverter.convert"><code class="docutils literal notranslate"><span class="pre">XLSVarConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVarConverter"><code class="docutils literal notranslate"><span class="pre">XLSWeightVarConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVarConverter.convert"><code class="docutils literal notranslate"><span class="pre">XLSWeightVarConverter.convert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition"><code class="docutils literal notranslate"><span class="pre">XLSWeightVariableDefinition</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition.get_xls_const_definition"><code class="docutils literal notranslate"><span class="pre">XLSWeightVariableDefinition.get_xls_const_definition()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition.xls_name"><code class="docutils literal notranslate"><span class="pre">XLSWeightVariableDefinition.xls_name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.float_to_significand"><code class="docutils literal notranslate"><span class="pre">float_to_significand()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.sN"><code class="docutils literal notranslate"><span class="pre">sN()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.shape_tuple"><code class="docutils literal notranslate"><span class="pre">shape_tuple()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.uN"><code class="docutils literal notranslate"><span class="pre">uN()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.xls_shape_str"><code class="docutils literal notranslate"><span class="pre">xls_shape_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.xls_str"><code class="docutils literal notranslate"><span class="pre">xls_str()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.xls.html#module-hls4ml.backends.xls">Module contents</a></li>
 </ul>
 </li>
 </ul>

@@ -84,6 +84,14 @@ hls4ml.writer.writers module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.writer.xls\_writer module
+--------------------------------
+
+.. automodule:: hls4ml.writer.xls_writer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

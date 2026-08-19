@@ -74,6 +74,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
@@ -217,6 +218,14 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator.vivado_accelerator_backend">hls4ml.backends.vivado_accelerator.vivado_accelerator_backend module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator.vivado_accelerator_config">hls4ml.backends.vivado_accelerator.vivado_accelerator_config module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.xls.html">hls4ml.backends.xls package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_backend">hls4ml.backends.xls.xls_backend module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_layer_util">hls4ml.backends.xls.xls_layer_util module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_types">hls4ml.backends.xls.xls_types module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.xls.html#module-hls4ml.backends.xls">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -1305,6 +1314,30 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.writers.get_writer"><code class="docutils literal notranslate"><span class="pre">get_writer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.writers.register_writer"><code class="docutils literal notranslate"><span class="pre">register_writer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.writer.html#module-hls4ml.writer.xls_writer">hls4ml.writer.xls_writer module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter"><code class="docutils literal notranslate"><span class="pre">XLSWriter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_build_script"><code class="docutils literal notranslate"><span class="pre">XLSWriter.write_build_script()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_hls"><code class="docutils literal notranslate"><span class="pre">XLSWriter.write_hls()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_layer"><code class="docutils literal notranslate"><span class="pre">XLSWriter.write_layer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_layers"><code class="docutils literal notranslate"><span class="pre">XLSWriter.write_layers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_nnet_utils"><code class="docutils literal notranslate"><span class="pre">XLSWriter.write_nnet_utils()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_project_dir"><code class="docutils literal notranslate"><span class="pre">XLSWriter.write_project_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_project_dslx"><code class="docutils literal notranslate"><span class="pre">XLSWriter.write_project_dslx()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_tar"><code class="docutils literal notranslate"><span class="pre">XLSWriter.write_tar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.append_line"><code class="docutils literal notranslate"><span class="pre">append_line()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.append_lines"><code class="docutils literal notranslate"><span class="pre">append_lines()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.firmware_dir"><code class="docutils literal notranslate"><span class="pre">firmware_dir()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.reports_dir"><code class="docutils literal notranslate"><span class="pre">reports_dir()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.to_tuple_or_singleton_str"><code class="docutils literal notranslate"><span class="pre">to_tuple_or_singleton_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.xls_function_definition"><code class="docutils literal notranslate"><span class="pre">xls_function_definition()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.xls_import_const_definition"><code class="docutils literal notranslate"><span class="pre">xls_import_const_definition()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.xls_import_module"><code class="docutils literal notranslate"><span class="pre">xls_import_module()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.xls_import_type_alias"><code class="docutils literal notranslate"><span class="pre">xls_import_type_alias()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.xls_writer.xls_variable_definition"><code class="docutils literal notranslate"><span class="pre">xls_variable_definition()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.writer.html#module-hls4ml.writer">Module contents</a></li>

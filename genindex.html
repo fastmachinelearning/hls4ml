@@ -73,6 +73,7 @@
 <li class="toctree-l1"><a class="reference internal" href="backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend/sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend/xls.html">XLS</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
@@ -232,15 +233,19 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter">AggregratedArrayVariableConverter (class in hls4ml.backends.oneapi.oneapi_types)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.simulation_utils.annotate_axis_stream_widths">annotate_axis_stream_widths() (in module hls4ml.utils.simulation_utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.APFixedPrecisionDefinition">APFixedPrecisionDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.APFloatPrecisionDefinition">APFloatPrecisionDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.APIntegerPrecisionDefinition">APIntegerPrecisionDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.append_line">append_line() (in module hls4ml.writer.xls_writer)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.append_lines">append_lines() (in module hls4ml.writer.xls_writer)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.apply_flow">apply_flow() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
@@ -439,6 +444,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.build">(hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.build">(hls4ml.backends.xls.xls_backend.XLSBackend method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.build">(hls4ml.model.graph.ModelGraph method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.build">(hls4ml.model.graph.MultiModelGraph method)</a>
@@ -517,6 +524,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.compile">(hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.compile">(hls4ml.backends.xls.xls_backend.XLSBackend method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.compile">(hls4ml.model.graph.ModelGraph method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.compile">(hls4ml.model.graph.MultiModelGraph method)</a>
@@ -594,8 +603,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate">(class in hls4ml.backends.vivado.passes.convolution_templates)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.convolution_templates.Conv1DFunctionTemplate">Conv1DFunctionTemplate (class in hls4ml.backends.catapult.passes.convolution_templates)</a>
 
       <ul>
@@ -606,6 +613,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate">(class in hls4ml.backends.vivado.passes.convolution_templates)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.oneapi.passes.html#hls4ml.backends.oneapi.passes.convolution_templates.Conv1DTaskSequenceTemplate">Conv1DTaskSequenceTemplate (class in hls4ml.backends.oneapi.passes.convolution_templates)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2D">Conv2D (class in hls4ml.model.layers)</a>
@@ -662,6 +671,14 @@
         <li><a href="autodoc/hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter.convert">(hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.oneapi.html#hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableConverter.convert">(hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableConverter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSInterfaceVarConverter.convert">(hls4ml.backends.xls.xls_types.XLSInterfaceVarConverter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeConverter.convert">(hls4ml.backends.xls.xls_types.XLSTypeConverter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSVarConverter.convert">(hls4ml.backends.xls.xls_types.XLSVarConverter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVarConverter.convert">(hls4ml.backends.xls.xls_types.XLSWeightVarConverter method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.convert_from_config">convert_from_config() (in module hls4ml.converters)</a>
@@ -730,6 +747,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.create_initial_config">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.create_initial_config">(hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.create_initial_config">(hls4ml.backends.xls.xls_backend.XLSBackend method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.backend.Backend.create_layer_class">create_layer_class() (hls4ml.backends.backend.Backend method)</a>
@@ -1086,6 +1105,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.find_minimum_width">find_minimum_width() (in module hls4ml.model.types)</a>
 </li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.firmware_dir">firmware_dir() (in module hls4ml.writer.xls_writer)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.keras_v3.hgq2.html#hls4ml.converters.keras_v3.hgq2.softmax.fixed_quantizer_to_hls4ml_t">fixed_quantizer_to_hls4ml_t() (in module hls4ml.converters.keras_v3.hgq2.softmax)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.hgq_proxy_model.fixedpoint_quantizer_handler">fixedpoint_quantizer_handler() (in module hls4ml.converters.keras.hgq_proxy_model)</a>
@@ -1099,6 +1120,8 @@
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.FixInputPrecision">FixInputPrecision (class in hls4ml.model.optimizer.passes.bit_exact)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize">FixSoftmaxTableSize (class in hls4ml.backends.fpga.passes.fix_softmax_table_size)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.float_to_significand">float_to_significand() (in module hls4ml.backends.xls.xls_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FloatPrecisionType">FloatPrecisionType (class in hls4ml.model.types)</a>
 </li>
@@ -1584,6 +1607,8 @@
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.IntegerPrecisionType.fractional">(hls4ml.model.types.IntegerPrecisionType property)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.from_float">from_float() (hls4ml.backends.xls.xls_types.XLSFixedPointDefinition class method)</a>
+</li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.qinterval.QIntervalArray.from_kif">from_kif() (hls4ml.utils.qinterval.QIntervalArray class method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.from_layer_list">from_layer_list() (hls4ml.model.graph.ModelGraph class method)</a>
@@ -1741,6 +1766,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.get_default_flow">(hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.get_default_flow">(hls4ml.backends.xls.xls_backend.XLSBackend method)</a>
+</li>
       </ul></li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_driver">get_driver() (hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig method)</a>
 </li>
@@ -1796,10 +1823,10 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_layer_mult_size">get_layer_mult_size() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_layer_output_variable">get_layer_output_variable() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_layer_precision">get_layer_precision() (hls4ml.model.layers.Layer method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_layers">get_layers() (hls4ml.model.graph.ModelGraph method)</a>
@@ -1880,6 +1907,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig.get_tcl_file_path">get_tcl_file_path() (hls4ml.backends.vivado_accelerator.vivado_accelerator_config.VivadoAcceleratorConfig method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.get_top_function">get_top_function() (hls4ml.backends.xls.xls_backend.XLSBackend static method)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.garnet_templates.GarNetConfigTemplate.get_transforms_config">get_transforms_config() (hls4ml.backends.catapult.passes.garnet_templates.GarNetConfigTemplate method)</a>
 
       <ul>
@@ -1951,7 +1980,11 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.get_writer_flow">(hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend.get_writer_flow">(hls4ml.backends.xls.xls_backend.XLSBackend method)</a>
+</li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition.get_xls_const_definition">get_xls_const_definition() (hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass">GlobalOptimizerPass (class in hls4ml.model.optimizer.optimizer)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.GlobalPooling1D">GlobalPooling1D (class in hls4ml.model.layers)</a>
@@ -2917,8 +2950,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pipeline_style">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.pointwise
 
@@ -2933,6 +2964,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pooling_templates">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.quantization_templates
 
@@ -3036,6 +3069,34 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator.vivado_accelerator_config">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.xls
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#module-hls4ml.backends.xls">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.xls.xls_backend
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_backend">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.xls.xls_layer_util
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_layer_util">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.xls.xls_types
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_types">module</a>
 </li>
       </ul></li>
       <li>
@@ -3927,6 +3988,13 @@
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.writers">module</a>
 </li>
       </ul></li>
+      <li>
+    hls4ml.writer.xls_writer
+
+      <ul>
+        <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.xls_writer">module</a>
+</li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig">HLSConfig (class in hls4ml.model.graph)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.HLSTypeConverter">HLSTypeConverter (class in hls4ml.backends.fpga.fpga_types)</a>
@@ -4254,6 +4322,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.initialize_large_fifos">initialize_large_fifos() (in module hls4ml.backends.vitis.passes.fifo_depth_optimization)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.inner_type">inner_type() (hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape">InplaceParallelReshape (class in hls4ml.backends.fpga.passes.inplace_parallel_reshape)</a>
 </li>
@@ -4661,6 +4731,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FixedPrecisionType.max">max (hls4ml.model.types.FixedPrecisionType property)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.max_value">max_value() (hls4ml.backends.xls.xls_types.XLSFixedPointDefinition class method)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.sparsepixels.MaxPooling2DSparseHandler">MaxPooling2DSparseHandler (class in hls4ml.converters.keras_v3.sparsepixels)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Merge">Merge (class in hls4ml.model.layers)</a>
@@ -4710,6 +4782,8 @@
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.merge_const.MergeTwoConstants">MergeTwoConstants (class in hls4ml.model.optimizer.passes.merge_const)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FixedPrecisionType.min">min (hls4ml.model.types.FixedPrecisionType property)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.min_value">min_value() (hls4ml.backends.xls.xls_types.XLSFixedPointDefinition class method)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.qinterval.minimal_kif">minimal_kif() (in module hls4ml.utils.qinterval)</a>
 </li>
@@ -4991,6 +5065,14 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#module-hls4ml.backends.vivado_accelerator.vivado_accelerator_config">hls4ml.backends.vivado_accelerator.vivado_accelerator_config</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#module-hls4ml.backends.xls">hls4ml.backends.xls</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_backend">hls4ml.backends.xls.xls_backend</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_layer_util">hls4ml.backends.xls.xls_layer_util</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#module-hls4ml.backends.xls.xls_types">hls4ml.backends.xls.xls_types</a>
+</li>
         <li><a href="autodoc/hls4ml.cli.html#module-hls4ml.cli">hls4ml.cli</a>
 </li>
         <li><a href="autodoc/hls4ml.contrib.html#module-hls4ml.contrib">hls4ml.contrib</a>
@@ -5245,6 +5327,8 @@
 </li>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.writers">hls4ml.writer.writers</a>
 </li>
+        <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.xls_writer">hls4ml.writer.xls_writer</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -5276,6 +5360,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.namespace">namespace (hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition property)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.CompressedWeightVariable.next">next() (hls4ml.model.types.CompressedWeightVariable method)</a>
 
       <ul>
@@ -5888,6 +5974,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.r_im2col">r_im2col() (in module hls4ml.model.optimizer.passes.bit_exact)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.rank">rank (hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition property)</a>
+</li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.qinterval.QIntervalArray.ravel">ravel() (hls4ml.utils.qinterval.QIntervalArray method)</a>
 </li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.catapult_report.read_catapult_report">read_catapult_report() (in module hls4ml.report.catapult_report)</a>
@@ -6017,6 +6105,8 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.replace_node">replace_node() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv">ReplaceMultidimensionalDenseWithConv (class in hls4ml.model.optimizer.passes.multi_dense)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.reports_dir">reports_dir() (in module hls4ml.writer.xls_writer)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.request_kif">request_kif() (in module hls4ml.model.optimizer.passes.bit_exact)</a>
 </li>
@@ -6248,10 +6338,10 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.fifo_depth_optimization.set_fifo_depth">(in module hls4ml.backends.vivado.passes.fifo_depth_optimization)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits">set_msb_bits() (hls4ml.utils.fixed_point_utils.FixedPointEmulator method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.set_name_config">set_name_config() (hls4ml.model.graph.HLSConfig method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.set_optimized_fifo_depths">set_optimized_fifo_depths() (in module hls4ml.backends.vitis.passes.fifo_depth_optimization)</a>
@@ -6263,6 +6353,10 @@
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle">SetPipelineStyle (class in hls4ml.backends.vivado.passes.pipeline_style)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.qinterval.QIntervalArray.shape">shape (hls4ml.utils.qinterval.QIntervalArray property)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.shape_tuple">shape_tuple() (in module hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.significand_type">significand_type (hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase property)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SimpleRNN">SimpleRNN (class in hls4ml.model.layers)</a>
 </li>
@@ -6287,6 +6381,8 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.TensorVariable.size_cpp">size_cpp() (hls4ml.model.types.TensorVariable method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax">SkipSoftmax (class in hls4ml.backends.fpga.passes.remove_softmax)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.sN">sN() (in module hls4ml.backends.xls.xls_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SNNReadout">SNNReadout (class in hls4ml.model.layers)</a>
 </li>
@@ -6409,6 +6505,8 @@
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.qinterval.QIntervalArray.to_kif">to_kif() (hls4ml.utils.qinterval.QIntervalArray method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.to_multi_model_graph">to_multi_model_graph() (in module hls4ml.model.graph)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.to_tuple_or_singleton_str">to_tuple_or_singleton_str() (in module hls4ml.writer.xls_writer)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.trace">trace() (hls4ml.model.graph.ModelGraph method)</a>
 
@@ -6724,6 +6822,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.uint_to_binary">uint_to_binary() (in module hls4ml.utils.fixed_point_utils)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.uN">uN() (in module hls4ml.backends.xls.xls_types)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.hgq_proxy_model.unary_lut_keras_handler">unary_lut_keras_handler() (in module hls4ml.converters.keras.hgq_proxy_model)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.UnaryLUT">UnaryLUT (class in hls4ml.model.optimizer.passes.hgq_proxy_model)</a>
@@ -6881,6 +6981,8 @@
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_build_script">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_build_script">(hls4ml.writer.xls_writer.XLSWriter method)</a>
+</li>
       </ul></li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_build_script_multigraph">write_build_script_multigraph() (hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
@@ -6933,8 +7035,14 @@
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.writers.Writer.write_hls">(hls4ml.writer.writers.Writer method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_hls">(hls4ml.writer.xls_writer.XLSWriter method)</a>
+</li>
       </ul></li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_host_code">write_host_code() (hls4ml.writer.coyote_writer.CoyoteWriter method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_layer">write_layer() (hls4ml.writer.xls_writer.XLSWriter method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_layers">write_layers() (hls4ml.writer.xls_writer.XLSWriter method)</a>
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_model_wrapper">write_model_wrapper() (hls4ml.writer.coyote_writer.CoyoteWriter method)</a>
 </li>
@@ -6956,6 +7064,8 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.symbolic_writer.SymbolicExpressionWriter.write_nnet_utils">(hls4ml.writer.symbolic_writer.SymbolicExpressionWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_nnet_utils">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_nnet_utils">(hls4ml.writer.xls_writer.XLSWriter method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_nnet_utils_overrides">write_nnet_utils_overrides() (hls4ml.writer.coyote_writer.CoyoteWriter method)</a>
@@ -7001,7 +7111,11 @@
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_project_dir">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_project_dir">(hls4ml.writer.xls_writer.XLSWriter method)</a>
+</li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_project_dslx">write_project_dslx() (hls4ml.writer.xls_writer.XLSWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_project_header">write_project_header() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>
 
       <ul>
@@ -7024,6 +7138,8 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_tar">(hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_tar">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_tar">(hls4ml.writer.xls_writer.XLSWriter static method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.write_tb_inputs">write_tb_inputs() (hls4ml.model.graph.MultiModelGraph method)</a>
@@ -7082,10 +7198,176 @@
 <h2 id="X">X</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.xnor_pooling.XnorPooling">XnorPooling (class in hls4ml.backends.fpga.passes.xnor_pooling)</a>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_bias">xls_bias() (in module hls4ml.backends.xls.xls_layer_util)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointExponentPrecisionDefinition.xls_binary_exponent">xls_binary_exponent (hls4ml.backends.xls.xls_types.XLSFixedPointExponentPrecisionDefinition property)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointFixedPrecisionDefinition.xls_binary_exponent">(hls4ml.backends.xls.xls_types.XLSFixedPointFixedPrecisionDefinition property)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointIntegerPrecisionDefinition.xls_binary_exponent">(hls4ml.backends.xls.xls_types.XLSFixedPointIntegerPrecisionDefinition property)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_binary_exponent">(hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase property)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointXnorPrecisionDefinition.xls_binary_exponent">(hls4ml.backends.xls.xls_types.XLSFixedPointXnorPrecisionDefinition property)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_binary_exponent">(hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition property)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayDefinition.xls_definition">xls_definition() (hls4ml.backends.xls.xls_types.XLSArrayDefinition method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.xls_definition">(hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSConstDefinition.xls_definition">(hls4ml.backends.xls.xls_types.XLSConstDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSDefinitionBase.xls_definition">(hls4ml.backends.xls.xls_types.XLSDefinitionBase method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointArrayDefinition.xls_definition">(hls4ml.backends.xls.xls_types.XLSFixedPointArrayDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.xls_definition">(hls4ml.backends.xls.xls_types.XLSFixedPointDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_definition">(hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.xls_definition">(hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition.xls_definition">(hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSLookupTableDefinition.xls_definition">(hls4ml.backends.xls.xls_types.XLSLookupTableDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSQualifiedName.xls_definition">(hls4ml.backends.xls.xls_types.XLSQualifiedName method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_definition">(hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition.xls_definition">(hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition method)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSLookupTableDefinition.xls_definitions">xls_definitions() (hls4ml.backends.xls.xls_types.XLSLookupTableDefinition method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_definitions">(hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition method)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_dims">xls_dims (hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition property)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_extra_func_args">xls_extra_func_args() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_extra_func_params">xls_extra_func_params() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_func_call">xls_func_call() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_func_name">xls_func_name() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.xls_function_definition">xls_function_definition() (in module hls4ml.writer.xls_writer)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.xls_import_const_definition">xls_import_const_definition() (in module hls4ml.writer.xls_writer)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.xls_import_module">xls_import_module() (in module hls4ml.writer.xls_writer)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.xls_import_type_alias">xls_import_type_alias() (in module hls4ml.writer.xls_writer)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_input_variables">xls_input_variables() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_min_input_rank">xls_min_input_rank() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_module_name">xls_module_name() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name">xls_name (hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition property)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition.xls_name">(hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition property)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name_camel">xls_name_camel (hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition property)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name_upper">xls_name_upper (hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition property)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_num_bits">xls_num_bits (hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase property)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_num_bits">(hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition property)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_overflow_mode">xls_overflow_mode (hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition property)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_rounding_mode">xls_rounding_mode (hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase property)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_rounding_mode">(hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition property)</a>
+</li>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_saturation_mode">xls_saturation_mode (hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase property)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.xls_shape_str">xls_shape_str() (in module hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.xls_str">xls_str() (in module hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_type_alias">xls_type_alias() (hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_type_alias_bits">xls_type_alias_bits (hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition property)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.xls_variable_definition">xls_variable_definition() (in module hls4ml.writer.xls_writer)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_weights">xls_weights() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_weights_definitions">xls_weights_definitions() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_layer_util.xls_weights_key">xls_weights_key() (in module hls4ml.backends.xls.xls_layer_util)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayDefinition">XLSArrayDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition">XLSArrayTypeDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_backend.XLSBackend">XLSBackend (class in hls4ml.backends.xls.xls_backend)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSConstDefinition">XLSConstDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSDefinitionBase">XLSDefinitionBase (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointArrayDefinition">XLSFixedPointArrayDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition">XLSFixedPointDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointExponentPrecisionDefinition">XLSFixedPointExponentPrecisionDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointFixedPrecisionDefinition">XLSFixedPointFixedPrecisionDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointIntegerPrecisionDefinition">XLSFixedPointIntegerPrecisionDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase">XLSFixedPointPrecisionDefinitionBase (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFixedPointXnorPrecisionDefinition">XLSFixedPointXnorPrecisionDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition">XLSFunctionCallDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition">XLSIntegerPrecisionDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSInterfaceVarConverter">XLSInterfaceVarConverter (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSLookupTableDefinition">XLSLookupTableDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSPrecisionConverter">XLSPrecisionConverter (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSQualifiedName">XLSQualifiedName (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition">XLSTensorVariableDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition">XLSTypeAliasDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeConverter">XLSTypeConverter (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSVarConverter">XLSVarConverter (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVarConverter">XLSWeightVarConverter (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition">XLSWeightVariableDefinition (class in hls4ml.backends.xls.xls_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter">XLSWriter (class in hls4ml.writer.xls_writer)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.xnor_pooling.XnorPooling">XnorPooling (class in hls4ml.backends.fpga.passes.xnor_pooling)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.XnorPrecisionType">XnorPrecisionType (class in hls4ml.model.types)</a>
 </li>
   </ul></td>

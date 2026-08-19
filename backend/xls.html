@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction &mdash; hls4ml 1.3.0 documentation</title>
+  <title>XLS &mdash; hls4ml 1.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Status and Features" href="status.html" />
-    <link rel="prev" title="Welcome to hls4ml’s documentation!" href="../index.html" /> 
+    <link rel="next" title="Profiling" href="../advanced/profiling.html" />
+    <link rel="prev" title="SymbolicExpression" href="sr.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,17 +46,13 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#the-inspiration">The Inspiration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-solution-hls4ml">The Solution: <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup and Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">Citation, Acknowledgments, and Contributors</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul>
@@ -72,15 +68,19 @@
 <li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Backends</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">XLS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#i-o-types-and-strategy">I/O Types and Strategy</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
@@ -129,9 +129,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Introduction</li>
+      <li class="breadcrumb-item active">XLS</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/intro/introduction.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/backend/xls.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -139,27 +139,45 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
-<p>The goal of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is to provide an efficient and fast translation of machine learning models from open-source packages (like Keras and PyTorch) for training machine learning algorithms to high level synthesis (HLS) code that can then be transpiled to run on an FPGA. The resulting HLS project can be then used to produce an IP which can be plugged into more complex designs or be used to create a kernel for CPU co-processing. The user has freedom to define many of the parameters of their algorithm to best suit their needs.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> package enables fast prototyping of a machine learning algorithm implementation in FPGAs,
-greatly reducing the time to results and giving the user intuition for how to best design a machine learning algorithm for their application while balancing performance, resource utilization and latency requirements.</p>
-<section id="the-inspiration">
-<h2>The Inspiration<a class="headerlink" href="#the-inspiration" title="Link to this heading"></a></h2>
-<p>The inspiration for the creation of the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> package stems from the high energy physics community at the CERN Large Hadron Collider (LHC).
-While machine learning has already been proven to be extremely useful in analysis of data from detectors at the LHC, it is typically performed in an “offline” environment after the data is taken and agglomerated.
-However, one of the largest problems at detectors on the LHC is that collisions, or “events”, generate too much data for everything to be saved.
-As such, filters called “triggers” are used to determine whether a given event should be kept.
-Using FPGAs allows for significantly lower latency so machine learning algorithms can essentially be run “live” at the detector level for event selection. As a result, more events with potential signs of new physics can be preserved for analysis.</p>
+  <section id="xls">
+<h1>XLS<a class="headerlink" href="#xls" title="Link to this heading"></a></h1>
+<p>The XLS backend can convert hls4ml models into Verilog or SystemVerilog via <a class="reference external" href="https://google.github.io/xls/">Google XLS</a>, which can be converted to IP via <strong>Vivado</strong> or other tools.</p>
+<p>To enable XLS:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>hls4ml<span class="o">[</span>xls<span class="o">]</span>
+</pre></div>
+</div>
+<p>hls4ml uses <a class="reference external" href="https://calad0i.github.io/pyxls/">pyxls</a> package to access XLS API.
+pyxls comes with batteries included, and a separate XLS installation is not required.</p>
+<section id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h2>
+<p>XLS backend performs the following transformations:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hls4ml</span> <span class="n">representation</span> <span class="o">-&gt;</span> <span class="n">DSLX</span> <span class="p">(</span><span class="o">&lt;</span><span class="n">ProjectName</span><span class="o">&gt;.</span><span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XLS</span> <span class="n">IR</span> <span class="p">(</span><span class="o">&lt;</span><span class="n">ProjectName</span><span class="o">&gt;.</span><span class="n">ir</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optimized</span> <span class="n">XLS</span> <span class="n">IR</span> <span class="p">(</span><span class="o">&lt;</span><span class="n">ProjectName</span><span class="o">&gt;.</span><span class="n">opt</span><span class="o">.</span><span class="n">ir</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">System</span><span class="p">)</span><span class="n">Verilog</span> <span class="p">(</span><span class="o">&lt;</span><span class="n">ProjectName</span><span class="o">&gt;.</span><span class="n">sv</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference external" href="https://google.github.io/xls/dslx_reference/">DSLX</a> is a DSL with Rust-like syntax.
+DSLX project generated by hls4ml in <code class="docutils literal notranslate"><span class="pre">&lt;OutputDir&gt;/firmware</span></code> contains the main module <code class="docutils literal notranslate"><span class="pre">&lt;ProjectName&gt;.x</span></code>, layer modules <code class="docutils literal notranslate"><span class="pre">layer_&lt;LayerName&gt;.x</span></code>, and helper modules in <code class="docutils literal notranslate"><span class="pre">ap_types/</span></code> and <code class="docutils literal notranslate"><span class="pre">nnet_utils/</span></code>.
+You may work with this project either through hls4ml or using your own XLS toolchain.</p>
+<p>hls4ml calls XLS compiler to convert DSLX into <a class="reference external" href="https://google.github.io/xls/ir_overview/">XLS IR</a> format (<code class="docutils literal notranslate"><span class="pre">&lt;ProjectName&gt;.ir</span></code>) and then runs IR optimization passes (<code class="docutils literal notranslate"><span class="pre">&lt;ProjectName&gt;.opt.ir</span></code>).</p>
+<p>Then, hls4ml uses <a class="reference external" href="https://google.github.io/xls/codegen_options/">XLS Codegen</a> to generate (System)Verilog (<code class="docutils literal notranslate"><span class="pre">&lt;ProjectName&gt;.sv</span></code>) from IR.</p>
+<p>You can override default codegen options:
+.. code-block:: python</p>
+<blockquote>
+<div><p>config = hls4ml.utils.config_from_keras_model(model)
+# This sets hls_model.config[‘XLSCodegenFlags’]
+hls_model = hls4ml.converters.convert_from_keras_model(</p>
+<blockquote>
+<div><p>model, hls_config=config, backend=’XLS’,
+xls_codegen_flags={‘delay_model’: ‘asap7’, ‘generator’: ‘pipeline’, ‘use_system_verilog’: False}</p>
+</div></blockquote>
+<p>)</p>
+</div></blockquote>
+<p>An example <strong>Vivado</strong> script for generating IP from RTL can be found at <code class="docutils literal notranslate"><span class="pre">&lt;OutputDir&gt;/build_prj.tcl</span></code>.</p>
 </section>
-<section id="the-solution-hls4ml">
-<h2>The Solution: <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code><a class="headerlink" href="#the-solution-hls4ml" title="Link to this heading"></a></h2>
-<img alt="Overview of hls4ml, taken from `JINST 13 P07027 (2018) &lt;https://dx.doi.org/10.1088/1748-0221/13/07/P07027&gt;`_." src="../_images/overview.jpg" />
-<p>With this in mind, let’s take a look at how <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> helps to achieve such a goal. First, it’s important to realize the architecture differences between an FPGA and a CPU or GPU.
-An FPGA can be specifically programmed to do a certain task, in this case evaluate neural networks given a set of inputs, and as such can be highly optimized for the task, with tricks like pipelining and parallel evaluation. However, this means dynamic remapping while running isn’t really a possibility.
-FPGAs also often come at a comparatively low power cost with respect to CPUs and GPUs. This allows <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> to build HLS code from compressed neural networks that results in predictions on the microsecond scale for latency.
-The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> tool saves the time investment needed to convert a neural network to a hardware design language or even HLS code, thus allowing for rapid prototyping.</p>
-<p>For more detailed information on technical details of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>, read the “Internals” section of our documentation or our <a class="reference internal" href="reference.html"><span class="doc">References</span></a> page.</p>
+<section id="i-o-types-and-strategy">
+<h2>I/O Types and Strategy<a class="headerlink" href="#i-o-types-and-strategy" title="Link to this heading"></a></h2>
+<p>Currently, only <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> is supported. <code class="docutils literal notranslate"><span class="pre">Strategy</span></code> is ignored.
+All operations are fully unrolled.</p>
+<p>Since XLS supports only signed <code class="docutils literal notranslate"><span class="pre">FixedPoint</span></code> type (similar to <code class="docutils literal notranslate"><span class="pre">ap_fixed</span></code>), all unsigned types are converted to signed types (with extra bit added).</p>
 </section>
 </section>
 
@@ -167,8 +185,8 @@ The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to hls4ml’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="status.html" class="btn btn-neutral float-right" title="Status and Features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="sr.html" class="btn btn-neutral float-left" title="SymbolicExpression" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../advanced/profiling.html" class="btn btn-neutral float-right" title="Profiling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

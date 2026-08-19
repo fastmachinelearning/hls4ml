@@ -1,0 +1,740 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hls4ml.backends.xls package &mdash; hls4ml 1.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hls4ml.converters package" href="hls4ml.converters.html" />
+    <link rel="prev" title="hls4ml.backends.vivado_accelerator.passes package" href="hls4ml.backends.vivado_accelerator.passes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/snn.html">Spiking Neural Networks (PyTorch/SNN)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/plugins.html">External Backend and Writer Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/multimodelgraph.html">MultiModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="hls4ml.backends.html">hls4ml.backends package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hls4ml.backends.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends.backend">hls4ml.backends.backend module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends.plugin_loader">hls4ml.backends.plugin_loader module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends.template">hls4ml.backends.template module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="hls4ml.backends.html">hls4ml.backends package</a></li>
+      <li class="breadcrumb-item active">hls4ml.backends.xls package</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/autodoc/hls4ml.backends.xls.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="hls4ml-backends-xls-package">
+<h1>hls4ml.backends.xls package<a class="headerlink" href="#hls4ml-backends-xls-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.backends.xls.xls_backend">
+<span id="hls4ml-backends-xls-xls-backend-module"></span><h2>hls4ml.backends.xls.xls_backend module<a class="headerlink" href="#module-hls4ml.backends.xls.xls_backend" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_backend.XLSBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_backend.</span></span><span class="sig-name descname"><span class="pre">XLSBackend</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_backend.XLSBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend" title="hls4ml.backends.fpga.fpga_backend.FPGABackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">FPGABackend</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_backend.XLSBackend.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_backend.XLSBackend.build" title="Link to this definition"></a></dt>
+<dd><p>Generates the RTL (SystemVerilog or Verilog) code.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p></li>
+<li><p><strong>reset</strong> (<em>bool</em>) – the reset synthesis option</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_backend.XLSBackend.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_backend.XLSBackend.compile" title="Link to this definition"></a></dt>
+<dd><p>Compile the generated project that can be linked into Python runtime.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to compile.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the project failed to compile</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns the name of the compiled library.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_backend.XLSBackend.create_initial_config">
+<span class="sig-name descname"><span class="pre">create_initial_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'xcu250-figd2104-2L-e'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clock_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clock_uncertainty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'12.5%'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'io_parallel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_tar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xls_codegen_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_backend.XLSBackend.create_initial_config" title="Link to this definition"></a></dt>
+<dd><p>Create an initial configuration of the XLS backend.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>part</strong> (<em>str</em><em>, </em><em>optional</em>) – The FPGA part to be used. Defaults to ‘xcvu13p-flga2577-2-e’.</p></li>
+<li><p><strong>clock_period</strong> (<em>int</em><em>, </em><em>optional</em>) – The clock period. Defaults to 5.</p></li>
+<li><p><strong>clock_uncertainty</strong> (<em>str</em><em>, </em><em>optional</em>) – The clock uncertainty. Defaults to 12.5%.</p></li>
+<li><p><strong>io_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Type of implementation used. Only ‘io_parallel’ is currently supported.</p></li>
+<li><p><strong>write_tar</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, compresses the output directory into a .tar.gz file. Defaults to False.</p></li>
+<li><p><strong>xls_codegen_flags</strong> (<em>dict</em><em>, </em><em>optional</em>) – Flags to pass to the XLS codegen. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>initial configuration.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_backend.XLSBackend.get_default_flow">
+<span class="sig-name descname"><span class="pre">get_default_flow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_backend.XLSBackend.get_default_flow" title="Link to this definition"></a></dt>
+<dd><p>The name of the default flow of the backend.</p>
+<p>Default flow is used as the conversion target if the target flow has not been specified.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_backend.XLSBackend.get_top_function">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_top_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_backend.XLSBackend.get_top_function" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_backend.XLSBackend.get_writer_flow">
+<span class="sig-name descname"><span class="pre">get_writer_flow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_backend.XLSBackend.get_writer_flow" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.xls.xls_layer_util">
+<span id="hls4ml-backends-xls-xls-layer-util-module"></span><h2>hls4ml.backends.xls.xls_layer_util module<a class="headerlink" href="#module-hls4ml.backends.xls.xls_layer_util" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_bias">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition" title="hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition"><span class="pre">XLSWeightVariableDefinition</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_bias" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_extra_func_args">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_extra_func_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSConstDefinition" title="hls4ml.backends.xls.xls_types.XLSConstDefinition"><span class="pre">XLSConstDefinition</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_extra_func_args" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_extra_func_params">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_extra_func_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSConstDefinition" title="hls4ml.backends.xls.xls_types.XLSConstDefinition"><span class="pre">XLSConstDefinition</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_extra_func_params" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_func_call">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_func_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition" title="hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition"><span class="pre">XLSFunctionCallDefinition</span></a></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_func_call" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_func_name">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_func_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSQualifiedName" title="hls4ml.backends.xls.xls_types.XLSQualifiedName"><span class="pre">XLSQualifiedName</span></a></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_func_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_input_variables">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_input_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition" title="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition"><span class="pre">XLSTensorVariableDefinition</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_input_variables" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_min_input_rank">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_min_input_rank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_min_input_rank" title="Link to this definition"></a></dt>
+<dd><p>Minimally required rank of the input tensor.
+Input tensor can have a higher rank if it consists of multiple batches.
+NB: in the case of multiple input variables, the rank is determined by the first input variable.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_module_name">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_module_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_module_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_weights">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition" title="hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition"><span class="pre">XLSWeightVariableDefinition</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_weights_definitions">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_weights_definitions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSConstDefinition" title="hls4ml.backends.xls.xls_types.XLSConstDefinition"><span class="pre">XLSConstDefinition</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_weights_definitions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_layer_util.xls_weights_key">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_layer_util.</span></span><span class="sig-name descname"><span class="pre">xls_weights_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_layer_util.xls_weights_key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.xls.xls_types">
+<span id="hls4ml-backends-xls-xls-types-module"></span><h2>hls4ml.backends.xls.xls_types module<a class="headerlink" href="#module-hls4ml.backends.xls.xls_types" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSArrayDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSArrayDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSArrayDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSArrayDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSArrayDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSArrayTypeDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.inner_type">
+<span class="sig-name descname"><span class="pre">inner_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.inner_type" title="Link to this definition"></a></dt>
+<dd><p>Returns: type of arr[0]</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.rank">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rank</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.rank" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSArrayTypeDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSConstDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSConstDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSConstDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSConstDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSConstDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSDefinitionBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSDefinitionBase</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSDefinitionBase.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointArrayDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSFixedPointArrayDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointArrayDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointArrayDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointArrayDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSFixedPointDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">significand</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.from_float">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.from_float" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.max_value">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.max_value" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.min_value">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">min_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.min_value" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointExponentPrecisionDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSFixedPointExponentPrecisionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointExponentPrecisionDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointExponentPrecisionDefinition.xls_binary_exponent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_binary_exponent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointExponentPrecisionDefinition.xls_binary_exponent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointFixedPrecisionDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSFixedPointFixedPrecisionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointFixedPrecisionDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointFixedPrecisionDefinition.xls_binary_exponent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_binary_exponent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointFixedPrecisionDefinition.xls_binary_exponent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointIntegerPrecisionDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSFixedPointIntegerPrecisionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointIntegerPrecisionDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointIntegerPrecisionDefinition.xls_binary_exponent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_binary_exponent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointIntegerPrecisionDefinition.xls_binary_exponent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a>, <a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.PrecisionType" title="hls4ml.model.types.PrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionType</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.significand_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">significand_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition" title="hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition"><span class="pre">XLSIntegerPrecisionDefinition</span></a></em><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.significand_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_binary_exponent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_binary_exponent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_binary_exponent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_num_bits">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_num_bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_num_bits" title="Link to this definition"></a></dt>
+<dd><p>Number of bits for DSLX FixedPoint representation for the given precision.
+Note that FixedPoint is always a signed type,
+so we add an extra bit when converting from unsigned.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_rounding_mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_rounding_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.RoundingMode" title="hls4ml.model.types.RoundingMode"><span class="pre">RoundingMode</span></a></em><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_rounding_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_saturation_mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_saturation_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="hls4ml.model.html#hls4ml.model.types.SaturationMode" title="hls4ml.model.types.SaturationMode"><span class="pre">SaturationMode</span></a></em><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase.xls_saturation_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointXnorPrecisionDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSFixedPointXnorPrecisionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointXnorPrecisionDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFixedPointXnorPrecisionDefinition.xls_binary_exponent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_binary_exponent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFixedPointXnorPrecisionDefinition.xls_binary_exponent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSFunctionCallDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.namespace">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">namespace</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.namespace" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSIntegerPrecisionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSIntegerPrecisionDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSInterfaceVarConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSInterfaceVarConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSInterfaceVarConverter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSVarConverter" title="hls4ml.backends.xls.xls_types.XLSVarConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSVarConverter</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSInterfaceVarConverter.convert">
+<span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSInterfaceVarConverter.convert" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSLookupTableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSLookupTableDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log2_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSLookupTableDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSLookupTableDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSLookupTableDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSLookupTableDefinition.xls_definitions">
+<span class="sig-name descname"><span class="pre">xls_definitions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSConstDefinition" title="hls4ml.backends.xls.xls_types.XLSConstDefinition"><span class="pre">XLSConstDefinition</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSLookupTableDefinition.xls_definitions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSPrecisionConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSPrecisionConverter</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSPrecisionConverter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter" title="hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">FPGAPrecisionConverter</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSQualifiedName">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSQualifiedName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSQualifiedName" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSQualifiedName.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSQualifiedName.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSTensorVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_binary_exponent">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_binary_exponent</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_binary_exponent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_definitions">
+<span class="sig-name descname"><span class="pre">xls_definitions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_definitions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_dims</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_dims" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_name</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name_camel">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_name_camel</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name_camel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name_upper">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_name_upper</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_name_upper" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_num_bits">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_num_bits</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_num_bits" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_overflow_mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_overflow_mode</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_overflow_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_rounding_mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_rounding_mode</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_rounding_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_type_alias">
+<span class="sig-name descname"><span class="pre">xls_type_alias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_type_alias" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_type_alias_bits">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_type_alias_bits</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTensorVariableDefinition.xls_type_alias_bits" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSTypeAliasDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSDefinitionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">XLSDefinitionBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition.xls_definition">
+<span class="sig-name descname"><span class="pre">xls_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition.xls_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTypeConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSTypeConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTypeConverter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSTypeConverter.convert">
+<span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atype</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSTypeConverter.convert" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSVarConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSVarConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSVarConverter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSVarConverter.convert">
+<span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSVarConverter.convert" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSWeightVarConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSWeightVarConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSWeightVarConverter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSWeightVarConverter.convert">
+<span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSWeightVarConverter.convert" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">XLSWeightVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition.get_xls_const_definition">
+<span class="sig-name descname"><span class="pre">get_xls_const_definition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSConstDefinition" title="hls4ml.backends.xls.xls_types.XLSConstDefinition"><span class="pre">XLSConstDefinition</span></a></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition.get_xls_const_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition.xls_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xls_name</span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.XLSWeightVariableDefinition.xls_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.float_to_significand">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">float_to_significand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">floating</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">floating</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase" title="hls4ml.backends.xls.xls_types.XLSFixedPointPrecisionDefinitionBase"><span class="pre">XLSFixedPointPrecisionDefinitionBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">integer</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">integer</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.float_to_significand" title="Link to this definition"></a></dt>
+<dd><p>Convert floating point value to fixed point significand.</p>
+<p>Returns: x * 2^precision.fractional</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.sN">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">sN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.sN" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.shape_tuple">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">shape_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.shape_tuple" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.uN">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">uN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.uN" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.xls_shape_str">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">xls_shape_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.xls_shape_str" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.xls.xls_types.xls_str">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.xls.xls_types.</span></span><span class="sig-name descname"><span class="pre">xls_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.backends.xls.xls_types.xls_str" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.xls">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.xls" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hls4ml.backends.vivado_accelerator.passes.html" class="btn btn-neutral float-left" title="hls4ml.backends.vivado_accelerator.passes package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.converters.html" class="btn btn-neutral float-right" title="hls4ml.converters package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

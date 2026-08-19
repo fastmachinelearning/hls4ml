@@ -75,6 +75,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
 <ul>
@@ -118,6 +119,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vivado_accelerator_writer">hls4ml.writer.vivado_accelerator_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vivado_writer">hls4ml.writer.vivado_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.writers">hls4ml.writer.writers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.xls_writer">hls4ml.writer.xls_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer">Module contents</a></li>
 </ul>
 </li>
@@ -1361,6 +1363,131 @@ For differences, refer to the myproject_test.cpp file.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.writer.writers.register_writer">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.writer.writers.</span></span><span class="sig-name descname"><span class="pre">register_writer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.writers.register_writer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-hls4ml.writer.xls_writer">
+<span id="hls4ml-writer-xls-writer-module"></span><h2>hls4ml.writer.xls_writer module<a class="headerlink" href="#module-hls4ml.writer.xls_writer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.XLSWriter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">XLSWriter</span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.XLSWriter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.writer.writers.Writer" title="hls4ml.writer.writers.Writer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Writer</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.XLSWriter.write_build_script">
+<span class="sig-name descname"><span class="pre">write_build_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.XLSWriter.write_build_script" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.XLSWriter.write_hls">
+<span class="sig-name descname"><span class="pre">write_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.XLSWriter.write_hls" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.XLSWriter.write_layer">
+<span class="sig-name descname"><span class="pre">write_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><span class="pre">Layer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.xls_writer.XLSWriter.write_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.XLSWriter.write_layers">
+<span class="sig-name descname"><span class="pre">write_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.xls_writer.XLSWriter.write_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.XLSWriter.write_nnet_utils">
+<span class="sig-name descname"><span class="pre">write_nnet_utils</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.XLSWriter.write_nnet_utils" title="Link to this definition"></a></dt>
+<dd><p>Copy the nnet_utils, AP types headers to the project output directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.XLSWriter.write_project_dir">
+<span class="sig-name descname"><span class="pre">write_project_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.XLSWriter.write_project_dir" title="Link to this definition"></a></dt>
+<dd><p>Write the base project directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.XLSWriter.write_project_dslx">
+<span class="sig-name descname"><span class="pre">write_project_dslx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.XLSWriter.write_project_dslx" title="Link to this definition"></a></dt>
+<dd><p>Write the main architecture source file (myproject.x)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.XLSWriter.write_tar">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write_tar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.xls_writer.XLSWriter.write_tar" title="Link to this definition"></a></dt>
+<dd><p>Write the generated project as a .tar.gz archive</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.append_line">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">append_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.append_line" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.append_lines">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">append_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">xs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.append_lines" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.firmware_dir">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">firmware_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.xls_writer.firmware_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.reports_dir">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">reports_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><span class="pre">ModelGraph</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.xls_writer.reports_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.to_tuple_or_singleton_str">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">to_tuple_or_singleton_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">',</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.to_tuple_or_singleton_str" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.xls_function_definition">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">xls_function_definition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">body</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.xls_function_definition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.xls_import_const_definition">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">xls_import_const_definition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">const_def</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSConstDefinition" title="hls4ml.backends.xls.xls_types.XLSConstDefinition"><span class="pre">XLSConstDefinition</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSConstDefinition" title="hls4ml.backends.xls.xls_types.XLSConstDefinition"><span class="pre">XLSConstDefinition</span></a></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.xls_import_const_definition" title="Link to this definition"></a></dt>
+<dd><p>Returns: const new_name = module_name::const_name</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.xls_import_module">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">xls_import_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.xls_import_module" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.xls_import_type_alias">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">xls_import_type_alias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_alias_def</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition" title="hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition"><span class="pre">XLSTypeAliasDefinition</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition" title="hls4ml.backends.xls.xls_types.XLSTypeAliasDefinition"><span class="pre">XLSTypeAliasDefinition</span></a></span></span><a class="headerlink" href="#hls4ml.writer.xls_writer.xls_import_type_alias" title="Link to this definition"></a></dt>
+<dd><p>Returns: type new_name = module_name::type_name</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.writer.xls_writer.xls_variable_definition">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.writer.xls_writer.</span></span><span class="sig-name descname"><span class="pre">xls_variable_definition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.xls_writer.xls_variable_definition" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
