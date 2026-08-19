@@ -17,52 +17,33 @@ class FixSoftmaxTableSize(OptimizerPass):
         if not isinstance(inp_layer, Layer):
             raise RuntimeError(f'Softmax layer {node.name} does not have an input layer')
 
-        input_bw: int = inp_layer.get_attr('result_t').precision.width  # type: ignore
-        table_bw: int = node.get_attr('inv_table_t').precision.width  # type: ignore
         table_size = int(node.get_attr('table_size'))  # type: ignore
+        exp_table_size = node.get_attr('exp_table_size', table_size)
+        inv_table_size = node.get_attr('inv_table_size', table_size)
 
-        backend = model.config.config['Backend']
+        implemenation = node.get_attr('implementation')
 
-        # Somehow, Intel want one extra bits for the table.
-        # I don't know why but if not simulation will crash with segmentation fault.
-        backend_limitation = -1 if backend == 'Quartus' else 0
+        if implemenation == 'stable':
+            inp_norm_bw = node.get_attr('inp_norm_t').precision.width
+            node.set_attr('exp_table_size', min(2**inp_norm_bw, exp_table_size))
 
-        if 2 ** (min(input_bw, table_bw) + backend_limitation) < table_size:
-            # If table size is too large w.r.t. input bitwidth and table bitwidth,
-            # reduce table size to avoid undefined behavior when cutting indices from,
-            # fixed point number.
-            node.set_attr('table_size', str(2 ** (min(input_bw, table_bw) + backend_limitation)))
-            if 2**input_bw < table_size:
-                # The warning message does not have to be looking like this, but you are asking
-                # 125 characters long line.
-                warnings.warn(
-                    (
-                        f'Softmax layer {node.name} table size is too large for input'
-                        f'bitwidth {input_bw}. Setting table size to {2**input_bw}.'
-                        'To avoid this warning, please increase input bitwidth or'
-                        'decrease table size.'
-                    ),
-                    stacklevel=1,
-                )
-            if 2**table_bw < table_size:
-                warnings.warn(
-                    (
-                        f'Softmax layer {node.name} table size is too large for input'
-                        f'bitwidth {input_bw}. Setting table size to {2**input_bw}.'
-                        'To avoid this warning, please increase input bitwidth or'
-                        'decrease table size.'
-                    ),
-                    stacklevel=1,
-                )
-            if backend == 'Quartus':
-                warnings.warn(
-                    (
-                        "Quartus backend's table size is half of 2^min(input_bw-1,table_bw-1)"
-                        ' instead of 2^min(input_bw,table_bw).'
-                    ),
-                    stacklevel=1,
-                )
-            return False
+            inv_inp_bw = node.get_attr('inv_inp_t').precision.width
+            node.set_attr('inv_table_size', min(2**inv_inp_bw, inv_table_size))
+
+        elif implemenation == 'latency':
+
+            input_bw = inp_layer.get_attr('result_t').precision.width
+            node.set_attr('exp_table_size', min(2**input_bw, exp_table_size))
+
+            accum_bw = node.get_attr('accum_t').precision.width
+            node.set_attr('inv_table_size', min(2**accum_bw, inv_table_size))
+
+        # One could try shrinking the size of legacy, but ignore it for now.
+        # Argmax doesn't use tables so the size is irrelevant in that case.
+
+        node.set_attr('table_sizes_checked', True)
+
+        return False
 
 
 def register_softmax__table_size_fix(backend):
