@@ -73,6 +73,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -160,7 +161,7 @@ To implement a custom layer in <code class="docutils literal notranslate"><span 
 <p>For concreteness, let’s say our custom layer <code class="docutils literal notranslate"><span class="pre">KReverse</span></code> is implemented in Keras and reverses the order of the last dimension of the input.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Keras implementation of a custom layer</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">KReverse</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Keras implementation of a hypothetical custom layer&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">'''Keras implementation of a hypothetical custom layer'''</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -176,7 +177,7 @@ To implement a custom layer in <code class="docutils literal notranslate"><span 
 We can define the equivalent layer in hls4ml <code class="docutils literal notranslate"><span class="pre">HReverse</span></code>, which inherits from <code class="docutils literal notranslate"><span class="pre">hls4ml.model.layers.Layer</span></code>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hls4ml layer implementation</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">HReverse</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;hls4ml implementation of a hypothetical custom layer&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">'''hls4ml implementation of a hypothetical custom layer'''</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_variable</span><span class="p">()</span>
@@ -193,12 +194,12 @@ In this case, there a single output with the same shape as the input.</p>
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Keras v2</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Keras v3</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Parser for converter</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_reverse_layer</span><span class="p">(</span><span class="n">keras_layer</span><span class="p">,</span> <span class="n">input_names</span><span class="p">,</span> <span class="n">input_shapes</span><span class="p">,</span> <span class="n">data_reader</span><span class="p">):</span>
     <span class="n">layer</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">layer</span><span class="p">[</span><span class="s1">&#39;class_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;KReverse&#39;</span>
-    <span class="n">layer</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keras_layer</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
-    <span class="n">layer</span><span class="p">[</span><span class="s1">&#39;n_in&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">layer</span><span class="p">[</span><span class="s1">'class_name'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'KReverse'</span>
+    <span class="n">layer</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="o">=</span> <span class="n">keras_layer</span><span class="p">[</span><span class="s1">'config'</span><span class="p">][</span><span class="s1">'name'</span><span class="p">]</span>
+    <span class="n">layer</span><span class="p">[</span><span class="s1">'n_in'</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">input_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">layer</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_names</span>
+        <span class="n">layer</span><span class="p">[</span><span class="s1">'inputs'</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_names</span>
 
     <span class="k">return</span> <span class="n">layer</span><span class="p">,</span> <span class="p">[</span><span class="n">shape</span> <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">input_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
 </pre></div>
@@ -207,19 +208,19 @@ In this case, there a single output with the same shape as the input.</p>
 
 <span class="c1"># Handlers are registered by metaclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">KReverseHandler</span><span class="p">(</span><span class="n">KerasV3LayerHandler</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Keras v3 layer handler for KReverse&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">'''Keras v3 layer handler for KReverse'''</span>
 
-    <span class="n">handles</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;KReverse&#39;</span><span class="p">,)</span>
+    <span class="n">handles</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'KReverse'</span><span class="p">,)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">layer</span><span class="p">:</span> <span class="s1">&#39;keras.Layer&#39;</span><span class="p">,</span>
-        <span class="n">in_tensors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="s1">&#39;KerasTensor&#39;</span><span class="p">],</span>
-        <span class="n">out_tensors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="s1">&#39;KerasTensor&#39;</span><span class="p">],</span>
+        <span class="n">layer</span><span class="p">:</span> <span class="s1">'keras.Layer'</span><span class="p">,</span>
+        <span class="n">in_tensors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="s1">'KerasTensor'</span><span class="p">],</span>
+        <span class="n">out_tensors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="s1">'KerasTensor'</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
         <span class="c1"># Only layer-specific parameters are needed.</span>
         <span class="c1"># Common parameters are automatically added in the base class.</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;KReverse is only supported for 2D tensors&#39;</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;n_in&#39;</span><span class="p">:</span> <span class="n">in_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]}</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'KReverse is only supported for 2D tensors'</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">'n_in'</span><span class="p">:</span> <span class="n">in_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]}</span>
 </pre></div>
 </div>
 </div></div>
@@ -227,7 +228,7 @@ In this case, there a single output with the same shape as the input.</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#ifndef NNET_REVERSE_H_</span>
 <span class="cp">#define NNET_REVERSE_H_</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;nnet_common.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"nnet_common.h"</span>
 
 <span class="k">namespace</span><span class="w"> </span><span class="nn">nnet</span><span class="w"> </span><span class="p">{</span>
 
@@ -252,12 +253,12 @@ In this case, there a single output with the same shape as the input.</p>
 </div>
 <p>Now, we can define the layer config and function call templates.
 These two templates determine how to populate the config template based on the layer attributes and the function call signature for the layer in HLS, respectively.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">rev_config_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;struct config</span><span class="si">{index}</span><span class="s2"> : nnet::reverse_config {{</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">rev_config_template</span> <span class="o">=</span> <span class="s2">"""struct config</span><span class="si">{index}</span><span class="s2"> : nnet::reverse_config {{</span>
 <span class="s2">    static const unsigned n_in = </span><span class="si">{n_in}</span><span class="s2">;</span>
-<span class="s2">}};</span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">}};</span><span class="se">\n</span><span class="s2">"""</span>
 
-<span class="n">rev_function_template</span> <span class="o">=</span> <span class="s1">&#39;nnet::reverse&lt;</span><span class="si">{input_t}</span><span class="s1">, </span><span class="si">{config}</span><span class="s1">&gt;(</span><span class="si">{input}</span><span class="s1">, </span><span class="si">{output}</span><span class="s1">);&#39;</span>
-<span class="n">rev_include_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;nnet_utils/nnet_reverse.h&#39;</span><span class="p">]</span>
+<span class="n">rev_function_template</span> <span class="o">=</span> <span class="s1">'nnet::reverse&lt;</span><span class="si">{input_t}</span><span class="s1">, </span><span class="si">{config}</span><span class="s1">&gt;(</span><span class="si">{input}</span><span class="s1">, </span><span class="si">{output}</span><span class="s1">);'</span>
+<span class="n">rev_include_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'nnet_utils/nnet_reverse.h'</span><span class="p">]</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">HReverseConfigTemplate</span><span class="p">(</span><span class="n">hls4ml</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">LayerConfigTemplate</span><span class="p">):</span>
@@ -284,13 +285,13 @@ These two templates determine how to populate the config template based on the l
 We also need to register the parser (a.k.a. the layer handler), the template passes, and HLS implementation source code with the particular backend.
 In this case, the HLS code is valid for both the Vivado and Quartus backends.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Register the converter for custom Keras layer</span>
-<span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">register_keras_v2_layer_handler</span><span class="p">(</span><span class="s1">&#39;KReverse&#39;</span><span class="p">,</span> <span class="n">parse_reverse_layer</span><span class="p">)</span>
+<span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">register_keras_v2_layer_handler</span><span class="p">(</span><span class="s1">'KReverse'</span><span class="p">,</span> <span class="n">parse_reverse_layer</span><span class="p">)</span>
 <span class="c1"># For keras v3, use register on subclassed KerasV3LayerHandler from hls4ml.converters.keras_v3._base instead</span>
 
-<span class="c1"># Register the hls4ml&#39;s IR layer</span>
-<span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">register_layer</span><span class="p">(</span><span class="s1">&#39;KReverse&#39;</span><span class="p">,</span> <span class="n">HReverse</span><span class="p">)</span>
+<span class="c1"># Register the hls4ml's IR layer</span>
+<span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">register_layer</span><span class="p">(</span><span class="s1">'KReverse'</span><span class="p">,</span> <span class="n">HReverse</span><span class="p">)</span>
 
-<span class="k">for</span> <span class="n">backend_id</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Vivado&#39;</span><span class="p">,</span> <span class="s1">&#39;Quartus&#39;</span><span class="p">]:</span>
+<span class="k">for</span> <span class="n">backend_id</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'Vivado'</span><span class="p">,</span> <span class="s1">'Quartus'</span><span class="p">]:</span>
     <span class="c1"># Register the optimization passes (if any)</span>
     <span class="n">backend</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">backend_id</span><span class="p">)</span>
 
@@ -299,7 +300,7 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.</p
     <span class="n">backend</span><span class="o">.</span><span class="n">register_template</span><span class="p">(</span><span class="n">HReverseFunctionTemplate</span><span class="p">)</span>
 
     <span class="c1"># Register HLS implementation</span>
-    <span class="n">backend</span><span class="o">.</span><span class="n">register_source</span><span class="p">(</span><span class="s1">&#39;/path/to/your/nnet_reverse.h&#39;</span><span class="p">)</span>
+    <span class="n">backend</span><span class="o">.</span><span class="n">register_source</span><span class="p">(</span><span class="s1">'/path/to/your/nnet_reverse.h'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Finally, we can actually test the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> custom layer compared to the Keras one.</p>
@@ -312,21 +313,21 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.</p
     <span class="p">]</span>
 <span class="p">)</span>
 
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">(</span><span class="mi">8</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">(</span><span class="mi">8</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'int32'</span><span class="p">)</span>
 <span class="n">kres</span> <span class="o">=</span> <span class="n">kmodel</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-<span class="k">for</span> <span class="n">backend_id</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Vivado&#39;</span><span class="p">,</span> <span class="s1">&#39;Quartus&#39;</span><span class="p">]:</span>
+<span class="k">for</span> <span class="n">backend_id</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'Vivado'</span><span class="p">,</span> <span class="s1">'Quartus'</span><span class="p">]:</span>
 
     <span class="n">hmodel</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span>
         <span class="n">kmodel</span><span class="p">,</span>
-        <span class="n">output_dir</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;hls4mlprj_extensions_</span><span class="si">{</span><span class="n">backend_id</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">),</span>
+        <span class="n">output_dir</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="sa">f</span><span class="s1">'hls4mlprj_extensions_</span><span class="si">{</span><span class="n">backend_id</span><span class="si">}</span><span class="s1">'</span><span class="p">),</span>
         <span class="n">backend</span><span class="o">=</span><span class="n">backend_id</span><span class="p">,</span>
-        <span class="n">io_type</span><span class="o">=</span><span class="s1">&#39;io_parallel&#39;</span><span class="p">,</span>
-        <span class="n">hls_config</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Model&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Precision&#39;</span><span class="p">:</span> <span class="s1">&#39;ap_int&lt;6&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;ReuseFactor&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span>
+        <span class="n">io_type</span><span class="o">=</span><span class="s1">'io_parallel'</span><span class="p">,</span>
+        <span class="n">hls_config</span><span class="o">=</span><span class="p">{</span><span class="s1">'Model'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'Precision'</span><span class="p">:</span> <span class="s1">'ap_int&lt;6&gt;'</span><span class="p">,</span> <span class="s1">'ReuseFactor'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span>
     <span class="p">)</span>
 
     <span class="n">hmodel</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
-    <span class="n">hres</span> <span class="o">=</span> <span class="n">hmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">))</span>
+    <span class="n">hres</span> <span class="o">=</span> <span class="n">hmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">))</span>
 
     <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_equal</span><span class="p">(</span><span class="n">kres</span><span class="p">,</span> <span class="n">hres</span><span class="p">)</span>
 </pre></div>

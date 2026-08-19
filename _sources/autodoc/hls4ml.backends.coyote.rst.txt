@@ -1,0 +1,37 @@
+hls4ml.backends.coyote package
+==============================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hls4ml.backends.coyote.passes
+
+Submodules
+----------
+
+hls4ml.backends.coyote.coyote\_backend module
+---------------------------------------------
+
+.. automodule:: hls4ml.backends.coyote.coyote_backend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hls4ml.backends.coyote.coyote\_overlay module
+---------------------------------------------
+
+.. automodule:: hls4ml.backends.coyote.coyote_overlay
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.coyote
+   :members:
+   :undoc-members:
+   :show-inheritance:

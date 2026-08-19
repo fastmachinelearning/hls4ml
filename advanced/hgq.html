@@ -71,6 +71,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -170,14 +171,14 @@ HGQ2 is a major improvement over HGQ with more supported layers, more quantizer 
 <span class="c1"># These values are the defaults, just for demonstration purposes here</span>
 <span class="k">with</span> <span class="p">(</span>
    <span class="c1"># Configuration scope for setting the default quantization type and overflow mode</span>
-   <span class="c1"># The second configuration scope overrides the first one for the &#39;datalane&#39; place</span>
-   <span class="n">QuantizerConfigScope</span><span class="p">(</span><span class="n">place</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">default_q_type</span><span class="o">=</span><span class="s1">&#39;kbi&#39;</span><span class="p">,</span> <span class="n">overflow_mode</span><span class="o">=</span><span class="s1">&#39;SAT_SYM&#39;</span><span class="p">),</span>
+   <span class="c1"># The second configuration scope overrides the first one for the 'datalane' place</span>
+   <span class="n">QuantizerConfigScope</span><span class="p">(</span><span class="n">place</span><span class="o">=</span><span class="s1">'all'</span><span class="p">,</span> <span class="n">default_q_type</span><span class="o">=</span><span class="s1">'kbi'</span><span class="p">,</span> <span class="n">overflow_mode</span><span class="o">=</span><span class="s1">'SAT_SYM'</span><span class="p">),</span>
    <span class="c1"># Configuration scope for enabling EBOPs and setting the beta0 value</span>
-   <span class="n">QuantizerConfigScope</span><span class="p">(</span><span class="n">place</span><span class="o">=</span><span class="s1">&#39;datalane&#39;</span><span class="p">,</span> <span class="n">default_q_type</span><span class="o">=</span><span class="s1">&#39;kif&#39;</span><span class="p">,</span> <span class="n">overflow_mode</span><span class="o">=</span><span class="s1">&#39;WRAP&#39;</span><span class="p">),</span>
+   <span class="n">QuantizerConfigScope</span><span class="p">(</span><span class="n">place</span><span class="o">=</span><span class="s1">'datalane'</span><span class="p">,</span> <span class="n">default_q_type</span><span class="o">=</span><span class="s1">'kif'</span><span class="p">,</span> <span class="n">overflow_mode</span><span class="o">=</span><span class="s1">'WRAP'</span><span class="p">),</span>
    <span class="n">LayerConfigScope</span><span class="p">(</span><span class="n">enable_ebops</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">beta0</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">),</span>
 <span class="p">):</span>
    <span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Sequential</span><span class="p">([</span>
-      <span class="n">QConv2D</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">),</span>
+      <span class="n">QConv2D</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s1">'relu'</span><span class="p">),</span>
       <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">MaxPooling2D</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
       <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span>
       <span class="n">QDense</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
@@ -187,7 +188,7 @@ HGQ2 is a major improvement over HGQ with more supported layers, more quantizer 
 
 <span class="n">model_hls</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 <span class="c1"># Model-wise precision propagation is done automatically for HGQ models for bit-exactness</span>
-<span class="c1"># Do NOT pass precision config if you don&#39;t know what you are doing</span>
+<span class="c1"># Do NOT pass precision config if you don't know what you are doing</span>
 
 <span class="n">model_hls</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
 </pre></div>

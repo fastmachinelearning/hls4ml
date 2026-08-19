@@ -1,0 +1,21 @@
+hls4ml.backends.coyote.passes package
+=====================================
+
+Submodules
+----------
+
+hls4ml.backends.coyote.passes.fifo\_depth\_optimization module
+--------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.coyote.passes.fifo_depth_optimization
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.coyote.passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

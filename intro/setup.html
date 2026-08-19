@@ -77,6 +77,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -221,8 +222,8 @@ Here we give line-by-line instructions to demonstrate the general workflow.</p>
 
 <span class="c1"># Construct a basic keras model</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
-<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,),</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
-<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,),</span> <span class="n">activation</span><span class="o">=</span><span class="s1">'relu'</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">'relu'</span><span class="p">))</span>
 
 <span class="c1"># This is where you would train the model in a real-world scenario</span>
 
@@ -236,7 +237,7 @@ Here we give line-by-line instructions to demonstrate the general workflow.</p>
 <span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span>
    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
    <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-   <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;Vitis&#39;</span>
+   <span class="n">backend</span><span class="o">=</span><span class="s1">'Vitis'</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -259,7 +260,7 @@ Here we give line-by-line instructions to demonstrate the general workflow.</p>
 <span class="n">hls_model</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
 
 <span class="c1"># Optional: print out the report</span>
-<span class="n">hls4ml</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">read_vivado_report</span><span class="p">(</span><span class="s1">&#39;my-hls-test&#39;</span><span class="p">)</span>
+<span class="n">hls4ml</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">read_vivado_report</span><span class="p">(</span><span class="s1">'my-hls-test'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Done! You’ve built your first project using <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>! To learn more about our various API functionalities, check out our tutorials <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">here</a>.</p>

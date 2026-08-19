@@ -74,6 +74,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -145,10 +146,10 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 
 <span class="c1"># Save a model to some path</span>
-<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;some/path/my_hls4ml_model.fml&#39;</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">'some/path/my_hls4ml_model.fml'</span><span class="p">)</span>
 
 <span class="c1"># Load a model from a file</span>
-<span class="n">loaded_model</span> <span class="o">=</span> <span class="n">load_saved_model</span><span class="p">(</span><span class="s1">&#39;some/path/my_hls4ml_model.fml&#39;</span><span class="p">)</span>
+<span class="n">loaded_model</span> <span class="o">=</span> <span class="n">load_saved_model</span><span class="p">(</span><span class="s1">'some/path/my_hls4ml_model.fml'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Saved model will have a <code class="docutils literal notranslate"><span class="pre">.fml</span></code> extension, but is in fact a gzipped tar archive. Loaded model can be used in the same way as the original one. This includes modification of certain config parameters, for example output directory, layer reuse factor etc.</p>
@@ -159,13 +160,13 @@
 <p>To link a model use the following API:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.converters</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_from_keras_model</span><span class="p">,</span> <span class="n">link_existing_project</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;/some/path/&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s1">'/some/path/'</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 
 <span class="c1"># Generate the project files and write them to some path</span>
 <span class="n">model</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
 
 <span class="c1"># Later on, link this path to the Python runtime</span>
-<span class="n">linked_model</span> <span class="o">=</span> <span class="n">link_existing_project</span><span class="p">(</span><span class="s1">&#39;some/path/&#39;</span><span class="p">)</span>
+<span class="n">linked_model</span> <span class="o">=</span> <span class="n">link_existing_project</span><span class="p">(</span><span class="s1">'some/path/'</span><span class="p">)</span>
 <span class="n">linked_model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
 <span class="n">linked_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">linked_model</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>

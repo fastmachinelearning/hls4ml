@@ -77,6 +77,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -157,62 +158,62 @@
 </div>
 <p>first publication:</p>
 <div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">Duarte:2018ite</span><span class="p">,</span>
-<span class="w">    </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Duarte, Javier and others&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{Fast inference of deep neural networks in FPGAs for particle physics}&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;1804.06913&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;arXiv&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;physics.ins-det&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;FERMILAB-PUB-18-089-E&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;10.1088/1748-0221/13/07/P07027&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;JINST&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">volume</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;13&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">number</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;07&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">pages</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;P07027&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2018&quot;</span>
+<span class="w">    </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"Duarte, Javier and others"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"{Fast inference of deep neural networks in FPGAs for particle physics}"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"1804.06913"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"arXiv"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"physics.ins-det"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"FERMILAB-PUB-18-089-E"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"10.1088/1748-0221/13/07/P07027"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"JINST"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">volume</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"13"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">number</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"07"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">pages</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"P07027"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2018"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>and the latest overview paper:</p>
 <div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">Schulte:2025mai</span><span class="p">,</span>
-<span class="w">        </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Schulte, Jan-Frederik and others&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{hls4ml: A Flexible, Open-Source Platform for Deep Learning Acceleration on Reconfigurable Hardware}&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2512.01463&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;arXiv&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;cs.AR&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;FERMILAB-PUB-25-0890-CSAID-ETD-PPD&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2026&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;10.1145/3801979&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;ACM Trans. Reconfigurable Technol. Syst.&quot;</span>
-<span class="w">        </span><span class="nv">volume</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="err">&quot;19&quot;,</span>
-<span class="w">        </span><span class="err">pages</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="err">&quot;19&quot;,</span>
+<span class="w">        </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"Schulte, Jan-Frederik and others"</span><span class="p">,</span>
+<span class="w">        </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"{hls4ml: A Flexible, Open-Source Platform for Deep Learning Acceleration on Reconfigurable Hardware}"</span><span class="p">,</span>
+<span class="w">        </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2512.01463"</span><span class="p">,</span>
+<span class="w">        </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"arXiv"</span><span class="p">,</span>
+<span class="w">        </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"cs.AR"</span><span class="p">,</span>
+<span class="w">        </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"FERMILAB-PUB-25-0890-CSAID-ETD-PPD"</span><span class="p">,</span>
+<span class="w">        </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2026"</span><span class="p">,</span>
+<span class="w">        </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"10.1145/3801979"</span><span class="p">,</span>
+<span class="w">        </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"ACM Trans. Reconfigurable Technol. Syst."</span>
+<span class="w">        </span><span class="nv">volume</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="err">"19",</span>
+<span class="w">        </span><span class="err">pages</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="err">"19",</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>Additionally, if you use specific features developed in later papers, please cite those as well. For example, CNNs:</p>
 <div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">Aarrestad:2021zos</span><span class="p">,</span>
-<span class="w">    </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Aarrestad, Thea and others&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{Fast convolutional neural networks on FPGAs with hls4ml}&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2101.05108&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;arXiv&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;cs.LG&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;FERMILAB-PUB-21-130-SCD&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;10.1088/2632-2153/ac0ea1&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Mach. Learn. Sci. Tech.&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">volume</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">number</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;4&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">pages</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;045015&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2021&quot;</span>
+<span class="w">    </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"Aarrestad, Thea and others"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"{Fast convolutional neural networks on FPGAs with hls4ml}"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2101.05108"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"arXiv"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"cs.LG"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"FERMILAB-PUB-21-130-SCD"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"10.1088/2632-2153/ac0ea1"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"Mach. Learn. Sci. Tech."</span><span class="p">,</span>
+<span class="w">    </span><span class="na">volume</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">number</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"4"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">pages</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"045015"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2021"</span>
 <span class="p">}</span>
 <span class="nc">@article</span><span class="p">{</span><span class="nl">Ghielmetti:2022ndm</span><span class="p">,</span>
-<span class="w">    </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Ghielmetti, Nicol\`{o} and others&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{Real-time semantic segmentation on FPGAs for autonomous vehicles with hls4ml}&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2205.07690&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;arXiv&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;cs.CV&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;FERMILAB-PUB-22-435-PPD&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;10.1088/2632-2153/ac9cb5&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="s">&quot;Mach. Learn. Sci. Tech.&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2022&quot;</span>
+<span class="w">    </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"Ghielmetti, Nicol\`{o} and others"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"{Real-time semantic segmentation on FPGAs for autonomous vehicles with hls4ml}"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2205.07690"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"arXiv"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"cs.CV"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"FERMILAB-PUB-22-435-PPD"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"10.1088/2632-2153/ac9cb5"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="s">"Mach. Learn. Sci. Tech."</span><span class="p">,</span>
+<span class="w">    </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2022"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -230,28 +231,28 @@
 </div>
 <p>binary/ternary networks:</p>
 <div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">Loncar:2020hqp</span><span class="p">,</span>
-<span class="w">    </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Ngadiuba, Jennifer and others&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{Compressing deep neural networks on FPGAs to binary and ternary precision with HLS4ML}&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2003.06308&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;arXiv&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;cs.LG&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;FERMILAB-PUB-20-167-PPD-SCD&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;10.1088/2632-2153/aba042&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Mach. Learn. Sci. Tech.&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">volume</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">pages</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;015001&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2021&quot;</span>
+<span class="w">    </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"Ngadiuba, Jennifer and others"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"{Compressing deep neural networks on FPGAs to binary and ternary precision with HLS4ML}"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2003.06308"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"arXiv"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"cs.LG"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">reportNumber</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"FERMILAB-PUB-20-167-PPD-SCD"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">doi</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"10.1088/2632-2153/aba042"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"Mach. Learn. Sci. Tech."</span><span class="p">,</span>
+<span class="w">    </span><span class="na">volume</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">pages</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"015001"</span><span class="p">,</span>
+<span class="w">    </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2021"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>optimization API:</p>
 <div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">Ramhorst:2023fpga</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;Benjamin Ramhorst and others&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;{FPGA Resource-aware Structured Pruning for Real-Time Neural Networks}&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2308.05170&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;arXiv&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;cs.AR&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;2023&quot;</span>
+<span class="w">  </span><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"Benjamin Ramhorst and others"</span><span class="p">,</span>
+<span class="w">  </span><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"{FPGA Resource-aware Structured Pruning for Real-Time Neural Networks}"</span><span class="p">,</span>
+<span class="w">  </span><span class="na">eprint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2308.05170"</span><span class="p">,</span>
+<span class="w">  </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"arXiv"</span><span class="p">,</span>
+<span class="w">  </span><span class="na">primaryClass</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"cs.AR"</span><span class="p">,</span>
+<span class="w">  </span><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"2023"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -434,6 +435,11 @@ Please use the following text for this acknowledgment:</p>
 </div>
 </li>
 <li class="sphinx-contributors_list__item"><div class="sphinx-contributors_contributor docutils container">
+<a class="reference external image-reference" href="https://github.com/HamzaEzzRa"><img alt="HamzaEzzRa" class="sphinx-contributors_contributor__image" src="https://avatars.githubusercontent.com/u/55510541?v=4" /></a>
+<p class="sphinx-contributors_contributor__username"><a class="reference external" href="https://github.com/HamzaEzzRa">HamzaEzzRa</a></p>
+</div>
+</li>
+<li class="sphinx-contributors_list__item"><div class="sphinx-contributors_contributor docutils container">
 <a class="reference external image-reference" href="https://github.com/nikiburggraf"><img alt="nikiburggraf" class="sphinx-contributors_contributor__image" src="https://avatars.githubusercontent.com/u/159066082?v=4" /></a>
 <p class="sphinx-contributors_contributor__username"><a class="reference external" href="https://github.com/nikiburggraf">nikiburggraf</a></p>
 </div>
@@ -446,11 +452,6 @@ Please use the following text for this acknowledgment:</p>
 <li class="sphinx-contributors_list__item"><div class="sphinx-contributors_contributor docutils container">
 <a class="reference external image-reference" href="https://github.com/LarocheC"><img alt="LarocheC" class="sphinx-contributors_contributor__image" src="https://avatars.githubusercontent.com/u/14241885?v=4" /></a>
 <p class="sphinx-contributors_contributor__username"><a class="reference external" href="https://github.com/LarocheC">LarocheC</a></p>
-</div>
-</li>
-<li class="sphinx-contributors_list__item"><div class="sphinx-contributors_contributor docutils container">
-<a class="reference external image-reference" href="https://github.com/HamzaEzzRa"><img alt="HamzaEzzRa" class="sphinx-contributors_contributor__image" src="https://avatars.githubusercontent.com/u/55510541?v=4" /></a>
-<p class="sphinx-contributors_contributor__username"><a class="reference external" href="https://github.com/HamzaEzzRa">HamzaEzzRa</a></p>
 </div>
 </li>
 <li class="sphinx-contributors_list__item"><div class="sphinx-contributors_contributor docutils container">

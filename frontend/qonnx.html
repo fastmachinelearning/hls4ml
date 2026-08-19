@@ -74,6 +74,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -146,7 +147,7 @@ $<span class="w"> </span>qonnx_clean<span class="w"> </span>filename_clean_chann
 </pre></div>
 </div>
 <p>Things can similarly be done in python. This method is usually easier if you additionally need to call other transforms. An example is given below which also calls the <code class="docutils literal notranslate"><span class="pre">GemmToMatMul</span></code> converter:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ModelWrapper</span><span class="p">(</span><span class="s1">&#39;filename.onnx&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ModelWrapper</span><span class="p">(</span><span class="s1">'filename.onnx'</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">qonnx</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">cleanup</span><span class="o">.</span><span class="n">cleanup_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">ConvertToChannelsLastAndClean</span><span class="p">())</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">GemmToMatMul</span><span class="p">())</span>
@@ -156,14 +157,14 @@ $<span class="w"> </span>qonnx_clean<span class="w"> </span>filename_clean_chann
 <p><code class="docutils literal notranslate"><span class="pre">ModelWrapper</span></code> is defined in <code class="docutils literal notranslate"><span class="pre">qonnx.core.modelwrapper</span></code>. More information on the <code class="docutils literal notranslate"><span class="pre">qonnx</span></code> package can be found at the <a class="reference external" href="https://qonnx.readthedocs.io/en/latest/index.html">QONNX documentation page</a>.</p>
 <p>The next steps are very similar to if you are using a Keras model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">config_from_onnx_model</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;Vitis&#39;</span><span class="p">,</span> <span class="n">default_precision</span><span class="o">=</span><span class="s1">&#39;fixed&lt;16,6&gt;&#39;</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">'Vitis'</span><span class="p">,</span> <span class="n">default_precision</span><span class="o">=</span><span class="s1">'fixed&lt;16,6&gt;'</span>
 <span class="p">)</span>
 <span class="c1"># modify the config as desired</span>
 <span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_onnx_model</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span>
-    <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;my-hls-test&#39;</span><span class="p">,</span>
-    <span class="n">io_type</span><span class="o">=</span><span class="s1">&#39;io_stream&#39;</span><span class="p">,</span>
-    <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;Vitis&#39;</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="o">=</span><span class="s1">'my-hls-test'</span><span class="p">,</span>
+    <span class="n">io_type</span><span class="o">=</span><span class="s1">'io_stream'</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="s1">'Vitis'</span><span class="p">,</span>
     <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">hls_model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>

@@ -71,6 +71,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -284,7 +285,7 @@ SNN inference, call the compiled model once per timestep and pass exactly
 <code class="docutils literal notranslate"><span class="pre">window_size</span></code> timesteps for each independent sequence:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">last</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">timesteps</span><span class="p">):</span>
-    <span class="n">x_step</span> <span class="o">=</span> <span class="n">x_sequence</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">x_step</span> <span class="o">=</span> <span class="n">x_sequence</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"float32"</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
     <span class="n">last</span> <span class="o">=</span> <span class="n">hls_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_step</span><span class="p">)</span>
 </pre></div>
 </div>

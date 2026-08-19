@@ -12,6 +12,14 @@ hls4ml.writer.catapult\_writer module
    :undoc-members:
    :show-inheritance:
 
+hls4ml.writer.coyote\_writer module
+-----------------------------------
+
+.. automodule:: hls4ml.writer.coyote_writer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hls4ml.writer.libero\_writer module
 -----------------------------------
 

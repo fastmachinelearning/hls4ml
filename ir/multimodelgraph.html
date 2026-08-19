@@ -71,6 +71,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -156,14 +157,14 @@ The central concept here is the division of a larger model into multiple smaller
 <section id="keras-example">
 <h2>Keras Example<a class="headerlink" href="#keras-example" title="Link to this heading"></a></h2>
 <p>For example, when converting a Keras model, you can specify the layers at which to split the model directly:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">'model'</span><span class="p">)</span>
 
 <span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-    <span class="n">backend</span><span class="o">=</span><span class="s1">&#39;vitis&#39;</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="s1">'vitis'</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">hls_multigraph_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to_multi_model_graph</span><span class="p">(</span><span class="n">hls_model</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;layer3&#39;</span><span class="p">,</span> <span class="s1">&#39;layer7&#39;</span><span class="p">])</span>
+<span class="n">hls_multigraph_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to_multi_model_graph</span><span class="p">(</span><span class="n">hls_model</span><span class="p">,</span> <span class="p">[</span><span class="s1">'layer3'</span><span class="p">,</span> <span class="s1">'layer7'</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Here, the <code class="docutils literal notranslate"><span class="pre">hls_multigraph_model</span></code> is a <code class="docutils literal notranslate"><span class="pre">MultiModelGraph</span></code> containing three subgraphs. Each subgraph is a <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> accessible via indexing: <code class="docutils literal notranslate"><span class="pre">hls_multigraph_model[i]</span></code>.</p>
@@ -198,10 +199,10 @@ The central concept here is the division of a larger model into multiple smaller
 <span id="mmg-predict-method"></span><h3><code class="docutils literal notranslate"><span class="pre">predict</span></code> method<a class="headerlink" href="#predict-method" title="Link to this heading"></a></h3>
 <p>Performs a forward pass through the chained bridge file using the C-simulation (<code class="docutils literal notranslate"><span class="pre">sim='csim'</span></code>), providing 1-to-1 output with the original model. You can also leverage RTL simulation (<code class="docutils literal notranslate"><span class="pre">sim='rtl'</span></code>) to perform the forward pass at the register-transfer level. In this case, a Verilog testbench is dynamically generated and executed against the stitched IP design, providing behavioral simulation to accurately verify latency and output at the hardware level. Note that the input data for the RTL simulation must have a single batch dimension.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Perform prediction using C-simulation (default)</span>
-<span class="n">y_csim</span> <span class="o">=</span> <span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">sim</span><span class="o">=</span><span class="s1">&#39;csim&#39;</span><span class="p">)</span>
+<span class="n">y_csim</span> <span class="o">=</span> <span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">sim</span><span class="o">=</span><span class="s1">'csim'</span><span class="p">)</span>
 
 <span class="c1"># Perform prediction using RTL simulation (behavioral)</span>
-<span class="n">y_rtl</span> <span class="o">=</span> <span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">sim</span><span class="o">=</span><span class="s1">&#39;rtl&#39;</span><span class="p">)</span>
+<span class="n">y_rtl</span> <span class="o">=</span> <span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">sim</span><span class="o">=</span><span class="s1">'rtl'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

@@ -69,6 +69,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -145,6 +146,14 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#module-hls4ml.backends.catapult.catapult_backend">hls4ml.backends.catapult.catapult_backend module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#module-hls4ml.backends.catapult.catapult_types">hls4ml.backends.catapult.catapult_types module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#module-hls4ml.backends.catapult">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.coyote.html">hls4ml.backends.coyote package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.coyote.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.coyote.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.coyote.html#module-hls4ml.backends.coyote.coyote_backend">hls4ml.backends.coyote.coyote_backend module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.coyote.html#module-hls4ml.backends.coyote.coyote_overlay">hls4ml.backends.coyote.coyote_overlay module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.coyote.html#module-hls4ml.backends.coyote">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.fpga.html">hls4ml.backends.fpga package</a><ul>
@@ -1144,6 +1153,21 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_test_bench"><code class="docutils literal notranslate"><span class="pre">CatapultWriter.write_test_bench()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_weights"><code class="docutils literal notranslate"><span class="pre">CatapultWriter.write_weights()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_yml"><code class="docutils literal notranslate"><span class="pre">CatapultWriter.write_yml()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.writer.html#module-hls4ml.writer.coyote_writer">hls4ml.writer.coyote_writer module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.restructure_dir"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter.restructure_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_build_script"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter.write_build_script()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_coyote"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter.write_coyote()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_hls"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter.write_hls()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_host_code"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter.write_host_code()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_model_wrapper"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter.write_model_wrapper()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_nnet_utils_overrides"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter.write_nnet_utils_overrides()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_project_cpp"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter.write_project_cpp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_test_bench"><code class="docutils literal notranslate"><span class="pre">CoyoteWriter.write_test_bench()</span></code></a></li>
 </ul>
 </li>
 </ul>

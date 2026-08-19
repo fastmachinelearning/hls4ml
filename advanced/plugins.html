@@ -71,6 +71,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -162,8 +163,8 @@ list (<code class="docutils literal notranslate"><span class="pre">:</span></cod
 <p>A minimal plugin registers both a backend and an accompanying writer. The example below
 shows how the <code class="docutils literal notranslate"><span class="pre">aie4ml</span></code> package exposes its backend via <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> and a <code class="docutils literal notranslate"><span class="pre">register</span></code>
 function:</p>
-<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[project.entry-points.</span><span class="s2">&quot;hls4ml.backends&quot;</span><span class="k">]</span>
-<span class="n">AIE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;aie4ml.plugin:register&quot;</span>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[project.entry-points.</span><span class="s2">"hls4ml.backends"</span><span class="k">]</span>
+<span class="n">AIE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"aie4ml.plugin:register"</span>
 </pre></div>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># aie4ml/plugin.py</span>
@@ -171,8 +172,8 @@ function:</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">aie4ml.writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">AIEWriter</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">register_backend</span><span class="p">,</span> <span class="n">register_writer</span><span class="p">):</span>
-    <span class="n">register_writer</span><span class="p">(</span><span class="s1">&#39;AIE&#39;</span><span class="p">,</span> <span class="n">AIEWriter</span><span class="p">)</span>
-    <span class="n">register_backend</span><span class="p">(</span><span class="s1">&#39;AIE&#39;</span><span class="p">,</span> <span class="n">AIEBackend</span><span class="p">)</span>
+    <span class="n">register_writer</span><span class="p">(</span><span class="s1">'AIE'</span><span class="p">,</span> <span class="n">AIEWriter</span><span class="p">)</span>
+    <span class="n">register_backend</span><span class="p">(</span><span class="s1">'AIE'</span><span class="p">,</span> <span class="n">AIEBackend</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>When the plugin is installed, <code class="docutils literal notranslate"><span class="pre">hls4ml.backends.get_available_backends()</span></code> will report the new

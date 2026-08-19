@@ -69,6 +69,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -180,11 +181,11 @@
        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
        <span class="bp">self</span><span class="o">.</span><span class="n">dense1</span> <span class="o">=</span> <span class="n">PQDense</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span>
                                  <span class="n">in_quant_bits</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-       <span class="bp">self</span><span class="o">.</span><span class="n">relu1</span> <span class="o">=</span> <span class="n">PQActivation</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">)</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">relu1</span> <span class="o">=</span> <span class="n">PQActivation</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"relu"</span><span class="p">)</span>
        <span class="bp">self</span><span class="o">.</span><span class="n">dense2</span> <span class="o">=</span> <span class="n">PQDense</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
-       <span class="bp">self</span><span class="o">.</span><span class="n">relu2</span> <span class="o">=</span> <span class="n">PQActivation</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">)</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">relu2</span> <span class="o">=</span> <span class="n">PQActivation</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"relu"</span><span class="p">)</span>
        <span class="bp">self</span><span class="o">.</span><span class="n">dense3</span> <span class="o">=</span> <span class="n">PQDense</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
-       <span class="bp">self</span><span class="o">.</span><span class="n">relu3</span> <span class="o">=</span> <span class="n">PQActivation</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">)</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">relu3</span> <span class="o">=</span> <span class="n">PQActivation</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"relu"</span><span class="p">)</span>
        <span class="bp">self</span><span class="o">.</span><span class="n">dense4</span> <span class="o">=</span> <span class="n">PQDense</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span>
                              <span class="n">quantize_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                              <span class="n">out_quant_bits</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
@@ -203,10 +204,10 @@
 
 <span class="o">...</span> <span class="c1"># Training, evaluation, and anything else you want to do with the model</span>
 
-<span class="n">hls_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Model&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;ChannelsLastConversion&#39;</span><span class="p">:</span> <span class="s1">&#39;full&#39;</span><span class="p">},</span> <span class="s1">&#39;InputShape&#39;</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">,}</span>
+<span class="n">hls_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'Model'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ChannelsLastConversion'</span><span class="p">:</span> <span class="s1">'full'</span><span class="p">},</span> <span class="s1">'InputShape'</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">,}</span>
 <span class="n">hls_model</span> <span class="o">=</span> <span class="n">convert_from_pytorch_model</span><span class="p">(</span><span class="n">PQmodel</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 <span class="c1"># Model-wise precision propagation is done automatically for PQuantML models for bit-exactness</span>
-<span class="c1"># Do NOT pass precision config if you don&#39;t know what you are doing</span>
+<span class="c1"># Do NOT pass precision config if you don't know what you are doing</span>
 <span class="c1"># Note: Model-wise precision propagation needs ChannelsLastConversion to be active in order to work correctly with PyTorch models</span>
 
 <span class="n">hls_model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>

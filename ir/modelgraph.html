@@ -71,6 +71,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -146,10 +147,10 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hls4ml</span>
 
 <span class="c1"># Generate a simple configuration from keras model</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">'name'</span><span class="p">)</span>
 
 <span class="c1"># Convert to a ModelGraph instance (hls_model)</span>
-<span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;test_prj&#39;</span><span class="p">)</span>
+<span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s1">'test_prj'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This object can be used to perform common simulation and firmware-generation tasks. Here is a list of important user-facing methods:</p>
@@ -195,7 +196,7 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">hls_model</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
 
 <span class="c1">#You can also read the report of the build</span>
-<span class="n">hls4ml</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">read_vivado_report</span><span class="p">(</span><span class="s1">&#39;hls4ml_prj&#39;</span><span class="p">)</span>
+<span class="n">hls4ml</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">read_vivado_report</span><span class="p">(</span><span class="s1">'hls4ml_prj'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The returned <code class="docutils literal notranslate"><span class="pre">report</span></code> object will contain the result of build step, which may include C-simulation results, HLS synthesis estimates, co-simulation latency etc, depending on the backend used.</p>

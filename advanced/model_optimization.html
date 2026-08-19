@@ -71,6 +71,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -156,15 +157,15 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 <span class="n">y_baseline</span> <span class="o">=</span> <span class="n">baseline_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 <span class="n">acc_base</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_baseline</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">sparsity</span><span class="p">,</span> <span class="n">layers</span> <span class="o">=</span> <span class="n">get_model_sparsity</span><span class="p">(</span><span class="n">baseline_model</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Baseline Keras accuracy: </span><span class="si">{</span><span class="n">acc_base</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Baseline Keras sparsity, overall: </span><span class="si">{</span><span class="n">sparsity</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Baseline Keras sparsity, per-layer: </span><span class="si">{</span><span class="n">layers</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Baseline Keras accuracy: </span><span class="si">{</span><span class="n">acc_base</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Baseline Keras sparsity, overall: </span><span class="si">{</span><span class="n">sparsity</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Baseline Keras sparsity, per-layer: </span><span class="si">{</span><span class="n">layers</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 <span class="c1"># Defining training parameters</span>
 <span class="c1"># Epochs refers to the number of maximum epochs to train a model, after imposing some sparsity</span>
 <span class="c1"># If the model is pre-trained, a good rule of thumb is to use between a 1/3 and 1/2 of the number of epochs used to train baseline model</span>
 <span class="n">epochs</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
-<span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;accuracy&#39;</span>
+<span class="n">metric</span> <span class="o">=</span> <span class="s1">'accuracy'</span>
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">()</span>
 <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">CategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -193,9 +194,9 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 <span class="n">y_optimized</span> <span class="o">=</span> <span class="n">optimized_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 <span class="n">acc_optimized</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_optimized</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">sparsity</span><span class="p">,</span> <span class="n">layers</span> <span class="o">=</span> <span class="n">get_model_sparsity</span><span class="p">(</span><span class="n">optimized_model</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimized Keras accuracy: </span><span class="si">{</span><span class="n">acc_optimized</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimized Keras sparsity, overall: </span><span class="si">{</span><span class="n">sparsity</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Opimized Keras sparsity, per-layer: </span><span class="si">{</span><span class="n">layers</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Optimized Keras accuracy: </span><span class="si">{</span><span class="n">acc_optimized</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Optimized Keras sparsity, overall: </span><span class="si">{</span><span class="n">sparsity</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Opimized Keras sparsity, per-layer: </span><span class="si">{</span><span class="n">layers</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In a similar manner, it is possible to target GPU FLOPs or Vivado DSPs. However, in that case, sparsity is not equivalent to model sparsity.
@@ -213,7 +214,7 @@ Instead, it is the sparsity of the target resource. As an example: Starting with
 <span class="c1"># Evaluate optimized model</span>
 <span class="n">y_optimized</span> <span class="o">=</span> <span class="n">optimized_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 <span class="n">acc_optimized</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_optimized</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimized Keras accuracy: </span><span class="si">{</span><span class="n">acc_optimized</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Optimized Keras accuracy: </span><span class="si">{</span><span class="n">acc_optimized</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 <span class="c1"># Note the difference in total number of parameters</span>
 <span class="c1"># Optimizing GPU FLOPs is equivalent to removing entire structures (filters, neurons) from the network</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">baseline_model</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
@@ -230,10 +231,10 @@ Instead, it is the sparsity of the target resource. As an example: Starting with
 
 <span class="c1"># Create hls4ml config</span>
 <span class="n">default_reuse_factor</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="n">default_precision</span> <span class="o">=</span> <span class="s1">&#39;ac_fixed&lt;16, 6&gt;&#39;</span>
-<span class="n">hls_config</span> <span class="o">=</span> <span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">baseline_model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">default_precision</span><span class="o">=</span><span class="n">default_precision</span><span class="p">,</span> <span class="n">default_reuse_factor</span><span class="o">=</span><span class="n">default_reuse_factor</span><span class="p">)</span>
-<span class="n">hls_config</span><span class="p">[</span><span class="s1">&#39;IOType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;io_parallel&#39;</span>
- <span class="n">hls_config</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">][</span><span class="s1">&#39;Strategy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Resource&#39;</span>   <span class="c1"># Strategy must be present for optimisation</span>
+<span class="n">default_precision</span> <span class="o">=</span> <span class="s1">'ac_fixed&lt;16, 6&gt;'</span>
+<span class="n">hls_config</span> <span class="o">=</span> <span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">baseline_model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">default_precision</span><span class="o">=</span><span class="n">default_precision</span><span class="p">,</span> <span class="n">default_reuse_factor</span><span class="o">=</span><span class="n">default_reuse_factor</span><span class="p">)</span>
+<span class="n">hls_config</span><span class="p">[</span><span class="s1">'IOType'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'io_parallel'</span>
+ <span class="n">hls_config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Resource'</span>   <span class="c1"># Strategy must be present for optimisation</span>
 
 <span class="c1"># Optimize model</span>
 <span class="c1"># Note the change from ParameterEstimator to VivadoDSPEstimator</span>
@@ -246,13 +247,13 @@ Instead, it is the sparsity of the target resource. As an example: Starting with
 <span class="c1"># Evaluate optimized model</span>
 <span class="n">y_optimized</span> <span class="o">=</span> <span class="n">optimized_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 <span class="n">acc_optimized</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_optimized</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimized Keras accuracy: </span><span class="si">{</span><span class="n">acc_optimized</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Optimized Keras accuracy: </span><span class="si">{</span><span class="n">acc_optimized</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>There are two more Vivado “optimizers” - VivadoFFEstimator, aimed at reducing register utilization and VivadoMultiObjectiveEstimator, aimed at optimizing BRAM and DSP utilization.
 Note, to ensure DSPs are optimized, “unrolled” Dense multiplication must be used before synthesizing HLS, by modifying the config:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">hls_config</span> <span class="o">=</span> <span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">optimized_model</span><span class="p">)</span>
-<span class="n">hls_config</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">][</span><span class="s1">&#39;Strategy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Unrolled&#39;</span>
+<span class="n">hls_config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Unrolled'</span>
 <span class="c1"># Any addition hls4ml config, reuse factor etc...</span>
 </pre></div>
 </div>

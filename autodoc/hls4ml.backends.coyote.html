@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hls4ml.backends.coyote package &mdash; hls4ml 1.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hls4ml.backends.coyote.passes package" href="hls4ml.backends.coyote.passes.html" />
+    <link rel="prev" title="hls4ml.backends.catapult.passes package" href="hls4ml.backends.catapult.passes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/snn.html">Spiking Neural Networks (PyTorch/SNN)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/plugins.html">External Backend and Writer Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/multimodelgraph.html">MultiModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="hls4ml.backends.html">hls4ml.backends package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hls4ml.backends.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends.backend">hls4ml.backends.backend module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends.plugin_loader">hls4ml.backends.plugin_loader module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends.template">hls4ml.backends.template module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="hls4ml.backends.html">hls4ml.backends package</a></li>
+      <li class="breadcrumb-item active">hls4ml.backends.coyote package</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/autodoc/hls4ml.backends.coyote.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="hls4ml-backends-coyote-package">
+<h1>hls4ml.backends.coyote package<a class="headerlink" href="#hls4ml-backends-coyote-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.coyote.passes.html">hls4ml.backends.coyote.passes package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.coyote.passes.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.coyote.passes.html#module-hls4ml.backends.coyote.passes.fifo_depth_optimization">hls4ml.backends.coyote.passes.fifo_depth_optimization module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.coyote.passes.html#hls4ml.backends.coyote.passes.fifo_depth_optimization.FifoDepthOptimization"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.coyote.passes.html#hls4ml.backends.coyote.passes.fifo_depth_optimization.FifoDepthOptimization.transform"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimization.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.coyote.passes.html#hls4ml.backends.coyote.passes.fifo_depth_optimization.execute_cosim_to_profile_fifos"><code class="docutils literal notranslate"><span class="pre">execute_cosim_to_profile_fifos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.coyote.passes.html#hls4ml.backends.coyote.passes.fifo_depth_optimization.get_vitis_optimized_fifo_depths"><code class="docutils literal notranslate"><span class="pre">get_vitis_optimized_fifo_depths()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.coyote.passes.html#module-hls4ml.backends.coyote.passes">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.backends.coyote.coyote_backend">
+<span id="hls4ml-backends-coyote-coyote-backend-module"></span><h2>hls4ml.backends.coyote.coyote_backend module<a class="headerlink" href="#module-hls4ml.backends.coyote.coyote_backend" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.coyote.coyote_backend.CoyoteBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.coyote.coyote_backend.</span></span><span class="sig-name descname"><span class="pre">CoyoteBackend</span></span><a class="headerlink" href="#hls4ml.backends.coyote.coyote_backend.CoyoteBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.vitis.html#hls4ml.backends.vitis.vitis_backend.VitisBackend" title="hls4ml.backends.vitis.vitis_backend.VitisBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">VitisBackend</span></code></a></p>
+<p>The Coyote backend, which deploys hls4ml models on a PCIe-attached Alveo FPGA
+Underneath it uses the Coyote shell: <a class="reference external" href="https://github.com/fpgasystems/Coyote">https://github.com/fpgasystems/Coyote</a>,
+which offers high-performance data movement, networking capabilities, multi-tenancy,
+partial reconfiguration etc. This backend has some similarities with the VitisAccelerator
+backend, but the underlying platforms are different. The implementation of this backend
+remains mostly simple, inheriting most of the functionality from the Vitis backend and
+providing the necessary infrastructure to run model inference on Alveo boards.</p>
+<p>Currently, this backend supports batched inference of a single model on hardware.
+In the future, it can easily be extended with the following capabilities, leveraging
+Coyote’s features:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Distributed inference</p></li>
+<li><p>Multiple parallel instances of hls4ml models (same or distinct models)</p></li>
+<li><p>Dynamic, run-time reconfiguration of models</p></li>
+</ul>
+</div></blockquote>
+<p>Generic examples of Coyote can be found at the above-mentioned repository, under examples/</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.coyote.coyote_backend.CoyoteBackend.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'u55c'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aclk_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">250</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csynth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bitfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timing_opt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_clock_period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hls_clock_uncertainty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">27</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.coyote.coyote_backend.CoyoteBackend.build" title="Link to this definition"></a></dt>
+<dd><p>Synthesizes the hls4ml model bitstream as part of the Coyote shell
+and compiles the host-side software to control the FPGA and run model inference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – hls4ml model to synthesize</p></li>
+<li><p><strong>device</strong> (<em>str</em><em>, </em><em>optional</em>) – Target Alveo FPGA card; currently supported u55c, u280 and u250</p></li>
+<li><p><strong>aclk_freq</strong> (<em>float</em><em>, </em><em>optional</em>) – System/shell clock frequency</p></li>
+<li><p><strong>reset</strong> (<em>bool</em><em>, </em><em>optional</em>) – Reset HLS project, if a previous one is found</p></li>
+<li><p><strong>csim</strong> (<em>bool</em><em>, </em><em>optional</em>) – Run C-Simulation of the HLS project</p></li>
+<li><p><strong>synth</strong> (<em>bool</em><em>, </em><em>optional</em>) – Run HLS synthesis</p></li>
+<li><p><strong>cosim</strong> (<em>bool</em><em>, </em><em>optional</em>) – Run HLS co-simulation</p></li>
+<li><p><strong>validation</strong> (<em>bool</em><em>, </em><em>optional</em>) – Validate results between C-Sim and Co-Sim</p></li>
+<li><p><strong>csynth</strong> (<em>bool</em><em>, </em><em>optional</em>) – Run Coyote synthesis using Vivado, which will synthesize the model in a vFPGA</p></li>
+<li><p><strong>bitfile</strong> (<em>bool</em><em>, </em><em>optional</em>) – Generate Coyote bitstream</p></li>
+<li><p><strong>timing_opt</strong> (<em>bool</em><em>, </em><em>optional</em>) – Run additional optimizations when running PnR during bitstream generation</p></li>
+<li><p><strong>hls_clock_period</strong> (<em>float</em><em>, </em><em>optional</em>) – Clock period to be used for HLS synthesis</p></li>
+<li><p><strong>hls_clock_uncertainty</strong> (<em>float</em><em>, </em><em>optional</em>) – Clock uncertainty to be used for HLS synthesis</p></li>
+</ul>
+</dd>
+</dl>
+<p>NOTE: Currently, the hardware will synthesize with a default clock period of 4ns / 250 MHz frequency,
+since this is the default frequency of Coyote (since the XDMA core defaults to 250 MHz). Coyote allows
+one to specify a different clock period for the model and use a clock-domain crossing (CDC) between the
+XDMA region and the model. This option is currently not exposed as part of the hls4ml backend, but advanced
+users can easily set in the the CMake configuration of Coyote.</p>
+<p>NOTE: While the hardware will synthesize at 250 MHz, users can optionally pass a different HLS clock period
+This is primarily a work-around when HLS synthesize a kernel that doesn’t meet timing during PnR.
+The “trick” is to run HLS synthesis at a higher clock frequency then (or provide higher uncertainty)</p>
+<p>TODO: Add functionality to parse synthesis reports</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.coyote.coyote_backend.CoyoteBackend.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.coyote.coyote_backend.CoyoteBackend.compile" title="Link to this definition"></a></dt>
+<dd><p>Compiles the hls4ml model for software emulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – hls4ml model to synthesize</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The name of the compiled library</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>lib_name (str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.coyote.coyote_overlay">
+<span id="hls4ml-backends-coyote-coyote-overlay-module"></span><h2>hls4ml.backends.coyote.coyote_overlay module<a class="headerlink" href="#module-hls4ml.backends.coyote.coyote_overlay" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.coyote.coyote_overlay.CoyoteOverlay">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.coyote.coyote_overlay.</span></span><span class="sig-name descname"><span class="pre">CoyoteOverlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'myproject'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.coyote.coyote_overlay.CoyoteOverlay" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>CoyoteOverlay class, similar to NeuralNetworkOverlay for the VivadoAccelerator backend
+This class can be used to run model inference on the FPGA with the Coyote backend</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.coyote.coyote_overlay.CoyoteOverlay.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.coyote.coyote_overlay.CoyoteOverlay.predict" title="Link to this definition"></a></dt>
+<dd><p>Run model inference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>np.array</em>) – Input data</p></li>
+<li><p><strong>y_shape</strong> (<em>tuple</em>) – Shape of the output; used for allocating sufficient memory for the output</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Inference batch size</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.coyote.coyote_overlay.CoyoteOverlay.program_ethz_hacc_fpga">
+<span class="sig-name descname"><span class="pre">program_ethz_hacc_fpga</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.coyote.coyote_overlay.CoyoteOverlay.program_ethz_hacc_fpga" title="Link to this definition"></a></dt>
+<dd><p>Utility function for loading the Coyote-hls4ml bitstream and driver
+on the ETH Zurich Heteregenous Accelerate Compute Cluster (HACC)
+On other clusters, users would need to manually load the bitstream and driver
+Gudance on this is specified in Coyote docs.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.coyote">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.coyote" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hls4ml.backends.catapult.passes.html" class="btn btn-neutral float-left" title="hls4ml.backends.catapult.passes package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.backends.coyote.passes.html" class="btn btn-neutral float-right" title="hls4ml.backends.coyote.passes package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

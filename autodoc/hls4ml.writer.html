@@ -70,6 +70,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -108,6 +109,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.writer package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.catapult_writer">hls4ml.writer.catapult_writer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.coyote_writer">hls4ml.writer.coyote_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.libero_writer">hls4ml.writer.libero_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.oneapi_writer">hls4ml.writer.oneapi_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.quartus_writer">hls4ml.writer.quartus_writer module</a></li>
@@ -315,6 +317,136 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.writer.coyote_writer">
+<span id="hls4ml-writer-coyote-writer-module"></span><h2>hls4ml.writer.coyote_writer module<a class="headerlink" href="#module-hls4ml.writer.coyote_writer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.writer.coyote_writer.</span></span><span class="sig-name descname"><span class="pre">CoyoteWriter</span></span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.writer.vitis_writer.VitisWriter" title="hls4ml.writer.vitis_writer.VitisWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">VitisWriter</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter.restructure_dir">
+<span class="sig-name descname"><span class="pre">restructure_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter.restructure_dir" title="Link to this definition"></a></dt>
+<dd><p>Simply moves around some files; these files were generated from the Vitis backend
+For a cleaner integration with the rest of the Coyote library, these are
+moved to the src/ folder</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter.write_build_script">
+<span class="sig-name descname"><span class="pre">write_build_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter.write_build_script" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Generate the following build scripts:</dt><dd><ul class="simple">
+<li><p>build_lib.sh — used for software emulation (with gcc) of the model</p></li>
+<li><p>CMakeLists.txt — for synthesizing the hardware with Coyote and the corresponding software library</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter.write_coyote">
+<span class="sig-name descname"><span class="pre">write_coyote</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter.write_coyote" title="Link to this definition"></a></dt>
+<dd><p>Copies the Coyote repository to the project folder</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter.write_hls">
+<span class="sig-name descname"><span class="pre">write_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter.write_hls" title="Link to this definition"></a></dt>
+<dd><p>Write the HLS project. Most of the functionality inherited from VitisWriter;
+some additional functionality added for Coyote specifically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter.write_host_code">
+<span class="sig-name descname"><span class="pre">write_host_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter.write_host_code" title="Link to this definition"></a></dt>
+<dd><p>Generates the host code, namely myproject_host.cpp and host_libs.hpp
+host_libs.hpp implements the “glue” logic which interacts with the Coyote
+software library. myproject_host.cpp is a stand-alone program that can be
+compiled and used to run model inference on an FPGA, with inputs from tb_data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter.write_model_wrapper">
+<span class="sig-name descname"><span class="pre">write_model_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter.write_model_wrapper" title="Link to this definition"></a></dt>
+<dd><p>Generate the model_wrapper and vfpga_top</p>
+<p>model_wrapper encapsulates the hls4ml model kernel as well as AXI-to-data
+and data-to-AXI converters. More details on the model_wrapper and these
+converters can be found in model_wrapper.hpp.</p>
+<p>vfpga_top.svh is a simple SystemVerilog header that is needed to synthesize
+any Coyote project; see vfpga_top.svh and the Coyote examples for more details</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter.write_nnet_utils_overrides">
+<span class="sig-name descname"><span class="pre">write_nnet_utils_overrides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter.write_nnet_utils_overrides" title="Link to this definition"></a></dt>
+<dd><p>Writes the HLS templates, both from Vitis and from Coyote</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter.write_project_cpp">
+<span class="sig-name descname"><span class="pre">write_project_cpp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter.write_project_cpp" title="Link to this definition"></a></dt>
+<dd><p>Write the main architecture source file (myproject.cpp)
+Very similar to VivadoWriter, but with a different generation for I/O.
+Since the myproject.cpp is no longer the top-level file (but model_wrapper is),
+no need to specify interfaces. Additionally, inlining can cause issues here
+when integrated with the model_wrapper, so it’s disabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.coyote_writer.CoyoteWriter.write_test_bench">
+<span class="sig-name descname"><span class="pre">write_test_bench</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.coyote_writer.CoyoteWriter.write_test_bench" title="Link to this definition"></a></dt>
+<dd><p>Generates the HLS testbench; very similar to the testbench in Vivado/Vitis backends
+For differences, refer to the myproject_test.cpp file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model</p>
 </dd>
 </dl>
 </dd></dl>
