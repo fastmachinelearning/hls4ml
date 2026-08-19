@@ -1038,7 +1038,7 @@ class Softmax(Activation):
         self._set_type_t('exp_table')
         self._set_type_t('inv_table')
         self._set_type_t('inv_inp')
-        self._set_type_t('inv_norm')
+        self._set_type_t('inp_norm')
 
 
 class TernaryTanh(Activation):
