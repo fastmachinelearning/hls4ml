@@ -38,5 +38,5 @@ mkdir -p ../../final_reports
 
 # Copy HLS reports (compile, cosim)
 HLS_REPORTS_DIR="../{PROJECT_NAME}/vitis_unified_project/reports"
-[ -f "$HLS_REPORTS_DIR/hls_compile.rpt" ] && cp -p "$HLS_REPORTS_DIR/hls_compile.rpt" ../../final_reports/
-[ -f "$HLS_REPORTS_DIR/hls_cosim.rpt" ] && cp -p "$HLS_REPORTS_DIR/hls_cosim.rpt" ../../final_reports/
+[ -f "$HLS_REPORTS_DIR/hls_compile.rpt" ] && cp -p "$HLS_REPORTS_DIR/hls_compile.rpt" ../../final_reports/ || true
+[ -f "$HLS_REPORTS_DIR/hls_cosim.rpt" ] && cp -p "$HLS_REPORTS_DIR/hls_cosim.rpt" ../../final_reports/ || true
