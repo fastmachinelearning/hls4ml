@@ -135,13 +135,15 @@ def randX_100_16():
 # https://github.com/fastmachinelearning/hls4ml/issues/381
 # @pytest.mark.parametrize('bits', [4, 6, 8])
 @pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_single_dense_activation_exact(test_case_id, randX_100_16, bits, alpha, backend, io_type):
     """
     Test a single Dense -> Activation layer topology for
     bit exactness with number of bits parameter
     """
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     X = randX_100_16
     model = Sequential(
         [
