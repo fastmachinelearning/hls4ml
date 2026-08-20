@@ -208,13 +208,12 @@ class OneAPIBackend(FPGABackend):
         builddir = outdir / 'build'
         builddir.mkdir(exist_ok=True)
         try:
-            subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
+            subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
-            print('Could not find icpx, trying ahls instead.')
             try:
-                subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
+                subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
             except subprocess.CalledProcessError:
-                raise RuntimeError('Could not find icpx or ahls. Please configure oneAPI appropriately')
+                raise RuntimeError('Could not find Altera HLS or oneAPI. Please configure your environment appropriately.')
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
