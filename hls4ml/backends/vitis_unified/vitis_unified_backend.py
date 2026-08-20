@@ -32,9 +32,7 @@ class VitisUnifiedBackend(VitisBackend):
             cosim = True
 
         if vitis_fifo_sizing and not cosim:
-            warnings.warn(
-                'vitis_fifo_sizing requires cosim to be enabled; cosim will be run automatically.', stacklevel=2
-            )
+            warnings.warn('vitis_fifo_sizing requires cosim to be enabled; cosim will be run automatically.', stacklevel=2)
             cosim = True
 
         # it builds and return vivado reports
