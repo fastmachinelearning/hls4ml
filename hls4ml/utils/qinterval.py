@@ -255,6 +255,21 @@ def _exec_einsum(recipe: EinsumRecipe, input0: np.ndarray | QIntervalArray, inpu
     Returns:
         np.ndarray: output array.
     """
+
+    def direct_sum(array, axes):
+        if not axes:
+            return array
+        if isinstance(array, QIntervalArray):
+            return QIntervalArray(
+                np.sum(array.min, axis=axes),
+                np.sum(array.max, axis=axes),
+                np.min(array.delta, axis=axes),
+            )
+        return np.sum(array, axis=axes)
+
+    sum_axis0, sum_axis1 = recipe['direct_sum_axis']
+    input0 = direct_sum(input0, sum_axis0)
+    input1 = direct_sum(input1, sum_axis1)
     input0 = input0.transpose(recipe['in_transpose_idxs'][0]).ravel()
     input1 = input1.transpose(recipe['in_transpose_idxs'][1]).ravel()
     # output = np.zeros(recipe['L0'] * recipe['L1'] * recipe['I'], dtype=input0.dtype)
