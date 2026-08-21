@@ -700,14 +700,6 @@ class OneAPIWriter(Writer):
         h_file.write('};\n')
         h_file.close()
 
-    def __get_table_precision(self, model, activation, table_name='table_precision'):
-        for layer in model.get_layers():
-            if layer.get_attr('activation') == activation and layer.get_attr(table_name) is not None:
-                precision = layer.get_attr(table_name)
-                return precision.precision
-
-        return None  # fp_bits, fp_integer, fp_signed
-
     def __write_exp_tables_stable(self, model, path):
 
         for layer in model.get_layers():
