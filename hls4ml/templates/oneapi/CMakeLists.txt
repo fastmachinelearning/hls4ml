@@ -1,7 +1,7 @@
-# Direct CMake to use icpx rather than the default C++ compiler/linker on Linux
+# Direct CMake to use ahls/icpx rather than the default C++ compiler/linker on Linux
 # and icx-cl on Windows
 if(UNIX)
-    find_program(CXX_COMPILER NAMES icpx ahls)
+    find_program(CXX_COMPILER NAMES ahls icpx)
     if(NOT CXX_COMPILER)
         message(FATAL_ERROR "Neither icpx nor ahls was found in PATH.")
     endif()
