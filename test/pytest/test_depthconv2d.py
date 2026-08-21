@@ -32,6 +32,7 @@ input_size_options = [3]
         ('Vivado', 'io_stream', 'resource'),
         ('Vitis', 'io_stream', 'resource'),
         ('Catapult', 'io_stream', 'latency'),
+        ('XLS', 'io_parallel', 'latency'),
     ],
 )
 @pytest.mark.parametrize('rf', rf_options)

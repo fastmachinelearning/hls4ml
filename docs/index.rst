@@ -39,6 +39,7 @@
     backend/catapult
     backend/quartus
     backend/sr
+    backend/xls
 
 .. toctree::
     :hidden:

@@ -1038,7 +1038,7 @@ class Softmax(Activation):
         self._set_type_t('exp_table')
         self._set_type_t('inv_table')
         self._set_type_t('inv_inp')
-        self._set_type_t('inv_norm')
+        self._set_type_t('inp_norm')
 
 
 class TernaryTanh(Activation):
@@ -1964,7 +1964,10 @@ class SparsePooling2D(Layer):
     _expected_attributes = [
         Attribute('n_sparse'),
         Attribute('n_chan'),
-        Attribute('pool_size'),
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('pool_height'),
+        Attribute('pool_width'),
         Attribute('pool_op', value_type=str, default='avg'),  # 'avg' or 'max'
         TypeAttribute('accum'),
     ]

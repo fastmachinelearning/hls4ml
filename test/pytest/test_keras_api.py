@@ -26,9 +26,11 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(test_case_id, backend, io_type, synthesis_config):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = tf.keras.models.Sequential()
     model.add(
         Dense(
@@ -95,9 +97,11 @@ def test_dense(test_case_id, backend, io_type, synthesis_config):
     ids=['relu', 'leaky_relu', 'elu', 'prelu', 'sigmoid'],
 )
 # ThresholdedReLU(theta=1.0)])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(test_case_id, activation_function, backend, io_type, synthesis_config):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = tf.keras.models.Sequential()
     model.add(Dense(64, input_shape=(1,), name='Dense', kernel_initializer='lecun_uniform', kernel_regularizer=None))
     model.add(activation_function)
@@ -137,15 +141,24 @@ padds_options = ['same', 'valid']
         ('Vitis', 'Latency'),
         ('Quartus', 'Resource'),
         ('oneAPI', 'Resource'),
+        ('XLS', 'Latency'),
     ],
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(test_case_id, padds, backend, strategy, io_type, synthesis_config):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+    if backend == 'XLS':
+        # XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (10, 32, 4)
+        filters = 8
+    else:
+        input_shape = (10, 128, 4)
+        filters = 32
     model = tf.keras.models.Sequential()
-    input_shape = (10, 128, 4)
     model.add(
         Conv1D(
-            filters=32,
+            filters=filters,
             kernel_size=3,
             strides=1,
             padding=padds,
@@ -159,7 +172,7 @@ def test_conv1d(test_case_id, padds, backend, strategy, io_type, synthesis_confi
     model.add(Activation(activation='relu'))
     model.compile(optimizer='adam', loss='mse')
 
-    X_input = np.random.rand(10, 128, 4)
+    X_input = np.random.rand(*input_shape)
     keras_prediction = model.predict(X_input)
 
     config = hls4ml.utils.config_from_keras_model(model)
@@ -175,36 +188,38 @@ def test_conv1d(test_case_id, padds, backend, strategy, io_type, synthesis_confi
     # 5e-2 might be too high
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=5e-2)
 
-    if not (backend in ['Vivado', 'Vitis'] and io_type == 'io_stream' and padds == 'same'):
-        # Vivado/Vitis inserts and additional layer for 'same' padding in io_stream
-        assert len(model.layers) + 2 == len(hls_model.get_layers())
-        assert list(hls_model.get_layers())[1].attributes['name'] == model.layers[0]._name
-        assert list(hls_model.get_layers())[1].attributes['class_name'] == 'Conv1D'
-        assert list(hls_model.get_layers())[1].attributes['activation'] == str(model.layers[0].activation).split()[1]
-        assert list(hls_model.get_layers())[1].attributes['in_width'] == model.layers[0]._batch_input_shape[1]
-        assert list(hls_model.get_layers())[1].attributes['filt_width'] == model.layers[0].kernel_size[0]
-        assert list(hls_model.get_layers())[1].attributes['n_chan'] == model.layers[0].input_shape[2]
-        assert list(hls_model.get_layers())[1].attributes['n_filt'] == model.layers[0].filters
-        assert list(hls_model.get_layers())[1].attributes['stride_width'] == model.layers[0].strides[0]
-        assert list(hls_model.get_layers())[1].attributes['data_format'] == model.layers[0].data_format
-        assert list(hls_model.get_layers())[1].attributes['out_width'] == list(model.layers[0].output_shape)[1]
+    off = 0
+    # Vitis/Vivado adds a padding layer after the input in the io_stream case
+    if backend in ['Vitis', 'Vivado'] and io_type == 'io_stream' and padds == 'same':
+        off = 1
+    assert len(model.layers) + 2 + off == len(hls_model.get_layers())
+    assert list(hls_model.get_layers())[1 + off].attributes['name'] == model.layers[0]._name
+    assert list(hls_model.get_layers())[1 + off].attributes['class_name'] == 'Conv1D'
+    assert list(hls_model.get_layers())[1 + off].attributes['activation'] == str(model.layers[0].activation).split()[1]
+    assert list(hls_model.get_layers())[1].attributes['in_width'] == model.layers[0]._batch_input_shape[1]
+    assert list(hls_model.get_layers())[1 + off].attributes['filt_width'] == model.layers[0].kernel_size[0]
+    assert list(hls_model.get_layers())[1 + off].attributes['n_chan'] == model.layers[0].input_shape[2]
+    assert list(hls_model.get_layers())[1 + off].attributes['n_filt'] == model.layers[0].filters
+    assert list(hls_model.get_layers())[1 + off].attributes['stride_width'] == model.layers[0].strides[0]
+    assert list(hls_model.get_layers())[1 + off].attributes['data_format'] == model.layers[0].data_format
+    assert list(hls_model.get_layers())[1 + off].attributes['out_width'] == list(model.layers[0].output_shape)[1]
 
-        out_width = math.ceil(float(model.layers[0]._batch_input_shape[2]) / float(model.layers[0].strides[0]))
-        pad_along_width = max(
-            (out_width - 1) * model.layers[0].strides[0]
-            + model.layers[0].kernel_size[0]
-            - model.layers[0]._batch_input_shape[2],
-            0,
-        )
-        pad_left = pad_along_width // 2
-        pad_right = pad_along_width - pad_left
+    out_width = math.ceil(float(model.layers[0]._batch_input_shape[2]) / float(model.layers[0].strides[0]))
+    pad_along_width = max(
+        (out_width - 1) * model.layers[0].strides[0]
+        + model.layers[0].kernel_size[0]
+        - model.layers[0]._batch_input_shape[2],
+        0,
+    )
+    pad_left = pad_along_width // 2
+    pad_right = pad_along_width - pad_left
 
-        if model.layers[0].padding == 'same':
-            assert list(hls_model.get_layers())[1].attributes['pad_left'] == pad_left
-            assert list(hls_model.get_layers())[1].attributes['pad_right'] == pad_right
-        elif model.layers[0].padding == 'valid':
-            assert list(hls_model.get_layers())[1].attributes['pad_left'] == 0
-            assert list(hls_model.get_layers())[1].attributes['pad_right'] == 0
+    if model.layers[0].padding == 'same':
+        assert list(hls_model.get_layers())[1].attributes['pad_left'] == pad_left
+        assert list(hls_model.get_layers())[1].attributes['pad_right'] == pad_right
+    elif model.layers[0].padding == 'valid':
+        assert list(hls_model.get_layers())[1 + off].attributes['pad_left'] == 0
+        assert list(hls_model.get_layers())[1 + off].attributes['pad_right'] == 0
 
 
 chans_options = ['channels_last']
@@ -222,15 +237,24 @@ padds_options = ['same', 'valid']
         ('Vitis', 'Latency'),
         ('Quartus', 'Resource'),
         ('oneAPI', 'Resource'),
+        ('XLS', 'Latency'),
     ],
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(test_case_id, chans, padds, backend, strategy, io_type, synthesis_config):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+    if backend == 'XLS':
+        # XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (12, 12, 3)
+        filters = 6
+    else:
+        input_shape = (28, 28, 3)
+        filters = 32
     model = tf.keras.models.Sequential()
-    input_shape = (28, 28, 3)
     model.add(
         Conv2D(
-            filters=32,
+            filters=filters,
             kernel_size=(4, 4),
             strides=(4, 4),
             padding=padds,
@@ -407,7 +431,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 )
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_pooling(test_case_id, pooling, padds, chans, backend, synthesis_config):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 

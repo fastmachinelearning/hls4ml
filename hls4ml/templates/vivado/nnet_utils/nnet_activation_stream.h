@@ -131,7 +131,7 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     // Calculate all the e^x's
     typename CONFIG_T::accum_t exp_res[data_T::size];
     #pragma HLS array_partition variable=exp_res complete
-    typename CONFIG_T::inv_inp_t exp_sum(0);
+    typename CONFIG_T::accum_t exp_sum(0);
 SoftmaxExpLoop:
     for (unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         #pragma HLS PIPELINE II=ii

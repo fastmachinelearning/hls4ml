@@ -611,18 +611,33 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
     def _infer_softmax_precision(self, node, types_to_infer):
         inferred_types = []
 
-        # for softmax, the table parameters have a default setting, so they don't need to be inferred
-        # here. We never expect them to be of type auto.
+        if 'exp_table_t' in types_to_infer:
+            if node.get_attr('implementation') == 'stable':
+                # this is <= 1
+                prec = FixedPrecisionType(
+                    16, 1, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+                )
+            else:
+                prec = FixedPrecisionType(
+                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+                )
+            node.types['exp_table_t'].precision = prec
+            inferred_types.append('exp_table_t')
 
-        # For result, we leave it to be set externally (model default if not set). We expect it to
-        # likely be the output value, in which case the output format would determine it's precision.
-        # Therefore, only the accum is configured here
+        if 'inv_table_t' in types_to_infer:
+            # this is <= 1
+            prec = FixedPrecisionType(
+                16, 1, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+            )
+            node.types['inv_table_t'].precision = prec
+            inferred_types.append('inv_table_t')
 
         if 'accum_t' in types_to_infer:
             exp_w = node.types['exp_table_t'].precision.width
             exp_i = node.types['exp_table_t'].precision.integer
             exp_s = node.types['exp_table_t'].precision.signed
-            ceillog = math.ceil(np.log2(node.get_attr('n_in')))
+            n_slice = node.get_attr('n_in') // node.get_attr('n_inner') // node.get_attr('n_outer')
+            ceillog = math.ceil(np.log2(n_slice))
             node.types['accum_t'].precision = FixedPrecisionType(exp_w + ceillog, exp_i + ceillog, signed=exp_s)
             inferred_types.append('accum_t')
 
@@ -645,6 +660,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                 inp_norm_int = in_type.integer - in_type.signed
             node.types['inp_norm_t'].precision = FixedPrecisionType(inp_norm_width, inp_norm_int, signed=False)
             inferred_types.append('inp_norm_t')
+
+        if 'result_t' in types_to_infer:
+            # if not set, just choose the inv_table_t type
+            node.types['result_t'].precision = node.types['inv_table_t'].precision
+            inferred_types.append('result_t')
 
         return inferred_types
 
