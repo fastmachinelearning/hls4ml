@@ -13,8 +13,11 @@ atol = 5e-3
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'XLS'])
 def test_causalpadding(test_case_id, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     model = Sequential()
     model.add(Conv1D(1, 5, padding='causal', input_shape=(100, 1)))
     model.compile()
