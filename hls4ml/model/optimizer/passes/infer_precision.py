@@ -615,11 +615,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             if node.get_attr('implementation') == 'stable':
                 # this is <= 1
                 prec = FixedPrecisionType(
-                    16, 1, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+                    16, 1, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
                 )
             else:
                 prec = FixedPrecisionType(
-                    18, 8, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+                    18, 8, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
                 )
             node.types['exp_table_t'].precision = prec
             inferred_types.append('exp_table_t')
@@ -627,7 +627,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if 'inv_table_t' in types_to_infer:
             # this is <= 1
             prec = FixedPrecisionType(
-                16, 1, signed=False, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT
+                16, 1, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
             )
             node.types['inv_table_t'].precision = prec
             inferred_types.append('inv_table_t')
