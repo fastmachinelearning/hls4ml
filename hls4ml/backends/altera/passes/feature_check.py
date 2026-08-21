@@ -10,4 +10,4 @@ class ValidateAcTypes(OptimizerPass):
         prec_types = [prec_type.precision for prec_type in node.get_layer_precision().values()]
         prec_types = [prec_type for prec_type in prec_types if isinstance(prec_type, FloatPrecisionType)]
         if len(prec_types) > 0:
-            raise Exception(f'Layer "{node.name}" uses ac_float types that are not supported in oneAPI')
+            raise Exception(f'Layer "{node.name}" uses ac_float types that are not supported in Altera')

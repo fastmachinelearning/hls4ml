@@ -1,4 +1,4 @@
-from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
+from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import GlobalPooling1D, GlobalPooling2D, Pooling1D, Pooling2D
 
@@ -120,7 +120,7 @@ class PoolingFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise Exception('channels_first not supported for oneAPI')
+            raise Exception('channels_first not supported for Altera')
         params['data_format'] = 'cl'
         return self.templates[node.class_name].format(**params)
 
@@ -138,7 +138,7 @@ class PoolingTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise Exception('channels_first not supported for oneAPI')
+            raise Exception('channels_first not supported for Altera')
         params['data_format'] = 'cl'
         return self.templates[node.class_name].format(**params)
 

@@ -1,5 +1,5 @@
+from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.backend import get_backend
-from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Concatenate, Dot, Merge
 
@@ -101,7 +101,7 @@ class DotConfigTemplate(LayerConfigTemplate):
         params = self._default_config_params(node)
         params['n_out'] = 1
         params['n_in'] = inp1.shape[0]
-        params['product_type'] = get_backend('oneAPI').product_type(inp1.type.precision, inp2.type.precision)
+        params['product_type'] = get_backend('Altera').product_type(inp1.type.precision, inp2.type.precision)
 
         return self.template.format(**params)
 

@@ -1,7 +1,7 @@
-"""The clone templates in the fpga backend are not enough for oneAPI, so this adds the missing parts"""
+"""The clone templates in the fpga backend are not enough for Altera, so this adds the missing parts"""
 
+from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.fpga.passes.clone import Clone
-from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 
 clone_stream_function_template = '{name}.async();'
 

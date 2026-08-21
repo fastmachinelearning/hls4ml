@@ -1,7 +1,7 @@
 import numpy as np
 
+from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.fpga.fpga_layers import BatchNormalizationQuantizedTanh
-from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import BatchNormalization, register_layer
 from hls4ml.model.optimizer import OptimizerPass

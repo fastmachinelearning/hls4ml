@@ -1,5 +1,5 @@
 """
-This package includes oneAPI-specific customizations to the variable types
+This package includes Altera-specific customizations to the variable types
 """
 
 import numpy as np
@@ -39,7 +39,7 @@ class ACExponentPrecisionDefinition(PrecisionDefinition):
         return typestring
 
 
-class OneAPIACTypeConverter(FPGAPrecisionConverter):
+class AlteraACTypeConverter(FPGAPrecisionConverter):
     def __init__(self):
         super().__init__(
             type_map={
@@ -54,8 +54,8 @@ class OneAPIACTypeConverter(FPGAPrecisionConverter):
         )
 
 
-class OneAPICompressedTypeConverter(TypeDefinition, TypePrecisionConverter):
-    """Use a tuple for storing a compressed type for oneAPI since it's better supported. (Currently unused)"""
+class AlteraCompressedTypeConverter(TypeDefinition, TypePrecisionConverter):
+    """Use a tuple for storing a compressed type for Altera since it's better supported. (Currently unused)"""
 
     def definition_cpp(self):
         """tuple format is row_index, col_index, weight"""
@@ -67,8 +67,8 @@ class OneAPICompressedTypeConverter(TypeDefinition, TypePrecisionConverter):
         self.index_precision = precision_converter.convert(self.index_precision)
 
 
-class OneAPIExponentTypeConverter(TypeDefinition, TypePrecisionConverter):
-    """Use a pair for storing a exponent type for oneAPI since it's better supported"""
+class AlteraExponentTypeConverter(TypeDefinition, TypePrecisionConverter):
+    """Use a pair for storing a exponent type for Altera since it's better supported"""
 
     def definition_cpp(self):
         cpp_fmt = 'typedef std::pair<{sign}, {precision}> {name};\n'
@@ -79,7 +79,7 @@ class OneAPIExponentTypeConverter(TypeDefinition, TypePrecisionConverter):
         self.sign = precision_converter.convert(self.sign)
 
 
-class OneAPIPackedTypeConverter(TypeDefinition, TypePrecisionConverter):
+class AlteraPackedTypeConverter(TypeDefinition, TypePrecisionConverter):
     def definition_cpp(self):
         n_elem_expr = '/' if self.unpack else '*'
         return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(
@@ -92,21 +92,21 @@ class OneAPIPackedTypeConverter(TypeDefinition, TypePrecisionConverter):
         self.precision = precision_converter.convert(self.precision)
 
 
-class OneAPIHLSTypeConverter(HLSTypeConverter):
+class AlteraHLSTypeConverter(HLSTypeConverter):
     def __init__(self, precision_converter):
         self.precision_converter = precision_converter
         self.type_map = {
             NamedType: NamedTypeConverter,
-            CompressedType: OneAPICompressedTypeConverter,
-            ExponentType: OneAPIExponentTypeConverter,
-            PackedType: OneAPIPackedTypeConverter,
+            CompressedType: AlteraCompressedTypeConverter,
+            ExponentType: AlteraExponentTypeConverter,
+            PackedType: AlteraPackedTypeConverter,
         }
 
 
 # region ArrayVarable
 
 
-class OneAPIArrayVariableDefinition(VariableDefinition):
+class AlteraArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
         if self.pragma and not isinstance(self.pragma, tuple):
             return f'[[{self.pragma}]] {self.type.name} {self.name}{name_suffix}'
@@ -114,7 +114,7 @@ class OneAPIArrayVariableDefinition(VariableDefinition):
             return f'{self.type.name} {self.name}{name_suffix}'
 
 
-class OneAPIInplaceArrayVariableDefinition(VariableDefinition):
+class AlteraInplaceArrayVariableDefinition(VariableDefinition):
     def definition_cpp(self):
         return f'auto& {self.name} = {self.input_var.name}'
 
@@ -157,14 +157,14 @@ class AggregratedArrayVariableConverter:
         return tensor_var
 
 
-class OneAPIArrayVariableConverter(AggregratedArrayVariableConverter):
+class AlteraArrayVariableConverter(AggregratedArrayVariableConverter):
     def __init__(self, type_converter):
-        super().__init__(type_converter=type_converter, prefix='OneAPI', definition_cls=OneAPIArrayVariableDefinition)
+        super().__init__(type_converter=type_converter, prefix='Altera', definition_cls=AlteraArrayVariableDefinition)
 
 
-class OneAPIInplaceArrayVariableConverter(AggregratedArrayVariableConverter):
+class AlteraInplaceArrayVariableConverter(AggregratedArrayVariableConverter):
     def __init__(self, type_converter):
-        super().__init__(type_converter=type_converter, prefix='OneAPI', definition_cls=OneAPIInplaceArrayVariableDefinition)
+        super().__init__(type_converter=type_converter, prefix='Altera', definition_cls=AlteraInplaceArrayVariableDefinition)
 
 
 # endregion
@@ -172,7 +172,7 @@ class OneAPIInplaceArrayVariableConverter(AggregratedArrayVariableConverter):
 # region InterfaceMemberVariable
 
 
-class OneAPIInterfaceVariableDefinition(VariableDefinition):
+class AlteraInterfaceVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=False):
         if self.pragma and not isinstance(self.pragma, tuple):
             return f'[[{self.pragma}]] {self.type.name} {self.name}{name_suffix}'
@@ -188,16 +188,16 @@ class OneAPIInterfaceVariableDefinition(VariableDefinition):
         return lines
 
 
-class OneAPIInterfaceVariableConverter(AggregratedArrayVariableConverter):
+class AlteraInterfaceVariableConverter(AggregratedArrayVariableConverter):
     def __init__(self, type_converter):
-        super().__init__(type_converter=type_converter, prefix='OneAPI', definition_cls=OneAPIInterfaceVariableDefinition)
+        super().__init__(type_converter=type_converter, prefix='Altera', definition_cls=AlteraInterfaceVariableDefinition)
 
 
 # endregion
 
 
 # region StreamVariable
-class OneAPIStreamVariableDefinition(VariableDefinition):
+class AlteraStreamVariableDefinition(VariableDefinition):
     def definition_cpp(self, name_suffix='', as_reference=True):
         return f'{self.name}{name_suffix}'
 
@@ -210,27 +210,27 @@ class OneAPIStreamVariableDefinition(VariableDefinition):
         return lines
 
 
-class OneAPIInplaceStreamVariableDefinition(VariableDefinition):
+class AlteraInplaceStreamVariableDefinition(VariableDefinition):
     def definition_cpp(self):
         return f'using {self.name} = {self.input_var.name}'
 
 
-class OneAPIStreamVariableConverter(AggregratedArrayVariableConverter):
+class AlteraStreamVariableConverter(AggregratedArrayVariableConverter):
     def __init__(self, type_converter):
-        super().__init__(type_converter=type_converter, prefix='OneAPI', definition_cls=OneAPIStreamVariableDefinition)
+        super().__init__(type_converter=type_converter, prefix='Altera', definition_cls=AlteraStreamVariableDefinition)
 
 
-class OneAPIInplaceStreamVariableConverter(AggregratedArrayVariableConverter):
+class AlteraInplaceStreamVariableConverter(AggregratedArrayVariableConverter):
     def __init__(self, type_converter):
         super().__init__(
-            type_converter=type_converter, prefix='OneAPI', definition_cls=OneAPIInplaceStreamVariableDefinition
+            type_converter=type_converter, prefix='Altera', definition_cls=AlteraInplaceStreamVariableDefinition
         )
 
 
 # region WeightsVariable
 
 
-class OneAPIStaticWeightVariableDefinition(VariableDefinition):
+class AlteraStaticWeightVariableDefinition(VariableDefinition):
     def definition_cpp(self, reuse_factor):
         """Write the appropriate weight definiiton"""
         # first determine whether to store in register or bram (heuristic)
@@ -251,12 +251,12 @@ class OneAPIStaticWeightVariableDefinition(VariableDefinition):
             return f'{attribute} {self.type.name} {self.name}'
 
 
-class OneAPIStaticWeightVariableConverter:
+class AlteraStaticWeightVariableConverter:
     def __init__(self, type_converter):
         self.type_converter = type_converter
 
     def convert(self, weight_var):
-        if isinstance(weight_var, OneAPIStaticWeightVariableDefinition):  # Already converted
+        if isinstance(weight_var, AlteraStaticWeightVariableDefinition):  # Already converted
             return weight_var
 
         weight_var.weight_class = weight_var.__class__.__name__
@@ -267,8 +267,8 @@ class OneAPIStaticWeightVariableConverter:
         weight_cls_fqn = weight_var.__class__.__module__ + '.' + weight_var.__class__.__qualname__
 
         weight_var.__class__ = type(
-            'OneAPIStaticWeightVariable',
-            (type(weight_var), OneAPIStaticWeightVariableDefinition),
+            'AlteraStaticWeightVariable',
+            (type(weight_var), AlteraStaticWeightVariableDefinition),
             {'_wrapped': weight_cls_fqn},
         )
         return weight_var

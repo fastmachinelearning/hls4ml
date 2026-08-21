@@ -1,12 +1,12 @@
 """
-This package includes oneAPI-specific templates
+This package includes Altera-specific templates
 """
 
 from hls4ml.backends.template import Template
 
 
 class StreamFunctionCallTemplate(Template):
-    """Base class for the streaming function call templates in oneAPI:  provides the 'stream_function_cpp' attribute.
+    """Base class for the streaming function call templates in Altera:  provides the 'stream_function_cpp' attribute.
     This generally provides the async call to the task sequence that executes the streaming function.
 
     Note:  the include header files are specified in the regular FunctionCallTemplate, not here.
@@ -33,7 +33,7 @@ class StreamFunctionCallTemplate(Template):
 
 
 class TaskSequenceTemplate(Template):
-    """Base class for the task sequence definition in oneAPI:  provides the 'task_sequence_cpp' attribute.
+    """Base class for the task sequence definition in Altera:  provides the 'task_sequence_cpp' attribute.
     This defines the task sequence that is then called by the StreamFunctionCallTemplate.
 
     Args:

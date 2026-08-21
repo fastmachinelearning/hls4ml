@@ -63,7 +63,7 @@ class EinsumConfigTemplate(LayerConfigTemplate):
         params['n_inplace'] = node.attributes['n_inplace']
         inp0_t = node.get_input_variable(node.inputs[0]).type.precision
         inp1_t = node.get_input_variable(node.inputs[1]).type.precision
-        params['product_type'] = get_backend('oneapi').product_type(inp0_t, inp1_t)
+        params['product_type'] = get_backend('altera').product_type(inp0_t, inp1_t)
 
         total_mults = params['n_free0'] * params['n_free1'] * params['n_contract'] * params['n_inplace']
         params['multiplier_limit'] = ceil(total_mults / params['reuse_factor'])

@@ -15,7 +15,7 @@ from hls4ml.writer.writers import Writer
 config_filename = 'hls4ml_config.yml'
 
 
-class OneAPIWriter(Writer):
+class AlteraWriter(Writer):
     def __make_dat_file(self, original_path, project_path):
         """
         Convert other input/output data types into a dat file, which is
@@ -102,7 +102,7 @@ class OneAPIWriter(Writer):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
-            open(os.path.join(filedir, '../templates/oneapi/firmware/myproject.cpp')) as f,
+            open(os.path.join(filedir, '../templates/altera/firmware/myproject.cpp')) as f,
             open(f'{model.config.get_output_dir()}/src/firmware/{project_name}.cpp', 'w') as fout,
         ):
             model_inputs = model.get_input_variables()
@@ -122,7 +122,7 @@ class OneAPIWriter(Writer):
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
-                # oneAPI pipes need to be declared and passed as template parameters
+                # Altera pipes need to be declared and passed as template parameters
                 elif '// hls-fpga-machine-learning insert inter-task pipes' in line:
                     newline = line
                     if io_type == 'io_stream':
@@ -208,7 +208,7 @@ class OneAPIWriter(Writer):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
-            open(os.path.join(filedir, '../templates/oneapi/firmware/myproject.h')) as f,
+            open(os.path.join(filedir, '../templates/altera/firmware/myproject.h')) as f,
             open(f'{model.config.get_output_dir()}/src/firmware/{project_name}.h', 'w') as fout,
         ):
             model_inputs = model.get_input_variables()
@@ -256,7 +256,7 @@ class OneAPIWriter(Writer):
         """
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
-            open(os.path.join(filedir, '../templates/oneapi/firmware/defines.h')) as f,
+            open(os.path.join(filedir, '../templates/altera/firmware/defines.h')) as f,
             open(f'{model.config.get_output_dir()}/src/firmware/defines.h', 'w') as fout,
         ):
             for line in f.readlines():
@@ -285,7 +285,7 @@ class OneAPIWriter(Writer):
         """
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
-            open(os.path.join(filedir, '../templates/oneapi/firmware/parameters.h')) as f,
+            open(os.path.join(filedir, '../templates/altera/firmware/parameters.h')) as f,
             open(f'{model.config.get_output_dir()}/src/firmware/parameters.h', 'w') as fout,
         ):
             for line in f.readlines():
@@ -327,7 +327,7 @@ class OneAPIWriter(Writer):
 
         # copy the exception handler
         filedir = os.path.dirname(os.path.abspath(__file__))
-        srcpath = os.path.join(filedir, '../templates/oneapi/exception_handler.hpp')
+        srcpath = os.path.join(filedir, '../templates/altera/exception_handler.hpp')
         dstpath = f'{model.config.get_output_dir()}/src/exception_handler.hpp'
         copyfile(srcpath, dstpath)
 
@@ -364,7 +364,7 @@ class OneAPIWriter(Writer):
                 )
 
         with (
-            open(os.path.join(filedir, '../templates/oneapi/myproject_test.cpp')) as f,
+            open(os.path.join(filedir, '../templates/altera/myproject_test.cpp')) as f,
             open(f'{model.config.get_output_dir()}/src/{project_name}_test.cpp', 'w') as fout,
         ):
             for line in f.readlines():
@@ -423,7 +423,7 @@ class OneAPIWriter(Writer):
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
-            open(os.path.join(filedir, '../templates/oneapi/myproject_bridge.cpp')) as f,
+            open(os.path.join(filedir, '../templates/altera/myproject_bridge.cpp')) as f,
             open(f'{model.config.get_output_dir()}/src/{project_name}_bridge.cpp', 'w') as fout,
         ):
             for line in f.readlines():
@@ -503,7 +503,7 @@ class OneAPIWriter(Writer):
         period = model.config.get_config_value('ClockPeriod')
         hyper = model.config.get_config_value('HyperoptHandshake')
         with (
-            open(os.path.join(filedir, '../templates/oneapi/CMakeLists.txt')) as f,
+            open(os.path.join(filedir, '../templates/altera/CMakeLists.txt')) as f,
             open(f'{model.config.get_output_dir()}/CMakeLists.txt', 'w') as fout,
         ):
             for line in f.readlines():
@@ -530,7 +530,7 @@ class OneAPIWriter(Writer):
         # nnet_utils
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        srcpath = os.path.join(filedir, '../templates/oneapi/firmware/nnet_utils/')
+        srcpath = os.path.join(filedir, '../templates/altera/firmware/nnet_utils/')
         dstpath = f'{model.config.get_output_dir()}/src/firmware/nnet_utils/'
 
         if not os.path.exists(dstpath):
@@ -544,7 +544,7 @@ class OneAPIWriter(Writer):
         # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        custom_source = get_backend('oneAPI').get_custom_source()
+        custom_source = get_backend('Altera').get_custom_source()
         for dst, srcpath in custom_source.items():
             dstpath = f'{model.config.get_output_dir()}/src/firmware/{dst}'
             copyfile(srcpath, dstpath)

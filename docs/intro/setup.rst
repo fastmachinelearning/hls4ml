@@ -60,7 +60,7 @@ The following Python packages are all optional and are only required if you inte
    * `Brevitas <https://xilinx.github.io/brevitas/>`_: Based on PyTorch. See `frontend/pytorch <../frontend/pytorch.html>`_ for more details.
    * `QONNX <https://github.com/fastmachinelearning/qonnx>`_: Based on ONNX. See `frontend/onnx <../frontend/onnx.html>`_ for more details.
 
-Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, when the *clang*-based ``g++`` finds issues with ``ap_types`` headers, one may still need to install GCC, using ``brew`` for example. For the oneAPI backend, one must have `oneAPI=2025.0` (2025.1 is known **not to work**) installed, along with the FPGA compiler, to run C/SYCL simulations.
+Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, when the *clang*-based ``g++`` finds issues with ``ap_types`` headers, one may still need to install GCC, using ``brew`` for example. For the Altera backend, one must have Intel oneAPI 2025.0 (2025.1 is known **not to work**) installed, along with the FPGA compiler, to run C/SYCL simulations.
 
 Specific functionalities may need additional Python packages. If any needed is missing, ``hls4ml`` will raise an error and prompt you to install the missing packages.
 
@@ -72,7 +72,7 @@ To run FPGA synthesis, installation of following tools is required:
 
 * Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the ``Quartus`` backend.
 
-* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions of ``OneAPI`` removed FPGA support and **will to work** with ``hls4ml``.
+* Intel oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``Altera`` backend. Newer versions of oneAPI removed FPGA support and **will not work** with ``hls4ml``.
 
 Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.
 

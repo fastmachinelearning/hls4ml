@@ -1,12 +1,12 @@
-from hls4ml.backends.oneapi.oneapi_types import (
-    OneAPIACTypeConverter,
-    OneAPIArrayVariableConverter,
-    OneAPIHLSTypeConverter,
-    OneAPIInplaceArrayVariableConverter,
-    OneAPIInplaceStreamVariableConverter,
-    OneAPIInterfaceVariableConverter,
-    OneAPIStaticWeightVariableConverter,
-    OneAPIStreamVariableConverter,
+from hls4ml.backends.altera.altera_types import (
+    AlteraACTypeConverter,
+    AlteraArrayVariableConverter,
+    AlteraHLSTypeConverter,
+    AlteraInplaceArrayVariableConverter,
+    AlteraInplaceStreamVariableConverter,
+    AlteraInterfaceVariableConverter,
+    AlteraStaticWeightVariableConverter,
+    AlteraStreamVariableConverter,
 )
 from hls4ml.model.optimizer import GlobalOptimizerPass
 from hls4ml.model.types import InplaceTensorVariable
@@ -16,13 +16,13 @@ from hls4ml.model.types import InplaceTensorVariable
 
 class TransformTypes(GlobalOptimizerPass):
     def __init__(self):
-        self.type_converter = OneAPIHLSTypeConverter(precision_converter=OneAPIACTypeConverter())
-        self.array_var_converter = OneAPIArrayVariableConverter(type_converter=self.type_converter)
-        self.inplace_array_var_converter = OneAPIInplaceArrayVariableConverter(type_converter=self.type_converter)
-        self.interface_var_converter = OneAPIInterfaceVariableConverter(type_converter=self.type_converter)
-        self.stream_var_converter = OneAPIStreamVariableConverter(type_converter=self.type_converter)
-        self.inplace_stream_var_converter = OneAPIInplaceStreamVariableConverter(type_converter=self.type_converter)
-        self.weight_var_converter = OneAPIStaticWeightVariableConverter(type_converter=self.type_converter)
+        self.type_converter = AlteraHLSTypeConverter(precision_converter=AlteraACTypeConverter())
+        self.array_var_converter = AlteraArrayVariableConverter(type_converter=self.type_converter)
+        self.inplace_array_var_converter = AlteraInplaceArrayVariableConverter(type_converter=self.type_converter)
+        self.interface_var_converter = AlteraInterfaceVariableConverter(type_converter=self.type_converter)
+        self.stream_var_converter = AlteraStreamVariableConverter(type_converter=self.type_converter)
+        self.inplace_stream_var_converter = AlteraInplaceStreamVariableConverter(type_converter=self.type_converter)
+        self.weight_var_converter = AlteraStaticWeightVariableConverter(type_converter=self.type_converter)
 
     def transform(self, model, node):
         io_type = node.model.config.get_config_value('IOType')

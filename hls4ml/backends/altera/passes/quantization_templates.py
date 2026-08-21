@@ -1,12 +1,12 @@
-from hls4ml.backends.backend import get_backend
-from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
-from hls4ml.backends.oneapi.passes.core_templates import (
+from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
+from hls4ml.backends.altera.passes.core_templates import (
     batchnorm_config_template,
     batchnorm_function_template,
     batchnorm_include_list,
     batchnorm_stream_function_template,
     batchnorm_task_sequence_template,
 )
+from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.optimizer.passes.qkeras import ApplyAlpha
 
@@ -19,7 +19,7 @@ class ApplyAlphaConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
-        params['product_type'] = get_backend('oneAPI').product_type(
+        params['product_type'] = get_backend('Altera').product_type(
             node.get_input_variable().type.precision, node.get_weights('scale').type.precision
         )
 

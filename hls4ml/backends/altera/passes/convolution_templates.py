@@ -1,5 +1,5 @@
+from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.backend import get_backend
-from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv1D, DepthwiseConv2D
 
@@ -98,7 +98,7 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         mult_params = self._default_config_params(node)
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
-        mult_params['product_type'] = get_backend('oneAPI').product_type(
+        mult_params['product_type'] = get_backend('Altera').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
         mult_config = self.mult_template.format(**mult_params)
@@ -114,7 +114,7 @@ class Conv1DFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on oneAPI')
+            raise RuntimeError('channels_first not supported on Altera')
         params['data_format'] = 'cl'
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
@@ -130,7 +130,7 @@ class Conv1DTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on oneAPI')
+            raise RuntimeError('channels_first not supported on Altera')
         params['data_format'] = 'cl'
         return self.template.format(**params)
 
@@ -215,7 +215,7 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params = self._default_config_params(node)
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_height') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
-        mult_params['product_type'] = get_backend('oneAPI').product_type(
+        mult_params['product_type'] = get_backend('Altera').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
         mult_config = self.mult_template.format(**mult_params)
@@ -231,7 +231,7 @@ class Conv2DFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported for oneAPI')
+            raise RuntimeError('channels_first not supported for Altera')
         params['data_format'] = 'cl'
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
@@ -247,7 +247,7 @@ class Conv2DTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on oneAPI')
+            raise RuntimeError('channels_first not supported on Altera')
         params['data_format'] = 'cl'
         return self.template.format(**params)
 

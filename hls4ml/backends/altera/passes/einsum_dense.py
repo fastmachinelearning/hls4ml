@@ -83,7 +83,7 @@ class EinsumDenseConfigTemplate(LayerConfigTemplate):
             dense_params['nzeros'] = '-1; // Not making sense when kernels are switching'
         dense_params['nonzeros'] = node.get_weights('weight').nonzeros
 
-        dense_params['product_type'] = get_backend('oneAPI').product_type(
+        dense_params['product_type'] = get_backend('Altera').product_type(
             node.get_input_variable().type.precision,
             node.get_weights('weight').type.precision,  # type: ignore
         )

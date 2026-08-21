@@ -4,7 +4,7 @@ import os
 import re
 
 
-def _convert_to_oneapi_naming(s):
+def _convert_to_altera_naming(s):
     s2 = s.lower()
 
     # Capitalize the first letter
@@ -54,7 +54,7 @@ def _parse_single_report(prjDir):
     # PathSimDataJson = PathJson + 'simulation_raw.ndjson'
 
     targetName, makeType, _ = os.path.basename(prjDir).rsplit('.', 2)
-    simTask = _convert_to_oneapi_naming(targetName)
+    simTask = _convert_to_altera_naming(targetName)
     # if targetName not in report:
     #    report[targetName] = {}
 
@@ -137,9 +137,9 @@ def _parse_single_report(prjDir):
     return report
 
 
-def parse_oneapi_report(hls_dir):
+def parse_altera_report(hls_dir):
     """
-    Parse a report from a given oneAPI project as a dictionary.
+    Parse a report from a given Altera project as a dictionary.
 
     Args:
         hls_dir (string): The directory where the project is found
@@ -159,9 +159,9 @@ def parse_oneapi_report(hls_dir):
     return report
 
 
-def print_oneapi_report(report_dict):
+def print_altera_report(report_dict):
     """
-    Prints the oneAPI report dictionary as a table.
+    Prints the Altera report dictionary as a table.
 
     Args:
         report_dict (dictionary): The report dictionary, containing latency, resource usage etc.

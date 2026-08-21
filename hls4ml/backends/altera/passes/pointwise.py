@@ -1,12 +1,12 @@
-from hls4ml.backends.fpga.fpga_layers import PointwiseConv1D, PointwiseConv2D
-from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
-from hls4ml.backends.oneapi.passes.convolution_templates import (
+from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
+from hls4ml.backends.altera.passes.convolution_templates import (
     Conv1DConfigTemplate,
     Conv2DConfigTemplate,
     conv1d_config_template,
     conv2d_config_template,
     conv_mult_config_template,
 )
+from hls4ml.backends.fpga.fpga_layers import PointwiseConv1D, PointwiseConv2D
 from hls4ml.backends.template import FunctionCallTemplate
 from hls4ml.model.layers import register_layer
 from hls4ml.model.optimizer import OptimizerPass
@@ -52,7 +52,7 @@ class PointwiseConv1DFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on oneAPI')
+            raise RuntimeError('channels_first not supported on Altera')
         params['data_format'] = 'cl'
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
@@ -68,7 +68,7 @@ class PointwiseConv1DTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on oneAPI')
+            raise RuntimeError('channels_first not supported on Altera')
         params['data_format'] = 'cl'
         return self.template.format(**params)
 
@@ -88,7 +88,7 @@ class PointwiseConv2DFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on oneAPI')
+            raise RuntimeError('channels_first not supported on Altera')
         params['data_format'] = 'cl'
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
@@ -104,7 +104,7 @@ class PointwiseConv2DTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on oneAPI')
+            raise RuntimeError('channels_first not supported on Altera')
         params['data_format'] = 'cl'
         return self.template.format(**params)
 

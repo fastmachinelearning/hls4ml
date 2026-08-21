@@ -1,6 +1,6 @@
 import numpy as np
 
-from hls4ml.backends.oneapi.oneapi_template import StreamFunctionCallTemplate, TaskSequenceTemplate
+from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Reshape, Resize, Transpose, ZeroPadding1D, ZeroPadding2D
 from hls4ml.utils.transpose_utils import transpose_config_gen
@@ -68,7 +68,7 @@ class ZeroPaddingFunctionTemplate(FunctionCallTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise Exception('oneAPI only supports channels_last data format')
+            raise Exception('Altera only supports channels_last data format')
         params['data_format'] = 'cl'
 
         return self.templates[node.class_name].format(**params)
@@ -85,7 +85,7 @@ class ZeroPaddingTaskSequenceTemplate(TaskSequenceTemplate):
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('data_format') == 'channels_first':
-            raise RuntimeError('channels_first not supported on oneAPI')
+            raise RuntimeError('channels_first not supported on Altera')
         params['data_format'] = 'cl'
 
         return self.templates[node.class_name].format(**params)

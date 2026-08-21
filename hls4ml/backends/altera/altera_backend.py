@@ -23,16 +23,16 @@ from hls4ml.model.layers import (
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
-from hls4ml.report import parse_oneapi_report
+from hls4ml.report import parse_altera_report
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.einsum_utils import parse_einsum
 
-# from hls4ml.report import parse_oneapi_report
+# from hls4ml.report import parse_altera_report
 
 
-class OneAPIBackend(FPGABackend):
+class AlteraBackend(FPGABackend):
     def __init__(self):
-        super().__init__('oneAPI')
+        super().__init__('Altera')
         self._register_layer_attributes()
         self._register_flows()
 
@@ -66,43 +66,43 @@ class OneAPIBackend(FPGABackend):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
-        streaming_passes = ['oneapi:clone_output']
+        streaming_passes = ['altera:clone_output']
         streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
 
-        oneapi_types = [
-            'oneapi:transform_types',
-            'oneapi:register_bram_weights',
-            'oneapi:apply_resource_strategy',
-            'oneapi:apply_winograd_kernel_transformation',
+        altera_types = [
+            'altera:transform_types',
+            'altera:register_bram_weights',
+            'altera:apply_resource_strategy',
+            'altera:apply_winograd_kernel_transformation',
         ]
-        oneapi_types_flow = register_flow('specific_types', oneapi_types, requires=[init_flow], backend=self.name)
+        altera_types_flow = register_flow('specific_types', altera_types, requires=[init_flow], backend=self.name)
 
         quantization_passes = [
-            'oneapi:merge_batch_norm_quantized_tanh',
-            'oneapi:quantize_dense_output',
+            'altera:merge_batch_norm_quantized_tanh',
+            'altera:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
-            'oneapi:xnor_pooling',
+            'altera:xnor_pooling',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
         optimization_passes = [
-            'oneapi:remove_final_reshape',
-            'oneapi:optimize_pointwise_conv',
-            'oneapi:inplace_parallel_reshape',
-            'oneapi:skip_softmax',
-            'oneapi:fix_softmax_table_size',
+            'altera:remove_final_reshape',
+            'altera:optimize_pointwise_conv',
+            'altera:inplace_parallel_reshape',
+            'altera:skip_softmax',
+            'altera:fix_softmax_table_size',
             'infer_precision_types',
-            'oneapi:process_fixed_point_quantizer_layer',
-            'oneapi:validate_ac_types',
+            'altera:process_fixed_point_quantizer_layer',
+            'altera:validate_ac_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
-        writer_passes = ['make_stamp', 'oneapi:write_hls']
+        writer_passes = ['make_stamp', 'altera:write_hls']
 
-        self._writer_flow = register_flow('write', writer_passes, requires=['oneapi:ip'], backend=self.name)
+        self._writer_flow = register_flow('write', writer_passes, requires=['altera:ip'], backend=self.name)
 
         all_passes = get_backend_passes(self.name)
 
@@ -113,12 +113,12 @@ class OneAPIBackend(FPGABackend):
             if opt_pass
             not in initializers
             + streaming_passes
-            + oneapi_types
+            + altera_types
             + quantization_passes
             + templates
             + optimization_passes
             + writer_passes
-            + ['oneapi:inplace_stream_flatten', 'oneapi:reshape_stream']  # not needed
+            + ['altera:inplace_stream_flatten', 'altera:reshape_stream']  # not needed
         ]
 
         if len(extras) > 0:
@@ -131,7 +131,7 @@ class OneAPIBackend(FPGABackend):
             streaming_flow,
             quantization_flow,
             optimization_flow,
-            oneapi_types_flow,
+            altera_types_flow,
             template_flow,
         ]
         ip_flow_requirements = list(filter(None, ip_flow_requirements))
@@ -147,7 +147,7 @@ class OneAPIBackend(FPGABackend):
     def create_initial_config(
         self, part='Agilex7', clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, **_
     ):
-        """Create initial configuration of the oneAPI backend.
+        """Create initial configuration of the Altera backend.
 
         Args:
             part (str, optional): The FPGA part to be used. Defaults to 'Agilex7'.
@@ -194,7 +194,7 @@ class OneAPIBackend(FPGABackend):
 
     def build(self, model, build_type='fpga_emu', run=False):
         """
-        Builds the project using Intel DPC++ (oneAPI) compiler.
+        Builds the project using the Intel oneAPI DPC++ compiler.
 
         Args:
             model (ModelGraph): The model to build
@@ -210,7 +210,7 @@ class OneAPIBackend(FPGABackend):
         try:
             subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
-            raise RuntimeError('Could not find icpx. Please configure oneAPI appropriately')
+            raise RuntimeError('Could not find icpx. Please configure the Intel oneAPI toolchain appropriately')
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
@@ -220,7 +220,7 @@ class OneAPIBackend(FPGABackend):
             executable = builddir / f'{model.config.get_project_name()}.{build_type}'
             subprocess.run(f'{str(executable)}', shell=True, cwd=builddir, check=True)
 
-        return parse_oneapi_report(model.config.get_output_dir())
+        return parse_altera_report(model.config.get_output_dir())
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
@@ -287,7 +287,7 @@ class OneAPIBackend(FPGABackend):
             )
         if 'table_size' not in layer.attributes:
             layer.set_attr('table_size', 1024)
-        if True:  # layer.model.config.is_resource_strategy(layer): ... oneAPI only supports Dense resource multiplication
+        if True:  # layer.model.config.is_resource_strategy(layer): ... Altera only supports Dense resource multiplication
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
@@ -323,7 +323,7 @@ class OneAPIBackend(FPGABackend):
 
         layer.set_attr(
             'n_partitions', 1
-        )  # TODO Not used yet as there is no codegen implementation of CNNs for oneAPI backend
+        )  # TODO Not used yet as there is no codegen implementation of CNNs for Altera backend
 
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
@@ -354,7 +354,7 @@ class OneAPIBackend(FPGABackend):
 
         layer.set_attr(
             'n_partitions', 1
-        )  # TODO Not used yet as there is no codegen implementation of CNNs for oneAPI backend
+        )  # TODO Not used yet as there is no codegen implementation of CNNs for Altera backend
 
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
@@ -362,7 +362,7 @@ class OneAPIBackend(FPGABackend):
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
         # We don't use RF yet
-        if True:  # layer.model.config.is_resource_strategy(layer): ... oneAPI only supports Dense resource multiplication
+        if True:  # layer.model.config.is_resource_strategy(layer): ... Altera only supports Dense resource multiplication
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
