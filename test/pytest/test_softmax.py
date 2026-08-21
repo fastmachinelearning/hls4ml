@@ -57,6 +57,12 @@ def test_softmax(
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
 
+    if backend == 'XLS' and table_bits == 'auto':
+        pytest.skip('XLS backend does not support setting the table_bits to auto')
+
+    if backend == 'XLS' and implementation == 'legacy':
+        pytest.skip('XLS backend does not support the legacy implementation')
+
     X = generate_data
     model = tf.keras.models.Sequential()
     if softmax_impl == 'activation':
