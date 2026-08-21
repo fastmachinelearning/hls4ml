@@ -49,6 +49,7 @@ HLS backends:
 * Catapult HLS
 * Altera HLS (experimental)
 * oneAPI (experimental)
+* XLS (experimental)
 
 A summary of the on-going status of the ``hls4ml`` tool is in the table below.
 
@@ -84,6 +85,8 @@ A summary of the on-going status of the ``hls4ml`` tool is in the table below.
 | Altera HLS (experimental) | ✅  | ✅  | ✅           | ❌     | ✅     | ❌  |
 +---------------------------+-----+-----+--------------+--------+--------+-----+
 | oneAPI (experimental)     | ✅  | ✅  | ✅           | ❌     | ✅     | ❌  |
++---------------------------+-----+-----+--------------+--------+--------+-----+
+| XLS (experimental)        | ✅  | ✅  | ❌           | ❌     | ❌     | ❌  |
 +---------------------------+-----+-----+--------------+--------+--------+-----+
 
 Other feature notes:

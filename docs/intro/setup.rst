@@ -207,6 +207,9 @@ Optional Dependencies
    # For symbolic regression
    pip install hls4ml[sr]
 
+   # For XLS backend
+   pip install hls4ml[xls]
+
    # For documentation building (developers)
    pip install hls4ml[doc]
 

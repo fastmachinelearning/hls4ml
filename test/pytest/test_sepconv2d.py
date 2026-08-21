@@ -32,16 +32,23 @@ input_size_options = [3]
         ('Vivado', 'io_stream', 'resource'),
         ('Vitis', 'io_stream', 'resource'),
         ('Catapult', 'io_stream', 'latency'),
+        ('XLS', 'io_parallel', 'latency'),
     ],
 )
 @pytest.mark.parametrize('rf', rf_options)
 @pytest.mark.parametrize('input_size', input_size_options)
 def test_sepconv2d(test_case_id, chans, padds, strides, kernels, bias, io_type, backend, strategy, rf, input_size):
+    if backend == 'XLS':
+        # XLS test is slow due to big IR size, we reduce dimensions to make it faster.
+        input_shape = (8, 8, input_size)
+        filters = 4
+    else:
+        input_shape = (16, 16, input_size)
+        filters = 8
     model = tf.keras.models.Sequential()
-    input_shape = (16, 16, input_size)
     model.add(
         tf.keras.layers.SeparableConv2D(
-            filters=8,
+            filters=filters,
             kernel_size=kernels,
             strides=strides,
             padding=padds,

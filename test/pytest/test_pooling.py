@@ -9,31 +9,47 @@ import hls4ml
 
 test_root_path = Path(__file__).parent
 
-in_shape = 124
-in_filt = 5
 atol = 5e-3
 
 
-@pytest.fixture(scope='module')
-def data_1d():
-    return np.random.rand(100, in_shape, in_filt)
+# XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+def in_shape(backend):
+    if backend == 'XLS':
+        return 17
+    return 124
 
 
-@pytest.fixture(scope='module')
-def keras_model_1d(request):
+def in_filt(backend):
+    if backend == 'XLS':
+        return 3
+    return 5
+
+
+def input_shape_1d(backend):
+    return (in_shape(backend), in_filt(backend))
+
+
+@pytest.fixture()
+def data_1d(backend):
+    return np.random.rand(100, *input_shape_1d(backend))
+
+
+@pytest.fixture()
+def keras_model_1d(request, backend):
     model_type = request.param['model_type']
     pads = request.param['padding']
     strides = request.param.get('strides', None)
+    input_shape = input_shape_1d(backend)
     model = Sequential()
     if model_type == 'avg':
-        model.add(AveragePooling1D(pool_size=3, input_shape=(in_shape, in_filt), padding=pads, strides=strides))
+        model.add(AveragePooling1D(pool_size=3, input_shape=input_shape, padding=pads, strides=strides))
     elif model_type == 'max':
-        model.add(MaxPooling1D(pool_size=3, input_shape=(in_shape, in_filt), padding=pads))
+        model.add(MaxPooling1D(pool_size=3, input_shape=input_shape, padding=pads))
     model.compile()
     return model, model_type, pads, strides
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize(
     'keras_model_1d',
     [
@@ -109,26 +125,31 @@ def test_pool1d_stream(test_case_id, backend, keras_model_1d, data_1d, io_type):
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
 
 
-@pytest.fixture(scope='module')
-def data_2d():
-    return np.random.rand(100, in_shape, in_shape, in_filt)
+def input_shape_2d(backend):
+    return (in_shape(backend), in_shape(backend), in_filt(backend))
 
 
-@pytest.fixture(scope='module')
-def keras_model_2d(request):
+@pytest.fixture()
+def data_2d(backend):
+    return np.random.rand(100, *input_shape_2d(backend))
+
+
+@pytest.fixture()
+def keras_model_2d(request, backend):
     model_type = request.param['model_type']
     pads = request.param['padding']
     strides = request.param.get('strides', None)
+    input_shape = input_shape_2d(backend)
     model = Sequential()
     if model_type == 'avg':
-        model.add(AveragePooling2D(input_shape=(in_shape, in_shape, in_filt), padding=pads, strides=strides))
+        model.add(AveragePooling2D(input_shape=input_shape, padding=pads, strides=strides))
     elif model_type == 'max':
-        model.add(MaxPooling2D(input_shape=(in_shape, in_shape, in_filt), padding=pads, strides=strides))
+        model.add(MaxPooling2D(input_shape=input_shape, padding=pads, strides=strides))
     model.compile()
     return model, model_type, pads, strides
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize(
     'keras_model_2d',
     [
