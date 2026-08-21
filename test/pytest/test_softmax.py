@@ -71,7 +71,7 @@ def test_softmax(
         model.add(tf.keras.layers.Softmax(input_shape=input_shape, name='softmax'))
     model.compile()
 
-    table_type = 'auto' if table_bits == 'auto' else f'ufixed<{table_bits}, RND, SAT>'
+    table_type = 'auto' if table_bits == 'auto' else f'ufixed<{table_bits}, RND_CONV, SAT>'
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     cfg['LayerName']['softmax']['Implementation'] = implementation
@@ -84,7 +84,7 @@ def test_softmax(
         # W, I = map(int, input_bits.split(','))  # noqa: E741
         # cfg['LayerName']['softmax']['Precision']['inv_inp'] = f'ufixed<{W + 2},{I + 2}>'
     inp_layer_name = next(iter(cfg['LayerName'].keys()))
-    cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}, RND, SAT>'
+    cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}, RND_CONV, SAT>'
 
     odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
