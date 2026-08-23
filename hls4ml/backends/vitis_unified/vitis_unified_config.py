@@ -65,8 +65,21 @@ class VitisUnifiedConfig:
         self.output_type = self.config['VitisUnifiedConfig']['OutputDtype']
 
         assert self.input_type == self.output_type, 'Input and Output data types must be the same type different'
-        assert len(model_inputs) >= 1, 'Only models with at least one input tensor are currently supported by VitisUnified'
-        assert len(model_outputs) >= 1, 'Only models with one output tensor are currently supported by VitisUnified'
+
+        # check at least one input and output port
+        if len(model_inputs) < 1 or len(model_outputs) < 1:
+            raise Exception(
+                'VitisUnified requires a model with at least one input and one output tensor '
+                f'(got {len(model_inputs)} inputs, {len(model_outputs)} outputs).'
+            )
+        # the axi-stream option is lock to single IO
+        if self.axi_mode == 'axi_stream' and (len(model_inputs) > 1 or len(model_outputs) > 1):
+            raise Exception(
+                f'axi_mode "axi_stream" only supports models with exactly one input and one output tensor '
+                f'(got {len(model_inputs)} inputs, {len(model_outputs)} outputs). '
+                'Use axi_mode "axi_master" for multi-input/multi-output models.'
+            )
+
         self.inps = model_inputs.copy()
         self.outs = model_outputs.copy()
 

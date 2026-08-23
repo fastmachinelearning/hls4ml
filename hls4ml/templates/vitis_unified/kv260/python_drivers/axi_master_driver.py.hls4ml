@@ -112,7 +112,7 @@ class HLS4ML_IP(DefaultIP):
 
     def disable_gie(self):
         print("global interrupt enable register")
-        self.write(self.REG_ADDR_GIE, 0x01)
+        self.write(self.REG_ADDR_GIE, 0x00)
         print("disable gie successful")
 
     def enable_done_intr(self):
