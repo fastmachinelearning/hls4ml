@@ -54,7 +54,7 @@ def _vitis_unified_convert_kwargs(io_type, axi_mode, board='zcu102', **extra):
         'io_type': io_type,
         'board': board,
         'part': part,
-        'clock_period': '10ns',
+        'clock_period': 10,
         'input_type': 'float',
         'output_type': 'float',
         'axi_mode': axi_mode,
@@ -91,7 +91,7 @@ def test_backend_predict(test_case_id, simple_unet, io_type, strategy, granulari
         backend='Vitis',
         io_type=io_type,
         part='xczu9eg-ffvb1156-2-e',
-        clock_period='10ns',
+        clock_period=10,
     )
     vitis_model.compile()
 
