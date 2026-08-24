@@ -5,7 +5,6 @@ import math
 import sys
 import warnings
 from collections.abc import Callable
-from copy import copy
 from enum import Enum
 from typing import TYPE_CHECKING, Literal
 
@@ -120,14 +119,11 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTableDefinition]:
     inv_table_size = int(node.get_attr('inv_table_size', table_size))
     implementation = node.get_attr('implementation', 'stable')
     input_precision = node.get_input_variable().type.precision
-    exp_in = copy(input_precision)
-    exp_out = node.get_attr('exp_table_t').precision
 
     EXP_ARG_MAX = math.log(sys.float_info.max)
     match implementation:
         case 'stable':
-            exp_in.width += 1
-            exp_in.integer += 1
+            exp_in = node.get_attr('inp_norm_t').precision
             exp_name = 'EXP_NEG_TABLE'
 
             def exp_func(x):
@@ -136,6 +132,7 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTableDefinition]:
             # Arguments of exp_func are (x_max - x_i) > 0
             exp_table_range = LookupTableRange.NON_NEGATIVE
         case 'latency':
+            exp_in = input_precision
             exp_name = 'EXP_TABLE'
 
             def exp_func(x):
@@ -149,7 +146,11 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTableDefinition]:
         case _:
             raise ValueError(f'Unknown softmax implementation={implementation}')
 
-    inv_in = exp_out
+    exp_out = node.get_attr('exp_table_t').precision
+    # inv_inp_t is only meaningful for 'stable' (matches Vivado/Vitis);
+    # 'latency' sums the exponents into accum_t directly.
+    inv_inp_t = 'inv_inp_t' if implementation == 'stable' else 'accum_t'
+    inv_in = node.get_attr(inv_inp_t).precision
     inv_out = node.get_attr('inv_table_t').precision
     inv_name = 'INV_TABLE'
 
