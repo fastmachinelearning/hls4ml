@@ -1,10 +1,12 @@
 import typing
 from collections.abc import Sequence
+from functools import partial
 from math import prod
 
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
 from ._base import QLayerHandler
+from .unary_lut import extract_lut_table
 
 if typing.TYPE_CHECKING:
     import hgq
@@ -118,6 +120,16 @@ class QSoftmaxHandler(QLayerHandler):
                 'parallelization_factor': parallelization_factor,
                 'class_name': class_name,
                 '_bit_exact': True,
+                # Not materialized here: for the latency implementation the domain is the
+                # softmax input precision, only final after bit_exact. materialize_softmax_tables
+                # calls these with the (k, i, f) of the address type, and pops them again -- they
+                # are not JSON-serializable, so they must not reach a saved model.
+                '_exp_table_fn': partial(
+                    extract_lut_table, layer.exp_table.activation, layer.exp_table.oq if layer.exp_table.enable_oq else None
+                ),
+                '_inv_table_fn': partial(
+                    extract_lut_table, layer.inv_table.activation, layer.inv_table.oq if layer.inv_table.enable_oq else None
+                ),
             }
         )
 
