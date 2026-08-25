@@ -56,11 +56,7 @@ void collect_trace_output(struct trace_data *c_trace_outputs) {
 void myproject_float(
     // hls-fpga-machine-learning insert header #float
 ) {
-#ifdef AHLS
     auto selector = sycl::ext::altera::fpga_emulator_selector_v;
-#else
-    auto selector = sycl::ext::intel::fpga_emulator_selector_v;
-#endif
     static sycl::queue q(selector, fpga_tools::exception_handler, sycl::property::queue::enable_profiling{});
 
     // hls-fpga-machine-learning insert wrapper #float
@@ -71,11 +67,7 @@ void myproject_float(
 void myproject_double(
     // hls-fpga-machine-learning insert header #double
 ) {
-#ifdef AHLS
     auto selector = sycl::ext::altera::fpga_emulator_selector_v;
-#else
-    auto selector = sycl::ext::intel::fpga_emulator_selector_v;
-#endif
     static sycl::queue q(selector, fpga_tools::exception_handler, sycl::property::queue::enable_profiling{});
 
     // hls-fpga-machine-learning insert wrapper #double

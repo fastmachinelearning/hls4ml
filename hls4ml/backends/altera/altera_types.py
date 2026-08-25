@@ -181,15 +181,9 @@ class AlteraInterfaceVariableDefinition(VariableDefinition):
 
     def declare_cpp(self, pipe_min_size=0, indent=''):
         lines = indent + f'class {self.pipe_id};\n'
-        # This will look very ugly but it is the only way to ensure synch with CMake compiler decision
         lines += indent + (
-            '#ifdef AHLS\n'
             f'using {self.pipe_name} = sycl::ext::altera::experimental::pipe<{self.pipe_id}, '
             f'{self.type.name}, {pipe_min_size}, PipeProps>;\n'
-            '#else\n'
-            f'using {self.pipe_name} = sycl::ext::intel::experimental::pipe<{self.pipe_id}, '
-            f'{self.type.name}, {pipe_min_size}, PipeProps>;\n'
-            '#endif\n'
         )
         return lines
 
@@ -210,13 +204,8 @@ class AlteraStreamVariableDefinition(VariableDefinition):
     def declare_cpp(self, indent=''):
         lines = indent + f'class {self.pipe_id};\n'
         lines += indent + (
-            '#ifdef AHLS\n'
             f'using {self.pipe_name} = sycl::ext::altera::experimental::pipe<{self.pipe_id}, '
             f'{self.type.name}, {self.pragma[-1]}>;\n'
-            '#else\n'
-            f'using {self.pipe_name} = sycl::ext::intel::experimental::pipe<{self.pipe_id}, '
-            f'{self.type.name}, {self.pragma[-1]}>;\n'
-            '#endif\n'
         )
         return lines
 
