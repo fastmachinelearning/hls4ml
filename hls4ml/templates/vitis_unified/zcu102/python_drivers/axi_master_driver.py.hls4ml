@@ -14,13 +14,34 @@ import subprocess
 import re
 import time
 
+
+def _as_list(value):
+    """Normalise a single item or a sequence of items into a list.
+
+    A shape is itself a tuple/list of ints, so a *list of shapes* is detected by its
+    first element also being a tuple/list. This keeps the single-port calling
+    convention (x_shape=(1, 16)) working unchanged alongside the multi-port one
+    (x_shape=[(1, 16), (1, 4)]).
+    """
+    if isinstance(value, (list, tuple)) and len(value) > 0 and isinstance(value[0], (list, tuple)):
+        return list(value)
+    return [value]
+
+
 class NeuralNetworkOverlay(Overlay):
     def __init__(
         self, bitfile_name, x_shape, y_shape, dtype=np.float32, dtbo=None, download=True, ignore_version=False, device=None
     ):
-        super().__init__(bitfile_name, dtbo=None, download=True, ignore_version=False, device=None)
-        self.input_buffer = allocate(shape=x_shape, dtype=dtype)
-        self.output_buffer = allocate(shape=y_shape, dtype=dtype)
+        """x_shape/y_shape accept either a single shape or a list of shapes, one per
+        model input/output port. The AXI-master kernel exposes one pointer register
+        per port, so multi-input/multi-output models allocate one buffer each.
+        """
+        super().__init__(bitfile_name, dtbo=dtbo, download=download, ignore_version=ignore_version, device=device)
+        self.input_buffers = [allocate(shape=shape, dtype=dtype) for shape in _as_list(x_shape)]
+        self.output_buffers = [allocate(shape=shape, dtype=dtype) for shape in _as_list(y_shape)]
+        # single-port aliases, kept so existing scripts continue to work
+        self.input_buffer = self.input_buffers[0]
+        self.output_buffer = self.output_buffers[0]
 
     def calculate_performance(self, N, execution_time):
         rate = N / execution_time if execution_time > 0 else float('inf')
@@ -33,7 +54,8 @@ class NeuralNetworkOverlay(Overlay):
         """
         Obtain the predictions of the NN implemented in the FPGA.
         Parameters:
-        - X : the input vector. Should be numpy ndarray.
+        - X : the input vector. Should be numpy ndarray, or a list of ndarrays for
+              multi-input models (one entry per input port, in port order).
         - dtype : the data type of the elements of the input/output vectors.
                   Note: it should be set depending on the interface of the accelerator; if it uses 'float'
                   types for the 'data' AXI-Stream field, 'np.float32' dtype is the correct one to use.
@@ -63,18 +85,29 @@ class NeuralNetworkOverlay(Overlay):
         my_interrupt = Interrupt("<TOP_WRAPPER_NAME>/interrupt")
         ip = self.<TOP_WRAPPER_NAME>
 
+        inputs = list(X) if isinstance(X, (list, tuple)) else [X]
+        if len(inputs) != len(self.input_buffers):
+            raise ValueError(
+                f"expected {len(self.input_buffers)} input array(s) for this accelerator, got {len(inputs)}"
+            )
+
         if encode is not None:
-            X = encode(X)
-        np.copyto(self.input_buffer, X)
-        exec_time = ip.transfer(self.input_buffer, self.output_buffer, my_interrupt, profile)
+            inputs = [encode(x) for x in inputs]
+        for buffer, x in zip(self.input_buffers, inputs):
+            np.copyto(buffer, x)
+
+        exec_time = ip.transfer(self.input_buffers, self.output_buffers, my_interrupt, profile)
         # exec_time will valid only when the profile is enabled
+        outputs = self.output_buffers
         if decode is not None:
-            self.output_buffer = decode(self.output_buffer)
+            outputs = [decode(out) for out in outputs]
+        # a single-output model keeps returning a bare array rather than a 1-element list
+        result = outputs[0] if len(outputs) == 1 else outputs
 
         if profile:
-            performance = self.calculate_performance(len(X), exec_time)
-            return self.output_buffer, exec_time, performance
-        return self.output_buffer
+            performance = self.calculate_performance(len(inputs[0]), exec_time)
+            return result, exec_time, performance
+        return result
 
 class HLS4ML_IP(DefaultIP):
     def __init__(self, description):
@@ -196,18 +229,33 @@ class HLS4ML_IP(DefaultIP):
         # run and return whatever inside the wait_for_acc return
         return loop.run_until_complete(task)
 
-    def transfer(self, input_buffer, output_buffer, intr, profile = True):
+    def transfer(self, input_buffers, output_buffers, intr, profile = True):
 
-        # flush the buffer first
-        input_buffer.flush()
-        # prepare the data
-        self.set_input(0, input_buffer)
-        self.set_output(0, output_buffer)
-        self.set_amt_query(input_buffer.shape[0])
+        # accept a bare buffer as well as a list, one entry per port
+        in_buffers = list(input_buffers) if isinstance(input_buffers, (list, tuple)) else [input_buffers]
+        out_buffers = list(output_buffers) if isinstance(output_buffers, (list, tuple)) else [output_buffers]
+
+        if len(in_buffers) != len(self.REG_ADDR_INP_PTRs):
+            raise ValueError(
+                f"kernel has {len(self.REG_ADDR_INP_PTRs)} input port(s), got {len(in_buffers)} buffer(s)"
+            )
+        if len(out_buffers) != len(self.REG_ADDR_OUT_PTRs):
+            raise ValueError(
+                f"kernel has {len(self.REG_ADDR_OUT_PTRs)} output port(s), got {len(out_buffers)} buffer(s)"
+            )
+
+        # prepare the data; set_input flushes each buffer as it is bound
+        for idx, buffer in enumerate(in_buffers):
+            self.set_input(idx, buffer)
+        for idx, buffer in enumerate(out_buffers):
+            self.set_output(idx, buffer)
+        # every port carries the same batch, so the first one defines the query count
+        self.set_amt_query(in_buffers[0].shape[0])
         self.prepare_intr()
         # run and get the profile data
         exec_time = self.build_event_and_run(intr, profile)
-        # invalidate the output buffer
-        output_buffer.invalidate()
+        # invalidate the output buffers
+        for buffer in out_buffers:
+            buffer.invalidate()
         # it will return 0 if the profile is not enable
         return exec_time
