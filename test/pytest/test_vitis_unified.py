@@ -16,14 +16,11 @@ from tensorflow.keras.models import Model
 import hls4ml
 
 test_root_path = Path(__file__).parent
-# 1. For who installed the xilinx tool chain in /opt
-# os.environ['XILINX_VITIS'] = '/opt/Xilinx/Vitis/2023.2'
 
-# 2. For who installed the xilinx tool chain in /tools (both vitis and vivado are mandatory)
-os.environ['XILINX_VITIS'] = '/tools/Xilinx/Vitis/2023.2'
-os.environ['XILINX_VIVADO'] = '/tools/Xilinx/Vivado/2023.2'
 
-os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['XILINX_VIVADO'] + '/bin:' + os.environ['PATH']
+def require_synthesis(synthesis_config):
+    if not synthesis_config['run_synthesis']:
+        pytest.skip('Set RUN_SYNTHESIS=true to run synthesis tests')
 
 
 @pytest.fixture(scope='module')
@@ -142,7 +139,10 @@ def test_backend_predict(test_case_id, simple_unet, io_type, strategy, granulari
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('batch_size', [10])
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_cosimulation(test_case_id, simple_unet, tmp_path, io_type, strategy, granularity, batch_size, axi_mode):
+def test_cosimulation(
+    test_case_id, simple_unet, tmp_path, io_type, strategy, granularity, batch_size, axi_mode, synthesis_config
+):
+    require_synthesis(synthesis_config)
     model = simple_unet
     X_input = np.random.rand(batch_size, 4, 4, 1).astype(np.float32)
     np.save(tmp_path / 'input.npy', X_input)
@@ -183,7 +183,10 @@ def test_cosimulation(test_case_id, simple_unet, tmp_path, io_type, strategy, gr
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('batch_size', [10])
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_csim_simulation(test_case_id, simple_unet, tmp_path, io_type, strategy, granularity, batch_size, axi_mode):
+def test_csim_simulation(
+    test_case_id, simple_unet, tmp_path, io_type, strategy, granularity, batch_size, axi_mode, synthesis_config
+):
+    require_synthesis(synthesis_config)
     model = simple_unet
     X_input = np.random.rand(batch_size, 4, 4, 1).astype(np.float32)
     np.save(tmp_path / 'input.npy', X_input)
@@ -224,7 +227,10 @@ def test_csim_simulation(test_case_id, simple_unet, tmp_path, io_type, strategy,
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('batch_size', [10])
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_fifo_depth(test_case_id, simple_unet, tmp_path, io_type, strategy, granularity, batch_size, axi_mode):
+def test_fifo_depth(
+    test_case_id, simple_unet, tmp_path, io_type, strategy, granularity, batch_size, axi_mode, synthesis_config
+):
+    require_synthesis(synthesis_config)
     model = simple_unet
     X_input = np.random.rand(batch_size, 4, 4, 1).astype(np.float32)
     np.save(tmp_path / 'input.npy', X_input)
@@ -266,6 +272,11 @@ def test_fifo_depth(test_case_id, simple_unet, tmp_path, io_type, strategy, gran
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
 # @pytest.mark.parametrize('board', ['zcu102', 'kv260'])
 @pytest.mark.parametrize('board', ['kv260'])
+# Keep full bitstream generation out of regular CI for now; revisit it as part of PR #1474.
+@pytest.mark.skipif(
+    os.getenv('RUN_VITIS_UNIFIED_BITSTREAM', 'false').lower() not in ('1', 'true'),
+    reason='Set RUN_VITIS_UNIFIED_BITSTREAM=true to run bitstream tests',
+)
 def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, batch_size, axi_mode, board):
     model = simple_unet
     X_input = np.random.rand(batch_size, 4, 4, 1).astype(np.float32)
