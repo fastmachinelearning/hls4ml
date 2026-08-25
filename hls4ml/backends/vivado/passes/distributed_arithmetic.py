@@ -438,7 +438,7 @@ class DACombinationalTemplate(OptimizerPass):
         backend = model.config.get_config_value('Backend').lower()
         if backend in ('vitis', 'vivado'):
             flavor = 'vitis'
-        elif backend == 'altera':
+        elif backend in ('altera', 'oneapi'):
             flavor = 'oneapi'
         else:
             raise ValueError(f'Unsupported backend {backend} for DACombinational layer.')

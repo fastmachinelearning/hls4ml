@@ -7,7 +7,6 @@ from shutil import copyfile
 import numpy as np
 import yaml
 
-from hls4ml.backends import get_backend
 from hls4ml.utils.fixed_point_utils import FixedPointEmulator, ceil_log2, uint_to_binary
 from hls4ml.utils.string_utils import convert_to_pascal_case
 from hls4ml.writer.writers import Writer
@@ -16,6 +15,9 @@ config_filename = 'hls4ml_config.yml'
 
 
 class AlteraWriter(Writer):
+    compiler_executable = 'ahls'
+    compiler_definitions = ()
+
     def __make_dat_file(self, original_path, project_path):
         """
         Convert other input/output data types into a dat file, which is
@@ -510,6 +512,13 @@ class AlteraWriter(Writer):
                 line = line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
+                if 'hls-fpga-machine-learning insert compiler definitions' in line:
+                    for definition in self.compiler_definitions:
+                        line += f'add_compile_definitions({definition})\n'
+
+                elif 'hls-fpga-machine-learning insert compiler' in line:
+                    line += f'set(CMAKE_CXX_COMPILER {self.compiler_executable})\n'
+
                 if 'set(FPGA_DEVICE' in line:
                     line = f'    set(FPGA_DEVICE "{device}")\n'
 
@@ -544,7 +553,7 @@ class AlteraWriter(Writer):
         # custom source
         filedir = os.path.dirname(os.path.abspath(__file__))
 
-        custom_source = get_backend('Altera').get_custom_source()
+        custom_source = model.config.backend.get_custom_source()
         for dst, srcpath in custom_source.items():
             dstpath = f'{model.config.get_output_dir()}/src/firmware/{dst}'
             copyfile(srcpath, dstpath)

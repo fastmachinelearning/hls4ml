@@ -1,3 +1,5 @@
+import inspect
+import os
 import subprocess
 from pathlib import Path
 from warnings import warn
@@ -22,6 +24,7 @@ from hls4ml.model.layers import (
     Softmax,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
+from hls4ml.model.optimizer.optimizer import extract_optimizers_from_path
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
 from hls4ml.report import parse_altera_report
 from hls4ml.utils import attribute_descriptions as descriptions
@@ -31,10 +34,20 @@ from hls4ml.utils.einsum_utils import parse_einsum
 
 
 class AlteraBackend(FPGABackend):
-    def __init__(self):
-        super().__init__('Altera')
+    compiler_executable = 'ahls'
+
+    def __init__(self, name='Altera'):
+        super().__init__(name)
         self._register_layer_attributes()
         self._register_flows()
+
+    def _init_file_optimizers(self):
+        file_optimizers = {}
+        for cls in (FPGABackend, AlteraBackend):
+            opt_path = os.path.dirname(inspect.getfile(cls)) + '/passes'
+            module_path = cls.__module__[: cls.__module__.rfind('.')] + '.passes'
+            file_optimizers.update(extract_optimizers_from_path(opt_path, module_path, self))
+        return file_optimizers
 
     def _register_layer_attributes(self):
         # Add RNN-specific recurrent_reuse_factor attribute
@@ -63,46 +76,51 @@ class AlteraBackend(FPGABackend):
             self.attribute_map[layer] = attrs
 
     def _register_flows(self):
+        backend_prefix = self.name.lower()
+
+        def backend_pass(name):
+            return f'{backend_prefix}:{name}'
+
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
-        streaming_passes = ['altera:clone_output']
+        streaming_passes = [backend_pass('clone_output')]
         streaming_flow = register_flow('streaming', streaming_passes, requires=[init_flow], backend=self.name)
 
         altera_types = [
-            'altera:transform_types',
-            'altera:register_bram_weights',
-            'altera:apply_resource_strategy',
-            'altera:apply_winograd_kernel_transformation',
+            backend_pass('transform_types'),
+            backend_pass('register_bram_weights'),
+            backend_pass('apply_resource_strategy'),
+            backend_pass('apply_winograd_kernel_transformation'),
         ]
         altera_types_flow = register_flow('specific_types', altera_types, requires=[init_flow], backend=self.name)
 
         quantization_passes = [
-            'altera:merge_batch_norm_quantized_tanh',
-            'altera:quantize_dense_output',
+            backend_pass('merge_batch_norm_quantized_tanh'),
+            backend_pass('quantize_dense_output'),
             'fuse_consecutive_batch_normalization',
-            'altera:xnor_pooling',
+            backend_pass('xnor_pooling'),
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
         optimization_passes = [
-            'altera:remove_final_reshape',
-            'altera:optimize_pointwise_conv',
-            'altera:inplace_parallel_reshape',
-            'altera:skip_softmax',
-            'altera:fix_softmax_table_size',
+            backend_pass('remove_final_reshape'),
+            backend_pass('optimize_pointwise_conv'),
+            backend_pass('inplace_parallel_reshape'),
+            backend_pass('skip_softmax'),
+            backend_pass('fix_softmax_table_size'),
             'infer_precision_types',
-            'altera:process_fixed_point_quantizer_layer',
-            'altera:validate_ac_types',
+            backend_pass('process_fixed_point_quantizer_layer'),
+            backend_pass('validate_ac_types'),
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
         templates = self._get_layer_templates()
         template_flow = register_flow('apply_templates', self._get_layer_templates, requires=[init_flow], backend=self.name)
 
-        writer_passes = ['make_stamp', 'altera:write_hls']
+        writer_passes = ['make_stamp', backend_pass('write_hls')]
 
-        self._writer_flow = register_flow('write', writer_passes, requires=['altera:ip'], backend=self.name)
+        self._writer_flow = register_flow('write', writer_passes, requires=[backend_pass('ip')], backend=self.name)
 
         all_passes = get_backend_passes(self.name)
 
@@ -118,7 +136,7 @@ class AlteraBackend(FPGABackend):
             + templates
             + optimization_passes
             + writer_passes
-            + ['altera:inplace_stream_flatten', 'altera:reshape_stream']  # not needed
+            + [backend_pass('inplace_stream_flatten'), backend_pass('reshape_stream')]  # not needed
         ]
 
         if len(extras) > 0:
@@ -194,7 +212,7 @@ class AlteraBackend(FPGABackend):
 
     def build(self, model, build_type='fpga_emu', run=False):
         """
-        Builds the project using the Intel oneAPI DPC++ compiler.
+        Builds the project using the backend's configured compiler.
 
         Args:
             model (ModelGraph): The model to build
@@ -208,9 +226,11 @@ class AlteraBackend(FPGABackend):
         builddir = outdir / 'build'
         builddir.mkdir(exist_ok=True)
         try:
-            subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
+            subprocess.run(f'which {self.compiler_executable}', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
-            raise RuntimeError('Could not find ahls. Please configure the Altera HLS IP Gen toolchain appropriately')
+            raise RuntimeError(
+                f'Could not find {self.compiler_executable}. Please configure the {self.name} toolchain appropriately'
+            )
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 

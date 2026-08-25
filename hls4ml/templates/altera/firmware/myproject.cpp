@@ -1,13 +1,12 @@
 #include "myproject.h"
 #include "parameters.h"
-#include <sycl/ext/altera/experimental/task_sequence.hpp>
 
 // hls-fpga-machine-learning insert weights
 
 // The inter-task pipes need to be declared in the global scope
 // hls-fpga-machine-learning insert inter-task pipes
 
-using sycl::ext::altera::experimental::task_sequence;
+using hls4ml_sycl_ext::experimental::task_sequence;
 
 void MyProject::operator()() const {
     // ****************************************

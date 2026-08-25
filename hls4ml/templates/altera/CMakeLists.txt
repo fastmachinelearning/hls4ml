@@ -1,15 +1,10 @@
-# Direct CMake to use ahls rather than the default C++ compiler/linker on Linux
-if(UNIX)
-    set(CMAKE_CXX_COMPILER ahls)
-else() # Windows
-    message(FATAL_ERROR "Only Unix/Linux is supported.")
-endif()
+# hls-fpga-machine-learning insert compiler
 
 cmake_minimum_required (VERSION 3.7.2)
 
 project(myproject CXX)
 
-add_compile_definitions(AHLS)
+# hls-fpga-machine-learning insert compiler definitions
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

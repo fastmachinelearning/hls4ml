@@ -27,12 +27,12 @@ def generate_mask_fn(
 ) -> str:
     """Generate heterogenous quantization mask function, ONLY works for IOType=io_parallel"""
     assert k.shape[0] == b.shape[0] == i.shape[0] == 1
-    assert backend.lower() in ('altera', 'quartus', 'vivado', 'vitis'), f'Backend {backend} not tested'
+    assert backend.lower() in ('altera', 'oneapi', 'quartus', 'vivado', 'vitis'), f'Backend {backend} not tested'
     Ks, Bs, Is = k[0], b[0], i[0]
     Ks, Bs, Is = np.broadcast_to(Ks, shape), np.broadcast_to(Bs, shape), np.broadcast_to(Is, shape)
     Ks, Bs, Is = Ks.ravel(), Bs.ravel(), Is.ravel()
     masks = []
-    to_fixed = to_acfixed if backend.lower() in ['altera', 'quartus'] else to_apfixed
+    to_fixed = to_acfixed if backend.lower() in ['altera', 'oneapi', 'quartus'] else to_apfixed
     for idx, (k, b, i) in enumerate(zip(Ks, Bs, Is)):
         if b == 0:
             fn = f'out[{idx}] = 0;'
@@ -41,12 +41,14 @@ def generate_mask_fn(
         masks.append(f'    {fn}')
     body = '\n'.join(masks)
     arguments = (
-        'input_t *inp, output_t *out' if backend.lower() not in ['altera', 'quartus'] else 'input_t &inp, output_t &out'
+        'input_t *inp, output_t *out'
+        if backend.lower() not in ['altera', 'oneapi', 'quartus']
+        else 'input_t &inp, output_t &out'
     )
     mask_fn = f"""
 template<typename input_t, typename output_t>
 void {name}({arguments}) {{
-    {'#pragma HLS INLINE' if backend.lower() not in ['altera', 'quartus'] else ''}
+    {'#pragma HLS INLINE' if backend.lower() not in ['altera', 'oneapi', 'quartus'] else ''}
 
 {body}
 }}

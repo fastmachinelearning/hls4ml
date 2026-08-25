@@ -3,6 +3,7 @@ from hls4ml.backends.fpga.fpga_backend import FPGABackend  # noqa: F401
 from hls4ml.backends.libero.libero_backend import LiberoBackend
 
 from hls4ml.backends.altera.altera_backend import AlteraBackend  # isort: skip
+from hls4ml.backends.oneapi.oneapi_backend import OneAPIBackend
 from hls4ml.backends.plugin_loader import load_backend_plugins
 from hls4ml.backends.quartus.quartus_backend import QuartusBackend
 from hls4ml.backends.symbolic.symbolic_backend import SymbolicExpressionBackend
@@ -25,6 +26,7 @@ def _register_builtin_backends():
     register_backend('Catapult', CatapultBackend)
     register_backend('SymbolicExpression', SymbolicExpressionBackend)
     register_backend('Altera', AlteraBackend)
+    register_backend('oneAPI', OneAPIBackend)
     register_backend('Coyote', CoyoteBackend)
     register_backend('Libero', LiberoBackend)
     register_backend('XLS', XLSBackend)
