@@ -19,6 +19,7 @@ from tensorflow.keras.layers import (
     MaxPooling1D,
     MaxPooling2D,
     PReLU,
+    ReLU,
 )
 
 import hls4ml
@@ -551,3 +552,55 @@ def test_pooling(test_case_id, pooling, padds, chans, backend, synthesis_config)
             assert hls_pool.attributes['pad_right'] == 0
 
     run_synthesis_test(config=synthesis_config, hls_model=hls_model, baseline_file_name=baseline_file_name, backend=backend)
+
+
+def test_relu_negative_slope_threshold(test_case_id):
+    """ReLU layer options previously silently dropped: negative_slope maps to LeakyReLU,
+    threshold to ThresholdedReLU. Checked numerically against Keras."""
+    model = tf.keras.models.Sequential(
+        [
+            tf.keras.layers.Input((8,)),
+            Dense(8, kernel_initializer='lecun_uniform'),
+            ReLU(negative_slope=0.25),
+            Dense(8, kernel_initializer='lecun_uniform'),
+            ReLU(threshold=0.5),
+        ]
+    )
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32,16>', backend='Vivado'
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend='Vivado')
+
+    activations = [str(layer.get_attr('activation', '')).lower() for layer in hls_model.get_layers()]
+    assert 'leakyrelu' in activations and 'thresholdedrelu' in activations
+
+    hls_model.compile()
+    X = (np.random.rand(50, 8) * 4 - 2).astype('float32')
+    keras_prediction = model.predict(X)
+    hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=1e-2)
+
+
+@pytest.mark.parametrize('dim', ['1d', '2d'])
+def test_grouped_depthwise_conv(test_case_id, dim):
+    """A depthwise-shaped grouped conv (groups == in_channels == filters) is routed to
+    DepthwiseConv. Checked numerically against Keras."""
+    if dim == '1d':
+        model = tf.keras.models.Sequential([tf.keras.layers.Input((16, 4)), Conv1D(4, 3, groups=4)])
+        X = np.random.rand(20, 16, 4).astype('float32')
+    else:
+        model = tf.keras.models.Sequential([tf.keras.layers.Input((16, 16, 4)), Conv2D(4, 3, groups=4)])
+        X = np.random.rand(20, 16, 16, 4).astype('float32')
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32,16>', backend='Vivado'
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend='Vivado')
+    assert f'DepthwiseConv{dim.upper()}' in [layer.class_name for layer in hls_model.get_layers()]
+
+    hls_model.compile()
+    keras_prediction = model.predict(X)
+    hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=1e-2)
