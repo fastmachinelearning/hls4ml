@@ -3646,4 +3646,3 @@ Backend-specific attributes
   * "LineBuffer" implementation is preferred over "Encoded" for most use cases. This attribute only applies to io_stream.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote
-
