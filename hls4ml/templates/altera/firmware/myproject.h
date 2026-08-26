@@ -7,8 +7,7 @@
 
 // currently this is fixed
 
-using PipeProps = decltype(
-    sycl::ext::oneapi::experimental::properties(hls4ml_sycl_ext::experimental::ready_latency<0>));
+using PipeProps = decltype(sycl::ext::oneapi::experimental::properties(hls4ml_sycl_ext::experimental::ready_latency<0>));
 
 // Need to declare the input and output pipes
 
@@ -21,8 +20,8 @@ struct MyProject {
 
     // kernel property method to config invocation interface
     auto get(sycl::ext::oneapi::experimental::properties_tag) {
-        return sycl::ext::oneapi::experimental::properties{
-            hls4ml_sycl_ext::experimental::streaming_interface<>, hls4ml_sycl_ext::experimental::pipelined<>};
+        return sycl::ext::oneapi::experimental::properties{hls4ml_sycl_ext::experimental::streaming_interface<>,
+                                                           hls4ml_sycl_ext::experimental::pipelined<>};
     }
 
     SYCL_EXTERNAL void operator()() const;

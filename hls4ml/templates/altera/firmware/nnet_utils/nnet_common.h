@@ -1,8 +1,8 @@
 #ifndef NNET_COMMON_H_
 #define NNET_COMMON_H_
 
-#include "nnet_helpers.h"
 #include "hls4ml_sycl.h"
+#include "nnet_helpers.h"
 
 typedef ac_fixed<16, 6> table_default_t;
 
