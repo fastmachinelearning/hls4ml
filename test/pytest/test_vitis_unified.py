@@ -317,6 +317,10 @@ def test_gen_unified(test_case_id, simple_unet, io_type, strategy, granularity, 
 @pytest.mark.parametrize('axi_mode', ['axi_master'])
 # @pytest.mark.parametrize('board', ['zcu102', 'kv260'])
 @pytest.mark.parametrize('board', ['kv260'])
+@pytest.mark.skipif(
+    os.getenv('RUN_VITIS_UNIFIED_BITSTREAM', 'false').lower() not in ('1', 'true'),
+    reason='Set RUN_VITIS_UNIFIED_BITSTREAM=true to run bitstream tests',
+)
 def test_gen_unified_multi_io(test_case_id, multi_io_net, io_type, strategy, granularity, batch_size, axi_mode, board):
     """Full bitstream generation for a multi-input / multi-output model on AXI-master.
 
