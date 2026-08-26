@@ -15,12 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![feature(type_inference_v2)]
 
-// Implements rounding for all rounding modes defined by the IEEE 754 standard.
+// Implements rounding for all rounding modes defined by hls4ml.model.types.RoundingMode (or ap_fixed type).
 //
 // It handles unsigned, signed (two's complement), and sign-and-magnitude values.
-// It handles all 5 IEEE 754 rounding modes.
 // Versions with compile-time 'num bits rounded' argument are provided, truncating the rounded-away
 // bits.
 // Versions with runtime 'num bits rounded' argument are provided, returning the full-width rounded
@@ -39,33 +37,16 @@
 import std;
 import round as std_round;
 
-// Rounding modes defined by the IEEE 754 standard.
-//
-// Note that the first two (RNE, RNA) always round to the nearest value, and when two potential
-// results are equally close, a tie-breaking rule is applied. The last three (RTZ, RTN, RTP)
+// Rounding modes defined by hls4ml.model.types.RoundingMode (or ap_fixed type).
+// NB: do not confuse with std_round::RoundingMode!
+// Note that the last five (RND, RND_ZERO, RND_INF, RND_MIN_INF, RND_CONV) always round to the nearest value, and when two potential
+// results are equally close, a tie-breaking rule is applied. The first two (TRN, TRN_ZERO)
 // first establish a direction on the Extended Real number line, and then round to the nearest
 // value in that direction. If there is a closer value in the opposite direction, it is never
 // returned.
 //
-// On naming: those that round to the nearest value begin with "RN", and those that always round
-// in the same direction begin with "RT".
-// pub enum RoundingMode : u3 {
-//     // Round to Nearest, ties to Even. Of the two equally-close rounded results, the 'even'
-//     // result's lsb is 0.
-//     RNE = 0,
-//     // Rounds to Nearest, ties Away from zero. Of the two equally-close rounded results, the
-//     // value with the larger magnitude is returned.
-//     RNA = 1,
-//     // Round Toward Zero (i.e. floor(x) when x >= 0, or ceil(x) when x < 0)
-//     RTZ = 2,
-//     // Round Toward Negative infinity (i.e. floor(x))
-//     RTN = 3,
-//     // Round Toward Positive infinity (i.e. ceil(x))
-//     RTP = 4,
-// }
-
-// All modes from hls4ml.model.types.RoundingMode
-// NB: do not confuse with std_round::RoundingMode!
+// On naming: those that round to the nearest value begin with "RND", and those that always round
+// in the same direction begin with "TRN".
 type RoundingModeIntegerType = u3;
 pub enum RoundingMode: RoundingModeIntegerType {
     // Directed truncation toward -inf.
@@ -91,7 +72,7 @@ pub enum RoundingMode: RoundingModeIntegerType {
 // Indicates a positive (more precisely: non-negative) or negative number.
 pub type Sign = std_round::Sign;
 
-// Conversion to/from std::round::RoundingMode
+// Conversion to/from std_round::RoundingMode
 
 const TO_STD_MODE = [
     (RoundingMode::TRN, std_round::RoundingMode::RTN),
@@ -151,26 +132,26 @@ pub fn convert_from_std(rm: std_round::RoundingMode) -> RoundingMode {
 //
 // Users should interpret `unrounded` as a fixed-point quantity with num_bits_rounded fractional
 // bits, being rounded to an integer. For unsigned inputs the corresponding Real value is
-// unrounded / 2^num_bits_rounded, and the IEEE-754 rounding modes apply directly to that Real
-// number. This viewpoint also explains the RNE tie case when every retained bit is discarded:
+// unrounded / 2^num_bits_rounded, and the rounding modes apply directly to that Real
+// number. This viewpoint also explains the RND_CONV tie case when every retained bit is discarded:
 // the surviving integer portion is zero (an even value), so ties resolve towards zero.
 //
 // Overflow is 1 when the Real rounded result isn't a representable result (because the increase
 // in magnitude requires a wider result type). Some non-exhaustive examples of when that can
 // occur:
-//  * RNE(3.5) = 4 -> overflow when round(RNE, 2, NonNegative, u4:0b11_10)
-//  * RTN(-1.0625) = -2 -> overflow when round(RTN, 4, Negative, u5:0b1_0001)
-//  * RTN(-0.03125) = -1 -> overflow when round(RTN, 5, NonNegative, s5:0b11111)
+//  * RND_CONV(3.5) = 4 -> overflow when round(RND_CONV, 2, NonNegative, u4:0b11_10)
+//  * TRN(-1.0625) = -2 -> overflow when round(TRN, 4, Negative, u5:0b1_0001)
+//  * TRN(-0.03125) = -1 -> overflow when round(TRN, 5, NonNegative, s5:0b11111)
 // The rounded result is 0 when overflow is 1.
 //
 // When num_bits_rounded > N, all source bits are treated as fractional. The rounded integer is 0
 // unless the rounding mode requires +/-1, in which case overflow is signaled and 0 is returned.
 //
-// As mentioned above, during a tie, RNE looks at the least significant retained bit to
+// As mentioned above, during a tie, RND_CONV looks at the least significant retained bit to
 // determine round up or down. When there are no retained bits (i.e. num_bits_rounded >= N),
 // round down is chosen. E.g.
-// round(RNE, 4 bits, unsigned, u5:0b1_1000) -> rounds up (retained msb is 1)
-// round(RNE, 4 bits, unsigned, u4:0b1000) -> rounds down (no retained bits)
+// round(RND_CONV, 4 bits, unsigned, u5:0b1_1000) -> rounds up (retained msb is 1)
+// round(RND_CONV, 4 bits, unsigned, u4:0b1000) -> rounds down (no retained bits)
 pub fn round<S: bool, N: u32, W_NBR: u32 = {std::clog2(N + u32:1)}>
     (rounding_mode: RoundingMode, num_bits_rounded: uN[W_NBR], sign: Sign, unrounded: xN[S][N])
     -> (u1, xN[S][N]) {
@@ -253,14 +234,14 @@ pub fn round<S: bool, N: u32, W_NBR: u32 = {std::clog2(N + u32:1)}>
                     // closer to 0 than half. E.g. -4 + 0.75 = -3.25 is closer to 0 than -3.5 is.
                     let closer_to_zero_than_half_is = rounded_gt_half;
                     if closer_to_zero_than_half_is || tie_to_even {
-                        // RNE(-3.25) -> -3, retained=-4, thus adjustment=1
-                        // RNE(-2.5) -> -2, retained=-3, thus adjustment=+1
+                        // RND_CONV(-3.25) -> -3, retained=-4, thus adjustment=1
+                        // RND_CONV(-2.5) -> -2, retained=-3, thus adjustment=+1
                         one
                     } else {
                         // case: further from 0 than half is (e.g. -4 + 0.25 = -3.75 which is
                         // further from 0 than -3.5 is) OR rounded=0.5 and retained bits are even.
-                        // RNE(-3.75) -> -4, retained=-4, thus adjustment=0
-                        // RNE(-3.5) -> -4, retained=-4, thus adjustment=0
+                        // RND_CONV(-3.75) -> -4, retained=-4, thus adjustment=0
+                        // RND_CONV(-3.5) -> -4, retained=-4, thus adjustment=0
                         zero
                     }
                 } else {
@@ -276,18 +257,18 @@ pub fn round<S: bool, N: u32, W_NBR: u32 = {std::clog2(N + u32:1)}>
                 // two's complement, positive value -> 1
                 // two's complement, negative value -> 0 (because truncation is toward -∞)
                 //
-                // you'll notice that RNE and RNA are the same w.r.t. the adjustment, and only
+                // you'll notice that RND_CONV and RND_INF are the same w.r.t. the adjustment, and only
                 // differ in the case of a tie (they agree when |rounded_bits| > |half|)
                 if negative_twos_complement {
                     // recall that rounded > 0.5 means the (negative two's complement) value is
                     // closer to 0 than half. E.g. -4 + 0.75 = -3.25 is closer to 0 than -3.5 is.
                     let closer_to_zero_than_half_is = rounded_gt_half;
                     if closer_to_zero_than_half_is {
-                        // RNA(-3.25) -> -3, retained=-4, thus adjustment=1
+                        // RND_INF(-3.25) -> -3, retained=-4, thus adjustment=1
                         one
                     } else {
-                        // RNA(-3.5) -> -4, retained=-4, thus adjustment=0
-                        // RNA(-3.75) -> -4, retained=-4, thus adjustment=0
+                        // RND_INF(-3.5) -> -4, retained=-4, thus adjustment=0
+                        // RND_INF(-3.75) -> -4, retained=-4, thus adjustment=0
                         zero
                     }
                 } else {
@@ -386,8 +367,8 @@ pub fn round<S: bool, N: u32, W_NBR: u32 = {std::clog2(N + u32:1)}>
                 (Sign::Negative, true) => false,
                 (Sign::Negative, false) => {
                     // Negative argument with no adjustment.
-                    // When every bit is rounded away the result is 0 (RTZ/RNE/RTP)
-                    // or -1 (RTN/RNA). The latter is not representable because no integer bits
+                    // When every bit is rounded away the result is 0 (TRN_ZERO/RND/RND_ZERO/RND_CONV)
+                    // or -1 (TRN/RND_MIN_INF/RND_INF). The latter is not representable because no integer bits
                     // remain.
                     if rounding_all_bits &&
                     (rounding_mode == RoundingMode::TRN ||
@@ -404,8 +385,8 @@ pub fn round<S: bool, N: u32, W_NBR: u32 = {std::clog2(N + u32:1)}>
         let rounded_u = if sign_changed {
             // handles cases like:
             // argument is two's complement, positive, and rounding away all bits
-            // RNE(0.9375) = 1 -> overflow
-            // round(RoundingMode::RNE, 4, NonNegative, s5:0b0_1111))
+            // RND_CONV(0.9375) = 1 -> overflow
+            // round(RoundingMode::RND_CONV, 4, NonNegative, s5:0b0_1111))
             // without this correction, result would be s5:0b1_0000, i.e. -1
             uN[N]:0
         } else {

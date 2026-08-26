@@ -11,7 +11,7 @@ type Sign = round::Sign;
 
 pub type RoundingMode = round::RoundingMode;
 
-// Same oveflow modes as in ac_fixed type and in hls4ml
+// Same overflow modes as in ac_fixed type and in hls4ml
 type OverflowModeIntegerType = u2;
 pub enum OverflowMode: OverflowModeIntegerType {
     // Drop bits to the left of MSB
