@@ -76,3 +76,21 @@ def test_layernorm(test_case_id, model, data, backend):
     y_pytorch = model(torch.Tensor(data)).detach().numpy().flatten()
     y_hls = hls_model.predict(data).flatten()
     np.testing.assert_allclose(y_pytorch, y_hls, rtol=0, atol=5e-2, verbose=True)
+
+
+@pytest.mark.parametrize('backend', ['Vivado'])
+def test_layernorm_no_affine(test_case_id, data, backend):
+    # with elementwise_affine=False the weight and bias parameters do not exist; identity values are substituted
+    model = nn.Sequential(OrderedDict([('layer_normalization', nn.LayerNorm(in_shape[-1], elementwise_affine=False))]))
+    model.eval()
+
+    config = hls4ml.utils.config_from_pytorch_model(model, in_shape, granularity='name', backend=backend)
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, backend=backend, hls_config=config, io_type='io_parallel', output_dir=output_dir
+    )
+    hls_model.compile()
+
+    y_pytorch = model(torch.Tensor(data)).detach().numpy().flatten()
+    y_hls = hls_model.predict(data).flatten()
+    np.testing.assert_allclose(y_pytorch, y_hls, rtol=0, atol=5e-2, verbose=True)
