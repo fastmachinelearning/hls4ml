@@ -51,8 +51,6 @@ HLS backends:
 * oneAPI (to be superseded by Altera)
 * XLS (experimental)
 
-======= end
-
 A summary of the on-going status of the ``hls4ml`` tool is in the table below.
 
 .. table:: hls4ml Supported Features
