@@ -58,12 +58,14 @@ def synthesis_config():
             'Vivado': os.getenv('VIVADO_VERSION', '2020.1'),
             'Vitis': os.getenv('VITIS_VERSION', '2024.1'),
             'Quartus': os.getenv('QUARTUS_VERSION', 'latest'),
-            'Altera': os.getenv('ONEAPI_VERSION', '2025.0.1'),
+            'Altera': os.getenv('AHLS_VERSION', '2026.1.0'),  # this doesn't actually work
+            'oneAPI': os.getenv('ONEAPI_VERSION', '2025.0.1'),
         },
         'build_args': {
             'Vivado': {'csim': False, 'synth': True, 'export': False},
             'Vitis': {'csim': False, 'synth': True, 'export': False},
             'Quartus': {'synth': True, 'fpgasynth': False},
             'Altera': {'build_type': 'report', 'run': False},
+            'oneAPI': {'build_type': 'report', 'run': False},
         },
     }

@@ -48,7 +48,7 @@ def _find(hls_model, cls, name):
     return next(node for node in hls_model.graph.values() if isinstance(node, cls) and node.name == name)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('n_chan, groups', [(16, 16), (16, 4), (16, 1)], ids=['depthwise', 'grouped', 'dense'])
 def test_bit_exact_grouped_conv1d(test_case_id, backend, n_chan, groups):
     with QuantizerConfigScope(f0=4, i0=4):
@@ -60,7 +60,7 @@ def test_bit_exact_grouped_conv1d(test_case_id, backend, n_chan, groups):
     data = np.random.default_rng(0).standard_normal((1000, 16, n_chan)).astype(np.float32)
     r_keras = trace_minmax(model, data, return_results=True)
 
-    precision = 'ac_fixed<2,0>' if backend == 'Altera' else 'ap_fixed<1,0>'
+    precision = 'ac_fixed<2,0>' if backend in ('Altera', 'oneAPI') else 'ap_fixed<1,0>'
     hls_config = {'Model': {'Precision': precision, 'ReuseFactor': 1, 'Strategy': 'latency'}}
     output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_keras_model(
@@ -70,12 +70,12 @@ def test_bit_exact_grouped_conv1d(test_case_id, backend, n_chan, groups):
     conv = _find(hls_model, Conv1D, 'cg')
     _assert_exactly_representable(r_keras, *_result_kif(conv))
 
-    # Per-channel check; skipped for Altera, which transposes conv weights after the pass.
-    if backend != 'Altera':
+    # Per-channel check; skipped for Altera-family backends, which transpose conv weights after the pass.
+    if backend not in ('Altera', 'oneAPI'):
         _assert_exactly_representable(r_keras, *produce_kif(conv))
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('n_chan, groups', [(4, 4), (4, 2), (4, 1)], ids=['depthwise', 'grouped', 'dense'])
 def test_bit_exact_grouped_conv2d(test_case_id, backend, n_chan, groups):
     with QuantizerConfigScope(f0=4, i0=4):
@@ -87,7 +87,7 @@ def test_bit_exact_grouped_conv2d(test_case_id, backend, n_chan, groups):
     data = np.random.default_rng(1).standard_normal((500, 8, 8, n_chan)).astype(np.float32)
     r_keras = trace_minmax(model, data, return_results=True)
 
-    precision = 'ac_fixed<2,0>' if backend == 'Altera' else 'ap_fixed<1,0>'
+    precision = 'ac_fixed<2,0>' if backend in ('Altera', 'oneAPI') else 'ap_fixed<1,0>'
     hls_config = {'Model': {'Precision': precision, 'ReuseFactor': 1, 'Strategy': 'latency'}}
     output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_keras_model(
@@ -96,5 +96,5 @@ def test_bit_exact_grouped_conv2d(test_case_id, backend, n_chan, groups):
 
     conv = _find(hls_model, Conv2D, 'cg')
     _assert_exactly_representable(r_keras, *_result_kif(conv))
-    if backend != 'Altera':
+    if backend not in ('Altera', 'oneAPI'):
         _assert_exactly_representable(r_keras, *produce_kif(conv))

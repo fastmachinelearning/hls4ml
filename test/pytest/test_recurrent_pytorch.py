@@ -31,7 +31,7 @@ class GRUNetStream(nn.Module):
         return output
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_gru(test_case_id, backend, io_type):
     model = GRUNet()
@@ -62,7 +62,7 @@ def test_gru(test_case_id, backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=1e-1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_gru_stream(test_case_id, backend, io_type):
     model = GRUNetStream()
@@ -107,7 +107,7 @@ class LSTMStream(nn.Module):
         return output
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_lstm(test_case_id, backend, io_type):
     model = LSTM()
@@ -148,10 +148,10 @@ def test_lstm(test_case_id, backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=1e-1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_lstm_stream(test_case_id, backend, io_type):
-    if not (backend in ('Quartus', 'Altera') and io_type == 'io_stream'):
+    if not (backend in ('Quartus', 'Altera', 'oneAPI') and io_type == 'io_stream'):
         model = LSTMStream()
         model.eval()
 
@@ -190,10 +190,10 @@ class RNN(nn.Module):
         return output
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_rnn(test_case_id, backend, io_type):
-    if not (backend in ('Quartus', 'Altera') and io_type == 'io_stream'):
+    if not (backend in ('Quartus', 'Altera', 'oneAPI') and io_type == 'io_stream'):
         model = RNN()
         model.eval()
 

@@ -29,7 +29,7 @@ def model(request):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('model', [True, False], indirect=True)
 def test_batchnorm(test_case_id, model, data, backend, io_type):
     default_precision = 'fixed<32, 1>'

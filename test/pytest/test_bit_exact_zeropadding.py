@@ -26,7 +26,7 @@ from keras.layers import Input, ZeroPadding1D, ZeroPadding2D  # noqa: E402
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_bit_exact_zeropadding1d(test_case_id, backend, io_type):
     """ZeroPadding1D between two quantized Conv1D layers must convert via the
@@ -41,7 +41,7 @@ def test_bit_exact_zeropadding1d(test_case_id, backend, io_type):
     data = np.random.default_rng(0).standard_normal((1000, 16, 8)).astype(np.float32)
     r_keras = trace_minmax(model, data, return_results=True)
 
-    precision = 'ac_fixed<2,0>' if backend == 'Altera' else 'ap_fixed<1,0>'
+    precision = 'ac_fixed<2,0>' if backend in ('Altera', 'oneAPI') else 'ap_fixed<1,0>'
     hls_config = {'Model': {'Precision': precision, 'ReuseFactor': 1, 'Strategy': 'latency'}}
     output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_keras_model(
@@ -53,7 +53,7 @@ def test_bit_exact_zeropadding1d(test_case_id, backend, io_type):
     np.testing.assert_array_equal(r_keras, r_hls)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_bit_exact_zeropadding2d(test_case_id, backend, io_type):
     """ZeroPadding2D between two quantized Conv2D layers must convert via the
@@ -68,7 +68,7 @@ def test_bit_exact_zeropadding2d(test_case_id, backend, io_type):
     data = np.random.default_rng(1).standard_normal((500, 8, 8, 4)).astype(np.float32)
     r_keras = trace_minmax(model, data, return_results=True)
 
-    precision = 'ac_fixed<2,0>' if backend == 'Altera' else 'ap_fixed<1,0>'
+    precision = 'ac_fixed<2,0>' if backend in ('Altera', 'oneAPI') else 'ap_fixed<1,0>'
     hls_config = {'Model': {'Precision': precision, 'ReuseFactor': 1, 'Strategy': 'latency'}}
     output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_keras_model(

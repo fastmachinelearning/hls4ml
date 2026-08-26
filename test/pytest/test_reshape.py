@@ -20,7 +20,7 @@ def randX_20_10():
     return randX(20, 10)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Catapult', 'Altera', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_reshape_parallel(test_case_id, randX_20_10, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':

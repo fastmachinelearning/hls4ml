@@ -19,6 +19,7 @@ test_root_path = Path(__file__).parent
         ('Vitis', 'Resource'),
         ('Quartus', 'Resource'),
         ('Altera', 'Resource'),
+        ('oneAPI', 'Resource'),
         ('Catapult', 'Latency'),
         ('Catapult', 'Resource'),
         ('XLS', 'Latency'),

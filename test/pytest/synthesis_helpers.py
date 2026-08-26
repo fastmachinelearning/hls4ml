@@ -121,6 +121,7 @@ COMPARE_FUNCS = {
     'Vivado': compare_vitis_backend,
     'Vitis': compare_vitis_backend,
     'Altera': compare_altera_backend,
+    'oneAPI': compare_altera_backend,
 }
 
 
@@ -128,6 +129,7 @@ EXPECTED_REPORT_KEYS = {
     'Vivado': {'CSynthesisReport'},
     'Vitis': {'CSynthesisReport'},
     'Altera': {'report'},
+    'oneAPI': {'report'},
 }
 
 

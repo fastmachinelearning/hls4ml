@@ -100,6 +100,7 @@ def backend_configs():
             + '    ALMs:   4520.0            N/A               N/A              \n\n',
         },
     }
+    config_dict['oneAPI'] = {**config_dict['Altera'], 'backend': 'oneAPI', 'report_backend': 'Altera'}
 
     return config_dict
 
@@ -116,7 +117,8 @@ def hls_model_setup(request, test_case_id, backend_configs, tmp_path):
     config = hls4ml.utils.config_from_keras_model(model, granularity='model')
 
     output_dir = str(tmp_path / test_case_id)
-    test_report_dir = test_root_path / f'test_report/{backend_config["backend"]}'
+    report_backend = backend_config.get('report_backend', backend_config['backend'])
+    test_report_dir = test_root_path / f'test_report/{report_backend}'
 
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
@@ -136,7 +138,7 @@ def hls_model_setup(request, test_case_id, backend_configs, tmp_path):
     yield output_dir, backend_config
 
 
-@pytest.mark.parametrize('hls_model_setup', ['Vivado', 'Altera'], indirect=True)
+@pytest.mark.parametrize('hls_model_setup', ['Vivado', 'Altera', 'oneAPI'], indirect=True)
 def test_report(hls_model_setup, capsys):
     """Tests that the report parsing and printing functions work for different backends."""
     output_dir, backend_config = hls_model_setup

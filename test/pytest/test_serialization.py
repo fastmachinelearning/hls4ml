@@ -32,7 +32,7 @@ def qkeras_model(input_shape):
     return model
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_save_load__model(test_case_id, io_type, backend):
     input_shape = (8, 8, 3)
@@ -194,7 +194,7 @@ def test_save_load_qonnx_model(test_case_id, backend):
     np.testing.assert_equal(y_original, y_clone)
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'Altera', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_linking_project(test_case_id, io_type, backend):
     input_shape = (8, 8, 3)
