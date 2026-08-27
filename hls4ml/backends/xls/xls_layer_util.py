@@ -122,7 +122,7 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
             axis = rank - 1
         return [XLSConstDefinition(name='AXIS', value=axis, type='u32')]
     elif class_name in ('Conv1D', 'DepthwiseConv1D'):
-        return [
+        return xls_named_type_definitions(layer, 'accum_t') + [
             XLSConstDefinition(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
             XLSConstDefinition(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
             XLSConstDefinition(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
@@ -131,7 +131,7 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
             ),
         ]
     elif class_name in ('Conv2D', 'DepthwiseConv2D'):
-        return [
+        return xls_named_type_definitions(layer, 'accum_t') + [
             XLSConstDefinition(name='STRIDE_HEIGHT', value=layer.get_attr('stride_height'), type='u32'),
             XLSConstDefinition(name='STRIDE_WIDTH', value=layer.get_attr('stride_width'), type='u32'),
             XLSConstDefinition(name='PAD_TOP', value=layer.get_attr('pad_top'), type='u32'),
