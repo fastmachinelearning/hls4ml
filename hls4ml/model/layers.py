@@ -856,7 +856,9 @@ class GlobalPooling1D(Layer):
     ]
 
     def initialize(self):
-        if self.attributes['keepdims']:
+        # get_attr with a default: initialize() runs before defaults of expected attributes are
+        # applied, and not every frontend sets 'keepdims'
+        if self.get_attr('keepdims', False):
             shape = [1, self.attributes['n_filt']]
         else:
             shape = [self.attributes['n_filt']]
@@ -874,7 +876,7 @@ class GlobalPooling2D(Layer):
     ]
 
     def initialize(self):
-        if self.attributes['keepdims']:
+        if self.get_attr('keepdims', False):
             shape = [1, 1, self.attributes['n_filt']]
         else:
             shape = [self.attributes['n_filt']]

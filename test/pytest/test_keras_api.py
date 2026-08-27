@@ -604,3 +604,20 @@ def test_grouped_depthwise_conv(test_case_id, dim):
     keras_prediction = model.predict(X)
     hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=1e-2)
+
+
+def test_relu_max_value_layer_structure(test_case_id):
+    """ReLU(max_value) through the full v2 parser gives a single ClippedReLU layer; the dispatcher must not
+    split the 'activation' key into a duplicate Activation layer."""
+    model = tf.keras.models.Sequential()
+    model.add(Dense(4, input_shape=(4,)))
+    model.add(ReLU(max_value=6.0))
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend='Vivado')
+
+    layers = list(hls_model.get_layers())
+    assert [layer.attributes['class_name'] for layer in layers] == ['InputLayer', 'Dense', 'ClippedReLU']
+    assert layers[-1].attributes['activation'] == 'clippedrelu'
+    assert layers[-1].attributes['activ_param'] == 6.0

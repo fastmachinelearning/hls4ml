@@ -291,3 +291,28 @@ def test_bidirectional_gru_accuracy(test_case_id):
     keras_prediction = model.predict(X)
     hls_prediction = hls_model.predict(X)
     np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
+
+
+@pytest.mark.parametrize('cell_type', ['gru', 'lstm'])
+def test_bidirectional_no_bias(test_case_id, cell_type):
+    """Bidirectional cells with use_bias=False parse (zeros are substituted) and match Keras."""
+    model = Sequential()
+    model.add(Input(shape=(5, 8)))
+    if cell_type == 'gru':
+        model.add(Bidirectional(GRU(4, use_bias=False)))
+    else:
+        model.add(Bidirectional(LSTM(4, use_bias=False)))
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32, 16>', backend='Vivado'
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
+    )
+    hls_model.compile()
+
+    X = np.random.rand(20, 5, 8).astype('float32')
+    keras_prediction = model.predict(X)
+    hls_prediction = hls_model.predict(X)
+    np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)

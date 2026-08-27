@@ -209,9 +209,13 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
             )
         )
 
-        if 'GRU' in rnn_layer['class_name']:
-            layer[f'{direction}_apply_reset_gate'] = 'after' if rnn_layer['config']['reset_after'] else 'before'
-
+        if layer[f'{direction}_bias_data'] is None:
+            # use_bias=False; the cell has no bias weights, substitute zeros of the gate width
+            d_out = layer[f'{direction}_weight_data'].shape[-1]
+            layer[f'{direction}_bias_data'] = np.zeros(d_out)
+            if 'GRU' in rnn_layer['class_name']:
+                layer[f'{direction}_recurrent_bias_data'] = np.zeros(d_out)
+        elif 'GRU' in rnn_layer['class_name']:
             if rnn_layer['config']['reset_after']:
                 # biases array is actually a 2-dim array of arrays (bias + recurrent bias)
                 # both arrays have shape: n_units * 3 (z, r, h_cand)
@@ -221,6 +225,9 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
             else:
                 # reset_after=False has a single flat bias and no recurrent bias
                 layer[f'{direction}_recurrent_bias_data'] = np.zeros_like(layer[f'{direction}_bias_data'])
+
+        if 'GRU' in rnn_layer['class_name']:
+            layer[f'{direction}_apply_reset_gate'] = 'after' if rnn_layer['config']['reset_after'] else 'before'
 
         layer[f'{direction}_n_states'] = rnn_layer['config']['units']
 
