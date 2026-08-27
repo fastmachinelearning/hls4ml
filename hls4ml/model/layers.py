@@ -1989,6 +1989,7 @@ layer_map = {
     'QActivation': Activation,
     'LeakyReLU': ParametrizedActivation,
     'ThresholdedReLU': ParametrizedActivation,
+    'ClippedReLU': ParametrizedActivation,
     'ELU': ParametrizedActivation,
     'PReLU': PReLU,
     'Softmax': Softmax,
