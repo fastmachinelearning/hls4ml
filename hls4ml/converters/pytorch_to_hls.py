@@ -85,9 +85,28 @@ def pytorch_handler(*args):
     return decorator
 
 
+def get_call_arg(node, position, name, default=None):
+    """Reads an argument of a traced function call, whether it was passed positionally or by keyword.
+
+    Args:
+        node: The traced call node.
+        position (int): Position of the argument in the call signature, counting the input tensor as position 0.
+        name (str): Keyword name of the argument.
+        default: Value to return if the argument was not passed.
+
+    Returns:
+        The argument value, or ``default`` if it was not passed.
+    """
+    if len(node.args) > position:
+        return node.args[position]
+    return node.kwargs.get(name, default)
+
+
 # map names of operations between torch.nn and torch.nn.functionals
 layer_name_map = {
     'relu': 'ReLU',
+    'relu6': 'ReLU6',
+    'hardtanh': 'Hardtanh',
     'tanh': 'Tanh',
     'leaky_relu': 'LeakyReLU',
     'elu': 'ELU',
@@ -184,15 +203,32 @@ def parse_pytorch_model(config, verbose=True):
     i = 0  # count number of consts and use it in the name
     for node in traced_model.nodes:
         if node.name.split('_')[0] in merge_layers:
-            for arg in node.args:
+            for arg_idx, arg in enumerate(node.args):
                 if np.isscalar(arg):
-                    # add an input node with the constant value
+                    # add an input node with the constant value, in the position the scalar had in the call
                     new_node = traced_model.placeholder(name='const_' + str(i), type_expr=torch.Tensor, default_value=arg)
                     node.prepend(new_node)
-                    node.update_arg(1, new_node)
+                    node.update_arg(arg_idx, new_node)
                     i += 1
 
     traced_model.lint()
+
+    def resolve_getitem_source(node_name, visited=None):
+        """Recursively resolve nested getitem calls to find the actual source node."""
+        if visited is None:
+            visited = set()
+
+        if node_name in visited:
+            raise Exception(f'Circular reference detected in getitem chain: {node_name}')
+        visited.add(node_name)
+
+        for tmp_node in traced_model.nodes:
+            if tmp_node.name == node_name:
+                if 'getitem' in tmp_node.args[0].name:
+                    return resolve_getitem_source(tmp_node.args[0].name, visited)
+                else:
+                    return tmp_node.args[0]
+        raise Exception(f'Could not find source node for getitem: {node_name}')
 
     for node in traced_model.nodes:
         if node.op == 'call_module':
@@ -243,32 +279,18 @@ def parse_pytorch_model(config, verbose=True):
                 for arg in node.args:
                     if isinstance(arg, tuple):
                         for input in arg:
+                            if hasattr(input, 'name') and 'getitem' in input.name:
+                                input = resolve_getitem_source(input.name)
                             input_shapes.append(output_shapes[str(input)])
                             input_names.append(inputs_map.get(str(input), str(input)))
                     else:
+                        if hasattr(arg, 'name') and 'getitem' in arg.name:
+                            arg = resolve_getitem_source(arg.name)
                         input_shapes.append(output_shapes[str(arg)])
                         input_names.append(inputs_map.get(str(arg), str(arg)))
 
             # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
             elif 'getitem' in node.args[0].name:
-
-                def resolve_getitem_source(node_name, visited=None):
-                    """Recursively resolve nested getitem calls to find the actual source node."""
-                    if visited is None:
-                        visited = set()
-
-                    if node_name in visited:
-                        raise Exception(f'Circular reference detected in getitem chain: {node_name}')
-                    visited.add(node_name)
-
-                    for tmp_node in traced_model.nodes:
-                        if tmp_node.name == node_name:
-                            if 'getitem' in tmp_node.args[0].name:
-                                return resolve_getitem_source(tmp_node.args[0].name, visited)
-                            else:
-                                return tmp_node.args[0]
-                    raise Exception(f'Could not find source node for getitem: {node_name}')
-
                 source_node = resolve_getitem_source(node.args[0].name)
                 input_names = [inputs_map.get(str(source_node), str(source_node))]
                 input_shapes = [output_shapes[str(source_node)]]
@@ -377,7 +399,8 @@ def parse_pytorch_model(config, verbose=True):
 
             layer_counter += 1
 
-            input_names = [inputs_map.get(str(i), str(i)) for i in node.all_input_nodes]
+            input_nodes = [resolve_getitem_source(i.name) if 'getitem' in i.name else i for i in node.all_input_nodes]
+            input_names = [inputs_map.get(str(i), str(i)) for i in input_nodes]
             input_shapes = [list(output_shapes[str(i)]) for i in input_names]
 
             # Process the layer
@@ -435,7 +458,8 @@ def parse_pytorch_model(config, verbose=True):
 
             layer_counter += 1
 
-            input_names = [inputs_map.get(str(i), str(i)) for i in node.all_input_nodes]
+            input_nodes = [resolve_getitem_source(i.name) if 'getitem' in i.name else i for i in node.all_input_nodes]
+            input_names = [inputs_map.get(str(i), str(i)) for i in input_nodes]
 
             # Process the layer
             input_shapes = [list(output_shapes[str(i)]) for i in input_names]
