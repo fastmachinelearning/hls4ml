@@ -72,7 +72,7 @@ To run FPGA synthesis, installation of following tools is required:
 
 * Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the ``Quartus`` backend.
 
-* Intel oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``Altera`` backend. Newer versions of oneAPI removed FPGA support and **will not work** with ``hls4ml``.
+* Altera HLS IP Gen and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``Altera`` backend.
 
 Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.
 
