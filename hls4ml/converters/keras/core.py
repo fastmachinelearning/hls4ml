@@ -109,8 +109,13 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader):
             raise Exception('PReLU with shared_axes other than None is not supported in hsl4ml')
         layer['param_data'] = get_weights_data(data_reader, layer['name'], 'alpha')
 
-    if layer['class_name'] == 'Activation' and layer['activation'] == 'softmax':
+    if (layer['class_name'] == 'Activation' and layer['activation'] == 'softmax') or layer['class_name'] == 'Softmax':
         layer['class_name'] = 'Softmax'
+        ax = len(input_shapes[0]) - 1
+        n_outer: int = math.prod(input_shapes[0][1:ax])  # type: ignore
+        n_inner: int = math.prod(input_shapes[0][ax + 1 :])  # type: ignore
+        layer['n_outer'] = n_outer
+        layer['n_inner'] = n_inner
     if layer['class_name'] == 'Activation' and layer['activation'] == 'hard_sigmoid':
         layer['class_name'] = 'HardActivation'
     if layer['class_name'] == 'Softmax':
