@@ -121,7 +121,7 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
         if axis == -1:
             axis = rank - 1
         return [XLSConstDefinition(name='AXIS', value=axis, type='u32')]
-    elif class_name == 'Dense':
+    elif class_name in ('Dense', 'Dot'):
         return xls_named_type_definitions(layer, 'accum_t')
     elif class_name in ('Conv1D', 'DepthwiseConv1D'):
         return xls_named_type_definitions(layer, 'accum_t') + [
