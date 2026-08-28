@@ -31,7 +31,7 @@ class GRUNetStream(nn.Module):
         return output
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_gru(test_case_id, backend, io_type):
     model = GRUNet()
@@ -62,7 +62,7 @@ def test_gru(test_case_id, backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=1e-1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_gru_stream(test_case_id, backend, io_type):
     model = GRUNetStream()
@@ -107,7 +107,7 @@ class LSTMStream(nn.Module):
         return output
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_lstm(test_case_id, backend, io_type):
     model = LSTM()
@@ -148,10 +148,10 @@ def test_lstm(test_case_id, backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=1e-1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_stream'])
 def test_lstm_stream(test_case_id, backend, io_type):
-    if not (backend in ('Quartus', 'oneAPI') and io_type == 'io_stream'):
+    if backend != 'oneAPI':
         model = LSTMStream()
         model.eval()
 
@@ -190,41 +190,40 @@ class RNN(nn.Module):
         return output
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_rnn(test_case_id, backend, io_type):
-    if not (backend in ('Quartus', 'oneAPI') and io_type == 'io_stream'):
-        model = RNN()
-        model.eval()
+    model = RNN()
+    model.eval()
 
-        X_input = torch.randn(1, 1, 10)
-        X_input = np.round(X_input * 2**16) * 2**-16  # make it exact ap_fixed<32,16>
-        h0 = torch.zeros(1, 1, 20)
+    X_input = torch.randn(1, 1, 10)
+    X_input = np.round(X_input * 2**16) * 2**-16  # make it exact ap_fixed<32,16>
+    h0 = torch.zeros(1, 1, 20)
 
-        pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(h0)).detach().numpy()
+    pytorch_prediction = model(torch.Tensor(X_input), torch.Tensor(h0)).detach().numpy()
 
-        config = config_from_pytorch_model(
-            model,
-            [(1, 10), (1, 20)],
-            channels_last_conversion='off',
-            transpose_outputs=False,
-            default_precision='fixed<32,16>',
-        )
-        output_dir = str(test_root_path / test_case_id)
+    config = config_from_pytorch_model(
+        model,
+        [(1, 10), (1, 20)],
+        channels_last_conversion='off',
+        transpose_outputs=False,
+        default_precision='fixed<32,16>',
+    )
+    output_dir = str(test_root_path / test_case_id)
 
-        hls_model = convert_from_pytorch_model(
-            model,
-            hls_config=config,
-            output_dir=output_dir,
-            backend=backend,
-            io_type=io_type,
-        )
+    hls_model = convert_from_pytorch_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        backend=backend,
+        io_type=io_type,
+    )
 
-        hls_model.compile()
+    hls_model.compile()
 
-        hls_prediction = np.reshape(hls_model.predict([X_input.detach().numpy(), h0.detach().numpy()]), (1, 1, 20))
+    hls_prediction = np.reshape(hls_model.predict([X_input.detach().numpy(), h0.detach().numpy()]), (1, 1, 20))
 
-        np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=1e-1)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=1e-1)
 
 
 # ---------------------------------------------------------------------------- #
@@ -308,8 +307,8 @@ def _convert(model, test_case_id, backend, input_shape=(None, n_timesteps, n_in)
 
 @pytest.mark.parametrize(
     'rnn_cls,backend',
-    [(nn.GRU, 'Vivado'), (nn.LSTM, 'Vivado'), (nn.RNN, 'Quartus')],
-    ids=['gru', 'lstm', 'rnn'],
+    [(nn.GRU, 'Vivado'), (nn.LSTM, 'Vivado')],
+    ids=['gru', 'lstm'],
 )
 def test_rnn_sequence_output(test_case_id, rnn_cls, backend):
     model = SequenceModel(rnn_cls)
@@ -424,7 +423,7 @@ def test_lstm_proj_size_rejected(test_case_id):
         _convert(model, test_case_id, 'Vivado')
 
 
-@pytest.mark.parametrize('rnn_cls', [nn.RNN, nn.LSTM, nn.GRU], ids=['rnn', 'lstm', 'gru'])
+@pytest.mark.parametrize('rnn_cls', [nn.LSTM, nn.GRU], ids=['lstm', 'gru'])
 def test_rnn_no_bias(test_case_id, rnn_cls):
     class NoBiasModel(nn.Module):
         def __init__(self):
@@ -441,8 +440,7 @@ def test_rnn_no_bias(test_case_id, rnn_cls):
     X_input = _quantized_random((5, n_timesteps, n_in))
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    backend = 'Quartus' if rnn_cls is nn.RNN else 'Vivado'
-    hls_model = _convert(model, test_case_id, backend)
+    hls_model = _convert(model, test_case_id, 'Vivado')
     hls_model.compile()
 
     hls_prediction = np.reshape(hls_model.predict(X_input), pytorch_prediction.shape)

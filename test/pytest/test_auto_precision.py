@@ -144,7 +144,7 @@ def keras_model_sepconv2d(backend):
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'XLS'])
 @pytest.mark.parametrize('model_type', ['conv1d', 'conv2d'])
 def test_auto_precision_conv(
     test_case_id, keras_model_conv1d, keras_model_conv2d, data_2d, data_3d, model_type, io_type, backend
@@ -197,7 +197,7 @@ def test_auto_precision_conv(
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])  # Until we implement SeparableConv1D/2D for io_parallel
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No SeparableConv1D/2D in Quartus
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('model_type', ['sepconv1d', 'sepconv2d'])
 def test_auto_precision_sepconv(
     test_case_id, keras_model_sepconv1d, keras_model_sepconv2d, data_2d, data_3d, model_type, io_type, backend
@@ -246,7 +246,7 @@ def test_auto_precision_sepconv(
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'XLS'])
 def test_auto_precision_dense(test_case_id, keras_model_dense, data_1d, io_type, backend):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')

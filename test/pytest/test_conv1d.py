@@ -66,8 +66,6 @@ def hls_model(keras_model, request, test_case_id):
 @pytest.mark.parametrize(
     'hls_model',
     [
-        ('Quartus', 'io_parallel', 'resource'),
-        ('Quartus', 'io_stream', 'resource'),
         ('oneAPI', 'io_parallel', 'resource'),
         ('oneAPI', 'io_stream', 'resource'),
         ('Vivado', 'io_parallel', 'resource'),
@@ -83,8 +81,6 @@ def hls_model(keras_model, request, test_case_id):
     ],
     indirect=True,
     ids=[
-        'Quartus_io_parallel_resource',
-        'Quartus_io_stream_resource',
         'oneAPI_io_parallel_resource',
         'oneAPI_io_stream_resource',
         'Vivado_io_parallel_resource',

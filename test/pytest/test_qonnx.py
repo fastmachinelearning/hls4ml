@@ -300,7 +300,7 @@ def bnn_fc_small_qonnx_model_scale_nonunit2(bnn_fc_small_qonnx_model):
 # The actual tests
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_tfc_2w2a(test_case_id, tfc_2w2a_model, backend):
     model = tfc_2w2a_model
 
@@ -351,7 +351,7 @@ def test_cnv_2w2a(test_case_id, cnv_2w2a_model, backend):
     np.testing.assert_allclose(y_qonnx.ravel(), y_hls4ml.ravel(), atol=1e-2, rtol=1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_jet_tagging(test_case_id, jettagging_model, backend):
     model = jettagging_model
 
