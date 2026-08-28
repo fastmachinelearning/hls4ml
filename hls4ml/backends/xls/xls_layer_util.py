@@ -146,13 +146,13 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
         pool_op = f'pooling::PoolingOperation::{layer.get_attr("pool_op").upper()}'
         data_format = f'data_format::DataFormat::{layer.get_attr("data_format").upper()}'
         if class_name.startswith('GlobalPooling'):
-            return [
+            return xls_named_type_definitions(layer, 'accum_t') + [
                 XLSConstDefinition(name='POOL_OP', value=pool_op),
                 XLSConstDefinition(name='DATA_FORMAT', value=data_format),
             ]
         elif class_name.endswith('Pooling1D'):
             count_pad = str(layer.get_attr('count_pad')).lower()
-            return [
+            return xls_named_type_definitions(layer, 'accum_t') + [
                 XLSConstDefinition(name='POOL_OP', value=pool_op),
                 XLSConstDefinition(name='POOL_SIZE', value=layer.get_attr('pool_width'), type='u32'),
                 XLSConstDefinition(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
@@ -163,7 +163,7 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
             ]
         elif class_name.endswith('Pooling2D'):
             count_pad = str(layer.get_attr('count_pad')).lower()
-            return [
+            return xls_named_type_definitions(layer, 'accum_t') + [
                 XLSConstDefinition(name='POOL_OP', value=pool_op),
                 XLSConstDefinition(name='POOL_HEIGHT', value=layer.get_attr('pool_height'), type='u32'),
                 XLSConstDefinition(name='POOL_WIDTH', value=layer.get_attr('pool_width'), type='u32'),
