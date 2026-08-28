@@ -60,7 +60,7 @@ The following Python packages are all optional and are only required if you inte
    * `Brevitas <https://xilinx.github.io/brevitas/>`_: Based on PyTorch. See `frontend/pytorch <../frontend/pytorch.html>`_ for more details.
    * `QONNX <https://github.com/fastmachinelearning/qonnx>`_: Based on ONNX. See `frontend/onnx <../frontend/onnx.html>`_ for more details.
 
-Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, when the *clang*-based ``g++`` finds issues with ``ap_types`` headers, one may still need to install GCC, using ``brew`` for example. For the Altera backend, one must have Intel oneAPI 2025.0 (2025.1 is known **not to work**) installed, along with the FPGA compiler, to run C/SYCL simulations.
+Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, if the *clang*-based ``g++`` finds issues with header files, one may want to install GCC, using ``brew`` for example. For the Altera backend, one must have Altera HLS IP Gen installed to run C/SYCL simulations.
 
 Specific functionalities may need additional Python packages. If any needed is missing, ``hls4ml`` will raise an error and prompt you to install the missing packages.
 
