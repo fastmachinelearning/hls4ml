@@ -1,5 +1,7 @@
 import math
 
+import numpy as np
+
 from hls4ml.converters.keras_v2_to_hls import get_weights_data, keras_handler, parse_default_keras_layer
 from hls4ml.model.quantizers import BinaryQuantizer, TernaryQuantizer
 from hls4ml.model.types import IntegerPrecisionType
@@ -76,7 +78,32 @@ def parse_activation_layer(keras_layer, input_names, input_shapes, data_reader):
     elif layer['class_name'] == 'ELU':
         layer['activ_param'] = keras_layer['config'].get('alpha', 1.0)
     elif layer['class_name'] == 'ReLU':
-        layer['class_name'] = 'Activation'
+        max_value = keras_layer['config'].get('max_value', None)
+        if max_value is not None and max_value == float('inf'):
+            max_value = None
+        negative_slope = keras_layer['config'].get('negative_slope', 0.0)
+        threshold = keras_layer['config'].get('threshold', 0.0)
+        if max_value is not None and (negative_slope != 0.0 or threshold != 0.0):
+            raise NotImplementedError(
+                f'Layer {layer["name"]}: ReLU with max_value combined with threshold or negative_slope is not supported.'
+            )
+        if negative_slope != 0.0 and threshold != 0.0:
+            raise NotImplementedError(f'Layer {layer["name"]}: ReLU must have threshold == 0 or negative_slope == 0.')
+        if max_value is not None:
+            layer['class_name'] = 'ClippedReLU'
+            layer['activation'] = 'clippedrelu'
+            layer['activ_param'] = max_value
+        elif negative_slope != 0.0:
+            layer['class_name'] = 'LeakyReLU'
+            layer['activation'] = 'LeakyReLU'
+            layer['activ_param'] = negative_slope
+        elif threshold != 0.0:
+            layer['class_name'] = 'ThresholdedReLU'
+            layer['activation'] = 'ThresholdedReLU'
+            layer['activ_param'] = threshold
+        else:
+            layer['class_name'] = 'Activation'
+            layer['activation'] = 'relu'
     elif layer['class_name'] == 'PReLU':
         if keras_layer['config'].get('shared_axes') is not None:
             raise Exception('PReLU with shared_axes other than None is not supported in hsl4ml')
@@ -101,6 +128,14 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
     assert 'BatchNormalization' in keras_layer['class_name'] or 'QConv2DBatchnorm' in keras_layer['class_name']
 
     layer = parse_default_keras_layer(keras_layer, input_names)
+
+    axis = keras_layer['config'].get('axis', -1)
+    if isinstance(axis, (list, tuple)):
+        axis = axis[0] if len(axis) == 1 else axis
+    if axis not in (-1, len(input_shapes[0]) - 1):
+        raise NotImplementedError(
+            f'Layer {layer["name"]}: normalization along axis {axis} is not supported; only the last (channel) dimension is.'
+        )
 
     in_size = 1
     for dim in input_shapes[0][1:]:
@@ -151,12 +186,23 @@ def parse_layernorm_layer(keras_layer, input_names, input_shapes, data_reader):
         )
     layer['seq_len'] = input_shapes[0][-2]
 
-    if not (keras_layer['config']['axis'][0] == 2):
+    axis = keras_layer['config']['axis'][0]
+    if axis < 0:
+        # Keras 3 serializes the default axis as -1; Keras 2 normalizes it to the positive form
+        axis += len(input_shapes[0])
+    if axis != 2:
         raise Exception('assigning the axis is not currently supported by hls4ml; only axis 2 is supported')
-    layer['axis'] = keras_layer['config']['axis'][0]
+    layer['axis'] = axis
 
-    layer['gamma_data'] = get_weights_data(data_reader, layer['name'], 'gamma')
-    layer['beta_data'] = get_weights_data(data_reader, layer['name'], 'beta')
+    n_norm = input_shapes[0][-1]
+    if keras_layer['config'].get('scale', True):
+        layer['gamma_data'] = get_weights_data(data_reader, layer['name'], 'gamma')
+    else:
+        layer['gamma_data'] = np.ones(n_norm)
+    if keras_layer['config'].get('center', True):
+        layer['beta_data'] = get_weights_data(data_reader, layer['name'], 'beta')
+    else:
+        layer['beta_data'] = np.zeros(n_norm)
 
     if keras_layer['config']['epsilon'] <= 0:
         raise Exception('epsilon must be positive')
@@ -172,6 +218,9 @@ def parse_embedding_layer(keras_layer, input_names, input_shapes, data_reader):
     assert 'Embedding' in keras_layer['class_name']
 
     layer = parse_default_keras_layer(keras_layer, input_names)
+
+    if keras_layer['config'].get('mask_zero', False):
+        raise NotImplementedError(f'Layer {layer["name"]}: mask_zero=True is not supported.')
 
     layer['n_in'] = input_shapes[0][1]
     layer['vocab_size'] = keras_layer['config']['input_dim']

@@ -851,11 +851,17 @@ class GlobalPooling1D(Layer):
     _expected_attributes = [
         Attribute('n_in'),
         Attribute('n_filt'),
+        Attribute('keepdims', value_type=bool, default=False),
         ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
     def initialize(self):
-        shape = [self.attributes['n_filt']]
+        # get_attr with a default: initialize() runs before defaults of expected attributes are
+        # applied, and not every frontend sets 'keepdims'
+        if self.get_attr('keepdims', False):
+            shape = [1, self.attributes['n_filt']]
+        else:
+            shape = [self.attributes['n_filt']]
         self.add_output_variable(shape)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
 
@@ -865,11 +871,15 @@ class GlobalPooling2D(Layer):
         Attribute('in_height'),
         Attribute('in_width'),
         Attribute('n_filt'),
+        Attribute('keepdims', value_type=bool, default=False),
         ChoiceAttribute('pool_op', ['Max', 'Average'], configurable=False),
     ]
 
     def initialize(self):
-        shape = [self.attributes['n_filt']]
+        if self.get_attr('keepdims', False):
+            shape = [1, 1, self.attributes['n_filt']]
+        else:
+            shape = [self.attributes['n_filt']]
         self.add_output_variable(shape)
         self.set_attr('pool_op', self.get_attr('class_name').split('Pooling')[0].replace('Global', ''))
 
@@ -1989,6 +1999,7 @@ layer_map = {
     'QActivation': Activation,
     'LeakyReLU': ParametrizedActivation,
     'ThresholdedReLU': ParametrizedActivation,
+    'ClippedReLU': ParametrizedActivation,
     'ELU': ParametrizedActivation,
     'PReLU': PReLU,
     'Softmax': Softmax,
