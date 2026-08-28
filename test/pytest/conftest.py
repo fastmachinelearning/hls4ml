@@ -31,10 +31,11 @@ def _sanitize_test_id(s: str) -> str:
 def test_case_id(request):
     """
     Return a unique identifier for the current parametrized test case.
-    Format: test_file_test_name_param_id (from test_file.py::test_name[param_id]).
-    Used for generating output directory names.
+    Format: hls4mlprj_test_file_test_name_param_id (from test_file.py::test_name[param_id]).
+    Used for generating output directory names; the hls4mlprj_ prefix keeps the
+    generated project directories covered by .gitignore.
     """
-    return _sanitize_test_id(request.node.nodeid)
+    return 'hls4mlprj_' + _sanitize_test_id(request.node.nodeid)
 
 
 def str_to_bool(val):
