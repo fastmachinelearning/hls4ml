@@ -35,7 +35,7 @@ optional-dependencies.doc = [
   "sphinx-tabs",
 ]
 optional-dependencies.hgq = [ "hgq>=0.2.3" ]
-optional-dependencies.hgq2 = [ "hgq2>=0.1.8" ]
+optional-dependencies.hgq2 = [ "hgq2>=0.2" ]
 optional-dependencies.keras-v3 = [ "keras>=3.10" ]
 optional-dependencies.onnx = [ "onnx>=1.4" ]
 optional-dependencies.optimization = [
@@ -72,7 +72,7 @@ optional-dependencies.testing-keras2 = [
 ]
 optional-dependencies.testing-keras3 = [
   "alkaid>=0.8.1,<1",
-  "hgq2>=0.1.8",
+  "hgq2>=0.2",
   "keras>=3.10",
   "pquant-ml",
   "sparsepixels>=0.3",
