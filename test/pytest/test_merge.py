@@ -183,3 +183,18 @@ def test_concatenate3d(test_case_id, axis, io_type, backend):
     hls_prediction = hls_model.predict([X_input1, X_input2]).reshape(keras_prediction.shape)
 
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
+
+
+def test_dot_rejects_normalize(test_case_id):
+    """Dot(normalize=True) (cosine similarity) was silently computed as a plain dot product."""
+    input_shape = (16,)
+    in1 = Input(shape=input_shape)
+    in2 = Input(shape=input_shape)
+    out = Dot(axes=1, normalize=True)([in1, in2])
+    model = tf.keras.models.Model(inputs=[in1, in2], outputs=out)
+
+    with pytest.raises(NotImplementedError, match='normalize'):
+        config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+        hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, output_dir=str(test_root_path / test_case_id), backend='Vivado'
+        )

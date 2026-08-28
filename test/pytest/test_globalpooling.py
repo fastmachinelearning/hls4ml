@@ -66,6 +66,9 @@ def test_global_pool1d(test_case_id, backend, keras_model_1d, data_1d, io_type):
     )
     hls_model.compile()
 
+    # keepdims must be reflected in the graph's output shape, not only in the values
+    assert list(hls_model.get_output_variables()[0].shape) == list(model.output_shape[1:])
+
     y_keras = model.predict(data_1d)
     y_hls = hls_model.predict(data_1d).reshape(y_keras.shape)
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
@@ -122,6 +125,9 @@ def test_global_pool2d(test_case_id, backend, keras_model_2d, data_2d, io_type):
         backend=backend,
     )
     hls_model.compile()
+
+    # keepdims must be reflected in the graph's output shape, not only in the values
+    assert list(hls_model.get_output_variables()[0].shape) == list(model.output_shape[1:])
 
     y_keras = model.predict(data_2d)
     y_hls = hls_model.predict(data_2d).reshape(y_keras.shape)

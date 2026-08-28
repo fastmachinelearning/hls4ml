@@ -16,6 +16,9 @@ def get_baseline_path(baseline_file_name, backend, version):
     Returns:
         Path: A pathlib.Path object pointing to the baseline file location.
     """
+    # Baseline files are named without the hls4mlprj_ prefix the test_case_id fixture
+    # adds for output directories
+    baseline_file_name = baseline_file_name.removeprefix('hls4mlprj_')
     return Path(__file__).parent / 'baselines' / backend / version / baseline_file_name
 
 

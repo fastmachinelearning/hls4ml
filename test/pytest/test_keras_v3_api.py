@@ -542,3 +542,172 @@ def test_reused_layer(test_case_id, backend, io_type):
     np.testing.assert_allclose(keras_pred[1].reshape(hls_pred[1].shape), hls_pred[1], rtol=0, atol=1e-5)
     np.testing.assert_allclose(keras_pred[2].reshape(hls_pred[2].shape), hls_pred[2], rtol=0, atol=1e-5)
     np.testing.assert_allclose(keras_pred[3].reshape(hls_pred[3].shape), hls_pred[3], rtol=0, atol=1e-2)
+
+
+# ----- Parser behavior: unsupported layer options are ingested faithfully or rejected ----- #
+
+
+def _convert_parse_only(model, test_case_id, io_type='io_parallel'):
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32,16>', backend='Vivado'
+    )
+    return hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        backend='Vivado',
+        io_type=io_type,
+        output_dir=str(test_root_path / test_case_id),
+    )
+
+
+@pytest.mark.parametrize('dim', ['1d', '2d'])
+def test_conv_dilation_parsed(test_case_id, dim):
+    # Dilation is ingested into the IR ('dilation' attribute, already a field of the conv
+    # config structs) and the output shape follows the dilated kernel extent. No kernel
+    # computes dilation yet; the backends are responsible for rejecting it.
+    if dim == '1d':
+        model = keras.Sequential([keras.layers.Input((16, 3)), Conv1D(4, 3, dilation_rate=2)])
+    else:
+        model = keras.Sequential([keras.layers.Input((16, 16, 3)), Conv2D(4, 3, dilation_rate=2)])
+    # io_stream: the io_parallel im2col codegen does not handle the dilated output shape
+    hls_model = _convert_parse_only(model, test_case_id, io_type='io_stream')
+    conv_layer = [layer for layer in hls_model.get_layers() if 'Conv' in layer.class_name][0]
+    assert conv_layer.get_attr('dilation') == 2
+    assert list(hls_model.get_output_variables()[0].shape) == list(model.output_shape[1:])
+
+
+def test_conv_rejects_asymmetric_dilation(test_case_id):
+    model = keras.Sequential([keras.layers.Input((16, 16, 3)), Conv2D(4, 3, dilation_rate=(2, 3))])
+    with pytest.raises(NotImplementedError, match='dilation'):
+        _convert_parse_only(model, test_case_id)
+
+
+def test_conv_rejects_grouped(test_case_id):
+    # groups that are not depthwise-shaped (groups == in_channels == filters) have no kernel
+    model = keras.Sequential([keras.layers.Input((16, 16, 4)), Conv2D(8, 3, groups=2)])
+    with pytest.raises(NotImplementedError, match='[Gg]rouped convolution'):
+        _convert_parse_only(model, test_case_id)
+
+
+def test_conv_routes_depthwise_shaped_groups(test_case_id):
+    model = keras.Sequential([keras.layers.Input((16, 16, 4)), Conv2D(4, 3, groups=4)])
+    hls_model = _convert_parse_only(model, test_case_id)
+    assert 'DepthwiseConv2D' in [layer.class_name for layer in hls_model.get_layers()]
+
+
+def test_relu_max_value_parsed(test_case_id):
+    # max_value (e.g. ReLU6) is ingested as a ClippedReLU parametrized activation.
+    # No backend maps it to a kernel yet; the backends are responsible for rejecting it.
+    model = keras.Sequential([keras.layers.Input((8,)), Dense(4), keras.layers.ReLU(max_value=6.0)])
+    hls_model = _convert_parse_only(model, test_case_id)
+    activations = {str(layer.get_attr('activation', '')).lower(): layer for layer in hls_model.get_layers()}
+    assert 'clippedrelu' in activations
+    assert activations['clippedrelu'].get_attr('activ_param') == 6.0
+
+
+def test_relu_rejects_max_value_combo(test_case_id):
+    model = keras.Sequential([keras.layers.Input((8,)), Dense(4), keras.layers.ReLU(max_value=6.0, negative_slope=0.1)])
+    with pytest.raises(NotImplementedError, match='max_value'):
+        _convert_parse_only(model, test_case_id)
+
+
+def test_plain_relu_not_parametrized(test_case_id):
+    # Plain ReLU() was silently classified as ThresholdedReLU(0.0) due to branch order
+    model = keras.Sequential([keras.layers.Input((8,)), Dense(4), keras.layers.ReLU()])
+    hls_model = _convert_parse_only(model, test_case_id)
+    relu_layers = [layer for layer in hls_model.get_layers() if str(layer.get_attr('activation', '')) == 'relu']
+    assert len(relu_layers) == 1
+    assert relu_layers[0].class_name == 'Activation'
+
+
+def test_rnn_rejects_go_backwards(test_case_id):
+    model = keras.Sequential([keras.layers.Input((5, 8)), keras.layers.LSTM(4, go_backwards=True)])
+    with pytest.raises(NotImplementedError, match='go_backwards'):
+        _convert_parse_only(model, test_case_id)
+
+
+def test_gru_reset_after_false_parsed(test_case_id):
+    # The GRU kernels implement only the reset_after=True formulation; the parser
+    # represents 'before' faithfully and the backends are responsible for rejecting it
+    model = keras.Sequential([keras.layers.Input((5, 8)), keras.layers.GRU(4, reset_after=False)])
+    hls_model = _convert_parse_only(model, test_case_id)
+    gru_layer = [layer for layer in hls_model.get_layers() if layer.class_name == 'GRU'][0]
+    assert gru_layer.get_attr('apply_reset_gate') == 'before'
+    assert gru_layer.get_weights('bias').data.shape == (12,)
+    recurrent_bias = gru_layer.get_weights('recurrent_bias').data
+    assert recurrent_bias.shape == (12,) and not recurrent_bias.any()
+
+
+def test_rnn_no_bias_parsed(test_case_id):
+    model = keras.Sequential([keras.layers.Input((5, 8)), keras.layers.LSTM(4, use_bias=False)])
+    hls_model = _convert_parse_only(model, test_case_id)
+    lstm_layer = [layer for layer in hls_model.get_layers() if layer.class_name == 'LSTM'][0]
+    bias = lstm_layer.get_weights('bias').data
+    assert bias.shape == (16,) and not bias.any()
+
+
+def test_bidirectional_merge_mode_parsed(test_case_id):
+    # Non-concat merge modes keep the sub-layer width; no kernel merges yet and the
+    # backends are responsible for rejecting non-concat modes
+    model = keras.Sequential(
+        [keras.layers.Input((5, 8)), keras.layers.Bidirectional(keras.layers.LSTM(4), merge_mode='sum')]
+    )
+    hls_model = _convert_parse_only(model, test_case_id)
+    bidir_layer = [layer for layer in hls_model.get_layers() if layer.class_name == 'Bidirectional'][0]
+    assert bidir_layer.get_attr('merge_mode') == 'sum'
+    assert bidir_layer.get_attr('n_out') == 4
+    assert list(hls_model.get_output_variables()[0].shape) == [4]
+
+
+def test_bidirectional_rejects_simple_rnn(test_case_id):
+    model = keras.Sequential([keras.layers.Input((5, 8)), keras.layers.Bidirectional(keras.layers.SimpleRNN(4))])
+    with pytest.raises(NotImplementedError, match='LSTM or GRU'):
+        _convert_parse_only(model, test_case_id)
+
+
+def test_bidirectional_gru_bias(test_case_id):
+    # The v3 handler checked isinstance(rnn_layer.cell, GRU), which is never true (the
+    # cell is a GRUCell), so GRU biases were stored unsplit and the recurrent bias was
+    # never set. Verified numerically against Keras.
+    model = keras.Sequential([keras.layers.Input((5, 8)), keras.layers.Bidirectional(keras.layers.GRU(4))])
+    hls_model = _convert_parse_only(model, test_case_id)
+    hls_model.compile()
+    X = np.random.rand(20, 5, 8).astype('float32')
+    keras_prediction = model.predict(X, verbose=0)
+    hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=5e-2)
+
+
+def test_batchnorm_rejects_non_channel_axis(test_case_id):
+    model = keras.Sequential([keras.layers.Input((8, 4)), keras.layers.BatchNormalization(axis=1)])
+    with pytest.raises(NotImplementedError, match='axis'):
+        _convert_parse_only(model, test_case_id)
+
+
+def test_dot_rejects_normalize(test_case_id):
+    inp1 = keras.layers.Input((8,))
+    inp2 = keras.layers.Input((8,))
+    out = keras.layers.Dot(axes=1, normalize=True)([inp1, inp2])
+    model = keras.Model([inp1, inp2], out)
+    with pytest.raises(NotImplementedError, match='normalize'):
+        _convert_parse_only(model, test_case_id)
+
+
+def test_embedding_rejects_mask_zero(test_case_id):
+    model = keras.Sequential([keras.layers.Input((4,), dtype='int32'), keras.layers.Embedding(16, 3, mask_zero=True)])
+    with pytest.raises(NotImplementedError, match='mask_zero'):
+        _convert_parse_only(model, test_case_id)
+
+
+def test_random_crop_rejected_when_shape_changes(test_case_id):
+    # RandomCrop still center-crops at inference time, so it is only a no-op
+    # if it does not change the shape
+    model = keras.Sequential([keras.layers.Input((16, 16, 3)), keras.layers.RandomCrop(8, 8)])
+    with pytest.raises(NotImplementedError, match='cannot be skipped'):
+        _convert_parse_only(model, test_case_id)
+
+
+def test_random_crop_same_shape_is_noop(test_case_id):
+    model = keras.Sequential([keras.layers.Input((16, 16, 3)), keras.layers.RandomCrop(16, 16)])
+    hls_model = _convert_parse_only(model, test_case_id)
+    assert hls_model is not None

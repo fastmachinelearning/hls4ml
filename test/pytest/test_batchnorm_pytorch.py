@@ -130,3 +130,18 @@ def test_batchnorm_fusion(test_case_id, fusion_data, backend, io_type):
     else:
         hls_prediction = np.reshape(hls_model.predict(fusion_data), pytorch_prediction.shape)
     np.testing.assert_allclose(pytorch_prediction, hls_prediction, rtol=0, atol=atol, verbose=True)
+
+
+def test_batchnorm_no_running_stats_rejected(test_case_id):
+    # with track_running_stats=False the layer normalizes with per-batch statistics even in eval mode,
+    # which hls4ml cannot represent
+    model = nn.Sequential(nn.BatchNorm1d(in_shape, track_running_stats=False)).to()
+    model.eval()
+
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.raises(NotImplementedError, match='track_running_stats'):
+        # config_from_pytorch_model traces the model too, so the reject can fire already there
+        config = hls4ml.utils.config_from_pytorch_model(model, (in_shape,))
+        hls4ml.converters.convert_from_pytorch_model(
+            model, backend='Vivado', hls_config=config, io_type='io_parallel', output_dir=output_dir
+        )

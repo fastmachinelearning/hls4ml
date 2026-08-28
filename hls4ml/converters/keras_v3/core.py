@@ -108,26 +108,34 @@ class ReLUHandler(KerasV3LayerHandler):
             config['activation'] = 'prelu'
 
         if layer.__class__.__name__ in ('ReLU', 'LeakyReLU'):
-            if layer.__class__.__name__ == 'ReLU':
-                assert layer.max_value in (None, float('inf')), 'Only ReLU with max_value=None or inf is supported'
-
+            max_value = getattr(layer, 'max_value', None)
+            if max_value is not None and float(max_value) == float('inf'):
+                max_value = None
             negative_slope = float(layer.negative_slope)
             threshold = float(layer.threshold) if hasattr(layer, 'threshold') else 0.0
-            if threshold != 0.0 and negative_slope != 0.0:
-                raise NotImplementedError(f'layer {layer.name}: ReLU must has threshold=0 or negative_slope=0')
 
-            if negative_slope == 0.0 and threshold == 0.0:
+            if max_value is not None and (negative_slope != 0.0 or threshold != 0.0):
+                raise NotImplementedError(
+                    f'Layer {layer.name}: ReLU with max_value combined with threshold or negative_slope is not supported.'
+                )
+            if threshold != 0.0 and negative_slope != 0.0:
+                raise NotImplementedError(f'Layer {layer.name}: ReLU must have threshold=0 or negative_slope=0.')
+
+            if max_value is not None:
+                config['class_name'] = 'ClippedReLU'
+                config['activ_param'] = float(max_value)
+                config['activation'] = 'clippedrelu'
+            elif negative_slope != 0.0:
+                config['class_name'] = 'LeakyReLU'
+                config['activ_param'] = negative_slope
+                config['activation'] = 'leakyrelu'
+            elif threshold != 0.0:
+                config['class_name'] = 'ThresholdedReLU'
+                config['activ_param'] = threshold
+                config['activation'] = 'thresholdedrelu'
+            else:
                 config['class_name'] = 'Activation'
                 config['activation'] = 'relu'
-
-            if negative_slope != 0.0:
-                config['class_name'] = 'LeakyReLU'
-                config['activ_param'] = float(layer.negative_slope)
-                config['activation'] = 'leakyrelu'
-            elif negative_slope == 0.0:
-                config['class_name'] = 'ThresholdedReLU'
-                config['activ_param'] = float(layer.threshold)
-                config['activation'] = 'thresholdedrelu'
 
         return (config,)
 
@@ -248,6 +256,12 @@ class NoOp(KerasV3LayerHandler):
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
+        if in_tensors[0].shape[1:] != out_tensors[0].shape[1:]:
+            # e.g. RandomCrop still crops at inference time; a shape-changing layer cannot be a no-op
+            raise NotImplementedError(
+                f'Layer {layer.name} ({layer.__class__.__name__}) changes the tensor shape at inference '
+                f'({in_tensors[0].shape[1:]} -> {out_tensors[0].shape[1:]}) and cannot be skipped.'
+            )
         config = {
             'activation': 'linear',
             'class_name': 'Activation',

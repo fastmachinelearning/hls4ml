@@ -66,7 +66,7 @@ def parse_zeropadding2d_layer(keras_layer, input_names, input_shapes, data_reade
             layer['pad_right'] = width_pad[1]
         else:
             layer['pad_left'] = width_pad
-            layer['pad_bottom'] = width_pad
+            layer['pad_right'] = width_pad
 
     if layer['data_format'] == 'channels_first':
         output_shape = [
