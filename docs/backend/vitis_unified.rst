@@ -9,7 +9,7 @@ Currently ``hls4ml`` officially supports the following boards and tool versions:
 * `zcu102 <https://www.xilinx.com/products/boards-and-kits/ek-u1-zcu102-g.html>`_ (Vitis and Vivado 2023.2)
 * `kv260 <https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html>`_ (Vitis and Vivado 2023.2 and 2025.2)
 
-If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. See the `platform setup tutorial <https://github.com/Tanawin1701d/vitis_unified_backend_tutorial/tree/master/platform_setup_tutorial>`_ for the steps.
+If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. The steps are covered in the platform setup tutorial in the accelerator backend section of the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
 
 
 System Flow
@@ -162,6 +162,6 @@ Output directory layout
 Tutorial
 ========
 
-A step-by-step tutorial with notebooks is available at
-`vitis_unified_backend_tutorial <https://github.com/Tanawin1701d/vitis_unified_backend_tutorial>`_.
+A step-by-step tutorial with notebooks is available in the accelerator backend section of the
+`hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
 It covers prediction, C simulation, co-simulation, FIFO depth optimization, bitstream generation, and how to build your own platform.
