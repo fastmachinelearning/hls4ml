@@ -94,6 +94,22 @@ def test_qinterval_einsum(qint_arr1, qint_arr2, eq):
     assert_is_represented(einsum_symbolic, einsum_sampled)
 
 
+@pytest.mark.parametrize('eq, input0_shape', [('ji,jk->k', (3, 2)), ('ij,jk->i', (2, 3))])
+def test_qinterval_einsum_direct_sum(eq, input0_shape):
+    """Axes present in only one input must be summed before contraction."""
+    input0 = np.arange(6, dtype=float).reshape(input0_shape)
+    input1 = np.arange(12, dtype=float).reshape(3, 4)
+    expected = np.einsum(eq, input0, input1)
+
+    interval0 = QIntervalArray(input0, input0, np.ones_like(input0))
+    interval1 = QIntervalArray(input1, input1, np.ones_like(input1))
+
+    result = einsum(eq, interval0, interval1)
+
+    np.testing.assert_array_equal(result.min, expected)
+    np.testing.assert_array_equal(result.max, expected)
+
+
 def test_qinterval_to_kif(qint_arr1):
     k, i, f = qint_arr1.to_kif()
     samples = qint_arr1.sample(10000)
