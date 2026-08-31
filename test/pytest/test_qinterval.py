@@ -94,20 +94,27 @@ def test_qinterval_einsum(qint_arr1, qint_arr2, eq):
     assert_is_represented(einsum_symbolic, einsum_sampled)
 
 
-@pytest.mark.parametrize('eq, input0_shape', [('ji,jk->k', (3, 2)), ('ij,jk->i', (2, 3))])
-def test_qinterval_einsum_direct_sum(eq, input0_shape):
-    """Axes present in only one input must be summed before contraction."""
-    input0 = np.arange(6, dtype=float).reshape(input0_shape)
-    input1 = np.arange(12, dtype=float).reshape(3, 4)
-    expected = np.einsum(eq, input0, input1)
-
-    interval0 = QIntervalArray(input0, input0, np.ones_like(input0))
-    interval1 = QIntervalArray(input1, input1, np.ones_like(input1))
+@pytest.mark.parametrize('eq', ['ij,jk->k', 'ji,jk->k', 'ij,jk->i', 'ij,kj->i', 'ij,kl->'])
+def test_qinterval_einsum_direct_sum(eq):
+    """Direct sums on either input and at any axis preserve sampled results."""
+    inputs, out = eq.split('->', 1)
+    in0, in1 = inputs.split(',')
+    interval0 = random_arr(seed=1)[:3, :3]
+    interval1 = random_arr(seed=2)[:3, :3]
+    sampled0 = interval0.sample(1000)
+    sampled1 = interval1.sample(1000)
 
     result = einsum(eq, interval0, interval1)
+    expected = np.einsum(f'A{in0},A{in1}->A{out}', sampled0, sampled1)
+    assert_is_represented(result, expected)
 
-    np.testing.assert_array_equal(result.min, expected)
-    np.testing.assert_array_equal(result.max, expected)
+    result = einsum(eq, interval0, sampled1[0])
+    expected = np.einsum(f'A{in0},{in1}->A{out}', sampled0, sampled1[0])
+    assert_is_represented(result, expected)
+
+    result = einsum(eq, sampled0[0], interval1)
+    expected = np.einsum(f'{in0},A{in1}->A{out}', sampled0[0], sampled1)
+    assert_is_represented(result, expected)
 
 
 def test_qinterval_to_kif(qint_arr1):
