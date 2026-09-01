@@ -3,6 +3,7 @@
 
 #include "firmware/PROJECT_FILE_NAME.h"
 #include "firmware/nnet_utils/nnet_helpers.h"
+#include "firmware/nnet_utils/nnet_helpers_axi.h"
 #include <algorithm>
 #include <map>
 

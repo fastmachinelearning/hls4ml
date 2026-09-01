@@ -22,6 +22,16 @@ class VitisUnifiedWriter(VitisWriter):
     def write_tar(self, model):
         super().write_tar(model)
 
+    def write_nnet_utils_unified_overrides(self, model):
+        """Copy VitisUnified-specific headers (AXI stream helpers and types) to the project."""
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        for subdir in ['nnet_utils', 'ap_types']:
+            srcpath = os.path.join(filedir, f'../templates/vitis_unified/{subdir}/')
+            dstpath = f'{model.config.get_output_dir()}/firmware/{subdir}/'
+
+            copytree(srcpath, dstpath, dirs_exist_ok=True)
+
     def write_board_script_override(self, model):
         """No-op: Vitis Unified uses vitis-comp.json and hls_kernel_config, not project.tcl."""
         pass
@@ -779,6 +789,7 @@ fi
 
         self._set_unified_config(model)
         super().write_hls(model, is_multigraph=False)
+        self.write_nnet_utils_unified_overrides(model)
         self.write_wrapper(model)
         self._ensure_export_path(model)
         self.write_driver(model)

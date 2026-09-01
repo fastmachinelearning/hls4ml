@@ -10,6 +10,7 @@
 // hls-fpga-machine-learning insert include
 
 #include "firmware/nnet_utils/nnet_helpers.h"
+#include "firmware/nnet_utils/nnet_helpers_axi.h"
 
 // hls-fpga-machine-learning insert bram
 
