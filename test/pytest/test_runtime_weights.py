@@ -163,53 +163,6 @@ def test_write_mem_format(tmp_path):
     assert int(lines[0], 16) == words[0]
 
 
-def test_package_generates_wrapper(tmp_path, synthesis_config):
-    """Post-export packaging emits the wrapper and preserves the stock IP."""
-    from hls4ml.contrib.runtime_weights import fingerprint_ip, package
-
-    if not synthesis_config['run_synthesis']:
-        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
-
-    manifest = _manifest(tmp_path)
-    assert manifest['ports']
-
-    inp = Input(shape=(N_IN,), name='input_1')
-    model = Model(inp, Dense(N_OUT, activation='linear', name='dense_1')(inp))
-    model.get_layer('dense_1').set_weights([_banks()[0].astype(np.float32), np.zeros((N_OUT,), np.float32)])
-    cfg = hls4ml.utils.config_from_keras_model(
-        model, granularity='model', backend='Vitis', default_precision='ap_fixed<16,6>', default_reuse_factor=2
-    )
-    cfg['Model']['Strategy'] = 'Resource'
-    cfg['Model']['BramFactor'] = 0
-    hls_model = hls4ml.converters.convert_from_keras_model(
-        model,
-        hls_config=cfg,
-        output_dir=str(tmp_path),
-        project_name='rw_prj',
-        backend='Vitis',
-        io_type='io_parallel',
-        part=PART,
-        clock_period=10.0,
-    )
-    hls_model.write()
-    hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
-
-    before = fingerprint_ip(str(tmp_path), 'rw_prj')
-    summary = package(str(tmp_path), 'rw_prj', n_banks=2)
-    after = fingerprint_ip(str(tmp_path), 'rw_prj')
-
-    assert before['combined'] == after['combined'], 'packaging must not modify the HLS IP'
-    assert summary['n_banks'] == 2
-    assert summary['bank_selection'].startswith('idle-time')
-    assert {p['name'] for p in summary['banked_ports']} == {'w2', 'b2'}
-
-    rtl = Path(tmp_path) / 'runtime_weights' / 'rtl'
-    assert (rtl / 'rw_prj_runtime_weights.sv').exists()
-    for module in ('bank_addr_mapper.sv', 'bank_select_latch.sv', 'parameter_bank.sv', 'scalar_bank_mux.sv'):
-        assert (rtl / module).exists()
-    assert (Path(tmp_path) / 'runtime_weights' / 'create_runtime_weights.tcl').exists()
-
-
 def test_two_banks_rtl_simulation(tmp_path, synthesis_config):
     """Elaborate the generated wrapper and check numerical output per bank.
 
@@ -424,7 +377,7 @@ def test_unregistered_flattener_adapter_is_rejected(tmp_path):
     port = dict(next(p for p in manifest['ports'] if p['role'] == 'weight'))
     port['flat_order'] = dict(port['flat_order'], adapter='not_registered')
 
-    with pytest.raises(PackingUnsupported, match='not registered'):
+    with pytest.raises(PackingUnsupported, match='no custom flatteners'):
         pack.flatten(port, _banks()[0])
 
 

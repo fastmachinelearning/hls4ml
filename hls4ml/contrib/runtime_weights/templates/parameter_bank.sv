@@ -48,9 +48,6 @@ module parameter_bank #(
     input  wire [BANK_ID_WIDTH-1:0]    ld_bank,
     input  wire [$clog2(LOCAL_WORDS > 1 ? LOCAL_WORDS : 2)-1:0] ld_word,
     input  wire [DATA_WIDTH-1:0]       ld_wdata,
-    input  wire                        ld_rd,
-    output reg  [DATA_WIDTH-1:0]       ld_rdata,
-    output reg                         ld_rvalid,
     output wire                        ld_accept,
     output wire                        ld_reject,
 
@@ -116,10 +113,8 @@ module parameter_bank #(
   wire bank_ok  = (32'(ld_bank) < N_BANKS);
   wire word_ok  = (32'(ld_word) < LOCAL_WORDS);
   wire safe     = quiescent & bank_ok & word_ok;   // idle => no active bank => any bank loadable
-  wire want     = ld_req | ld_rd;
-
-  assign ld_accept = want &  safe;
-  assign ld_reject = want & ~safe;
+  assign ld_accept = ld_req &  safe;
+  assign ld_reject = ld_req & ~safe;
 
   // Widen before combining: ld_word is only $clog2(LOCAL_WORDS) bits, so a
   // part-select of PHYS_ADDR_WIDTH bits from it can read past its width and
@@ -129,16 +124,7 @@ module parameter_bank #(
 
   // port B: loader writes, accepted only while the wrapper is idle
   always @(posedge ap_clk) begin
-    ld_rvalid <= 1'b0;
-    if (ap_rst) begin
-      ld_rdata <= {DATA_WIDTH{1'b0}};
-    end else if (ld_accept) begin
-      if (ld_req) mem[phys_b] <= ld_wdata;
-      if (ld_rd) begin
-        ld_rdata  <= mem[phys_b];
-        ld_rvalid <= 1'b1;
-      end
-    end
+    if (ld_accept) mem[phys_b] <= ld_wdata;
   end
 
 `ifdef RUNTIME_WEIGHTS_ASSERT

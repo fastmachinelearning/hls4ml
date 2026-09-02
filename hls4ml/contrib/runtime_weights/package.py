@@ -200,7 +200,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         f.write(f'      .hls_Addr_A({n}_Addr_A), .hls_EN_A({n}_EN_A), .hls_WEN_A({n}_WEN_A),\n')
         f.write(f'      .hls_Din_A({n}_Din_A), .hls_Dout_A({n}_Dout_A), .hls_Rst_A({n}_Rst_A),\n')
         f.write(f'      .ld_req(ld_{n}_req), .ld_bank(ld_{n}_bank), .ld_word(ld_{n}_word),\n')
-        f.write(f"      .ld_wdata(ld_{n}_wdata), .ld_rd(1'b0), .ld_rdata(), .ld_rvalid(),\n")
+        f.write(f'      .ld_wdata(ld_{n}_wdata),\n')
         f.write(f'      .ld_accept(ld_{n}_accept), .ld_reject(ld_{n}_reject),\n')
         f.write('      .addr_padding_violation());\n\n')
 
