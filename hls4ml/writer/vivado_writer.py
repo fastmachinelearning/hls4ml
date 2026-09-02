@@ -9,7 +9,7 @@ from shutil import copyfile, copytree, rmtree
 import numpy as np
 import yaml
 
-from hls4ml.writer.bram_manifest import write_bram_manifest
+from hls4ml.writer.external_parameters import write_manifest as write_external_parameter_manifest
 from hls4ml.writer.writers import Writer
 
 config_filename = 'hls4ml_config.yml'
@@ -1132,12 +1132,12 @@ class VivadoWriter(Writer):
             with tarfile.open(tar_path, mode='w:gz') as archive:
                 archive.add(model.config.get_output_dir(), recursive=True, arcname='')
 
-    def write_bram_manifest(self, model):
-        """Describe external BRAM parameter ports in a machine-readable manifest.
+    def write_external_parameter_manifest(self, model):
+        """Describe external parameter ports in a machine-readable manifest.
 
-        No-op unless ``BramFactor`` exposed at least one weight as an external BRAM port.
+        No-op unless ``BramFactor`` exposed at least one parameter outside the compute IP.
         """
-        write_bram_manifest(model)
+        write_external_parameter_manifest(model)
 
     def write_hls(self, model, is_multigraph=False):
         if not is_multigraph:
@@ -1145,7 +1145,7 @@ class VivadoWriter(Writer):
             self.write_project_cpp(model)
             self.write_project_header(model)
             self.write_weights(model)
-            self.write_bram_manifest(model)
+            self.write_external_parameter_manifest(model)
             self.write_defines(model)
             self.write_parameters(model)
             self.write_test_bench(model)

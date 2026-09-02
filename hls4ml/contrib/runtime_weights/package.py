@@ -15,6 +15,7 @@ import os
 import shutil
 
 from hls4ml.contrib.runtime_weights import interface
+from hls4ml.writer.external_parameters import MANIFEST_FILENAME
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 STATIC_MODULES = ['bank_addr_mapper.sv', 'bank_select_latch.sv', 'parameter_bank.sv', 'scalar_bank_mux.sv']
@@ -231,11 +232,11 @@ def package(project_dir, project_name=None, n_banks=2, output_dir=None):
     if project_name is None:
         project_name = os.path.basename(os.path.normpath(project_dir))
 
-    manifest_path = os.path.join(project_dir, 'firmware', 'weights', 'bram_manifest.json')
+    manifest_path = os.path.join(project_dir, 'firmware', 'weights', MANIFEST_FILENAME)
     if not os.path.exists(manifest_path):
         raise FileNotFoundError(
             f'no manifest at {manifest_path}; the project must be written with BramFactor set '
-            'so that parameters are exposed as external BRAM'
+            'so that parameters are exposed outside the compute IP'
         )
     manifest = json.load(open(manifest_path))
 
