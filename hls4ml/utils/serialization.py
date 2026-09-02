@@ -189,18 +189,37 @@ def _serialize_array_attrs(attr_dict, layer_name, dest_dir):
     for attr_name, attr_val in attr_dict.items():
         if isinstance(attr_val, dict):
             _serialize_array_attrs(attr_val, layer_name, dest_dir)
-        if isinstance(attr_val, np.ndarray):
+        if isinstance(attr_val, (np.ndarray, list, tuple)):
             # arr_name ensures a nicer name for the data of weight variables and avoids name-clashing
             arr_name = layer_name
             if 'name' in attr_dict and attr_dict['name'] != layer_name:
                 arr_name += '_' + attr_dict['name']
             arr_name += '_' + attr_name
-            serialized_name = _serialize_ndarray(attr_val, arr_name, dest_dir)
-            attr_dict[attr_name] = serialized_name
+            if isinstance(attr_val, np.ndarray):
+                attr_dict[attr_name] = _serialize_ndarray(attr_val, arr_name, dest_dir)
+            else:
+                attr_dict[attr_name] = _serialize_sequence(attr_val, arr_name, layer_name, dest_dir)
         if isinstance(attr_val, np.integer):
             attr_dict[attr_name] = int(attr_val)
         if isinstance(attr_val, np.floating):
             attr_dict[attr_name] = float(attr_val)
+
+
+def _serialize_sequence(seq, name_prefix, layer_name, dest_dir):
+    serialized = []
+    for idx, val in enumerate(seq):
+        if isinstance(val, dict):
+            _serialize_array_attrs(val, layer_name, dest_dir)
+        if isinstance(val, np.ndarray):
+            val = _serialize_ndarray(val, name_prefix + '_' + str(idx), dest_dir)
+        elif isinstance(val, (list, tuple)):
+            val = _serialize_sequence(val, name_prefix + '_' + str(idx), layer_name, dest_dir)
+        if isinstance(val, np.integer):
+            val = int(val)
+        if isinstance(val, np.floating):
+            val = float(val)
+        serialized.append(val)
+    return tuple(serialized) if isinstance(seq, tuple) else serialized
 
 
 def _serialize_ndarray(arr, name_prefix, dest_dir):
@@ -227,6 +246,21 @@ def _deserialize_array_attrs(src_dir, attr_dict):
         if isinstance(attr_val, str) and attr_val.startswith('@ndarray:'):
             arr = _deserialize_ndarray(src_dir, attr_val)
             attr_dict[attr_name] = arr
+        if isinstance(attr_val, list):
+            attr_dict[attr_name] = _deserialize_sequence(src_dir, attr_val)
+
+
+def _deserialize_sequence(src_dir, seq):
+    deserialized = []
+    for val in seq:
+        if isinstance(val, dict):
+            _deserialize_array_attrs(src_dir, val)
+        if isinstance(val, str) and val.startswith('@ndarray:'):
+            val = _deserialize_ndarray(src_dir, val)
+        elif isinstance(val, list):
+            val = _deserialize_sequence(src_dir, val)
+        deserialized.append(val)
+    return deserialized
 
 
 def _deserialize_ndarray(src_dir, arr_name):
