@@ -22,6 +22,14 @@ from hls4ml.writer.external_parameters import MANIFEST_FILENAME
 EXPECTED_SCHEMA = 'hls4ml.external_parameter_manifest/v1'
 SUPPORTED_SCHEMA_VERSIONS = frozenset({1})
 
+# Only the Vitis flow has been verified end to end. Note this is about which
+# hls4ml backend produced the IP; Vivado is still used to implement the result.
+SUPPORTED_BACKENDS = frozenset({'Vitis'})
+
+# The ownership latch drives ap_start/ap_ready directly, so anything else
+# (ap_ctrl_chain, ap_ctrl_none) would be mis-driven rather than merely unsupported.
+REQUIRED_CONTROL_PROTOCOL = 'ap_ctrl_hs'
+
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 STATIC_MODULES = ['bank_addr_mapper.sv', 'bank_select_latch.sv', 'parameter_bank.sv', 'scalar_bank_mux.sv']
 
@@ -257,7 +265,17 @@ def package(project_dir, project_name=None, n_banks=2, output_dir=None):
     if version not in SUPPORTED_SCHEMA_VERSIONS:
         raise ValueError(f'manifest schema version {version!r} is not one of {sorted(SUPPORTED_SCHEMA_VERSIONS)}')
 
+    if manifest.get('backend') not in SUPPORTED_BACKENDS:
+        raise ValueError(f'manifest backend is {manifest.get("backend")!r}, expected one of {sorted(SUPPORTED_BACKENDS)}')
+    if manifest.get('project_name') != project_name:
+        raise ValueError(f'manifest is for project {manifest.get("project_name")!r}, not {project_name!r}')
+
     verified, hardware = interface.verify(manifest, project_dir, project_name)
+
+    if hardware['control'] != REQUIRED_CONTROL_PROTOCOL:
+        raise interface.InterfaceMismatch(
+            f'control protocol is {hardware["control"]!r}; the idle-time wrapper requires {REQUIRED_CONTROL_PROTOCOL!r}'
+        )
     if not verified:
         raise ValueError('manifest describes no ports within schema scope; nothing to bank')
 
@@ -308,6 +326,7 @@ def package(project_dir, project_name=None, n_banks=2, output_dir=None):
         'control_protocol': hardware['control'],
         'bank_selection': 'idle-time (bank committed before ap_start, held to ap_done)',
         'port_b_proven_unused': True,
+        'port_clk_proven_ap_clk': True,
         'passthrough_ports': [p['name'] for p in _classify_ports(rtl_ports, verified)],
         'banked_ports': [
             {

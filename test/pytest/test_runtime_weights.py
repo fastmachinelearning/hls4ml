@@ -447,24 +447,6 @@ def test_manifest_refuses_layout_for_unencodable_precision(tmp_path):
     assert _unsupported_precision_reason({'type': 'int<8>', 'width': None, 'integer': None})
 
 
-def test_package_rejects_foreign_schema(tmp_path):
-    """The consumer verifies schema name and version before packaging."""
-    from hls4ml.contrib.runtime_weights import EXPECTED_SCHEMA, package
-
-    _manifest(tmp_path)
-    path = tmp_path / 'firmware' / 'weights' / 'external_parameters.json'
-    good = json.loads(path.read_text())
-    assert good['schema'] == EXPECTED_SCHEMA
-
-    path.write_text(json.dumps({**good, 'schema': 'someone.else/v1'}))
-    with pytest.raises(ValueError, match='schema'):
-        package(str(tmp_path), 'manifest_prj', n_banks=2)
-
-    path.write_text(json.dumps({**good, 'schema_version': 99}))
-    with pytest.raises(ValueError, match='version'):
-        package(str(tmp_path), 'manifest_prj', n_banks=2)
-
-
 def test_latch_rejects_out_of_range_bank(tmp_path, synthesis_config):
     """Out-of-range bank ids are rejected, checked on the latch directly.
 
@@ -480,3 +462,68 @@ def test_latch_rejects_out_of_range_bank(tmp_path, synthesis_config):
     tb = sim.write_latch_testbench(str(tmp_path / 'tb_latch.sv'))
     passed, log = sim.run_xsim(str(tmp_path / 'xsim_latch'), [str(rtl)], tb)
     assert passed, f'latch bench failed:\n{log[-4000:]}'
+
+
+@pytest.mark.parametrize(
+    'field,value,match',
+    [
+        ('backend', 'Vivado', 'backend'),
+        ('project_name', 'someone_else', 'project'),
+        ('schema', 'someone.else/v1', 'schema'),
+        ('schema_version', 99, 'version'),
+    ],
+)
+def test_package_enforces_manifest_contract(tmp_path, field, value, match):
+    """Packaging refuses a manifest that is not the one it was verified against."""
+    from hls4ml.contrib.runtime_weights import package
+
+    _manifest(tmp_path)
+    path = tmp_path / 'firmware' / 'weights' / 'external_parameters.json'
+    good = json.loads(path.read_text())
+    path.write_text(json.dumps({**good, field: value}))
+
+    with pytest.raises(ValueError, match=match):
+        package(str(tmp_path), 'manifest_prj', n_banks=2)
+
+
+def test_rtl_port_parsing_is_exhaustive(tmp_path, synthesis_config):
+    """A header port with no declaration must raise, not be silently dropped."""
+    from hls4ml.contrib.runtime_weights import interface
+
+    if not synthesis_config['run_synthesis']:
+        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
+
+    hls_model = _convert_dense_for_build(tmp_path)
+    hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
+
+    ports = interface.parse_rtl_ports(str(tmp_path), 'rw_prj')
+    assert {p['name'] for p in ports} >= {'ap_clk', 'ap_rst', 'ap_start', 'ap_done', 'input_1'}
+    assert all(p['dir'] in ('input', 'output') for p in ports)
+
+    rtl = Path(tmp_path) / 'rw_prj_prj' / 'solution1' / 'syn' / 'verilog' / 'rw_prj.v'
+    rtl.write_text(rtl.read_text().replace('input   ap_start;', ''))
+    with pytest.raises(ValueError, match='no declaration found'):
+        interface.parse_rtl_ports(str(tmp_path), 'rw_prj')
+
+
+def _convert_dense_for_build(tmp_path):
+    inp = Input(shape=(N_IN,), name='input_1')
+    model = Model(inp, Dense(N_OUT, activation='linear', name='dense_1')(inp))
+    model.get_layer('dense_1').set_weights([_banks()[0].astype(np.float32), np.zeros((N_OUT,), np.float32)])
+    cfg = hls4ml.utils.config_from_keras_model(
+        model, granularity='model', backend='Vitis', default_precision='ap_fixed<16,6>', default_reuse_factor=2
+    )
+    cfg['Model']['Strategy'] = 'Resource'
+    cfg['Model']['BramFactor'] = 0
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=cfg,
+        output_dir=str(tmp_path),
+        project_name='rw_prj',
+        backend='Vitis',
+        io_type='io_parallel',
+        part=PART,
+        clock_period=10.0,
+    )
+    hls_model.write()
+    return hls_model
