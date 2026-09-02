@@ -6,9 +6,9 @@ and the structured ``layout`` the manifest declares, and produces memory words.
 Getting from a tensor to that flat sequence is the only layer-specific step, and
 the manifest describes it structurally in ``flat_order`` as an axis permutation,
 so ``flatten`` stays generic too. A layer whose order is *not* a permutation of
-its tensor axes (RNN gate ordering is the likely first case) names an explicit
-adapter in ``flat_order['adapter']``, which is looked up in ``CUSTOM_FLATTENERS``.
-Dispatch is never implicit: an adapter is used only when the manifest names it.
+its tensor axes (RNN gate ordering is the likely first case) will name an explicit
+adapter in ``flat_order['adapter']``. No adapter is implemented yet, so such a
+manifest is rejected rather than packed by the permutation path.
 
 Nothing here infers a packing rule. A port the manifest declined to describe
 cannot be packed, and a mismatch between the supplied data and the manifest is an
@@ -22,11 +22,6 @@ import numpy as np
 
 class PackingUnsupported(Exception):
     """The manifest does not describe this port well enough to pack it."""
-
-
-# adapter id (as named by manifest flat_order['adapter']) -> callable(port, tensor)
-# Empty by default; the generic axis-permutation path covers Dense.
-CUSTOM_FLATTENERS = {}
 
 
 def quantize(value, width, integer, signed=True, rounding='TRN', saturation='WRAP'):
@@ -71,11 +66,9 @@ def flatten(port, tensor):
 
     adapter = order.get('adapter')
     if adapter is not None:
-        if adapter not in CUSTOM_FLATTENERS:
-            raise PackingUnsupported(
-                f'{port["name"]}: manifest names flattener {adapter!r}, which is not registered in CUSTOM_FLATTENERS'
-            )
-        return CUSTOM_FLATTENERS[adapter](port, tensor)
+        raise PackingUnsupported(
+            f'{port["name"]}: manifest names flattener {adapter!r}, but no custom flatteners are implemented'
+        )
 
     tensor_axes, axes = order['tensor_axes'], order['axes']
     if sorted(tensor_axes) != sorted(axes):

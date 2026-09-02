@@ -106,12 +106,7 @@ def test_weight_packing_claimed_for_verified_kernels(tmp_path):
     assert weight['kernel_variant'] == 'dense_resource_rf_leq_nin'
     assert weight['flat_order']['tensor_axes'] == ['n_in', 'n_out']
     assert weight['flat_order']['axes'] == ['n_out', 'n_in']
-    assert weight['layout'] == {
-        'mode': 'block',
-        'block_size': 2,
-        'lanes': 16,
-        'description': 'lane = f // 2, word = f % 2',
-    }
+    assert weight['layout'] == {'mode': 'block', 'block_size': 2, 'lanes': 16}
 
 
 def test_bias_is_scalar_bundle_regardless_of_size(tmp_path):
@@ -141,7 +136,7 @@ def test_conv2d_is_out_of_scope_and_claims_nothing(tmp_path):
         assert port['flat_order'] is None
         assert port['layout'] is None
         assert port['kernel_variant'] is None
-        assert 'no adapter registered' in port['note']
+        assert 'no adapter for' in port['note']
 
 
 def test_values_txt_omitted_when_weights_txt_disabled(tmp_path):
@@ -154,9 +149,9 @@ def test_values_txt_omitted_when_weights_txt_disabled(tmp_path):
 
 def test_registry_covers_only_verified_combinations():
     """The registry is the scope boundary: unverified combinations must be absent."""
-    from hls4ml.writer.external_parameters import registered_keys
+    from hls4ml.writer.external_parameters import described_combinations
 
-    keys = set(registered_keys())
+    keys = set(described_combinations())
     assert ('Vitis', 'io_parallel', 'resource', 'Dense', 'weight') in keys
     assert ('Vitis', 'io_parallel', 'resource', 'Dense', 'bias') in keys
 
@@ -174,5 +169,6 @@ def test_manifest_layout_is_structured_not_expressions(tmp_path):
 
     assert isinstance(weight['layout']['block_size'], int)
     assert isinstance(weight['layout']['lanes'], int)
+    assert 'description' not in weight['layout'], 'prose duplicates the structural fields'
     assert weight['flat_order']['tensor_axes'] == ['n_in', 'n_out']
     assert weight['flat_order']['axes'] == ['n_out', 'n_in']

@@ -34,25 +34,6 @@ SCHEMA_VERSION = 1
 
 MANIFEST_FILENAME = 'external_parameters.json'
 
-# (backend, io_type, strategy, layer_class, role) -> describe(context) -> dict
-# strategy is compared lower-case; backend and layer_class keep hls4ml's casing.
-_REGISTRY = {}
-
-
-def register(backend, io_type, strategy, layer_class, role):
-    """Register a description adapter for one parameter kind."""
-
-    def decorator(func):
-        _REGISTRY[(backend, io_type, strategy.lower(), layer_class, role)] = func
-        return func
-
-    return decorator
-
-
-def registered_keys():
-    """Every (backend, io_type, strategy, layer_class, role) currently described."""
-    return sorted(_REGISTRY)
-
 
 # --------------------------------------------------------------------------
 # Dense, Vitis, io_parallel, Resource
@@ -104,7 +85,6 @@ def _dense_kernel_variant(n_in, reuse_factor):
     return 'dense_resource_rf_gt_nin'
 
 
-@register('Vitis', 'io_parallel', 'Resource', 'Dense', 'weight')
 def _describe_dense_weight(ctx):
     """Dense kernel: reshaped by `ARRAY_RESHAPE variable=weights block factor=N`.
 
@@ -141,19 +121,16 @@ def _describe_dense_weight(ctx):
             'tensor_axes': ['n_in', 'n_out'],
             'axes': ['n_out', 'n_in'],
             'shape': [n_in, n_out],
-            'description': 'index(out,in) = out*n_in + in',
         },
         layout={
             'mode': 'block',
             'block_size': block_size,
             'lanes': block_factor,
-            'description': f'lane = f // {block_size}, word = f % {block_size}',
         },
     )
     return described
 
 
-@register('Vitis', 'io_parallel', 'Resource', 'Dense', 'bias')
 def _describe_dense_bias(ctx):
     """Dense bias: `ARRAY_PARTITION variable=biases complete` wins over the BRAM
     interface, so it lowers to scalar ports regardless of size.
@@ -176,13 +153,24 @@ def _describe_dense_bias(ctx):
             'tensor_axes': ['n_out'],
             'axes': ['n_out'],
             'shape': [ctx['n_scalars']],
-            'description': 'b[i] = bias[i], i = out index',
         },
-        'layout': {'mode': 'complete', 'description': 'one scalar port per element'},
+        'layout': {'mode': 'complete'},
     }
 
 
-# --------------------------------------------------------------------------
+# (backend, io_type, strategy, layer_class, role) -> describe(context) -> dict.
+# strategy is matched lower-case; backend and layer_class keep hls4ml's casing.
+# Adding an entry is the only way to widen the manifest's scope, and requires
+# evidence that the packing has been verified against generated RTL.
+_ADAPTERS = {
+    ('Vitis', 'io_parallel', 'resource', 'Dense', 'weight'): _describe_dense_weight,
+    ('Vitis', 'io_parallel', 'resource', 'Dense', 'bias'): _describe_dense_bias,
+}
+
+
+def described_combinations():
+    """Every (backend, io_type, strategy, layer_class, role) the manifest describes."""
+    return sorted(_ADAPTERS)
 
 
 def _precision_dict(precision):
@@ -256,10 +244,10 @@ def build_manifest(model):
         }
 
         key = (backend, io_type, str(strategy).lower(), entry['layer_class'], role)
-        describe = _REGISTRY.get(key)
+        describe = _ADAPTERS.get(key)
         if describe is None:
             entry['note'] = (
-                f'no adapter registered for {key}; no interface kind, geometry or '
+                f'no adapter for {key}; no interface kind, geometry or '
                 'ordering is claimed -- classify from the export report'
             )
         else:
