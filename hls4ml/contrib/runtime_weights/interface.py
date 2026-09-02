@@ -103,7 +103,10 @@ def verify(manifest, project_dir, project_name):
 
             word_bytes = data_width // 8
             shift = parse_addr_shift(project_dir, project_name, name)
-            if shift is not None and (1 << shift) != word_bytes:
+            if shift is None:
+                problems.append(f'{name}: could not determine the byte-address shift from the generated RTL')
+                continue
+            if (1 << shift) != word_bytes:
                 problems.append(f'{name}: RTL shifts address by {shift} but word is {word_bytes} bytes')
                 continue
 
@@ -129,11 +132,19 @@ def verify(manifest, project_dir, project_name):
             if len(members) != port['n_scalars']:
                 problems.append(f'{name}: found {len(members)} scalar ports, expected {port["n_scalars"]}')
                 continue
-            mode, bits = hardware['scalar'][members[0]]
+            modes = {hardware['scalar'][m][0] for m in members}
+            widths = {hardware['scalar'][m][1] for m in members}
+            if len(modes) != 1 or len(widths) != 1:
+                problems.append(f'{name}: scalar ports disagree (modes={sorted(modes)}, widths={sorted(widths)})')
+                continue
+            mode, bits = modes.pop(), widths.pop()
             if bits != port['expected_data_width']:
                 problems.append(f'{name}: scalar width {bits} but manifest expected {port["expected_data_width"]}')
                 continue
             verified.append({**port, 'actual_ports': members, 'actual_mode': mode, 'actual_width': bits})
+
+        else:
+            problems.append(f'{name}: unknown interface kind {kind!r}')
 
     if problems:
         raise InterfaceMismatch('; '.join(problems))
@@ -166,11 +177,32 @@ def parse_rtl_ports(project_dir, project_name):
         width = (int(msb) - int(lsb) + 1) if msb is not None else 1
         decls[name] = {'name': name, 'dir': direction, 'width': width}
 
-    ports = []
+    ports, missing = [], []
     for name in order:
         if name in decls:
             ports.append(decls[name])
+        else:
+            missing.append(name)
+    if missing:
+        raise ValueError(f'{project_name}: no declaration found for header port(s) {missing}; refusing to guess')
+    inout = [p['name'] for p in ports if p['dir'] == 'inout']
+    if inout:
+        raise ValueError(f'{project_name}: inout ports are not supported ({inout})')
     return ports
+
+
+def bram_port_clk_is_ap_clk(project_dir, project_name, port):
+    """Prove from the RTL that the IP ties this BRAM port's clock to ap_clk.
+
+    The wrapper clocks the banked memory with ap_clk and leaves Clk_A dangling, so
+    check rather than assume the two are the same clock.
+    """
+    path = os.path.join(_solution_dir(project_dir, project_name), 'syn', 'verilog', f'{project_name}.v')
+    if not os.path.exists(path):
+        return False, 'exported RTL not found'
+    text = open(path).read()
+    tied = bool(re.search(rf'assign\s+{re.escape(port)}_Clk_A\s*=\s*ap_clk\s*;', text))
+    return tied, {'Clk_A_tied_to_ap_clk': tied}
 
 
 def bram_port_b_is_unused(project_dir, project_name, port):
