@@ -21,9 +21,11 @@ from hls4ml.contrib.runtime_weights.interface import InterfaceMismatch, verify  
 from hls4ml.contrib.runtime_weights.pack import (  # noqa: F401
     PackingUnsupported,
     build_bank_image,
-    pack_scalar_bank,
-    pack_weight_bank,
+    flatten,
+    pack_flat,
+    pack_tensor,
     quantize,
+    quantize_port,
     write_mem,
 )
 from hls4ml.contrib.runtime_weights.package import fingerprint_ip, package  # noqa: F401

@@ -1,4 +1,4 @@
-"""Unit tests for the external-BRAM parameter manifest.
+"""Unit tests for the external-parameter manifest.
 
 C-level only: no HLS synthesis, so these run in ordinary CI.
 """
@@ -12,7 +12,7 @@ from tensorflow.keras.layers import Conv2D, Dense, Input
 from tensorflow.keras.models import Model
 
 import hls4ml
-from hls4ml.writer.bram_manifest import SCHEMA, SCHEMA_VERSION, build_bram_manifest
+from hls4ml.writer.external_parameters import MANIFEST_FILENAME, SCHEMA, SCHEMA_VERSION, build_manifest
 
 test_root_path = Path(__file__).parent
 PART = 'xcvu9p-flga2104-2L-e'
@@ -54,15 +54,15 @@ def test_no_manifest_without_bram_factor(tmp_path):
     hls_model = _convert(_dense_model(), tmp_path / 'nobram', bram_factor=1_000_000_000)
     hls_model.write()
 
-    assert build_bram_manifest(hls_model)['ports'] == []
-    assert not (tmp_path / 'nobram' / 'firmware' / 'weights' / 'bram_manifest.json').exists()
+    assert build_manifest(hls_model)['ports'] == []
+    assert not (tmp_path / 'nobram' / 'firmware' / 'weights' / MANIFEST_FILENAME).exists()
 
 
 def test_manifest_written_and_wellformed(tmp_path):
     hls_model = _convert(_dense_model(), tmp_path / 'dense')
     hls_model.write()
 
-    path = tmp_path / 'dense' / 'firmware' / 'weights' / 'bram_manifest.json'
+    path = tmp_path / 'dense' / 'firmware' / 'weights' / MANIFEST_FILENAME
     assert path.exists()
     manifest = json.loads(path.read_text())
 
@@ -87,7 +87,7 @@ def test_manifest_written_and_wellformed(tmp_path):
 def test_weight_geometry_matches_reshape(tmp_path, reuse_factor, expected_width, expected_depth):
     """expected_data_width / expected_depth follow from the ARRAY_RESHAPE block factor."""
     hls_model = _convert(_dense_model(), tmp_path / f'rf{reuse_factor}', reuse_factor=reuse_factor)
-    weight = next(p for p in build_bram_manifest(hls_model)['ports'] if p['role'] == 'weight')
+    weight = next(p for p in build_manifest(hls_model)['ports'] if p['role'] == 'weight')
 
     assert weight['expected_interface_kind'] == 'bram'
     assert weight['expected_data_width'] == expected_width
@@ -101,19 +101,23 @@ def test_weight_geometry_matches_reshape(tmp_path, reuse_factor, expected_width,
 
 def test_weight_packing_claimed_for_verified_kernels(tmp_path):
     hls_model = _convert(_dense_model(), tmp_path / 'packing', reuse_factor=2)
-    weight = next(p for p in build_bram_manifest(hls_model)['ports'] if p['role'] == 'weight')
+    weight = next(p for p in build_manifest(hls_model)['ports'] if p['role'] == 'weight')
 
     assert weight['kernel_variant'] == 'dense_resource_rf_leq_nin'
-    assert weight['logical_scalar_order'] == 'index(out,in) = out*n_in + in'
-    assert weight['reshape']['lane_of_flat_index'] == 'f // 2'
-    assert weight['reshape']['word_of_flat_index'] == 'f % 2'
-    assert weight['reshape']['verified_for'] == ['dense_resource_rf_leq_nin']
+    assert weight['flat_order']['tensor_axes'] == ['n_in', 'n_out']
+    assert weight['flat_order']['axes'] == ['n_out', 'n_in']
+    assert weight['layout'] == {
+        'mode': 'block',
+        'block_size': 2,
+        'lanes': 16,
+        'description': 'lane = f // 2, word = f % 2',
+    }
 
 
 def test_bias_is_scalar_bundle_regardless_of_size(tmp_path):
     """ARRAY_PARTITION variable=biases complete wins over the BRAM interface."""
     hls_model = _convert(_dense_model(n_out=32), tmp_path / 'bigbias')
-    bias = next(p for p in build_bram_manifest(hls_model)['ports'] if p['role'] == 'bias')
+    bias = next(p for p in build_manifest(hls_model)['ports'] if p['role'] == 'bias')
 
     assert bias['expected_interface_kind'] == 'scalar_bundle'
     assert bias['expected_data_width'] == 16
@@ -127,21 +131,48 @@ def test_conv2d_is_out_of_scope_and_claims_nothing(tmp_path):
     model = Model(inp, Conv2D(3, (2, 2), padding='valid', activation='linear', name='conv2d_1')(inp))
     hls_model = _convert(model, tmp_path / 'conv2d')
 
-    ports = build_bram_manifest(hls_model)['ports']
+    ports = build_manifest(hls_model)['ports']
     assert ports, 'expected Conv2D weights to be exposed as external BRAM'
     for port in ports:
         assert port['layer_class'] == 'Conv2D'
         assert port['expected_interface_kind'] is None
         assert port['expected_data_width'] is None
         assert port['expected_depth'] is None
-        assert port['logical_scalar_order'] is None
+        assert port['flat_order'] is None
+        assert port['layout'] is None
         assert port['kernel_variant'] is None
-        assert 'outside schema v1 scope' in port['note']
+        assert 'no adapter registered' in port['note']
 
 
 def test_values_txt_omitted_when_weights_txt_disabled(tmp_path):
     hls_model = _convert(_dense_model(), tmp_path / 'notxt')
     hls_model.config.get_writer_config()['WriteWeightsTxt'] = False
 
-    for port in build_bram_manifest(hls_model)['ports']:
+    for port in build_manifest(hls_model)['ports']:
         assert port['values_txt'] is None
+
+
+def test_registry_covers_only_verified_combinations():
+    """The registry is the scope boundary: unverified combinations must be absent."""
+    from hls4ml.writer.external_parameters import registered_keys
+
+    keys = set(registered_keys())
+    assert ('Vitis', 'io_parallel', 'resource', 'Dense', 'weight') in keys
+    assert ('Vitis', 'io_parallel', 'resource', 'Dense', 'bias') in keys
+
+    for backend, io_type, strategy, layer_class, _role in keys:
+        assert backend == 'Vitis', 'only the Vitis backend has been verified'
+        assert io_type == 'io_parallel'
+        assert strategy == 'resource'
+        assert layer_class == 'Dense'
+
+
+def test_manifest_layout_is_structured_not_expressions(tmp_path):
+    """Consumers must not have to parse strings to learn the mapping."""
+    hls_model = _convert(_dense_model(), tmp_path / 'structured')
+    weight = next(p for p in build_manifest(hls_model)['ports'] if p['role'] == 'weight')
+
+    assert isinstance(weight['layout']['block_size'], int)
+    assert isinstance(weight['layout']['lanes'], int)
+    assert weight['flat_order']['tensor_axes'] == ['n_in', 'n_out']
+    assert weight['flat_order']['axes'] == ['n_out', 'n_in']
