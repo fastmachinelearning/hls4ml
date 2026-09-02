@@ -74,8 +74,8 @@ becomes a bundle of scalar ports, and is described here too.
 ``flat_order`` gives the tensor's own axis names and the order to enumerate them
 in, so flattening is a transpose followed by a ravel. ``layout`` says how that
 flat sequence maps into memory words: with ``mode: "block"``, lane is
-``f // block_size`` and word is ``f % block_size``. Both are structured rather
-than expressions to parse.
+``f // block_size`` and word is ``f % block_size``. Both are structured values, so
+a consumer never has to parse an expression.
 
 Two properties of the manifest are worth understanding:
 
@@ -128,8 +128,22 @@ Bank images are produced with the same package:
 
 The packer is layer-agnostic: ``pack_flat`` consumes a flat scalar sequence and
 the declared ``layout``, and ``flatten`` applies the declared axis permutation. A
-layer whose order is not a permutation of its tensor axes can register an
-override in ``pack.FLATTENERS`` without changing the core.
+layer whose order is not a permutation of its tensor axes would name an adapter in
+``flat_order['adapter']``; none is implemented yet, and such a manifest is
+rejected rather than packed by the permutation path.
+
+The image is bound to the wrapper through the generated top's per-port
+``<PORT>_INIT_HEX`` parameter, which is read with ``$readmemh`` at elaboration:
+
+.. code-block:: systemverilog
+
+    my_prj_runtime_weights #(
+        .N_BANKS(2),
+        .W2_INIT_HEX("w2_banks.mem")
+    ) u_wrapper ( ... );
+
+Banks can equally be written at run time through the loader ports, which is the
+point of the feature; ``INIT_HEX`` just gives the memory a defined starting state.
 
 Bank selection is **idle-time only**. The wrapper captures ``bank_id`` when it
 takes a request, makes it stable *before* asserting ``ap_start``, and holds it
@@ -141,7 +155,9 @@ is in flight a new start is gated away from the IP; overlapping transactions are
 not supported, which gives up any back-to-back capability the IP may have.
 
 Any valid bank may be written while idle; all writes are rejected while an
-inference is active.
+inference is active. Out-of-range bank ids, word addresses and scalar indices are
+rejected too, so a write is either performed or reported as refused on
+``ld_<port>_reject``.
 
 The number of banks, the memory geometry and the physical capacity are fixed when
 the design is implemented. Changing values within an existing bank requires only
