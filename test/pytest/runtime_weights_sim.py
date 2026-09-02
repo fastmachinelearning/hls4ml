@@ -173,9 +173,6 @@ def write_testbench(path, project_name, n_in, n_out, input_codes, banks, expecte
             ]
     lines += [
         '',
-        '    // an out-of-range bank must be rejected and must not start the IP',
-        '    @(negedge ap_clk);',
-        f"    ext_bank_id = {bank_bits}'d{n_banks - 1}; ext_ap_start = 0;",
         '    @(negedge ap_clk);',
         '    if (busy !== 1\'b0) begin $display("FAIL: busy stuck high"); errors = errors + 1; end',
         '',
@@ -221,3 +218,99 @@ def run_xsim(work_dir, rtl_dirs, tb_file, top='tb'):
         if re.search(r'^ERROR', result.stdout, re.M):
             return False, log
     return 'RUNTIME_WEIGHTS_PASS' in log, log
+
+
+LATCH_TB = r"""
+`timescale 1 ns / 1 ps
+
+// Out-of-range bank rejection, checked on bank_select_latch directly.
+//
+// This cannot be exercised through a two-bank wrapper: with N_BANKS=2 the bank id
+// is one bit wide, so every encodable value is valid. N_BANKS=3 makes id 3
+// representable and invalid.
+module tb;
+  localparam int NB = 3;
+  localparam int W  = $clog2(NB);
+
+  reg clk = 0, rst = 1;
+  always #5 clk = ~clk;
+
+  reg ext_ap_start = 0;
+  reg [W-1:0] ext_bank_id = 0;
+  wire ext_ap_ready, ext_bank_id_bad, hls_ap_start;
+  reg hls_ap_ready = 1, hls_ap_idle = 1, hls_ap_done = 0;
+  wire [W-1:0] cur_bank_id;
+  wire busy, quiescent;
+  integer errors = 0;
+
+  bank_select_latch #(.BANK_ID_WIDTH(W), .N_BANKS(NB)) dut (
+    .ap_clk(clk), .ap_rst(rst),
+    .ext_ap_start(ext_ap_start), .ext_bank_id(ext_bank_id),
+    .ext_ap_ready(ext_ap_ready), .ext_bank_id_bad(ext_bank_id_bad),
+    .hls_ap_start(hls_ap_start), .hls_ap_ready(hls_ap_ready),
+    .hls_ap_idle(hls_ap_idle), .hls_ap_done(hls_ap_done),
+    .cur_bank_id(cur_bank_id), .busy(busy), .quiescent(quiescent));
+
+  initial begin
+    repeat (4) @(negedge clk);
+    rst = 0;
+    @(negedge clk);
+
+    // id 3 is out of range for NB=3: flagged, and nothing starts
+    ext_bank_id = 2'd3; ext_ap_start = 1;
+    @(negedge clk);
+    if (ext_bank_id_bad !== 1'b1) begin
+      $display("FAIL: out-of-range bank not flagged"); errors = errors + 1;
+    end
+    if (hls_ap_start !== 1'b0) begin
+      $display("FAIL: invalid bank started the IP"); errors = errors + 1;
+    end
+    @(negedge clk);
+    if (busy !== 1'b0) begin
+      $display("FAIL: invalid bank made the wrapper busy"); errors = errors + 1;
+    end
+    ext_ap_start = 0;
+    @(negedge clk);
+
+    // a valid id is accepted, and is stable before ap_start rises
+    ext_bank_id = 2'd2; ext_ap_start = 1;
+    @(negedge clk);
+    if (ext_bank_id_bad !== 1'b0) begin
+      $display("FAIL: valid bank flagged as bad"); errors = errors + 1;
+    end
+    if (cur_bank_id !== 2'd2) begin
+      $display("FAIL: bank not committed before ap_start (got %0d)", cur_bank_id);
+      errors = errors + 1;
+    end
+    if (hls_ap_start !== 1'b1) begin
+      $display("FAIL: valid bank did not start the IP"); errors = errors + 1;
+    end
+    ext_ap_start = 0;
+    @(negedge clk);
+    if (busy !== 1'b1) begin $display("FAIL: not busy after accept"); errors = errors + 1; end
+
+    // loads are refused while a transaction is in flight
+    if (quiescent !== 1'b0) begin
+      $display("FAIL: quiescent asserted while busy"); errors = errors + 1;
+    end
+    hls_ap_done = 1; @(negedge clk); hls_ap_done = 0;
+    @(negedge clk);
+    if (busy !== 1'b0) begin $display("FAIL: still busy after done"); errors = errors + 1; end
+
+    if (errors == 0) $display("RUNTIME_WEIGHTS_PASS");
+    else $display("RUNTIME_WEIGHTS_FAIL errors=%0d", errors);
+    $finish;
+  end
+
+  initial begin
+    #50000; $display("RUNTIME_WEIGHTS_FAIL timeout"); $finish;
+  end
+endmodule
+"""
+
+
+def write_latch_testbench(path):
+    """Standalone bench for bank_select_latch; needs no synthesized IP."""
+    with open(path, 'w') as fh:
+        fh.write(LATCH_TB)
+    return path
