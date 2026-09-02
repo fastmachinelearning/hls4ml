@@ -42,6 +42,11 @@ def fingerprint_ip(project_dir, project_name):
     return {'combined': combined, 'files': entries}
 
 
+# N_BANKS is an overridable parameter, so the bank-id width must track it rather
+# than being fixed at generation time. An ANSI port list cannot reference a
+# localparam declared in the module body, so derive it inline at every use.
+BANK_W = '$clog2(N_BANKS)'
+
 CONTROL_PORTS = {'ap_clk', 'ap_rst', 'ap_start', 'ap_done', 'ap_ready', 'ap_idle'}
 BRAM_SUFFIXES = [
     'Addr_A',
@@ -113,7 +118,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         '',
         '    // transaction boundary',
         '    input  wire ext_ap_start',
-        f'    input  wire [{bank_id_width - 1}:0] ext_bank_id',
+        f'    input  wire [{BANK_W}-1:0] ext_bank_id',
         '    output wire ext_ap_ready',
         '    output wire ext_ap_done',
         '    output wire ext_bank_id_bad',
@@ -129,7 +134,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         word_bits = max((p['expected_depth'] - 1).bit_length(), 1)
         lines += [
             f'    input  wire ld_{n}_req',
-            f'    input  wire [{bank_id_width - 1}:0] ld_{n}_bank',
+            f'    input  wire [{BANK_W}-1:0] ld_{n}_bank',
             f'    input  wire [{word_bits - 1}:0] ld_{n}_word',
             f'    input  wire [{p["actual_data_width"] - 1}:0] ld_{n}_wdata',
             f'    output wire ld_{n}_accept',
@@ -140,7 +145,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         idx_bits = max((p['n_scalars'] - 1).bit_length(), 1)
         lines += [
             f'    input  wire ld_{n}_we',
-            f'    input  wire [{bank_id_width - 1}:0] ld_{n}_bank',
+            f'    input  wire [{BANK_W}-1:0] ld_{n}_bank',
             f'    input  wire [{idx_bits - 1}:0] ld_{n}_idx',
             f'    input  wire [{p["actual_width"] - 1}:0] ld_{n}_data',
             f'    output wire ld_{n}_accept',
@@ -148,7 +153,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
     lines += [
         '',
         '    // observability',
-        f'    output wire [{bank_id_width - 1}:0] cur_bank_id',
+        f'    output wire [{BANK_W}-1:0] cur_bank_id',
         '    output wire busy',
         '    output wire quiescent',
     ]
@@ -163,7 +168,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
     f.write(');\n\n')
 
     f.write('  wire hls_ap_start, hls_ap_done, hls_ap_idle, hls_ap_ready;\n\n')
-    f.write(f'  bank_select_latch #(.BANK_ID_WIDTH({bank_id_width}), .N_BANKS(N_BANKS)) u_latch (\n')
+    f.write(f'  bank_select_latch #(.BANK_ID_WIDTH({BANK_W}), .N_BANKS(N_BANKS)) u_latch (\n')
     f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst),\n')
     f.write('      .ext_ap_start(ext_ap_start), .ext_bank_id(ext_bank_id),\n')
     f.write('      .ext_ap_ready(ext_ap_ready), .ext_bank_id_bad(ext_bank_id_bad),\n')
@@ -181,7 +186,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         f.write(f'  wire [{dw // 8 - 1}:0] {n}_WEN_A;\n')
         f.write(f'  parameter_bank #(.DATA_WIDTH({dw}), .HLS_ADDR_WIDTH({p["actual_addr_width"]}),\n')
         f.write(f'      .WORD_BYTES({p["actual_word_bytes"]}), .LOCAL_WORDS({p["expected_depth"]}),\n')
-        f.write(f'      .N_BANKS(N_BANKS), .BANK_ID_WIDTH({bank_id_width}),\n')
+        f.write(f'      .N_BANKS(N_BANKS), .BANK_ID_WIDTH({BANK_W}),\n')
         f.write(f'      .BANK_STRIDE_WORDS({stride}), .INIT_HEX({n.upper()}_INIT_HEX)) u_{n} (\n')
         f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
         f.write(f'      .hls_Addr_A({n}_Addr_A), .hls_EN_A({n}_EN_A), .hls_WEN_A({n}_WEN_A),\n')
@@ -195,7 +200,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         n, w, count = p['name'], p['actual_width'], p['n_scalars']
         f.write(f'  wire [{w * count - 1}:0] {n}_flat;\n')
         f.write(f'  scalar_bank_mux #(.SCALAR_WIDTH({w}), .N_SCALARS({count}),\n')
-        f.write(f'      .N_BANKS(N_BANKS), .BANK_ID_WIDTH({bank_id_width})) u_{n} (\n')
+        f.write(f'      .N_BANKS(N_BANKS), .BANK_ID_WIDTH({BANK_W})) u_{n} (\n')
         f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
         f.write(f'      .ld_we(ld_{n}_we), .ld_bank(ld_{n}_bank), .ld_idx(ld_{n}_idx),\n')
         f.write(f'      .ld_data(ld_{n}_data), .ld_accept(ld_{n}_accept), .q_flat({n}_flat));\n\n')
