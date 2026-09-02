@@ -104,8 +104,12 @@ module parameter_bank #(
   // Writes to the bank currently selected for inference are PROHIBITED, and no
   // write is accepted while a transaction is in flight. To update the selected
   // bank, switch selection to another bank first.
-  wire bank_ok  = (ld_bank < N_BANKS[BANK_ID_WIDTH:0]);
-  wire safe     = quiescent & bank_ok;   // idle => no active bank => any bank loadable
+  // ld_word is $clog2(LOCAL_WORDS) bits, so when LOCAL_WORDS is not a power of two
+  // it can encode words that lie in the inter-bank padding. Reject those rather
+  // than acknowledging a write that lands nowhere useful.
+  wire bank_ok  = (32'(ld_bank) < N_BANKS);
+  wire word_ok  = (32'(ld_word) < LOCAL_WORDS);
+  wire safe     = quiescent & bank_ok & word_ok;   // idle => no active bank => any bank loadable
   wire want     = ld_req | ld_rd;
 
   assign ld_accept = want &  safe;
@@ -135,6 +139,8 @@ module parameter_bank #(
                             !(hls_EN_A & pad_a));
   a_write_only_when_idle: assert property (@(posedge ap_clk) disable iff (ap_rst)
                             (ld_req & ld_accept) |-> quiescent);
+  a_write_in_bounds     : assert property (@(posedge ap_clk) disable iff (ap_rst)
+                            (ld_req & ld_accept) |-> (32'(ld_word) < LOCAL_WORDS));
 `endif
 
 endmodule

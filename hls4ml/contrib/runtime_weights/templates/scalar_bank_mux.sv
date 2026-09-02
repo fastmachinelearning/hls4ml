@@ -43,8 +43,10 @@ module scalar_bank_mux #(
       for (s = 0; s < N_SCALARS; s = s + 1) bank_mem[bk][s] = '0;
   end
 
-  // same policy as parameter_bank: writes only while the wrapper is idle
-  assign ld_accept = ld_we & quiescent & (ld_bank < N_BANKS[BANK_ID_WIDTH:0]);
+  // same policy as parameter_bank: writes only while the wrapper is idle.
+  // ld_idx is $clog2(N_SCALARS) bits, so for a non-power-of-two bundle it can
+  // encode indices past the end of the array; reject those.
+  assign ld_accept = ld_we & quiescent & (32'(ld_bank) < N_BANKS) & (32'(ld_idx) < N_SCALARS);
 
   always_ff @(posedge ap_clk) begin
     if (ld_accept) bank_mem[ld_bank][ld_idx] <= ld_data;
