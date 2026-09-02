@@ -527,3 +527,45 @@ def _convert_dense_for_build(tmp_path):
     )
     hls_model.write()
     return hls_model
+
+
+def test_vivado_synthesizes_the_wrapper(tmp_path, synthesis_config):
+    """Batch-Vivado smoke test: the generated Tcl runs and the wrapper synthesizes.
+
+    This is the only check that exercises the Tcl itself, and the only one that
+    proves the RTL is synthesizable rather than merely simulatable. It packages IP
+    produced by the hls4ml Vitis backend; Vivado is the implementation tool here,
+    not a supported hls4ml HLS backend.
+    """
+    import shutil
+    import subprocess
+
+    from hls4ml.contrib.runtime_weights import package
+
+    if not synthesis_config['run_synthesis']:
+        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
+    if shutil.which('vivado') is None:
+        pytest.skip('requires vivado')
+
+    hls_model = _convert_dense_for_build(tmp_path)
+    hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
+    package(str(tmp_path), 'rw_prj', n_banks=2)
+
+    rw = Path(tmp_path) / 'runtime_weights'
+    result = subprocess.run(
+        'vivado -mode batch -nojournal -nolog -source create_runtime_weights.tcl',
+        shell=True,
+        cwd=str(rw),
+        capture_output=True,
+        text=True,
+        timeout=3600,
+    )
+    assert 'runtime-weights wrapper synthesized' in result.stdout, (
+        f'vivado synthesis did not complete:\n{result.stdout[-4000:]}'
+    )
+    for report in ('utilization.rpt', 'timing.rpt', 'drc.rpt'):
+        assert (rw / report).exists(), f'missing {report}'
+
+    # the clock must have reached synthesis, not just been written to a file
+    timing = (rw / 'timing.rpt').read_text()
+    assert 'ap_clk' in timing, 'clock constraint did not reach synthesis'
