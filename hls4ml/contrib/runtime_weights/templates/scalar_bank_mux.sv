@@ -48,7 +48,7 @@ module scalar_bank_mux #(
   // encode indices past the end of the array; reject those.
   assign ld_accept = ld_we & quiescent & (32'(ld_bank) < N_BANKS) & (32'(ld_idx) < N_SCALARS);
 
-  always_ff @(posedge ap_clk) begin
+  always @(posedge ap_clk) begin
     if (ld_accept) bank_mem[ld_bank][ld_idx] <= ld_data;
   end
 

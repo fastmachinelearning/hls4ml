@@ -88,13 +88,19 @@ module parameter_bank #(
       .addr_in_padding(pad_a)
   );
 
-  always_ff @(posedge ap_clk or posedge hls_Rst_A) begin
-    if (hls_Rst_A) begin
-      hls_Dout_A <= '0;
-    end else if (hls_EN_A) begin
-      hls_Dout_A <= mem[phys_a];
-      for (int b = 0; b < DATA_WIDTH / 8; b++)
-        if (hls_WEN_A[b]) mem[phys_a][b*8 +: 8] <= hls_Din_A[b*8 +: 8];
+  // port A: registered read, byte-enabled write. Plain always blocks (not
+  // always_ff) because `mem` is shared with the loader port below; always_ff
+  // asserts exclusive ownership of the variables it assigns.
+  always @(posedge ap_clk or posedge hls_Rst_A) begin
+    if (hls_Rst_A) hls_Dout_A <= {DATA_WIDTH{1'b0}};
+    else if (hls_EN_A) hls_Dout_A <= mem[phys_a];
+  end
+
+  integer bidx;
+  always @(posedge ap_clk) begin
+    if (hls_EN_A) begin
+      for (bidx = 0; bidx < DATA_WIDTH / 8; bidx = bidx + 1)
+        if (hls_WEN_A[bidx]) mem[phys_a][bidx*8 +: 8] <= hls_Din_A[bidx*8 +: 8];
     end
   end
 
@@ -121,10 +127,11 @@ module parameter_bank #(
   wire [31:0] phys_b_full = (32'(ld_bank) * BANK_STRIDE_WORDS) + 32'(ld_word);
   wire [PHYS_ADDR_WIDTH-1:0] phys_b = phys_b_full[PHYS_ADDR_WIDTH-1:0];
 
-  always_ff @(posedge ap_clk) begin
+  // port B: loader writes, accepted only while the wrapper is idle
+  always @(posedge ap_clk) begin
     ld_rvalid <= 1'b0;
     if (ap_rst) begin
-      ld_rdata <= '0;
+      ld_rdata <= {DATA_WIDTH{1'b0}};
     end else if (ld_accept) begin
       if (ld_req) mem[phys_b] <= ld_wdata;
       if (ld_rd) begin
