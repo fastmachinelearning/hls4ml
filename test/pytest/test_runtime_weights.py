@@ -463,3 +463,20 @@ def test_package_rejects_foreign_schema(tmp_path):
     path.write_text(json.dumps({**good, 'schema_version': 99}))
     with pytest.raises(ValueError, match='version'):
         package(str(tmp_path), 'manifest_prj', n_banks=2)
+
+
+def test_latch_rejects_out_of_range_bank(tmp_path, synthesis_config):
+    """Out-of-range bank ids are rejected, checked on the latch directly.
+
+    N_BANKS=2 cannot express an invalid id at all, so this needs its own bench.
+    It exercises only the wrapper RTL, so no synthesized IP is required.
+    """
+    import runtime_weights_sim as sim
+
+    if not sim.have_xsim():
+        pytest.skip('requires xvlog/xelab/xsim')
+
+    rtl = Path(__file__).parent.parent.parent / 'hls4ml' / 'contrib' / 'runtime_weights' / 'templates'
+    tb = sim.write_latch_testbench(str(tmp_path / 'tb_latch.sv'))
+    passed, log = sim.run_xsim(str(tmp_path / 'xsim_latch'), [str(rtl)], tb)
+    assert passed, f'latch bench failed:\n{log[-4000:]}'
