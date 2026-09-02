@@ -10,8 +10,10 @@ Typical use, after ``hls_model.build(synth=True)`` on a project written with
 
     summary = package('my-hls-test', n_banks=2)
 
-Bank selection is idle-time only: ``bank_id`` is latched when the IP accepts a
-transaction and held until ``ap_done``. Writes to the selected bank are rejected.
+Bank selection is idle-time only: ``bank_id`` is captured when the wrapper takes a
+request, made stable before ``ap_start`` rises, and held through ``ap_done``. Any
+valid bank may be written while idle; all writes are rejected while an inference
+is active.
 
 Deliberately out of scope: AXI and board support, drivers, a C++ wrapper, any
 automatic change to ``BramFactor``, and overlapping transactions.
