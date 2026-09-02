@@ -17,6 +17,11 @@ import shutil
 from hls4ml.contrib.runtime_weights import interface
 from hls4ml.writer.external_parameters import MANIFEST_FILENAME
 
+# Verified independently of the writer: if hls4ml starts emitting a different
+# schema, packaging must fail loudly rather than misread the new semantics.
+EXPECTED_SCHEMA = 'hls4ml.external_parameter_manifest/v1'
+SUPPORTED_SCHEMA_VERSIONS = frozenset({1})
+
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 STATIC_MODULES = ['bank_addr_mapper.sv', 'bank_select_latch.sv', 'parameter_bank.sv', 'scalar_bank_mux.sv']
 
@@ -239,6 +244,13 @@ def package(project_dir, project_name=None, n_banks=2, output_dir=None):
             'so that parameters are exposed outside the compute IP'
         )
     manifest = json.load(open(manifest_path))
+
+    schema = manifest.get('schema')
+    version = manifest.get('schema_version')
+    if schema != EXPECTED_SCHEMA:
+        raise ValueError(f'manifest schema is {schema!r}, expected {EXPECTED_SCHEMA!r}')
+    if version not in SUPPORTED_SCHEMA_VERSIONS:
+        raise ValueError(f'manifest schema version {version!r} is not one of {sorted(SUPPORTED_SCHEMA_VERSIONS)}')
 
     verified, hardware = interface.verify(manifest, project_dir, project_name)
     if not verified:
