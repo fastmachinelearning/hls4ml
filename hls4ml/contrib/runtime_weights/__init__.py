@@ -28,4 +28,9 @@ from hls4ml.contrib.runtime_weights.pack import (  # noqa: F401
     quantize_port,
     write_mem,
 )
-from hls4ml.contrib.runtime_weights.package import fingerprint_ip, package  # noqa: F401
+from hls4ml.contrib.runtime_weights.package import (  # noqa: F401
+    EXPECTED_SCHEMA,
+    SUPPORTED_SCHEMA_VERSIONS,
+    fingerprint_ip,
+    package,
+)

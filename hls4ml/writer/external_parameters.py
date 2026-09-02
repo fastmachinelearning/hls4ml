@@ -72,6 +72,27 @@ VERIFIED_DENSE_KERNELS = {
 }
 
 
+# Quantization a packing consumer can actually encode. A layout is claimed only
+# for these; anything else (integer types, rounding/saturation variants) would
+# promise a mapping that cannot be reproduced, so it is described but unclaimed.
+SUPPORTED_ROUNDING = {'TRN'}
+SUPPORTED_SATURATION = {'WRAP'}
+
+
+def _unsupported_precision_reason(precision):
+    """Return why this precision cannot be packed, or None if it can."""
+    if precision.get('width') is None or precision.get('integer') is None:
+        return f'precision {precision.get("type")!r} has no width/integer bits'
+    rounding = precision.get('rounding_mode')
+    saturation = precision.get('saturation_mode')
+    if rounding not in SUPPORTED_ROUNDING or saturation not in SUPPORTED_SATURATION:
+        return (
+            f'precision {precision.get("type")!r} uses rounding={rounding}/saturation={saturation}; '
+            f'only {sorted(SUPPORTED_ROUNDING)}/{sorted(SUPPORTED_SATURATION)} can be encoded'
+        )
+    return None
+
+
 def _dense_kernel_variant(n_in, reuse_factor):
     """Mirror the dispatch in nnet_dense_resource.h::dense_resource."""
     if n_in is None or reuse_factor is None:
@@ -104,6 +125,10 @@ def _describe_dense_weight(ctx):
         'kernel_variant': kernel,
         'pragma': f'ARRAY_RESHAPE variable=weights block factor={block_factor}',
     }
+    unsupported = _unsupported_precision_reason(ctx['precision'])
+    if unsupported:
+        described['note'] = f'{unsupported}; no layout or ordering is claimed'
+        return described
     if kernel not in VERIFIED_DENSE_KERNELS or not block_size:
         described['note'] = f"kernel variant '{kernel}' is not verified; no layout or ordering is claimed"
         return described
@@ -136,6 +161,12 @@ def _describe_dense_bias(ctx):
     Scoped claim: true for the templates and tool flow tested. It follows from a
     template pragma and is not a permanent property.
     """
+    unsupported = _unsupported_precision_reason(ctx['precision'])
+    if unsupported:
+        return {
+            'pragma': 'ARRAY_PARTITION variable=biases complete',
+            'note': f'{unsupported}; no layout or ordering is claimed',
+        }
     return {
         'expected_interface_kind': 'scalar_bundle',
         'expected_data_width': ctx['precision']['width'],

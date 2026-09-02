@@ -6,11 +6,13 @@ and the structured ``layout`` the manifest declares, and produces memory words.
 Getting from a tensor to that flat sequence is the only layer-specific step, and
 the manifest describes it structurally in ``flat_order`` as an axis permutation,
 so ``flatten`` stays generic too. A layer whose order is *not* a permutation of
-its tensor axes (RNN gate ordering is the likely first case) can register an
-override in ``FLATTENERS`` rather than changing the core.
+its tensor axes (RNN gate ordering is the likely first case) names an explicit
+adapter in ``flat_order['adapter']``, which is looked up in ``CUSTOM_FLATTENERS``.
+Dispatch is never implicit: an adapter is used only when the manifest names it.
 
-Nothing here infers a packing rule: a port the manifest declined to describe
-cannot be packed.
+Nothing here infers a packing rule. A port the manifest declined to describe
+cannot be packed, and a mismatch between the supplied data and the manifest is an
+error rather than something to pad, truncate or transpose around.
 """
 
 from fractions import Fraction
@@ -22,9 +24,9 @@ class PackingUnsupported(Exception):
     """The manifest does not describe this port well enough to pack it."""
 
 
-# layer_class -> callable(port, tensor) -> flat sequence, for orders that are not
-# an axis permutation. Empty by default; the generic path covers Dense.
-FLATTENERS = {}
+# adapter id (as named by manifest flat_order['adapter']) -> callable(port, tensor)
+# Empty by default; the generic axis-permutation path covers Dense.
+CUSTOM_FLATTENERS = {}
 
 
 def quantize(value, width, integer, signed=True, rounding='TRN', saturation='WRAP'):
@@ -60,27 +62,32 @@ def quantize_port(port, values):
 def flatten(port, tensor):
     """Tensor -> flat scalar sequence, in the order the manifest declares.
 
-    ``flat_order`` gives the tensor's own axis names and the order to enumerate
-    them in, so this is a transpose followed by a ravel.
+    ``flat_order`` gives the tensor's own axis names, the shape it expects, and the
+    order to enumerate them in, so this is a transpose followed by a ravel.
     """
     order = port.get('flat_order')
     if not order:
         raise PackingUnsupported(f'{port["name"]}: manifest declares no flat_order; cannot flatten')
 
-    override = FLATTENERS.get(port.get('layer_class'))
-    if override is not None:
-        return override(port, tensor)
+    adapter = order.get('adapter')
+    if adapter is not None:
+        if adapter not in CUSTOM_FLATTENERS:
+            raise PackingUnsupported(
+                f'{port["name"]}: manifest names flattener {adapter!r}, which is not registered in CUSTOM_FLATTENERS'
+            )
+        return CUSTOM_FLATTENERS[adapter](port, tensor)
 
     tensor_axes, axes = order['tensor_axes'], order['axes']
     if sorted(tensor_axes) != sorted(axes):
         raise PackingUnsupported(
             f'{port["name"]}: flat_order axes {axes} are not a permutation of {tensor_axes}; '
-            'register a flattener for this layer'
+            'the manifest must name a flattener adapter for this layer'
         )
 
     array = np.asarray(tensor)
-    if array.ndim != len(tensor_axes):
-        raise PackingUnsupported(f'{port["name"]}: tensor has {array.ndim} dimensions, manifest declares {len(tensor_axes)}')
+    expected_shape = tuple(order['shape'])
+    if array.shape != expected_shape:
+        raise PackingUnsupported(f'{port["name"]}: tensor shape {array.shape} but manifest declares {expected_shape}')
 
     permutation = [tensor_axes.index(axis) for axis in axes]
     return np.transpose(array, permutation).ravel().tolist()
@@ -89,8 +96,9 @@ def flatten(port, tensor):
 def pack_flat(port, scalar_values):
     """Pack a flat scalar sequence into memory words, per the declared layout.
 
-    ``scalar_values`` are real numbers; they are quantized with the port's
-    precision. Returns a list of ints, one per word.
+    ``scalar_values`` are real numbers; they are quantized once here using the
+    port's declared precision. Returns a list of ints, one per word (or one per
+    scalar port, for a fully partitioned bundle).
     """
     layout = port.get('layout')
     if not layout:
@@ -98,22 +106,22 @@ def pack_flat(port, scalar_values):
             f'{port["name"]}: manifest declares no layout (kernel_variant={port.get("kernel_variant")}); cannot pack'
         )
 
+    values = list(scalar_values)
+    if len(values) != port['n_scalars']:
+        raise PackingUnsupported(f'{port["name"]}: got {len(values)} scalars, manifest declares {port["n_scalars"]}')
+
+    codes = quantize_port(port, values)
+
     mode = layout.get('mode')
     if mode == 'complete':
         # not a memory: one scalar port per element, so the "words" are the scalars
-        return quantize_port(port, scalar_values)
+        return codes
     if mode != 'block':
         raise PackingUnsupported(f'{port["name"]}: layout mode {mode!r} is not supported')
 
     block_size = layout['block_size']
     width = port['precision']['width']
-    depth = port['expected_depth']
-
-    codes = quantize_port(port, scalar_values)
-    if len(codes) != port['n_scalars']:
-        raise PackingUnsupported(f'{port["name"]}: got {len(codes)} scalars, manifest declares {port["n_scalars"]}')
-
-    words = [0] * depth
+    words = [0] * port['expected_depth']
     for f, code in enumerate(codes):
         words[f % block_size] |= code << (width * (f // block_size))
     return words
@@ -133,10 +141,23 @@ def write_mem(path, words, width_bits):
 
 
 def build_bank_image(port, banks, bank_stride_words=None):
-    """Stack per-bank tensors into one physical image, padding to the stride."""
+    """Stack per-bank tensors into one depth-stacked memory image.
+
+    BRAM ports only: a scalar bundle has no memory to stack into, and its banks are
+    loaded scalar by scalar instead.
+    """
+    if port.get('expected_interface_kind') != 'bram':
+        raise PackingUnsupported(
+            f'{port["name"]}: build_bank_image is for bram ports; this port is '
+            f'{port.get("expected_interface_kind")!r} and has no depth-stacked image'
+        )
+
     per_bank = [pack_tensor(port, tensor) for tensor in banks]
     depth = port['expected_depth']
     stride = bank_stride_words or (1 << (depth - 1).bit_length())  # next power of two
+    if stride < depth:
+        raise PackingUnsupported(f'{port["name"]}: bank stride {stride} is smaller than depth {depth}')
+
     image = []
     for words in per_bank:
         image.extend(words)

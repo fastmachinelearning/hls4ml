@@ -351,12 +351,14 @@ def test_flatten_follows_declared_axis_order(tmp_path):
     assert flat[:N_IN] == tensor[:, 0].tolist(), 'first n_in scalars are output 0'
 
 
-def test_flatten_rejects_wrong_rank(tmp_path):
+def test_flatten_rejects_wrong_shape(tmp_path):
+    """Exact shape, not just rank: a transposed tensor would silently mis-pack."""
     manifest = _manifest(tmp_path)
     port = next(p for p in manifest['ports'] if p['role'] == 'weight')
 
-    with pytest.raises(PackingUnsupported, match='dimensions'):
-        pack.flatten(port, np.zeros((N_IN, N_OUT, 2)))
+    for bad in (np.zeros((N_OUT, N_IN)), np.zeros((N_IN, N_OUT, 2)), np.zeros((N_IN, N_OUT + 1))):
+        with pytest.raises(PackingUnsupported, match='shape'):
+            pack.flatten(port, bad)
 
 
 def test_unregistered_layer_cannot_be_packed(tmp_path):
@@ -389,3 +391,75 @@ def _convert_conv(model, out_dir):
         part=PART,
         clock_period=10.0,
     )
+
+
+# --- fail-closed behaviour ---------------------------------------------------
+
+
+def test_pack_flat_rejects_wrong_scalar_count(tmp_path):
+    """Both the block and complete paths must check the count."""
+    manifest = _manifest(tmp_path)
+    weight = next(p for p in manifest['ports'] if p['role'] == 'weight')
+    bias = next(p for p in manifest['ports'] if p['role'] == 'bias')
+
+    for port in (weight, bias):
+        n = port['n_scalars']
+        for bad in ([0.0] * (n - 1), [0.0] * (n + 1)):
+            with pytest.raises(PackingUnsupported, match='scalars'):
+                pack.pack_flat(port, bad)
+
+
+def test_build_bank_image_rejects_scalar_bundle(tmp_path):
+    """A scalar bundle has no depth-stacked memory image."""
+    manifest = _manifest(tmp_path)
+    bias = next(p for p in manifest['ports'] if p['role'] == 'bias')
+
+    with pytest.raises(PackingUnsupported, match='bram'):
+        pack.build_bank_image(bias, [[0.0] * N_OUT, [0.0] * N_OUT])
+
+
+def test_unregistered_flattener_adapter_is_rejected(tmp_path):
+    """Custom orders dispatch on an explicit id named by the manifest."""
+    manifest = _manifest(tmp_path)
+    port = dict(next(p for p in manifest['ports'] if p['role'] == 'weight'))
+    port['flat_order'] = dict(port['flat_order'], adapter='not_registered')
+
+    with pytest.raises(PackingUnsupported, match='not registered'):
+        pack.flatten(port, _banks()[0])
+
+
+def test_manifest_refuses_layout_for_unencodable_precision(tmp_path):
+    """An adapter must not claim a layout quantize() cannot produce."""
+    from hls4ml.writer.external_parameters import _unsupported_precision_reason
+
+    assert (
+        _unsupported_precision_reason(
+            {'type': 'x', 'width': 16, 'integer': 6, 'rounding_mode': 'TRN', 'saturation_mode': 'WRAP'}
+        )
+        is None
+    )
+    assert _unsupported_precision_reason(
+        {'type': 'x', 'width': 16, 'integer': 6, 'rounding_mode': 'RND', 'saturation_mode': 'WRAP'}
+    )
+    assert _unsupported_precision_reason(
+        {'type': 'x', 'width': 16, 'integer': 6, 'rounding_mode': 'TRN', 'saturation_mode': 'SAT'}
+    )
+    assert _unsupported_precision_reason({'type': 'int<8>', 'width': None, 'integer': None})
+
+
+def test_package_rejects_foreign_schema(tmp_path):
+    """The consumer verifies schema name and version before packaging."""
+    from hls4ml.contrib.runtime_weights import EXPECTED_SCHEMA, package
+
+    _manifest(tmp_path)
+    path = tmp_path / 'firmware' / 'weights' / 'external_parameters.json'
+    good = json.loads(path.read_text())
+    assert good['schema'] == EXPECTED_SCHEMA
+
+    path.write_text(json.dumps({**good, 'schema': 'someone.else/v1'}))
+    with pytest.raises(ValueError, match='schema'):
+        package(str(tmp_path), 'manifest_prj', n_banks=2)
+
+    path.write_text(json.dumps({**good, 'schema_version': 99}))
+    with pytest.raises(ValueError, match='version'):
+        package(str(tmp_path), 'manifest_prj', n_banks=2)
