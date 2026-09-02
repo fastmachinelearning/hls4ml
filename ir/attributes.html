@@ -105,6 +105,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#parametrizedactivation">ParametrizedActivation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#prelu">PReLU</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#softmax">Softmax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ifneuron">IFNeuron</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lifneuron">LIFNeuron</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#snnreadout">SNNReadout</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ternarytanh">TernaryTanh</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hardactivation">HardActivation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reshape">Reshape</a></li>
@@ -151,14 +154,19 @@
 <li class="toctree-l2"><a class="reference internal" href="#einsum">Einsum</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#biasadd">BiasAdd</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dacombinational">DACombinational</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparseinputreduce">SparseInputReduce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparseconv2d">SparseConv2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparseactivation">SparseActivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparsepooling2d">SparsePooling2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparseflatten">SparseFlatten</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fixedpointquantizer">FixedPointQuantizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unarylut">UnaryLUT</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#repack">Repack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clone">Clone</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#repack">Repack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batchnormalizationquantizedtanh">BatchNormalizationQuantizedTanh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#broadcast">Broadcast</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pointwiseconv1d">PointwiseConv1D</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pointwiseconv2d">PointwiseConv2D</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#broadcast">Broadcast</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#batchnormalizationquantizedtanh">BatchNormalizationQuantizedTanh</a></li>
 </ul>
 </li>
 </ul>
@@ -321,19 +329,19 @@
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -388,19 +396,19 @@
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -461,19 +469,19 @@
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -524,70 +532,70 @@
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>n_outer: int (Default: 1)</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>n_inner: int (Default: 1)</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>implementation: list [latency,stable,argmax,legacy] (Default: stable)</p>
 <ul>
 <li><p>Choice of implementation of softmax function. “latency” provides good latency at the expense of extra resources. performs well on small number of classes. “stable” may require extra clock cycles but has better accuracy. “legacy” is the older implementation which has bad accuracy, but is fast and has low resource use. It is superseded by the “latency” implementation for most applications. “argmax” is a special implementation that can be used if only the output with the highest probability is important. Using this implementation will save resources and clock cycles.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>skip: bool (Default: False)</p>
 <ul>
 <li><p>If enabled, skips the softmax node and returns the raw outputs.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>exp_table_t: NamedType (Default: fixed&lt;18,8,RND,SAT,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>inv_table_t: NamedType (Default: fixed&lt;18,8,RND,SAT,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>inv_inp_t: NamedType (Default: fixed&lt;18,8,RND,SAT,0&gt;)</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>accum_t: NamedType (Default: fixed&lt;18,8,RND,SAT,0&gt;)</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
 </section>
 </section>
-<section id="ternarytanh">
-<h2>TernaryTanh<a class="headerlink" href="#ternarytanh" title="Link to this heading"></a></h2>
+<section id="ifneuron">
+<h2>IFNeuron<a class="headerlink" href="#ifneuron" title="Link to this heading"></a></h2>
 <section id="id19">
 <h3>Base attributes<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
 <ul class="simple">
@@ -596,6 +604,8 @@
 <li><p>The datatype (precision) of the output tensor.</p></li>
 </ul>
 </li>
+<li><p>threshold_t: NamedType</p></li>
+<li><p>membrane_t: NamedType</p></li>
 </ul>
 </section>
 <section id="id20">
@@ -607,7 +617,11 @@
 </ul>
 </li>
 <li><p>n_in: int</p></li>
-<li><p>activation: str</p></li>
+<li><p>n_out: int</p></li>
+<li><p>window_size: int (Default: 0)</p></li>
+<li><p>threshold: float</p></li>
+<li><p>threshold_mode: str (Default: scalar)</p></li>
+<li><p>reset_mechanism: list [subtract,zero] (Default: subtract)</p></li>
 </ul>
 </section>
 <section id="id21">
@@ -623,27 +637,168 @@
 <li><p>The datatype (precision) of the output tensor.</p></li>
 </ul>
 </li>
+<li><p>threshold_t: NamedType</p></li>
+<li><p>membrane_t: NamedType</p></li>
 </ul>
 </section>
+</section>
+<section id="lifneuron">
+<h2>LIFNeuron<a class="headerlink" href="#lifneuron" title="Link to this heading"></a></h2>
 <section id="id22">
-<h3>Backend-specific attributes<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<h3>Base attributes<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>beta_t: NamedType</p></li>
+<li><p>threshold_t: NamedType</p></li>
+<li><p>membrane_t: NamedType</p></li>
+</ul>
+</section>
+<section id="id23">
+<h3>Type attributes<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>n_in: int</p></li>
+<li><p>n_out: int</p></li>
+<li><p>window_size: int (Default: 0)</p></li>
+<li><p>threshold: float</p></li>
+<li><p>threshold_mode: str (Default: scalar)</p></li>
+<li><p>beta: float</p></li>
+<li><p>beta_mode: str (Default: scalar)</p></li>
+<li><p>reset_mechanism: list [subtract,zero] (Default: subtract)</p></li>
+</ul>
+</section>
+<section id="id24">
+<h3>Configurable attributes<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>beta_t: NamedType</p></li>
+<li><p>threshold_t: NamedType</p></li>
+<li><p>membrane_t: NamedType</p></li>
+</ul>
+</section>
+</section>
+<section id="snnreadout">
+<h2>SNNReadout<a class="headerlink" href="#snnreadout" title="Link to this heading"></a></h2>
+<section id="id25">
+<h3>Base attributes<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>membrane_t: NamedType</p></li>
+</ul>
+</section>
+<section id="id26">
+<h3>Type attributes<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>n_classes: int</p></li>
+<li><p>window_size: int (Default: 1)</p></li>
+<li><p>class_threshold: int (Default: 1)</p></li>
+<li><p>beta: float (Default: 1.0)</p></li>
+<li><p>state_reset_policy: list [fixed_window,tlast,host_pulse,never] (Default: fixed_window)</p></li>
+<li><p>decision_rule: list [argmax_spike_count,first_to_threshold,threshold_then_argmax,binary_logit,argmax_membrane] (Default: argmax_membrane)</p></li>
+</ul>
+</section>
+<section id="id27">
+<h3>Configurable attributes<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>output_mode: list [spike,membrane] (Default: spike)</p></li>
+<li><p>membrane_t: NamedType</p></li>
+</ul>
+</section>
+</section>
+<section id="ternarytanh">
+<h2>TernaryTanh<a class="headerlink" href="#ternarytanh" title="Link to this heading"></a></h2>
+<section id="id28">
+<h3>Base attributes<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id29">
+<h3>Type attributes<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>n_in: int</p></li>
+<li><p>activation: str</p></li>
+</ul>
+</section>
+<section id="id30">
+<h3>Configurable attributes<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id31">
+<h3>Backend-specific attributes<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -651,8 +806,8 @@
 </section>
 <section id="hardactivation">
 <h2>HardActivation<a class="headerlink" href="#hardactivation" title="Link to this heading"></a></h2>
-<section id="id23">
-<h3>Base attributes<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<section id="id32">
+<h3>Base attributes<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -663,8 +818,8 @@
 <li><p>shift_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id24">
-<h3>Type attributes<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<section id="id33">
+<h3>Type attributes<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -677,8 +832,8 @@
 <li><p>shift: float (Default: 0.5)</p></li>
 </ul>
 </section>
-<section id="id25">
-<h3>Configurable attributes<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<section id="id34">
+<h3>Configurable attributes<a class="headerlink" href="#id34" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -694,25 +849,25 @@
 <li><p>shift_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id26">
-<h3>Backend-specific attributes<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<section id="id35">
+<h3>Backend-specific attributes<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -720,8 +875,8 @@
 </section>
 <section id="reshape">
 <h2>Reshape<a class="headerlink" href="#reshape" title="Link to this heading"></a></h2>
-<section id="id27">
-<h3>Base attributes<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<section id="id36">
+<h3>Base attributes<a class="headerlink" href="#id36" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -730,8 +885,8 @@
 </li>
 </ul>
 </section>
-<section id="id28">
-<h3>Type attributes<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<section id="id37">
+<h3>Type attributes<a class="headerlink" href="#id37" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -741,8 +896,8 @@
 <li><p>target_shape: Sequence</p></li>
 </ul>
 </section>
-<section id="id29">
-<h3>Configurable attributes<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<section id="id38">
+<h3>Configurable attributes<a class="headerlink" href="#id38" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -759,134 +914,6 @@
 </section>
 <section id="dense">
 <h2>Dense<a class="headerlink" href="#dense" title="Link to this heading"></a></h2>
-<section id="id30">
-<h3>Base attributes<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-<li><p>weight_t: NamedType</p></li>
-<li><p>bias_t: NamedType</p></li>
-</ul>
-</section>
-<section id="id31">
-<h3>Type attributes<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>index: int</p>
-<ul>
-<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
-</ul>
-</li>
-<li><p>n_in: int</p></li>
-<li><p>n_out: int</p></li>
-</ul>
-</section>
-<section id="id32">
-<h3>Weight attributes<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>weight: WeightVariable</p></li>
-<li><p>bias: WeightVariable</p></li>
-</ul>
-</section>
-<section id="id33">
-<h3>Configurable attributes<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>trace: int (Default: False)</p>
-<ul>
-<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
-</ul>
-</li>
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-<li><p>weight_t: NamedType</p></li>
-<li><p>bias_t: NamedType</p></li>
-</ul>
-</section>
-<section id="id34">
-<h3>Backend-specific attributes<a class="headerlink" href="#id34" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>accum_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
-</ul>
-</li>
-<li><p>reuse_factor: int (Default: 1)</p>
-<ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
-</ul>
-</li>
-<li><p>strategy: list [latency,resource] (Default: latency)</p>
-<ul>
-<li><p>Available in: Libero</p></li>
-</ul>
-</li>
-</ul>
-</section>
-</section>
-<section id="conv">
-<h2>Conv<a class="headerlink" href="#conv" title="Link to this heading"></a></h2>
-<section id="id35">
-<h3>Base attributes<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-<section id="id36">
-<h3>Type attributes<a class="headerlink" href="#id36" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>index: int</p>
-<ul>
-<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-<section id="id37">
-<h3>Configurable attributes<a class="headerlink" href="#id37" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>trace: int (Default: False)</p>
-<ul>
-<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
-</ul>
-</li>
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-<section id="id38">
-<h3>Backend-specific attributes<a class="headerlink" href="#id38" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>accum_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
-</ul>
-</li>
-<li><p>reuse_factor: int (Default: 1)</p>
-<ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
-</ul>
-</li>
-</ul>
-</section>
-</section>
-<section id="conv1d">
-<h2>Conv1D<a class="headerlink" href="#conv1d" title="Link to this heading"></a></h2>
 <section id="id39">
 <h3>Base attributes<a class="headerlink" href="#id39" title="Link to this heading"></a></h3>
 <ul class="simple">
@@ -907,14 +934,8 @@
 <li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
 </ul>
 </li>
-<li><p>in_width: int</p></li>
-<li><p>out_width: int</p></li>
-<li><p>n_chan: int</p></li>
-<li><p>n_filt: int</p></li>
-<li><p>filt_width: int</p></li>
-<li><p>stride_width: int</p></li>
-<li><p>pad_left: int</p></li>
-<li><p>pad_right: int</p></li>
+<li><p>n_in: int</p></li>
+<li><p>n_out: int</p></li>
 </ul>
 </section>
 <section id="id41">
@@ -947,32 +968,25 @@
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
-<li><p>parallelization_factor: int (Default: 1)</p>
+<li><p>strategy: list [latency,resource] (Default: latency)</p>
 <ul>
-<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI</p></li>
-</ul>
-</li>
-<li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
-<ul>
-<li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Libero</p></li>
 </ul>
 </li>
 </ul>
 </section>
 </section>
-<section id="conv2d">
-<h2>Conv2D<a class="headerlink" href="#conv2d" title="Link to this heading"></a></h2>
+<section id="conv">
+<h2>Conv<a class="headerlink" href="#conv" title="Link to this heading"></a></h2>
 <section id="id44">
 <h3>Base attributes<a class="headerlink" href="#id44" title="Link to this heading"></a></h3>
 <ul class="simple">
@@ -981,8 +995,6 @@
 <li><p>The datatype (precision) of the output tensor.</p></li>
 </ul>
 </li>
-<li><p>weight_t: NamedType</p></li>
-<li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
 <section id="id45">
@@ -993,31 +1005,82 @@
 <li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
 </ul>
 </li>
-<li><p>in_height: int</p></li>
+</ul>
+</section>
+<section id="id46">
+<h3>Configurable attributes<a class="headerlink" href="#id46" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id47">
+<h3>Backend-specific attributes<a class="headerlink" href="#id47" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>accum_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
+</ul>
+</li>
+<li><p>reuse_factor: int (Default: 1)</p>
+<ul>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="conv1d">
+<h2>Conv1D<a class="headerlink" href="#conv1d" title="Link to this heading"></a></h2>
+<section id="id48">
+<h3>Base attributes<a class="headerlink" href="#id48" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>weight_t: NamedType</p></li>
+<li><p>bias_t: NamedType</p></li>
+</ul>
+</section>
+<section id="id49">
+<h3>Type attributes<a class="headerlink" href="#id49" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
 <li><p>in_width: int</p></li>
-<li><p>out_height: int</p></li>
 <li><p>out_width: int</p></li>
 <li><p>n_chan: int</p></li>
 <li><p>n_filt: int</p></li>
-<li><p>filt_height: int</p></li>
 <li><p>filt_width: int</p></li>
-<li><p>stride_height: int</p></li>
 <li><p>stride_width: int</p></li>
-<li><p>pad_top: int</p></li>
-<li><p>pad_bottom: int</p></li>
 <li><p>pad_left: int</p></li>
 <li><p>pad_right: int</p></li>
 </ul>
 </section>
-<section id="id46">
-<h3>Weight attributes<a class="headerlink" href="#id46" title="Link to this heading"></a></h3>
+<section id="id50">
+<h3>Weight attributes<a class="headerlink" href="#id50" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id47">
-<h3>Configurable attributes<a class="headerlink" href="#id47" title="Link to this heading"></a></h3>
+<section id="id51">
+<h3>Configurable attributes<a class="headerlink" href="#id51" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1033,40 +1096,40 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id48">
-<h3>Backend-specific attributes<a class="headerlink" href="#id48" title="Link to this heading"></a></h3>
+<section id="id52">
+<h3>Backend-specific attributes<a class="headerlink" href="#id52" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 </ul>
 </section>
 </section>
-<section id="conv2dbatchnorm">
-<h2>Conv2DBatchnorm<a class="headerlink" href="#conv2dbatchnorm" title="Link to this heading"></a></h2>
-<section id="id49">
-<h3>Base attributes<a class="headerlink" href="#id49" title="Link to this heading"></a></h3>
+<section id="conv2d">
+<h2>Conv2D<a class="headerlink" href="#conv2d" title="Link to this heading"></a></h2>
+<section id="id53">
+<h3>Base attributes<a class="headerlink" href="#id53" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1077,8 +1140,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id50">
-<h3>Type attributes<a class="headerlink" href="#id50" title="Link to this heading"></a></h3>
+<section id="id54">
+<h3>Type attributes<a class="headerlink" href="#id54" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1101,15 +1164,15 @@
 <li><p>pad_right: int</p></li>
 </ul>
 </section>
-<section id="id51">
-<h3>Weight attributes<a class="headerlink" href="#id51" title="Link to this heading"></a></h3>
+<section id="id55">
+<h3>Weight attributes<a class="headerlink" href="#id55" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id52">
-<h3>Configurable attributes<a class="headerlink" href="#id52" title="Link to this heading"></a></h3>
+<section id="id56">
+<h3>Configurable attributes<a class="headerlink" href="#id56" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1125,31 +1188,123 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id53">
-<h3>Backend-specific attributes<a class="headerlink" href="#id53" title="Link to this heading"></a></h3>
+<section id="id57">
+<h3>Backend-specific attributes<a class="headerlink" href="#id57" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="conv2dbatchnorm">
+<h2>Conv2DBatchnorm<a class="headerlink" href="#conv2dbatchnorm" title="Link to this heading"></a></h2>
+<section id="id58">
+<h3>Base attributes<a class="headerlink" href="#id58" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>weight_t: NamedType</p></li>
+<li><p>bias_t: NamedType</p></li>
+</ul>
+</section>
+<section id="id59">
+<h3>Type attributes<a class="headerlink" href="#id59" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>in_height: int</p></li>
+<li><p>in_width: int</p></li>
+<li><p>out_height: int</p></li>
+<li><p>out_width: int</p></li>
+<li><p>n_chan: int</p></li>
+<li><p>n_filt: int</p></li>
+<li><p>filt_height: int</p></li>
+<li><p>filt_width: int</p></li>
+<li><p>stride_height: int</p></li>
+<li><p>stride_width: int</p></li>
+<li><p>pad_top: int</p></li>
+<li><p>pad_bottom: int</p></li>
+<li><p>pad_left: int</p></li>
+<li><p>pad_right: int</p></li>
+</ul>
+</section>
+<section id="id60">
+<h3>Weight attributes<a class="headerlink" href="#id60" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>weight: WeightVariable</p></li>
+<li><p>bias: WeightVariable</p></li>
+</ul>
+</section>
+<section id="id61">
+<h3>Configurable attributes<a class="headerlink" href="#id61" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>weight_t: NamedType</p></li>
+<li><p>bias_t: NamedType</p></li>
+</ul>
+</section>
+<section id="id62">
+<h3>Backend-specific attributes<a class="headerlink" href="#id62" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>accum_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
+</ul>
+</li>
+<li><p>reuse_factor: int (Default: 1)</p>
+<ul>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
+</ul>
+</li>
+<li><p>parallelization_factor: int (Default: 1)</p>
+<ul>
+<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
+</ul>
+</li>
+<li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
+<ul>
+<li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -1157,8 +1312,8 @@
 </section>
 <section id="separableconv1d">
 <h2>SeparableConv1D<a class="headerlink" href="#separableconv1d" title="Link to this heading"></a></h2>
-<section id="id54">
-<h3>Base attributes<a class="headerlink" href="#id54" title="Link to this heading"></a></h3>
+<section id="id63">
+<h3>Base attributes<a class="headerlink" href="#id63" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1170,8 +1325,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id55">
-<h3>Type attributes<a class="headerlink" href="#id55" title="Link to this heading"></a></h3>
+<section id="id64">
+<h3>Type attributes<a class="headerlink" href="#id64" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1189,16 +1344,16 @@
 <li><p>pad_right: int</p></li>
 </ul>
 </section>
-<section id="id56">
-<h3>Weight attributes<a class="headerlink" href="#id56" title="Link to this heading"></a></h3>
+<section id="id65">
+<h3>Weight attributes<a class="headerlink" href="#id65" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>depthwise: WeightVariable</p></li>
 <li><p>pointwise: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id57">
-<h3>Configurable attributes<a class="headerlink" href="#id57" title="Link to this heading"></a></h3>
+<section id="id66">
+<h3>Configurable attributes<a class="headerlink" href="#id66" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1215,38 +1370,38 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id58">
-<h3>Backend-specific attributes<a class="headerlink" href="#id58" title="Link to this heading"></a></h3>
+<section id="id67">
+<h3>Backend-specific attributes<a class="headerlink" href="#id67" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>depthwise_accum_t: NamedType</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>pointwise_accum_t: NamedType</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>depthwise_result_t: NamedType</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>depthwise_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>pointwise_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 <li><p>dw_output_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
@@ -1259,8 +1414,8 @@
 </section>
 <section id="depthwiseconv1d">
 <h2>DepthwiseConv1D<a class="headerlink" href="#depthwiseconv1d" title="Link to this heading"></a></h2>
-<section id="id59">
-<h3>Base attributes<a class="headerlink" href="#id59" title="Link to this heading"></a></h3>
+<section id="id68">
+<h3>Base attributes<a class="headerlink" href="#id68" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1273,8 +1428,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id60">
-<h3>Type attributes<a class="headerlink" href="#id60" title="Link to this heading"></a></h3>
+<section id="id69">
+<h3>Type attributes<a class="headerlink" href="#id69" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1300,8 +1455,8 @@
 <li><p>pad_right: int</p></li>
 </ul>
 </section>
-<section id="id61">
-<h3>Weight attributes<a class="headerlink" href="#id61" title="Link to this heading"></a></h3>
+<section id="id70">
+<h3>Weight attributes<a class="headerlink" href="#id70" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
@@ -1309,8 +1464,8 @@
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id62">
-<h3>Configurable attributes<a class="headerlink" href="#id62" title="Link to this heading"></a></h3>
+<section id="id71">
+<h3>Configurable attributes<a class="headerlink" href="#id71" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1328,31 +1483,31 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id63">
-<h3>Backend-specific attributes<a class="headerlink" href="#id63" title="Link to this heading"></a></h3>
+<section id="id72">
+<h3>Backend-specific attributes<a class="headerlink" href="#id72" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -1360,8 +1515,8 @@
 </section>
 <section id="separableconv2d">
 <h2>SeparableConv2D<a class="headerlink" href="#separableconv2d" title="Link to this heading"></a></h2>
-<section id="id64">
-<h3>Base attributes<a class="headerlink" href="#id64" title="Link to this heading"></a></h3>
+<section id="id73">
+<h3>Base attributes<a class="headerlink" href="#id73" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1373,8 +1528,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id65">
-<h3>Type attributes<a class="headerlink" href="#id65" title="Link to this heading"></a></h3>
+<section id="id74">
+<h3>Type attributes<a class="headerlink" href="#id74" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1398,16 +1553,16 @@
 <li><p>pad_right: int</p></li>
 </ul>
 </section>
-<section id="id66">
-<h3>Weight attributes<a class="headerlink" href="#id66" title="Link to this heading"></a></h3>
+<section id="id75">
+<h3>Weight attributes<a class="headerlink" href="#id75" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>depthwise: WeightVariable</p></li>
 <li><p>pointwise: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id67">
-<h3>Configurable attributes<a class="headerlink" href="#id67" title="Link to this heading"></a></h3>
+<section id="id76">
+<h3>Configurable attributes<a class="headerlink" href="#id76" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1424,38 +1579,38 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id68">
-<h3>Backend-specific attributes<a class="headerlink" href="#id68" title="Link to this heading"></a></h3>
+<section id="id77">
+<h3>Backend-specific attributes<a class="headerlink" href="#id77" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>depthwise_accum_t: NamedType</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>pointwise_accum_t: NamedType</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>depthwise_result_t: NamedType</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>depthwise_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>pointwise_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 <li><p>dw_output_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
@@ -1468,8 +1623,8 @@
 </section>
 <section id="depthwiseconv2d">
 <h2>DepthwiseConv2D<a class="headerlink" href="#depthwiseconv2d" title="Link to this heading"></a></h2>
-<section id="id69">
-<h3>Base attributes<a class="headerlink" href="#id69" title="Link to this heading"></a></h3>
+<section id="id78">
+<h3>Base attributes<a class="headerlink" href="#id78" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1482,8 +1637,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id70">
-<h3>Type attributes<a class="headerlink" href="#id70" title="Link to this heading"></a></h3>
+<section id="id79">
+<h3>Type attributes<a class="headerlink" href="#id79" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1521,8 +1676,8 @@
 <li><p>pad_right: int</p></li>
 </ul>
 </section>
-<section id="id71">
-<h3>Weight attributes<a class="headerlink" href="#id71" title="Link to this heading"></a></h3>
+<section id="id80">
+<h3>Weight attributes<a class="headerlink" href="#id80" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
@@ -1530,8 +1685,8 @@
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id72">
-<h3>Configurable attributes<a class="headerlink" href="#id72" title="Link to this heading"></a></h3>
+<section id="id81">
+<h3>Configurable attributes<a class="headerlink" href="#id81" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1549,31 +1704,31 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id73">
-<h3>Backend-specific attributes<a class="headerlink" href="#id73" title="Link to this heading"></a></h3>
+<section id="id82">
+<h3>Backend-specific attributes<a class="headerlink" href="#id82" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -1581,8 +1736,8 @@
 </section>
 <section id="batchnormalization">
 <h2>BatchNormalization<a class="headerlink" href="#batchnormalization" title="Link to this heading"></a></h2>
-<section id="id74">
-<h3>Base attributes<a class="headerlink" href="#id74" title="Link to this heading"></a></h3>
+<section id="id83">
+<h3>Base attributes<a class="headerlink" href="#id83" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1593,8 +1748,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id75">
-<h3>Type attributes<a class="headerlink" href="#id75" title="Link to this heading"></a></h3>
+<section id="id84">
+<h3>Type attributes<a class="headerlink" href="#id84" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1607,15 +1762,15 @@
 <li><p>use_beta: bool (Default: True)</p></li>
 </ul>
 </section>
-<section id="id76">
-<h3>Weight attributes<a class="headerlink" href="#id76" title="Link to this heading"></a></h3>
+<section id="id85">
+<h3>Weight attributes<a class="headerlink" href="#id85" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>scale: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id77">
-<h3>Configurable attributes<a class="headerlink" href="#id77" title="Link to this heading"></a></h3>
+<section id="id86">
+<h3>Configurable attributes<a class="headerlink" href="#id86" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1631,13 +1786,13 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id78">
-<h3>Backend-specific attributes<a class="headerlink" href="#id78" title="Link to this heading"></a></h3>
+<section id="id87">
+<h3>Backend-specific attributes<a class="headerlink" href="#id87" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -1645,8 +1800,8 @@
 </section>
 <section id="pooling1d">
 <h2>Pooling1D<a class="headerlink" href="#pooling1d" title="Link to this heading"></a></h2>
-<section id="id79">
-<h3>Base attributes<a class="headerlink" href="#id79" title="Link to this heading"></a></h3>
+<section id="id88">
+<h3>Base attributes<a class="headerlink" href="#id88" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1655,8 +1810,8 @@
 </li>
 </ul>
 </section>
-<section id="id80">
-<h3>Type attributes<a class="headerlink" href="#id80" title="Link to this heading"></a></h3>
+<section id="id89">
+<h3>Type attributes<a class="headerlink" href="#id89" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1674,8 +1829,8 @@
 <li><p>pool_op: list [Max,Average]</p></li>
 </ul>
 </section>
-<section id="id81">
-<h3>Configurable attributes<a class="headerlink" href="#id81" title="Link to this heading"></a></h3>
+<section id="id90">
+<h3>Configurable attributes<a class="headerlink" href="#id90" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1689,25 +1844,25 @@
 </li>
 </ul>
 </section>
-<section id="id82">
-<h3>Backend-specific attributes<a class="headerlink" href="#id82" title="Link to this heading"></a></h3>
+<section id="id91">
+<h3>Backend-specific attributes<a class="headerlink" href="#id91" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -1715,8 +1870,8 @@
 </section>
 <section id="pooling2d">
 <h2>Pooling2D<a class="headerlink" href="#pooling2d" title="Link to this heading"></a></h2>
-<section id="id83">
-<h3>Base attributes<a class="headerlink" href="#id83" title="Link to this heading"></a></h3>
+<section id="id92">
+<h3>Base attributes<a class="headerlink" href="#id92" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1725,8 +1880,8 @@
 </li>
 </ul>
 </section>
-<section id="id84">
-<h3>Type attributes<a class="headerlink" href="#id84" title="Link to this heading"></a></h3>
+<section id="id93">
+<h3>Type attributes<a class="headerlink" href="#id93" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1750,8 +1905,8 @@
 <li><p>pool_op: list [Max,Average]</p></li>
 </ul>
 </section>
-<section id="id85">
-<h3>Configurable attributes<a class="headerlink" href="#id85" title="Link to this heading"></a></h3>
+<section id="id94">
+<h3>Configurable attributes<a class="headerlink" href="#id94" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1765,25 +1920,25 @@
 </li>
 </ul>
 </section>
-<section id="id86">
-<h3>Backend-specific attributes<a class="headerlink" href="#id86" title="Link to this heading"></a></h3>
+<section id="id95">
+<h3>Backend-specific attributes<a class="headerlink" href="#id95" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -1791,8 +1946,8 @@
 </section>
 <section id="globalpooling1d">
 <h2>GlobalPooling1D<a class="headerlink" href="#globalpooling1d" title="Link to this heading"></a></h2>
-<section id="id87">
-<h3>Base attributes<a class="headerlink" href="#id87" title="Link to this heading"></a></h3>
+<section id="id96">
+<h3>Base attributes<a class="headerlink" href="#id96" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1801,8 +1956,8 @@
 </li>
 </ul>
 </section>
-<section id="id88">
-<h3>Type attributes<a class="headerlink" href="#id88" title="Link to this heading"></a></h3>
+<section id="id97">
+<h3>Type attributes<a class="headerlink" href="#id97" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1811,11 +1966,12 @@
 </li>
 <li><p>n_in: int</p></li>
 <li><p>n_filt: int</p></li>
+<li><p>keepdims: bool (Default: False)</p></li>
 <li><p>pool_op: list [Max,Average]</p></li>
 </ul>
 </section>
-<section id="id89">
-<h3>Configurable attributes<a class="headerlink" href="#id89" title="Link to this heading"></a></h3>
+<section id="id98">
+<h3>Configurable attributes<a class="headerlink" href="#id98" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1829,19 +1985,19 @@
 </li>
 </ul>
 </section>
-<section id="id90">
-<h3>Backend-specific attributes<a class="headerlink" href="#id90" title="Link to this heading"></a></h3>
+<section id="id99">
+<h3>Backend-specific attributes<a class="headerlink" href="#id99" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -1849,8 +2005,8 @@
 </section>
 <section id="globalpooling2d">
 <h2>GlobalPooling2D<a class="headerlink" href="#globalpooling2d" title="Link to this heading"></a></h2>
-<section id="id91">
-<h3>Base attributes<a class="headerlink" href="#id91" title="Link to this heading"></a></h3>
+<section id="id100">
+<h3>Base attributes<a class="headerlink" href="#id100" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -1859,8 +2015,8 @@
 </li>
 </ul>
 </section>
-<section id="id92">
-<h3>Type attributes<a class="headerlink" href="#id92" title="Link to this heading"></a></h3>
+<section id="id101">
+<h3>Type attributes<a class="headerlink" href="#id101" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -1870,11 +2026,12 @@
 <li><p>in_height: int</p></li>
 <li><p>in_width: int</p></li>
 <li><p>n_filt: int</p></li>
+<li><p>keepdims: bool (Default: False)</p></li>
 <li><p>pool_op: list [Max,Average]</p></li>
 </ul>
 </section>
-<section id="id93">
-<h3>Configurable attributes<a class="headerlink" href="#id93" title="Link to this heading"></a></h3>
+<section id="id102">
+<h3>Configurable attributes<a class="headerlink" href="#id102" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -1888,19 +2045,19 @@
 </li>
 </ul>
 </section>
-<section id="id94">
-<h3>Backend-specific attributes<a class="headerlink" href="#id94" title="Link to this heading"></a></h3>
+<section id="id103">
+<h3>Backend-specific attributes<a class="headerlink" href="#id103" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -1908,139 +2065,6 @@
 </section>
 <section id="zeropadding1d">
 <h2>ZeroPadding1D<a class="headerlink" href="#zeropadding1d" title="Link to this heading"></a></h2>
-<section id="id95">
-<h3>Base attributes<a class="headerlink" href="#id95" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-<section id="id96">
-<h3>Type attributes<a class="headerlink" href="#id96" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>index: int</p>
-<ul>
-<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
-</ul>
-</li>
-<li><p>in_width: int</p></li>
-<li><p>out_width: int</p></li>
-<li><p>n_chan: int</p></li>
-<li><p>pad_left: int</p></li>
-<li><p>pad_right: int</p></li>
-</ul>
-</section>
-<section id="id97">
-<h3>Configurable attributes<a class="headerlink" href="#id97" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>trace: int (Default: False)</p>
-<ul>
-<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
-</ul>
-</li>
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-</section>
-<section id="zeropadding2d">
-<h2>ZeroPadding2D<a class="headerlink" href="#zeropadding2d" title="Link to this heading"></a></h2>
-<section id="id98">
-<h3>Base attributes<a class="headerlink" href="#id98" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-<section id="id99">
-<h3>Type attributes<a class="headerlink" href="#id99" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>index: int</p>
-<ul>
-<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
-</ul>
-</li>
-<li><p>in_height: int</p></li>
-<li><p>in_width: int</p></li>
-<li><p>out_height: int</p></li>
-<li><p>out_width: int</p></li>
-<li><p>n_chan: int</p></li>
-<li><p>pad_top: int</p></li>
-<li><p>pad_bottom: int</p></li>
-<li><p>pad_left: int</p></li>
-<li><p>pad_right: int</p></li>
-</ul>
-</section>
-<section id="id100">
-<h3>Configurable attributes<a class="headerlink" href="#id100" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>trace: int (Default: False)</p>
-<ul>
-<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
-</ul>
-</li>
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-</section>
-<section id="cropping1d">
-<h2>Cropping1D<a class="headerlink" href="#cropping1d" title="Link to this heading"></a></h2>
-<section id="id101">
-<h3>Base attributes<a class="headerlink" href="#id101" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-<section id="id102">
-<h3>Type attributes<a class="headerlink" href="#id102" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>index: int</p>
-<ul>
-<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
-</ul>
-</li>
-<li><p>in_width: int</p></li>
-<li><p>out_width: int</p></li>
-<li><p>n_chan: int</p></li>
-<li><p>crop_left: int</p></li>
-<li><p>crop_right: int</p></li>
-</ul>
-</section>
-<section id="id103">
-<h3>Configurable attributes<a class="headerlink" href="#id103" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>trace: int (Default: False)</p>
-<ul>
-<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
-</ul>
-</li>
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-</section>
-<section id="cropping2d">
-<h2>Cropping2D<a class="headerlink" href="#cropping2d" title="Link to this heading"></a></h2>
 <section id="id104">
 <h3>Base attributes<a class="headerlink" href="#id104" title="Link to this heading"></a></h3>
 <ul class="simple">
@@ -2059,15 +2083,11 @@
 <li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
 </ul>
 </li>
-<li><p>in_height: int</p></li>
 <li><p>in_width: int</p></li>
-<li><p>out_height: int</p></li>
 <li><p>out_width: int</p></li>
 <li><p>n_chan: int</p></li>
-<li><p>crop_top: int</p></li>
-<li><p>crop_bottom: int</p></li>
-<li><p>crop_left: int</p></li>
-<li><p>crop_right: int</p></li>
+<li><p>pad_left: int</p></li>
+<li><p>pad_right: int</p></li>
 </ul>
 </section>
 <section id="id106">
@@ -2086,8 +2106,8 @@
 </ul>
 </section>
 </section>
-<section id="merge">
-<h2>Merge<a class="headerlink" href="#merge" title="Link to this heading"></a></h2>
+<section id="zeropadding2d">
+<h2>ZeroPadding2D<a class="headerlink" href="#zeropadding2d" title="Link to this heading"></a></h2>
 <section id="id107">
 <h3>Base attributes<a class="headerlink" href="#id107" title="Link to this heading"></a></h3>
 <ul class="simple">
@@ -2106,6 +2126,15 @@
 <li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
 </ul>
 </li>
+<li><p>in_height: int</p></li>
+<li><p>in_width: int</p></li>
+<li><p>out_height: int</p></li>
+<li><p>out_width: int</p></li>
+<li><p>n_chan: int</p></li>
+<li><p>pad_top: int</p></li>
+<li><p>pad_bottom: int</p></li>
+<li><p>pad_left: int</p></li>
+<li><p>pad_right: int</p></li>
 </ul>
 </section>
 <section id="id109">
@@ -2123,22 +2152,11 @@
 </li>
 </ul>
 </section>
+</section>
+<section id="cropping1d">
+<h2>Cropping1D<a class="headerlink" href="#cropping1d" title="Link to this heading"></a></h2>
 <section id="id110">
-<h3>Backend-specific attributes<a class="headerlink" href="#id110" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>reuse_factor: int (Default: 1)</p>
-<ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
-</ul>
-</li>
-</ul>
-</section>
-</section>
-<section id="matmul">
-<h2>MatMul<a class="headerlink" href="#matmul" title="Link to this heading"></a></h2>
-<section id="id111">
-<h3>Base attributes<a class="headerlink" href="#id111" title="Link to this heading"></a></h3>
+<h3>Base attributes<a class="headerlink" href="#id110" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2147,24 +2165,42 @@
 </li>
 </ul>
 </section>
-<section id="id112">
-<h3>Type attributes<a class="headerlink" href="#id112" title="Link to this heading"></a></h3>
+<section id="id111">
+<h3>Type attributes<a class="headerlink" href="#id111" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
 <li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
 </ul>
 </li>
+<li><p>in_width: int</p></li>
+<li><p>out_width: int</p></li>
+<li><p>n_chan: int</p></li>
+<li><p>crop_left: int</p></li>
+<li><p>crop_right: int</p></li>
 </ul>
 </section>
-<section id="id113">
-<h3>Configurable attributes<a class="headerlink" href="#id113" title="Link to this heading"></a></h3>
+<section id="id112">
+<h3>Configurable attributes<a class="headerlink" href="#id112" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
 <li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
 </ul>
 </li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="cropping2d">
+<h2>Cropping2D<a class="headerlink" href="#cropping2d" title="Link to this heading"></a></h2>
+<section id="id113">
+<h3>Base attributes<a class="headerlink" href="#id113" title="Link to this heading"></a></h3>
+<ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) of the output tensor.</p></li>
@@ -2173,18 +2209,139 @@
 </ul>
 </section>
 <section id="id114">
-<h3>Backend-specific attributes<a class="headerlink" href="#id114" title="Link to this heading"></a></h3>
+<h3>Type attributes<a class="headerlink" href="#id114" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>in_height: int</p></li>
+<li><p>in_width: int</p></li>
+<li><p>out_height: int</p></li>
+<li><p>out_width: int</p></li>
+<li><p>n_chan: int</p></li>
+<li><p>crop_top: int</p></li>
+<li><p>crop_bottom: int</p></li>
+<li><p>crop_left: int</p></li>
+<li><p>crop_right: int</p></li>
+</ul>
+</section>
+<section id="id115">
+<h3>Configurable attributes<a class="headerlink" href="#id115" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="merge">
+<h2>Merge<a class="headerlink" href="#merge" title="Link to this heading"></a></h2>
+<section id="id116">
+<h3>Base attributes<a class="headerlink" href="#id116" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id117">
+<h3>Type attributes<a class="headerlink" href="#id117" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id118">
+<h3>Configurable attributes<a class="headerlink" href="#id118" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id119">
+<h3>Backend-specific attributes<a class="headerlink" href="#id119" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>reuse_factor: int (Default: 1)</p>
+<ul>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="matmul">
+<h2>MatMul<a class="headerlink" href="#matmul" title="Link to this heading"></a></h2>
+<section id="id120">
+<h3>Base attributes<a class="headerlink" href="#id120" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id121">
+<h3>Type attributes<a class="headerlink" href="#id121" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id122">
+<h3>Configurable attributes<a class="headerlink" href="#id122" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id123">
+<h3>Backend-specific attributes<a class="headerlink" href="#id123" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -2192,8 +2349,8 @@
 </section>
 <section id="dot">
 <h2>Dot<a class="headerlink" href="#dot" title="Link to this heading"></a></h2>
-<section id="id115">
-<h3>Base attributes<a class="headerlink" href="#id115" title="Link to this heading"></a></h3>
+<section id="id124">
+<h3>Base attributes<a class="headerlink" href="#id124" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2207,8 +2364,8 @@
 </li>
 </ul>
 </section>
-<section id="id116">
-<h3>Type attributes<a class="headerlink" href="#id116" title="Link to this heading"></a></h3>
+<section id="id125">
+<h3>Type attributes<a class="headerlink" href="#id125" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2222,8 +2379,8 @@
 </li>
 </ul>
 </section>
-<section id="id117">
-<h3>Configurable attributes<a class="headerlink" href="#id117" title="Link to this heading"></a></h3>
+<section id="id126">
+<h3>Configurable attributes<a class="headerlink" href="#id126" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2247,19 +2404,19 @@
 </li>
 </ul>
 </section>
-<section id="id118">
-<h3>Backend-specific attributes<a class="headerlink" href="#id118" title="Link to this heading"></a></h3>
+<section id="id127">
+<h3>Backend-specific attributes<a class="headerlink" href="#id127" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, oneAPI, oneAPI, Libero, Libero, XLS, XLS</p></li>
+<li><p>Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, oneAPI, oneAPI, Coyote, Coyote, Libero, Libero, XLS, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -2267,8 +2424,8 @@
 </section>
 <section id="concatenate">
 <h2>Concatenate<a class="headerlink" href="#concatenate" title="Link to this heading"></a></h2>
-<section id="id119">
-<h3>Base attributes<a class="headerlink" href="#id119" title="Link to this heading"></a></h3>
+<section id="id128">
+<h3>Base attributes<a class="headerlink" href="#id128" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2282,8 +2439,8 @@
 </li>
 </ul>
 </section>
-<section id="id120">
-<h3>Type attributes<a class="headerlink" href="#id120" title="Link to this heading"></a></h3>
+<section id="id129">
+<h3>Type attributes<a class="headerlink" href="#id129" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2297,8 +2454,8 @@
 </li>
 </ul>
 </section>
-<section id="id121">
-<h3>Configurable attributes<a class="headerlink" href="#id121" title="Link to this heading"></a></h3>
+<section id="id130">
+<h3>Configurable attributes<a class="headerlink" href="#id130" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2322,13 +2479,13 @@
 </li>
 </ul>
 </section>
-<section id="id122">
-<h3>Backend-specific attributes<a class="headerlink" href="#id122" title="Link to this heading"></a></h3>
+<section id="id131">
+<h3>Backend-specific attributes<a class="headerlink" href="#id131" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -2336,8 +2493,8 @@
 </section>
 <section id="resize">
 <h2>Resize<a class="headerlink" href="#resize" title="Link to this heading"></a></h2>
-<section id="id123">
-<h3>Base attributes<a class="headerlink" href="#id123" title="Link to this heading"></a></h3>
+<section id="id132">
+<h3>Base attributes<a class="headerlink" href="#id132" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2346,8 +2503,8 @@
 </li>
 </ul>
 </section>
-<section id="id124">
-<h3>Type attributes<a class="headerlink" href="#id124" title="Link to this heading"></a></h3>
+<section id="id133">
+<h3>Type attributes<a class="headerlink" href="#id133" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2362,8 +2519,8 @@
 <li><p>align_corners: bool (Default: False)</p></li>
 </ul>
 </section>
-<section id="id125">
-<h3>Configurable attributes<a class="headerlink" href="#id125" title="Link to this heading"></a></h3>
+<section id="id134">
+<h3>Configurable attributes<a class="headerlink" href="#id134" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2381,8 +2538,8 @@
 </section>
 <section id="transpose">
 <h2>Transpose<a class="headerlink" href="#transpose" title="Link to this heading"></a></h2>
-<section id="id126">
-<h3>Base attributes<a class="headerlink" href="#id126" title="Link to this heading"></a></h3>
+<section id="id135">
+<h3>Base attributes<a class="headerlink" href="#id135" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2391,8 +2548,8 @@
 </li>
 </ul>
 </section>
-<section id="id127">
-<h3>Type attributes<a class="headerlink" href="#id127" title="Link to this heading"></a></h3>
+<section id="id136">
+<h3>Type attributes<a class="headerlink" href="#id136" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2401,8 +2558,8 @@
 </li>
 </ul>
 </section>
-<section id="id128">
-<h3>Configurable attributes<a class="headerlink" href="#id128" title="Link to this heading"></a></h3>
+<section id="id137">
+<h3>Configurable attributes<a class="headerlink" href="#id137" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2419,8 +2576,8 @@
 </section>
 <section id="embedding">
 <h2>Embedding<a class="headerlink" href="#embedding" title="Link to this heading"></a></h2>
-<section id="id129">
-<h3>Base attributes<a class="headerlink" href="#id129" title="Link to this heading"></a></h3>
+<section id="id138">
+<h3>Base attributes<a class="headerlink" href="#id138" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2430,8 +2587,8 @@
 <li><p>embeddings_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id130">
-<h3>Type attributes<a class="headerlink" href="#id130" title="Link to this heading"></a></h3>
+<section id="id139">
+<h3>Type attributes<a class="headerlink" href="#id139" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2443,14 +2600,14 @@
 <li><p>vocab_size: int</p></li>
 </ul>
 </section>
-<section id="id131">
-<h3>Weight attributes<a class="headerlink" href="#id131" title="Link to this heading"></a></h3>
+<section id="id140">
+<h3>Weight attributes<a class="headerlink" href="#id140" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>embeddings: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id132">
-<h3>Configurable attributes<a class="headerlink" href="#id132" title="Link to this heading"></a></h3>
+<section id="id141">
+<h3>Configurable attributes<a class="headerlink" href="#id141" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2465,13 +2622,13 @@
 <li><p>embeddings_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id133">
-<h3>Backend-specific attributes<a class="headerlink" href="#id133" title="Link to this heading"></a></h3>
+<section id="id142">
+<h3>Backend-specific attributes<a class="headerlink" href="#id142" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -2479,8 +2636,8 @@
 </section>
 <section id="simplernn">
 <h2>SimpleRNN<a class="headerlink" href="#simplernn" title="Link to this heading"></a></h2>
-<section id="id134">
-<h3>Base attributes<a class="headerlink" href="#id134" title="Link to this heading"></a></h3>
+<section id="id143">
+<h3>Base attributes<a class="headerlink" href="#id143" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2492,8 +2649,8 @@
 <li><p>recurrent_weight_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id135">
-<h3>Type attributes<a class="headerlink" href="#id135" title="Link to this heading"></a></h3>
+<section id="id144">
+<h3>Type attributes<a class="headerlink" href="#id144" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2507,16 +2664,16 @@
 <li><p>pass_initial_states: bool (Default: False)</p></li>
 </ul>
 </section>
-<section id="id136">
-<h3>Weight attributes<a class="headerlink" href="#id136" title="Link to this heading"></a></h3>
+<section id="id145">
+<h3>Weight attributes<a class="headerlink" href="#id145" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 <li><p>recurrent_weight: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id137">
-<h3>Configurable attributes<a class="headerlink" href="#id137" title="Link to this heading"></a></h3>
+<section id="id146">
+<h3>Configurable attributes<a class="headerlink" href="#id146" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2534,43 +2691,43 @@
 <li><p>recurrent_weight_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id138">
-<h3>Backend-specific attributes<a class="headerlink" href="#id138" title="Link to this heading"></a></h3>
+<section id="id147">
+<h3>Backend-specific attributes<a class="headerlink" href="#id147" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>static: bool (Default: True)</p>
 <ul>
 <li><p>If set to True, will reuse the the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -2578,8 +2735,8 @@
 </section>
 <section id="lstm">
 <h2>LSTM<a class="headerlink" href="#lstm" title="Link to this heading"></a></h2>
-<section id="id139">
-<h3>Base attributes<a class="headerlink" href="#id139" title="Link to this heading"></a></h3>
+<section id="id148">
+<h3>Base attributes<a class="headerlink" href="#id148" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2592,8 +2749,8 @@
 <li><p>recurrent_bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id140">
-<h3>Type attributes<a class="headerlink" href="#id140" title="Link to this heading"></a></h3>
+<section id="id149">
+<h3>Type attributes<a class="headerlink" href="#id149" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2610,8 +2767,8 @@
 <li><p>time_major: bool (Default: False)</p></li>
 </ul>
 </section>
-<section id="id141">
-<h3>Weight attributes<a class="headerlink" href="#id141" title="Link to this heading"></a></h3>
+<section id="id150">
+<h3>Weight attributes<a class="headerlink" href="#id150" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
@@ -2619,8 +2776,8 @@
 <li><p>recurrent_bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id142">
-<h3>Configurable attributes<a class="headerlink" href="#id142" title="Link to this heading"></a></h3>
+<section id="id151">
+<h3>Configurable attributes<a class="headerlink" href="#id151" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2638,43 +2795,43 @@
 <li><p>recurrent_bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id143">
-<h3>Backend-specific attributes<a class="headerlink" href="#id143" title="Link to this heading"></a></h3>
+<section id="id152">
+<h3>Backend-specific attributes<a class="headerlink" href="#id152" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>static: bool (Default: True)</p>
 <ul>
 <li><p>If set to True, will reuse the the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -2682,8 +2839,8 @@
 </section>
 <section id="gru">
 <h2>GRU<a class="headerlink" href="#gru" title="Link to this heading"></a></h2>
-<section id="id144">
-<h3>Base attributes<a class="headerlink" href="#id144" title="Link to this heading"></a></h3>
+<section id="id153">
+<h3>Base attributes<a class="headerlink" href="#id153" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2696,8 +2853,8 @@
 <li><p>recurrent_bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id145">
-<h3>Type attributes<a class="headerlink" href="#id145" title="Link to this heading"></a></h3>
+<section id="id154">
+<h3>Type attributes<a class="headerlink" href="#id154" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2715,8 +2872,8 @@
 <li><p>apply_reset_gate: list [before,after] (Default: after)</p></li>
 </ul>
 </section>
-<section id="id146">
-<h3>Weight attributes<a class="headerlink" href="#id146" title="Link to this heading"></a></h3>
+<section id="id155">
+<h3>Weight attributes<a class="headerlink" href="#id155" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
@@ -2724,8 +2881,8 @@
 <li><p>recurrent_bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id147">
-<h3>Configurable attributes<a class="headerlink" href="#id147" title="Link to this heading"></a></h3>
+<section id="id156">
+<h3>Configurable attributes<a class="headerlink" href="#id156" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2743,43 +2900,43 @@
 <li><p>recurrent_bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id148">
-<h3>Backend-specific attributes<a class="headerlink" href="#id148" title="Link to this heading"></a></h3>
+<section id="id157">
+<h3>Backend-specific attributes<a class="headerlink" href="#id157" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>static: bool (Default: True)</p>
 <ul>
 <li><p>If set to True, will reuse the the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -2787,8 +2944,8 @@
 </section>
 <section id="bidirectional">
 <h2>Bidirectional<a class="headerlink" href="#bidirectional" title="Link to this heading"></a></h2>
-<section id="id149">
-<h3>Base attributes<a class="headerlink" href="#id149" title="Link to this heading"></a></h3>
+<section id="id158">
+<h3>Base attributes<a class="headerlink" href="#id158" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2805,8 +2962,8 @@
 <li><p>backward_recurrent_bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id150">
-<h3>Type attributes<a class="headerlink" href="#id150" title="Link to this heading"></a></h3>
+<section id="id159">
+<h3>Type attributes<a class="headerlink" href="#id159" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2824,8 +2981,8 @@
 <li><p>backward_recurrent_activation: str</p></li>
 </ul>
 </section>
-<section id="id151">
-<h3>Weight attributes<a class="headerlink" href="#id151" title="Link to this heading"></a></h3>
+<section id="id160">
+<h3>Weight attributes<a class="headerlink" href="#id160" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>forward_weight: WeightVariable</p></li>
 <li><p>forward_bias: WeightVariable</p></li>
@@ -2837,8 +2994,8 @@
 <li><p>backward_recurrent_bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id152">
-<h3>Configurable attributes<a class="headerlink" href="#id152" title="Link to this heading"></a></h3>
+<section id="id161">
+<h3>Configurable attributes<a class="headerlink" href="#id161" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2860,61 +3017,61 @@
 <li><p>backward_recurrent_bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id153">
-<h3>Backend-specific attributes<a class="headerlink" href="#id153" title="Link to this heading"></a></h3>
+<section id="id162">
+<h3>Backend-specific attributes<a class="headerlink" href="#id162" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>forward_reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>backward_reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>forward_recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>backward_recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>static: bool (Default: True)</p>
 <ul>
 <li><p>If set to True, will reuse the the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 1024)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -2922,8 +3079,8 @@
 </section>
 <section id="timedistributed">
 <h2>TimeDistributed<a class="headerlink" href="#timedistributed" title="Link to this heading"></a></h2>
-<section id="id154">
-<h3>Base attributes<a class="headerlink" href="#id154" title="Link to this heading"></a></h3>
+<section id="id163">
+<h3>Base attributes<a class="headerlink" href="#id163" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2932,8 +3089,8 @@
 </li>
 </ul>
 </section>
-<section id="id155">
-<h3>Type attributes<a class="headerlink" href="#id155" title="Link to this heading"></a></h3>
+<section id="id164">
+<h3>Type attributes<a class="headerlink" href="#id164" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2945,8 +3102,8 @@
 <li><p>output_shape: list</p></li>
 </ul>
 </section>
-<section id="id156">
-<h3>Configurable attributes<a class="headerlink" href="#id156" title="Link to this heading"></a></h3>
+<section id="id165">
+<h3>Configurable attributes<a class="headerlink" href="#id165" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -2960,13 +3117,13 @@
 </li>
 </ul>
 </section>
-<section id="id157">
-<h3>Backend-specific attributes<a class="headerlink" href="#id157" title="Link to this heading"></a></h3>
+<section id="id166">
+<h3>Backend-specific attributes<a class="headerlink" href="#id166" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>time_step_loop_parallelism: list [Off,Unroll,Pipeline] (Default: Off)</p>
 <ul>
 <li><p>Controls the amont and type of parallelism in the loop over time steps. If set to “off”, no parallelism will be used. If set to “unroll”, the loop will be unrolled. This may result in excessive resource use and cannot be used in “io_stream” mode. If set to “pipeline”, the loop will be pipelined.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -2974,8 +3131,8 @@
 </section>
 <section id="garnet">
 <h2>GarNet<a class="headerlink" href="#garnet" title="Link to this heading"></a></h2>
-<section id="id158">
-<h3>Base attributes<a class="headerlink" href="#id158" title="Link to this heading"></a></h3>
+<section id="id167">
+<h3>Base attributes<a class="headerlink" href="#id167" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -2984,8 +3141,8 @@
 </li>
 </ul>
 </section>
-<section id="id159">
-<h3>Type attributes<a class="headerlink" href="#id159" title="Link to this heading"></a></h3>
+<section id="id168">
+<h3>Type attributes<a class="headerlink" href="#id168" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -2994,8 +3151,8 @@
 </li>
 </ul>
 </section>
-<section id="id160">
-<h3>Configurable attributes<a class="headerlink" href="#id160" title="Link to this heading"></a></h3>
+<section id="id169">
+<h3>Configurable attributes<a class="headerlink" href="#id169" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3009,13 +3166,13 @@
 </li>
 </ul>
 </section>
-<section id="id161">
-<h3>Backend-specific attributes<a class="headerlink" href="#id161" title="Link to this heading"></a></h3>
+<section id="id170">
+<h3>Backend-specific attributes<a class="headerlink" href="#id170" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, oneAPI, oneAPI, Libero, Libero, XLS, XLS</p></li>
+<li><p>Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, oneAPI, oneAPI, Coyote, Coyote, Libero, Libero, XLS, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -3023,8 +3180,8 @@
 </section>
 <section id="garnetstack">
 <h2>GarNetStack<a class="headerlink" href="#garnetstack" title="Link to this heading"></a></h2>
-<section id="id162">
-<h3>Base attributes<a class="headerlink" href="#id162" title="Link to this heading"></a></h3>
+<section id="id171">
+<h3>Base attributes<a class="headerlink" href="#id171" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3038,8 +3195,8 @@
 </li>
 </ul>
 </section>
-<section id="id163">
-<h3>Type attributes<a class="headerlink" href="#id163" title="Link to this heading"></a></h3>
+<section id="id172">
+<h3>Type attributes<a class="headerlink" href="#id172" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3053,8 +3210,8 @@
 </li>
 </ul>
 </section>
-<section id="id164">
-<h3>Configurable attributes<a class="headerlink" href="#id164" title="Link to this heading"></a></h3>
+<section id="id173">
+<h3>Configurable attributes<a class="headerlink" href="#id173" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3078,13 +3235,13 @@
 </li>
 </ul>
 </section>
-<section id="id165">
-<h3>Backend-specific attributes<a class="headerlink" href="#id165" title="Link to this heading"></a></h3>
+<section id="id174">
+<h3>Backend-specific attributes<a class="headerlink" href="#id174" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, oneAPI, oneAPI, Libero, Libero, XLS, XLS</p></li>
+<li><p>Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, oneAPI, oneAPI, Coyote, Coyote, Libero, Libero, XLS, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -3092,8 +3249,8 @@
 </section>
 <section id="quant">
 <h2>Quant<a class="headerlink" href="#quant" title="Link to this heading"></a></h2>
-<section id="id166">
-<h3>Base attributes<a class="headerlink" href="#id166" title="Link to this heading"></a></h3>
+<section id="id175">
+<h3>Base attributes<a class="headerlink" href="#id175" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3102,8 +3259,8 @@
 </li>
 </ul>
 </section>
-<section id="id167">
-<h3>Type attributes<a class="headerlink" href="#id167" title="Link to this heading"></a></h3>
+<section id="id176">
+<h3>Type attributes<a class="headerlink" href="#id176" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3115,8 +3272,8 @@
 <li><p>signed: bool</p></li>
 </ul>
 </section>
-<section id="id168">
-<h3>Configurable attributes<a class="headerlink" href="#id168" title="Link to this heading"></a></h3>
+<section id="id177">
+<h3>Configurable attributes<a class="headerlink" href="#id177" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3130,13 +3287,13 @@
 </li>
 </ul>
 </section>
-<section id="id169">
-<h3>Backend-specific attributes<a class="headerlink" href="#id169" title="Link to this heading"></a></h3>
+<section id="id178">
+<h3>Backend-specific attributes<a class="headerlink" href="#id178" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -3144,8 +3301,8 @@
 </section>
 <section id="bipolarquant">
 <h2>BipolarQuant<a class="headerlink" href="#bipolarquant" title="Link to this heading"></a></h2>
-<section id="id170">
-<h3>Base attributes<a class="headerlink" href="#id170" title="Link to this heading"></a></h3>
+<section id="id179">
+<h3>Base attributes<a class="headerlink" href="#id179" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3154,8 +3311,8 @@
 </li>
 </ul>
 </section>
-<section id="id171">
-<h3>Type attributes<a class="headerlink" href="#id171" title="Link to this heading"></a></h3>
+<section id="id180">
+<h3>Type attributes<a class="headerlink" href="#id180" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3164,8 +3321,8 @@
 </li>
 </ul>
 </section>
-<section id="id172">
-<h3>Configurable attributes<a class="headerlink" href="#id172" title="Link to this heading"></a></h3>
+<section id="id181">
+<h3>Configurable attributes<a class="headerlink" href="#id181" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3182,8 +3339,8 @@
 </section>
 <section id="applyalpha">
 <h2>ApplyAlpha<a class="headerlink" href="#applyalpha" title="Link to this heading"></a></h2>
-<section id="id173">
-<h3>Base attributes<a class="headerlink" href="#id173" title="Link to this heading"></a></h3>
+<section id="id182">
+<h3>Base attributes<a class="headerlink" href="#id182" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3194,8 +3351,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id174">
-<h3>Type attributes<a class="headerlink" href="#id174" title="Link to this heading"></a></h3>
+<section id="id183">
+<h3>Type attributes<a class="headerlink" href="#id183" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3208,15 +3365,15 @@
 <li><p>use_beta: bool (Default: True)</p></li>
 </ul>
 </section>
-<section id="id175">
-<h3>Weight attributes<a class="headerlink" href="#id175" title="Link to this heading"></a></h3>
+<section id="id184">
+<h3>Weight attributes<a class="headerlink" href="#id184" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>scale: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id176">
-<h3>Configurable attributes<a class="headerlink" href="#id176" title="Link to this heading"></a></h3>
+<section id="id185">
+<h3>Configurable attributes<a class="headerlink" href="#id185" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3232,13 +3389,13 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id177">
-<h3>Backend-specific attributes<a class="headerlink" href="#id177" title="Link to this heading"></a></h3>
+<section id="id186">
+<h3>Backend-specific attributes<a class="headerlink" href="#id186" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -3246,8 +3403,8 @@
 </section>
 <section id="batchnormonnx">
 <h2>BatchNormOnnx<a class="headerlink" href="#batchnormonnx" title="Link to this heading"></a></h2>
-<section id="id178">
-<h3>Base attributes<a class="headerlink" href="#id178" title="Link to this heading"></a></h3>
+<section id="id187">
+<h3>Base attributes<a class="headerlink" href="#id187" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3256,8 +3413,8 @@
 </li>
 </ul>
 </section>
-<section id="id179">
-<h3>Type attributes<a class="headerlink" href="#id179" title="Link to this heading"></a></h3>
+<section id="id188">
+<h3>Type attributes<a class="headerlink" href="#id188" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3266,8 +3423,8 @@
 </li>
 </ul>
 </section>
-<section id="id180">
-<h3>Configurable attributes<a class="headerlink" href="#id180" title="Link to this heading"></a></h3>
+<section id="id189">
+<h3>Configurable attributes<a class="headerlink" href="#id189" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3281,13 +3438,13 @@
 </li>
 </ul>
 </section>
-<section id="id181">
-<h3>Backend-specific attributes<a class="headerlink" href="#id181" title="Link to this heading"></a></h3>
+<section id="id190">
+<h3>Backend-specific attributes<a class="headerlink" href="#id190" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -3295,8 +3452,8 @@
 </section>
 <section id="layergroup">
 <h2>LayerGroup<a class="headerlink" href="#layergroup" title="Link to this heading"></a></h2>
-<section id="id182">
-<h3>Base attributes<a class="headerlink" href="#id182" title="Link to this heading"></a></h3>
+<section id="id191">
+<h3>Base attributes<a class="headerlink" href="#id191" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3305,8 +3462,8 @@
 </li>
 </ul>
 </section>
-<section id="id183">
-<h3>Type attributes<a class="headerlink" href="#id183" title="Link to this heading"></a></h3>
+<section id="id192">
+<h3>Type attributes<a class="headerlink" href="#id192" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3320,8 +3477,8 @@
 <li><p>output_shape: list</p></li>
 </ul>
 </section>
-<section id="id184">
-<h3>Configurable attributes<a class="headerlink" href="#id184" title="Link to this heading"></a></h3>
+<section id="id193">
+<h3>Configurable attributes<a class="headerlink" href="#id193" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3338,8 +3495,8 @@
 </section>
 <section id="symbolicexpression">
 <h2>SymbolicExpression<a class="headerlink" href="#symbolicexpression" title="Link to this heading"></a></h2>
-<section id="id185">
-<h3>Base attributes<a class="headerlink" href="#id185" title="Link to this heading"></a></h3>
+<section id="id194">
+<h3>Base attributes<a class="headerlink" href="#id194" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3348,8 +3505,8 @@
 </li>
 </ul>
 </section>
-<section id="id186">
-<h3>Type attributes<a class="headerlink" href="#id186" title="Link to this heading"></a></h3>
+<section id="id195">
+<h3>Type attributes<a class="headerlink" href="#id195" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3361,8 +3518,8 @@
 <li><p>lut_functions: list (Default: [])</p></li>
 </ul>
 </section>
-<section id="id187">
-<h3>Configurable attributes<a class="headerlink" href="#id187" title="Link to this heading"></a></h3>
+<section id="id196">
+<h3>Configurable attributes<a class="headerlink" href="#id196" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3379,8 +3536,8 @@
 </section>
 <section id="layernormalization">
 <h2>LayerNormalization<a class="headerlink" href="#layernormalization" title="Link to this heading"></a></h2>
-<section id="id188">
-<h3>Base attributes<a class="headerlink" href="#id188" title="Link to this heading"></a></h3>
+<section id="id197">
+<h3>Base attributes<a class="headerlink" href="#id197" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3391,8 +3548,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id189">
-<h3>Type attributes<a class="headerlink" href="#id189" title="Link to this heading"></a></h3>
+<section id="id198">
+<h3>Type attributes<a class="headerlink" href="#id198" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3405,15 +3562,15 @@
 <li><p>epsilon_power_of_10: int (Default: 3)</p></li>
 </ul>
 </section>
-<section id="id190">
-<h3>Weight attributes<a class="headerlink" href="#id190" title="Link to this heading"></a></h3>
+<section id="id199">
+<h3>Weight attributes<a class="headerlink" href="#id199" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>scale: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id191">
-<h3>Configurable attributes<a class="headerlink" href="#id191" title="Link to this heading"></a></h3>
+<section id="id200">
+<h3>Configurable attributes<a class="headerlink" href="#id200" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3429,43 +3586,43 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id192">
-<h3>Backend-specific attributes<a class="headerlink" href="#id192" title="Link to this heading"></a></h3>
+<section id="id201">
+<h3>Backend-specific attributes<a class="headerlink" href="#id201" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>table_range_power2: int (Default: 0)</p>
 <ul>
 <li><p>The negative power of 2 that represents the range of the lookup table, e.g. a value of 1 would represent a range of 0.5.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_size: int (Default: 4096)</p>
 <ul>
 <li><p>The size of the lookup table used to approximate the function.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>table_t: NamedType (Default: ufixed&lt;8,5,RND_CONV,SAT,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used for the values of the lookup table.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>accum_t: NamedType (Default: fixed&lt;14,4,RND_CONV,SAT,0&gt;)</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -3473,8 +3630,8 @@
 </section>
 <section id="einsumdense">
 <h2>EinsumDense<a class="headerlink" href="#einsumdense" title="Link to this heading"></a></h2>
-<section id="id193">
-<h3>Base attributes<a class="headerlink" href="#id193" title="Link to this heading"></a></h3>
+<section id="id202">
+<h3>Base attributes<a class="headerlink" href="#id202" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3486,8 +3643,8 @@
 <li><p>accum_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id194">
-<h3>Type attributes<a class="headerlink" href="#id194" title="Link to this heading"></a></h3>
+<section id="id203">
+<h3>Type attributes<a class="headerlink" href="#id203" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3499,15 +3656,15 @@
 <li><p>out_shape: tuple</p></li>
 </ul>
 </section>
-<section id="id195">
-<h3>Weight attributes<a class="headerlink" href="#id195" title="Link to this heading"></a></h3>
+<section id="id204">
+<h3>Weight attributes<a class="headerlink" href="#id204" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id196">
-<h3>Configurable attributes<a class="headerlink" href="#id196" title="Link to this heading"></a></h3>
+<section id="id205">
+<h3>Configurable attributes<a class="headerlink" href="#id205" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3527,8 +3684,8 @@
 </section>
 <section id="einsum">
 <h2>Einsum<a class="headerlink" href="#einsum" title="Link to this heading"></a></h2>
-<section id="id197">
-<h3>Base attributes<a class="headerlink" href="#id197" title="Link to this heading"></a></h3>
+<section id="id206">
+<h3>Base attributes<a class="headerlink" href="#id206" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3538,8 +3695,8 @@
 <li><p>accum_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id198">
-<h3>Type attributes<a class="headerlink" href="#id198" title="Link to this heading"></a></h3>
+<section id="id207">
+<h3>Type attributes<a class="headerlink" href="#id207" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3552,8 +3709,8 @@
 <li><p>out_shape: tuple</p></li>
 </ul>
 </section>
-<section id="id199">
-<h3>Configurable attributes<a class="headerlink" href="#id199" title="Link to this heading"></a></h3>
+<section id="id208">
+<h3>Configurable attributes<a class="headerlink" href="#id208" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3571,8 +3728,8 @@
 </section>
 <section id="biasadd">
 <h2>BiasAdd<a class="headerlink" href="#biasadd" title="Link to this heading"></a></h2>
-<section id="id200">
-<h3>Base attributes<a class="headerlink" href="#id200" title="Link to this heading"></a></h3>
+<section id="id209">
+<h3>Base attributes<a class="headerlink" href="#id209" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3586,8 +3743,8 @@
 </li>
 </ul>
 </section>
-<section id="id201">
-<h3>Type attributes<a class="headerlink" href="#id201" title="Link to this heading"></a></h3>
+<section id="id210">
+<h3>Type attributes<a class="headerlink" href="#id210" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3601,8 +3758,8 @@
 </li>
 </ul>
 </section>
-<section id="id202">
-<h3>Configurable attributes<a class="headerlink" href="#id202" title="Link to this heading"></a></h3>
+<section id="id211">
+<h3>Configurable attributes<a class="headerlink" href="#id211" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3626,13 +3783,13 @@
 </li>
 </ul>
 </section>
-<section id="id203">
-<h3>Backend-specific attributes<a class="headerlink" href="#id203" title="Link to this heading"></a></h3>
+<section id="id212">
+<h3>Backend-specific attributes<a class="headerlink" href="#id212" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 </ul>
@@ -3640,8 +3797,8 @@
 </section>
 <section id="dacombinational">
 <h2>DACombinational<a class="headerlink" href="#dacombinational" title="Link to this heading"></a></h2>
-<section id="id204">
-<h3>Base attributes<a class="headerlink" href="#id204" title="Link to this heading"></a></h3>
+<section id="id213">
+<h3>Base attributes<a class="headerlink" href="#id213" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3650,8 +3807,8 @@
 </li>
 </ul>
 </section>
-<section id="id205">
-<h3>Type attributes<a class="headerlink" href="#id205" title="Link to this heading"></a></h3>
+<section id="id214">
+<h3>Type attributes<a class="headerlink" href="#id214" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3660,8 +3817,237 @@
 </li>
 </ul>
 </section>
-<section id="id206">
-<h3>Configurable attributes<a class="headerlink" href="#id206" title="Link to this heading"></a></h3>
+<section id="id215">
+<h3>Configurable attributes<a class="headerlink" href="#id215" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="sparseinputreduce">
+<h2>SparseInputReduce<a class="headerlink" href="#sparseinputreduce" title="Link to this heading"></a></h2>
+<section id="id216">
+<h3>Base attributes<a class="headerlink" href="#id216" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id217">
+<h3>Type attributes<a class="headerlink" href="#id217" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>in_height: int</p></li>
+<li><p>in_width: int</p></li>
+<li><p>n_chan: int</p></li>
+<li><p>n_sparse: int</p></li>
+<li><p>threshold: float</p></li>
+<li><p>hash_bits: int (Default: 10)</p></li>
+</ul>
+</section>
+<section id="id218">
+<h3>Configurable attributes<a class="headerlink" href="#id218" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="sparseconv2d">
+<h2>SparseConv2D<a class="headerlink" href="#sparseconv2d" title="Link to this heading"></a></h2>
+<section id="id219">
+<h3>Base attributes<a class="headerlink" href="#id219" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>weight_t: NamedType</p></li>
+<li><p>bias_t: NamedType</p></li>
+<li><p>accum_t: NamedType</p></li>
+</ul>
+</section>
+<section id="id220">
+<h3>Type attributes<a class="headerlink" href="#id220" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>n_sparse: int</p></li>
+<li><p>n_chan: int</p></li>
+<li><p>n_filt: int</p></li>
+<li><p>kernel_size: int</p></li>
+</ul>
+</section>
+<section id="id221">
+<h3>Weight attributes<a class="headerlink" href="#id221" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>weight: WeightVariable</p></li>
+<li><p>bias: WeightVariable</p></li>
+</ul>
+</section>
+<section id="id222">
+<h3>Configurable attributes<a class="headerlink" href="#id222" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>weight_t: NamedType</p></li>
+<li><p>bias_t: NamedType</p></li>
+<li><p>accum_t: NamedType</p></li>
+</ul>
+</section>
+</section>
+<section id="sparseactivation">
+<h2>SparseActivation<a class="headerlink" href="#sparseactivation" title="Link to this heading"></a></h2>
+<section id="id223">
+<h3>Base attributes<a class="headerlink" href="#id223" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id224">
+<h3>Type attributes<a class="headerlink" href="#id224" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>n_sparse: int</p></li>
+<li><p>n_chan: int</p></li>
+<li><p>activation: str</p></li>
+</ul>
+</section>
+<section id="id225">
+<h3>Configurable attributes<a class="headerlink" href="#id225" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="sparsepooling2d">
+<h2>SparsePooling2D<a class="headerlink" href="#sparsepooling2d" title="Link to this heading"></a></h2>
+<section id="id226">
+<h3>Base attributes<a class="headerlink" href="#id226" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>accum_t: NamedType</p></li>
+</ul>
+</section>
+<section id="id227">
+<h3>Type attributes<a class="headerlink" href="#id227" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>n_sparse: int</p></li>
+<li><p>n_chan: int</p></li>
+<li><p>in_height: int</p></li>
+<li><p>in_width: int</p></li>
+<li><p>pool_height: int</p></li>
+<li><p>pool_width: int</p></li>
+<li><p>pool_op: str (Default: avg)</p></li>
+</ul>
+</section>
+<section id="id228">
+<h3>Configurable attributes<a class="headerlink" href="#id228" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>accum_t: NamedType</p></li>
+</ul>
+</section>
+</section>
+<section id="sparseflatten">
+<h2>SparseFlatten<a class="headerlink" href="#sparseflatten" title="Link to this heading"></a></h2>
+<section id="id229">
+<h3>Base attributes<a class="headerlink" href="#id229" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id230">
+<h3>Type attributes<a class="headerlink" href="#id230" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>n_sparse: int</p></li>
+<li><p>n_chan: int</p></li>
+<li><p>out_height: int</p></li>
+<li><p>out_width: int</p></li>
+</ul>
+</section>
+<section id="id231">
+<h3>Configurable attributes<a class="headerlink" href="#id231" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3678,8 +4064,8 @@
 </section>
 <section id="fixedpointquantizer">
 <h2>FixedPointQuantizer<a class="headerlink" href="#fixedpointquantizer" title="Link to this heading"></a></h2>
-<section id="id207">
-<h3>Base attributes<a class="headerlink" href="#id207" title="Link to this heading"></a></h3>
+<section id="id232">
+<h3>Base attributes<a class="headerlink" href="#id232" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3688,8 +4074,8 @@
 </li>
 </ul>
 </section>
-<section id="id208">
-<h3>Type attributes<a class="headerlink" href="#id208" title="Link to this heading"></a></h3>
+<section id="id233">
+<h3>Type attributes<a class="headerlink" href="#id233" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3698,8 +4084,8 @@
 </li>
 </ul>
 </section>
-<section id="id209">
-<h3>Configurable attributes<a class="headerlink" href="#id209" title="Link to this heading"></a></h3>
+<section id="id234">
+<h3>Configurable attributes<a class="headerlink" href="#id234" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3716,8 +4102,8 @@
 </section>
 <section id="unarylut">
 <h2>UnaryLUT<a class="headerlink" href="#unarylut" title="Link to this heading"></a></h2>
-<section id="id210">
-<h3>Base attributes<a class="headerlink" href="#id210" title="Link to this heading"></a></h3>
+<section id="id235">
+<h3>Base attributes<a class="headerlink" href="#id235" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3727,8 +4113,8 @@
 <li><p>table_t: NamedType (Default: fixed&lt;18,8,TRN,WRAP,0&gt;)</p></li>
 </ul>
 </section>
-<section id="id211">
-<h3>Type attributes<a class="headerlink" href="#id211" title="Link to this heading"></a></h3>
+<section id="id236">
+<h3>Type attributes<a class="headerlink" href="#id236" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3738,14 +4124,14 @@
 <li><p>n_in: int</p></li>
 </ul>
 </section>
-<section id="id212">
-<h3>Weight attributes<a class="headerlink" href="#id212" title="Link to this heading"></a></h3>
+<section id="id237">
+<h3>Weight attributes<a class="headerlink" href="#id237" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>table: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id213">
-<h3>Configurable attributes<a class="headerlink" href="#id213" title="Link to this heading"></a></h3>
+<section id="id238">
+<h3>Configurable attributes<a class="headerlink" href="#id238" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3761,10 +4147,10 @@
 </ul>
 </section>
 </section>
-<section id="repack">
-<h2>Repack<a class="headerlink" href="#repack" title="Link to this heading"></a></h2>
-<section id="id214">
-<h3>Base attributes<a class="headerlink" href="#id214" title="Link to this heading"></a></h3>
+<section id="clone">
+<h2>Clone<a class="headerlink" href="#clone" title="Link to this heading"></a></h2>
+<section id="id239">
+<h3>Base attributes<a class="headerlink" href="#id239" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3773,8 +4159,8 @@
 </li>
 </ul>
 </section>
-<section id="id215">
-<h3>Type attributes<a class="headerlink" href="#id215" title="Link to this heading"></a></h3>
+<section id="id240">
+<h3>Type attributes<a class="headerlink" href="#id240" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3783,8 +4169,8 @@
 </li>
 </ul>
 </section>
-<section id="id216">
-<h3>Configurable attributes<a class="headerlink" href="#id216" title="Link to this heading"></a></h3>
+<section id="id241">
+<h3>Configurable attributes<a class="headerlink" href="#id241" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3799,10 +4185,10 @@
 </ul>
 </section>
 </section>
-<section id="clone">
-<h2>Clone<a class="headerlink" href="#clone" title="Link to this heading"></a></h2>
-<section id="id217">
-<h3>Base attributes<a class="headerlink" href="#id217" title="Link to this heading"></a></h3>
+<section id="repack">
+<h2>Repack<a class="headerlink" href="#repack" title="Link to this heading"></a></h2>
+<section id="id242">
+<h3>Base attributes<a class="headerlink" href="#id242" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3811,8 +4197,8 @@
 </li>
 </ul>
 </section>
-<section id="id218">
-<h3>Type attributes<a class="headerlink" href="#id218" title="Link to this heading"></a></h3>
+<section id="id243">
+<h3>Type attributes<a class="headerlink" href="#id243" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3821,8 +4207,89 @@
 </li>
 </ul>
 </section>
-<section id="id219">
-<h3>Configurable attributes<a class="headerlink" href="#id219" title="Link to this heading"></a></h3>
+<section id="id244">
+<h3>Configurable attributes<a class="headerlink" href="#id244" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="batchnormalizationquantizedtanh">
+<h2>BatchNormalizationQuantizedTanh<a class="headerlink" href="#batchnormalizationquantizedtanh" title="Link to this heading"></a></h2>
+<section id="id245">
+<h3>Base attributes<a class="headerlink" href="#id245" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>accum_t: NamedType</p></li>
+</ul>
+</section>
+<section id="id246">
+<h3>Type attributes<a class="headerlink" href="#id246" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>n_in: int</p></li>
+<li><p>n_filt: int (Default: 0)</p></li>
+</ul>
+</section>
+<section id="id247">
+<h3>Configurable attributes<a class="headerlink" href="#id247" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>trace: int (Default: False)</p>
+<ul>
+<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
+</ul>
+</li>
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+<li><p>accum_t: NamedType</p></li>
+<li><p>reuse_factor: int (Default: 1)</p></li>
+</ul>
+</section>
+</section>
+<section id="broadcast">
+<h2>Broadcast<a class="headerlink" href="#broadcast" title="Link to this heading"></a></h2>
+<section id="id248">
+<h3>Base attributes<a class="headerlink" href="#id248" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>result_t: NamedType</p>
+<ul>
+<li><p>The datatype (precision) of the output tensor.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id249">
+<h3>Type attributes<a class="headerlink" href="#id249" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id250">
+<h3>Configurable attributes<a class="headerlink" href="#id250" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3839,8 +4306,8 @@
 </section>
 <section id="pointwiseconv1d">
 <h2>PointwiseConv1D<a class="headerlink" href="#pointwiseconv1d" title="Link to this heading"></a></h2>
-<section id="id220">
-<h3>Base attributes<a class="headerlink" href="#id220" title="Link to this heading"></a></h3>
+<section id="id251">
+<h3>Base attributes<a class="headerlink" href="#id251" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3851,8 +4318,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id221">
-<h3>Type attributes<a class="headerlink" href="#id221" title="Link to this heading"></a></h3>
+<section id="id252">
+<h3>Type attributes<a class="headerlink" href="#id252" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3869,15 +4336,15 @@
 <li><p>pad_right: int</p></li>
 </ul>
 </section>
-<section id="id222">
-<h3>Weight attributes<a class="headerlink" href="#id222" title="Link to this heading"></a></h3>
+<section id="id253">
+<h3>Weight attributes<a class="headerlink" href="#id253" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id223">
-<h3>Configurable attributes<a class="headerlink" href="#id223" title="Link to this heading"></a></h3>
+<section id="id254">
+<h3>Configurable attributes<a class="headerlink" href="#id254" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3893,31 +4360,31 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id224">
-<h3>Backend-specific attributes<a class="headerlink" href="#id224" title="Link to this heading"></a></h3>
+<section id="id255">
+<h3>Backend-specific attributes<a class="headerlink" href="#id255" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
 </ul>
@@ -3925,8 +4392,8 @@
 </section>
 <section id="pointwiseconv2d">
 <h2>PointwiseConv2D<a class="headerlink" href="#pointwiseconv2d" title="Link to this heading"></a></h2>
-<section id="id225">
-<h3>Base attributes<a class="headerlink" href="#id225" title="Link to this heading"></a></h3>
+<section id="id256">
+<h3>Base attributes<a class="headerlink" href="#id256" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
@@ -3937,8 +4404,8 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id226">
-<h3>Type attributes<a class="headerlink" href="#id226" title="Link to this heading"></a></h3>
+<section id="id257">
+<h3>Type attributes<a class="headerlink" href="#id257" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>index: int</p>
 <ul>
@@ -3961,15 +4428,15 @@
 <li><p>pad_right: int</p></li>
 </ul>
 </section>
-<section id="id227">
-<h3>Weight attributes<a class="headerlink" href="#id227" title="Link to this heading"></a></h3>
+<section id="id258">
+<h3>Weight attributes<a class="headerlink" href="#id258" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>weight: WeightVariable</p></li>
 <li><p>bias: WeightVariable</p></li>
 </ul>
 </section>
-<section id="id228">
-<h3>Configurable attributes<a class="headerlink" href="#id228" title="Link to this heading"></a></h3>
+<section id="id259">
+<h3>Configurable attributes<a class="headerlink" href="#id259" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>trace: int (Default: False)</p>
 <ul>
@@ -3985,114 +4452,33 @@
 <li><p>bias_t: NamedType</p></li>
 </ul>
 </section>
-<section id="id229">
-<h3>Backend-specific attributes<a class="headerlink" href="#id229" title="Link to this heading"></a></h3>
+<section id="id260">
+<h3>Backend-specific attributes<a class="headerlink" href="#id260" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>accum_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) used to store intermediate results of the computation within the layer.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Libero, XLS</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
 <li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
 <li><p>conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)</p>
 <ul>
 <li><p>“LineBuffer” implementation is preferred over “Encoded” for most use cases. This attribute only applies to io_stream.</p></li>
-<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult</p></li>
+<li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote</p></li>
 </ul>
 </li>
-</ul>
-</section>
-</section>
-<section id="broadcast">
-<h2>Broadcast<a class="headerlink" href="#broadcast" title="Link to this heading"></a></h2>
-<section id="id230">
-<h3>Base attributes<a class="headerlink" href="#id230" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-<section id="id231">
-<h3>Type attributes<a class="headerlink" href="#id231" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>index: int</p>
-<ul>
-<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-<section id="id232">
-<h3>Configurable attributes<a class="headerlink" href="#id232" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>trace: int (Default: False)</p>
-<ul>
-<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
-</ul>
-</li>
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-</ul>
-</section>
-</section>
-<section id="batchnormalizationquantizedtanh">
-<h2>BatchNormalizationQuantizedTanh<a class="headerlink" href="#batchnormalizationquantizedtanh" title="Link to this heading"></a></h2>
-<section id="id233">
-<h3>Base attributes<a class="headerlink" href="#id233" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-<li><p>accum_t: NamedType</p></li>
-</ul>
-</section>
-<section id="id234">
-<h3>Type attributes<a class="headerlink" href="#id234" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>index: int</p>
-<ul>
-<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
-</ul>
-</li>
-<li><p>n_in: int</p></li>
-<li><p>n_filt: int (Default: 0)</p></li>
-</ul>
-</section>
-<section id="id235">
-<h3>Configurable attributes<a class="headerlink" href="#id235" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>trace: int (Default: False)</p>
-<ul>
-<li><p>Enables saving of layer output (tracing) when using hls_model.predict(…) or hls_model.trace(…)</p></li>
-</ul>
-</li>
-<li><p>result_t: NamedType</p>
-<ul>
-<li><p>The datatype (precision) of the output tensor.</p></li>
-</ul>
-</li>
-<li><p>accum_t: NamedType</p></li>
-<li><p>reuse_factor: int (Default: 1)</p></li>
 </ul>
 </section>
 </section>
