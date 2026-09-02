@@ -40,3 +40,101 @@ Having set ``BramFactor=100``, only layers with more than 100 weights will be ex
         ...
 
 When integrating the design, users can use the exposed interface to implement weight reloading scheme.
+
+Parameter manifest
+==================
+
+When ``BramFactor`` exposes parameters externally, ``hls4ml`` also writes
+``firmware/weights/bram_manifest.json``. It records, per external port, what the
+generated design is expected to look like: the logical scalar order ``hls4ml``
+wrote, the ``ARRAY_RESHAPE`` it emitted, the resulting word width and depth, and
+the fixed-point format. This is what a weight-reloading scheme needs in order to
+know which logical scalar lands in which physical memory word and lane.
+
+.. code-block:: json
+
+    {
+      "schema": "hls4ml.bram_manifest/v1",
+      "ports": [
+        {
+          "name": "w2", "layer": "dense_1", "role": "weight",
+          "logical_scalar_order": "index(out,in) = out*n_in + in",
+          "kernel_variant": "dense_resource_rf_leq_nin",
+          "reshape": {"lane_of_flat_index": "f // 2", "word_of_flat_index": "f % 2"},
+          "expected_interface_kind": "bram",
+          "expected_data_width": 256, "expected_depth": 2
+        }
+      ]
+    }
+
+Two properties of the manifest are worth understanding:
+
+* Every geometry field is named ``expected_*``. ``hls4ml`` knows what it *asked*
+  HLS for; only C/RTL synthesis or export establishes what was actually built.
+  Consumers should cross-check against the synthesis report before relying on it.
+* Claims are made only where the packing has been verified against generated RTL.
+  ``hls4ml`` sees every external parameter, including layers whose packing has not
+  been checked. For anything outside the verified scope it emits no interface
+  kind, geometry or ordering, only a note - never a guess. Schema v1 covers the
+  **Vitis backend only**, and within it ``Dense`` weights and biases with
+  ``io_parallel`` and ``Strategy: Resource``. The Vivado backend also implements
+  ``BramFactor`` but has not been verified, so it receives no claims.
+
+Note that a ``Dense`` bias is *not* exposed as a memory even when ``BramFactor``
+selects it: ``nnet_dense_resource.h`` fully partitions ``biases``, so it lowers to
+individual scalar ports regardless of size. The manifest reports this as
+``expected_interface_kind: "scalar_bundle"``.
+
+Runtime-selected weight banks
+=============================
+
+``hls4ml.contrib.runtime_weights`` builds on the manifest to give a synthesized
+design several pre-provisioned weight banks, selected per inference, without
+resynthesizing the HLS IP. **This version supports the Vitis backend only.** It
+runs *after* ``build(synth=True)`` and only reads the generated project - the
+compute IP is never modified, and the summary includes a hash of its RTL so this
+can be verified.
+
+.. code-block:: Python
+
+    from hls4ml.contrib.runtime_weights import package
+
+    hls_model.build(csim=False, synth=True)
+    summary = package(output_dir, n_banks=2)
+
+This writes a ``runtime_weights/`` directory containing a generated top level that
+instantiates the unmodified IP alongside banked storage per supported parameter
+interface - a depth-stacked memory for a BRAM port, a scalar bank for a bundle
+such as a Dense bias - plus the parameterized RTL and a Vivado Tcl script.
+Bank images are produced with the same package:
+
+.. code-block:: Python
+
+    from hls4ml.contrib.runtime_weights import build_bank_image, write_mem
+
+    image, stride = build_bank_image(port, [bank0_weights, bank1_weights], n_in, n_out)
+    write_mem("w2_banks.mem", image, port["expected_data_width"])
+
+.. note::
+    The ``n_in`` / ``n_out`` arguments above are Dense-specific and provisional.
+    They will be replaced by a per-layer adapter API.
+
+Bank selection is **idle-time only**. The wrapper captures ``bank_id`` when it
+takes a request, makes it stable *before* asserting ``ap_start``, and holds it
+through ``ap_done``. Acceptance follows the real ``ap_ctrl_hs`` handshake:
+``ap_start`` is held until the IP asserts ``ap_ready``. Every parameter read
+therefore belongs to the selected bank, including any read in the first cycle.
+An out-of-range ``bank_id`` is rejected and starts nothing. While a transaction
+is in flight a new start is gated away from the IP; overlapping transactions are
+not supported, which gives up any back-to-back capability the IP may have.
+
+Any valid bank may be written while idle; all writes are rejected while an
+inference is active.
+
+The number of banks, the memory geometry and the physical capacity are fixed when
+the design is implemented. Changing values within an existing bank requires only
+memory writes; adding a bank, or changing the network, precision or reuse factor,
+requires regenerating and re-implementing.
+
+Not provided: AXI or board support, any driver, a C++ wrapper, and any automatic
+change to ``BramFactor`` - which parameters are exposed remains the user's choice.
