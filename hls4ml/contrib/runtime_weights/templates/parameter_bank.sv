@@ -1,0 +1,142 @@
+`timescale 1 ns / 1 ps
+
+// Depth-stacked replacement for the single-bank memory a stock hls4ml IP expects
+// on an external BRAM parameter port.
+//
+// PORT A faces the HLS IP and reproduces the contract of the memory model Vitis
+// generates for co-simulation:
+//     always_ff @(posedge clk) if (EN) Dout <= mem[Addr / WORD_BYTES];
+// i.e. 1-cycle synchronous read, enable-gated. bank_addr_mapper is combinational,
+// so this latency is identical to the unbanked memory.
+//
+// PORT B is the loader. hls4ml drives only port A of a BRAM parameter interface;
+// interface.bram_port_b_is_unused() PROVES from the exported RTL that EN_B/WEN_B/
+// Addr_B are tied off before the wrapper borrows port B, rather than assuming it.
+// Loads are additionally accepted only while the wrapper is idle.
+//
+// Banks are stacked in depth: phys_word = bank_id*BANK_STRIDE_WORDS + local_word.
+// N_BANKS, BANK_STRIDE_WORDS and the physical depth are build-time constants.
+
+`default_nettype none
+
+module parameter_bank #(
+    parameter int DATA_WIDTH        = 256,
+    parameter int HLS_ADDR_WIDTH    = 32,
+    parameter int WORD_BYTES        = 32,
+    parameter int LOCAL_WORDS       = 2,
+    parameter int N_BANKS           = 2,
+    parameter int BANK_ID_WIDTH     = 1,
+    parameter int BANK_STRIDE_WORDS = 2,
+    parameter     INIT_HEX          = ""
+) (
+    input  wire                        ap_clk,
+    input  wire                        ap_rst,
+
+    input  wire [BANK_ID_WIDTH-1:0]    cur_bank_id,
+    input  wire                        quiescent,
+
+    // facing the stock HLS IP (HLS is the master)
+    input  wire [HLS_ADDR_WIDTH-1:0]   hls_Addr_A,
+    input  wire                        hls_EN_A,
+    input  wire [DATA_WIDTH/8-1:0]     hls_WEN_A,
+    input  wire [DATA_WIDTH-1:0]       hls_Din_A,
+    output reg  [DATA_WIDTH-1:0]       hls_Dout_A,
+    input  wire                        hls_Rst_A,
+
+    // native loader
+    input  wire                        ld_req,
+    input  wire [BANK_ID_WIDTH-1:0]    ld_bank,
+    input  wire [$clog2(LOCAL_WORDS > 1 ? LOCAL_WORDS : 2)-1:0] ld_word,
+    input  wire [DATA_WIDTH-1:0]       ld_wdata,
+    input  wire                        ld_rd,
+    output reg  [DATA_WIDTH-1:0]       ld_rdata,
+    output reg                         ld_rvalid,
+    output wire                        ld_accept,
+    output wire                        ld_reject,
+
+    output wire                        addr_padding_violation
+);
+
+  localparam int PHYS_WORDS      = N_BANKS * BANK_STRIDE_WORDS;
+  localparam int PHYS_ADDR_WIDTH = (PHYS_WORDS <= 1) ? 1 : $clog2(PHYS_WORDS);
+
+  (* ram_style = "block" *)
+  reg [DATA_WIDTH-1:0] mem [0:PHYS_WORDS-1];
+
+  initial begin
+    integer i;
+    for (i = 0; i < PHYS_WORDS; i = i + 1) mem[i] = '0;
+    if (INIT_HEX != "") $readmemh(INIT_HEX, mem);
+  end
+
+  // ---------------- port A : HLS read path ----------------
+  wire [PHYS_ADDR_WIDTH-1:0] phys_a;
+  wire                       pad_a;
+
+  bank_addr_mapper #(
+      .HLS_ADDR_WIDTH   (HLS_ADDR_WIDTH),
+      .WORD_BYTES       (WORD_BYTES),
+      .LOCAL_WORDS      (LOCAL_WORDS),
+      .N_BANKS          (N_BANKS),
+      .BANK_ID_WIDTH    (BANK_ID_WIDTH),
+      .BANK_STRIDE_WORDS(BANK_STRIDE_WORDS),
+      .PHYS_ADDR_WIDTH  (PHYS_ADDR_WIDTH)
+  ) u_map_a (
+      .hls_byte_addr  (hls_Addr_A),
+      .bank_id        (cur_bank_id),
+      .phys_word_addr (phys_a),
+      .addr_in_padding(pad_a)
+  );
+
+  always_ff @(posedge ap_clk or posedge hls_Rst_A) begin
+    if (hls_Rst_A) begin
+      hls_Dout_A <= '0;
+    end else if (hls_EN_A) begin
+      hls_Dout_A <= mem[phys_a];
+      for (int b = 0; b < DATA_WIDTH / 8; b++)
+        if (hls_WEN_A[b]) mem[phys_a][b*8 +: 8] <= hls_Din_A[b*8 +: 8];
+    end
+  end
+
+  assign addr_padding_violation = hls_EN_A & pad_a;
+
+  // ---------------- port B : loader ----------------
+  // Writes to the bank currently selected for inference are PROHIBITED, and no
+  // write is accepted while a transaction is in flight. To update the selected
+  // bank, switch selection to another bank first.
+  wire bank_ok  = (ld_bank < N_BANKS[BANK_ID_WIDTH:0]);
+  wire safe     = quiescent & bank_ok;   // idle => no active bank => any bank loadable
+  wire want     = ld_req | ld_rd;
+
+  assign ld_accept = want &  safe;
+  assign ld_reject = want & ~safe;
+
+  // Widen before combining: ld_word is only $clog2(LOCAL_WORDS) bits, so a
+  // part-select of PHYS_ADDR_WIDTH bits from it can read past its width and
+  // yield x, silently sending every loader write to an undefined address.
+  wire [31:0] phys_b_full = (32'(ld_bank) * BANK_STRIDE_WORDS) + 32'(ld_word);
+  wire [PHYS_ADDR_WIDTH-1:0] phys_b = phys_b_full[PHYS_ADDR_WIDTH-1:0];
+
+  always_ff @(posedge ap_clk) begin
+    ld_rvalid <= 1'b0;
+    if (ap_rst) begin
+      ld_rdata <= '0;
+    end else if (ld_accept) begin
+      if (ld_req) mem[phys_b] <= ld_wdata;
+      if (ld_rd) begin
+        ld_rdata  <= mem[phys_b];
+        ld_rvalid <= 1'b1;
+      end
+    end
+  end
+
+`ifdef RUNTIME_WEIGHTS_ASSERT
+  a_no_padding_access   : assert property (@(posedge ap_clk) disable iff (ap_rst)
+                            !(hls_EN_A & pad_a));
+  a_write_only_when_idle: assert property (@(posedge ap_clk) disable iff (ap_rst)
+                            (ld_req & ld_accept) |-> quiescent);
+`endif
+
+endmodule
+
+`default_nettype wire
