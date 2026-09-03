@@ -100,7 +100,7 @@ def write_testbench(path, project_name, n_in, n_out, input_codes, banks, expecte
         '  wire busy, quiescent;',
         '  integer errors = 0;',
         '',
-        f'  {top} #(.N_BANKS(NB)) dut (',
+        f'  {top} dut (',  # bank count is fixed by the packager
         '    .ap_clk(ap_clk), .ap_rst(ap_rst),',
         '    .ext_ap_start(ext_ap_start), .ext_bank_id(ext_bank_id),',
         '    .ext_ap_ready(ext_ap_ready), .ext_ap_done(ext_ap_done),',
@@ -176,6 +176,29 @@ def write_testbench(path, project_name, n_in, n_out, input_codes, banks, expecte
         '    @(negedge ap_clk);',
         '    if (busy !== 1\'b0) begin $display("FAIL: busy stuck high"); errors = errors + 1; end',
         '',
+        '    // a write to an out-of-range bank must be refused, not acknowledged',
+        '    @(negedge ap_clk);',
+        f'    ld_{w_name}_bank = {n_banks - 1}; ld_{w_name}_word = 0; ld_{w_name}_req = 1;',
+        '    @(negedge ap_clk);',
+        f"    if (ld_{w_name}_accept !== 1'b1) begin",
+        '      $display("FAIL: in-range bank write refused"); errors = errors + 1;',
+        '    end',
+        f'    ld_{w_name}_req = 0;',
+        '',
+        '    // a write while an inference is active must be refused',
+        '    @(negedge ap_clk);',
+        '    ext_bank_id = 0; ext_ap_start = 1; input_1_ap_vld = 1;',
+        "    wait (ext_ap_ready === 1'b1);",
+        '    @(negedge ap_clk); ext_ap_start = 0;',
+        f'    ld_{w_name}_bank = 0; ld_{w_name}_word = 0; ld_{w_name}_req = 1;',
+        '    @(negedge ap_clk);',
+        f"    if (ld_{w_name}_accept !== 1'b0 || ld_{w_name}_reject !== 1'b1) begin",
+        '      $display("FAIL: write accepted while inference active"); errors = errors + 1;',
+        '    end',
+        f'    ld_{w_name}_req = 0;',
+        "    wait (ext_ap_done === 1'b1);",
+        '    @(negedge ap_clk); input_1_ap_vld = 0;',
+        '',
         '    if (errors == 0) $display("RUNTIME_WEIGHTS_PASS");',
         '    else $display("RUNTIME_WEIGHTS_FAIL errors=%0d", errors);',
         '    $finish;',
@@ -201,21 +224,18 @@ def run_xsim(work_dir, rtl_dirs, tb_file, top='tb'):
         for name in sorted(os.listdir(d)):
             (sv if name.endswith('.sv') else v if name.endswith('.v') else []).append(os.path.join(d, name))
 
-    def _run(cmd):
-        return subprocess.run(cmd, shell=True, cwd=work_dir, capture_output=True, text=True, timeout=1800)
+    commands = []
+    if sv:
+        commands.append(['xvlog', '-sv', *sv, tb_file])
+    if v:
+        commands.append(['xvlog', *v])
+    commands += [['xelab', top, '-s', 'rw_sim'], ['xsim', 'rw_sim', '-runall']]
 
     log = ''
-    for cmd in (
-        f'xvlog -sv {" ".join(sv)} {tb_file}' if sv else None,
-        f'xvlog {" ".join(v)}' if v else None,
-        f'xelab {top} -s rw_sim',
-        'xsim rw_sim -runall',
-    ):
-        if cmd is None:
-            continue
-        result = _run(cmd)
-        log += f'$ {cmd}\n{result.stdout}\n{result.stderr}\n'
-        if re.search(r'^ERROR', result.stdout, re.M):
+    for cmd in commands:
+        result = subprocess.run(cmd, cwd=work_dir, capture_output=True, text=True, timeout=600)
+        log += f'$ {" ".join(cmd)}\n{result.stdout}\n{result.stderr}\n'
+        if result.returncode != 0 or re.search(r'^ERROR', result.stdout, re.M):
             return False, log
     return 'RUNTIME_WEIGHTS_PASS' in log, log
 

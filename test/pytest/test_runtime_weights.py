@@ -77,6 +77,22 @@ def _unpack(port, words, n_in, n_out):
     return out
 
 
+@pytest.fixture(scope='module')
+def synthesized_project(tmp_path_factory, synthesis_config):
+    """One tiny Vitis synthesis, shared by every test that needs real RTL.
+
+    Synthesis dominates the runtime of this file, so running it once per test
+    would triple the cost for no additional coverage.
+    """
+    if not synthesis_config['run_synthesis']:
+        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
+
+    path = tmp_path_factory.mktemp('rw_synth')
+    hls_model = _convert_dense_for_build(path)
+    hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
+    return path, 'rw_prj'
+
+
 def test_two_banks_roundtrip(tmp_path):
     """Each bank packs to a distinct image that decodes back to its own weights."""
     manifest = _manifest(tmp_path)
@@ -163,7 +179,7 @@ def test_write_mem_format(tmp_path):
     assert int(lines[0], 16) == words[0]
 
 
-def test_two_banks_rtl_simulation(tmp_path, synthesis_config):
+def test_two_banks_rtl_simulation(synthesized_project, tmp_path):
     """Elaborate the generated wrapper and check numerical output per bank.
 
     This is the gate that pack/unpack round trips cannot provide: it catches a top
@@ -171,12 +187,13 @@ def test_two_banks_rtl_simulation(tmp_path, synthesis_config):
     """
     import runtime_weights_sim as sim
 
-    from hls4ml.contrib.runtime_weights import fingerprint_ip, pack_flat, pack_tensor, package
+    from hls4ml.contrib.runtime_weights import pack_flat, pack_tensor, package
+    from hls4ml.contrib.runtime_weights.package import fingerprint_ip
 
-    if not synthesis_config['run_synthesis']:
-        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
     if not sim.have_xsim():
         pytest.skip('requires xvlog/xelab/xsim')
+
+    project_path, project = synthesized_project
 
     banks_w = _banks()
     banks_b = [
@@ -184,33 +201,14 @@ def test_two_banks_rtl_simulation(tmp_path, synthesis_config):
         [-1.5, 0.75, -0.5, 0.25],
     ]
 
-    # the IP is built with bank 0 baked in; the wrapper must override it at runtime
-    inp = Input(shape=(N_IN,), name='input_1')
-    model = Model(inp, Dense(N_OUT, activation='linear', name='dense_1')(inp))
-    model.get_layer('dense_1').set_weights([banks_w[0].astype(np.float32), np.array(banks_b[0], np.float32)])
-    cfg = hls4ml.utils.config_from_keras_model(
-        model, granularity='model', backend='Vitis', default_precision='ap_fixed<16,6>', default_reuse_factor=2
-    )
-    cfg['Model']['Strategy'] = 'Resource'
-    cfg['Model']['BramFactor'] = 0
-    hls_model = hls4ml.converters.convert_from_keras_model(
-        model,
-        hls_config=cfg,
-        output_dir=str(tmp_path),
-        project_name='rw_prj',
-        backend='Vitis',
-        io_type='io_parallel',
-        part=PART,
-        clock_period=10.0,
-    )
-    hls_model.write()
-    hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
+    # The IP is synthesized once with bank 0 baked in; the wrapper must override
+    # whatever is baked in, so the shared project is reused as-is.
+    before = fingerprint_ip(str(project_path), project)
+    summary = package(str(project_path), n_banks=len(banks_w))
+    assert summary['port_b_verified_unused']
+    assert summary['port_clk_verified_ap_clk']
 
-    before = fingerprint_ip(str(tmp_path), 'rw_prj')
-    summary = package(str(tmp_path), 'rw_prj', n_banks=len(banks_w))
-    assert summary['port_b_proven_unused']
-
-    manifest = json.loads((tmp_path / 'firmware' / 'weights' / 'external_parameters.json').read_text())
+    manifest = json.loads((project_path / 'firmware' / 'weights' / 'external_parameters.json').read_text())
     w_port = next(p for p in manifest['ports'] if p['role'] == 'weight')
     b_port = next(p for p in manifest['ports'] if p['role'] == 'bias')
     w_port = dict(w_port, actual_data_width=w_port['expected_data_width'])
@@ -237,11 +235,15 @@ def test_two_banks_rtl_simulation(tmp_path, synthesis_config):
     )
     passed, log = sim.run_xsim(
         str(tmp_path / 'xsim_work'),
-        [str(tmp_path / 'runtime_weights' / 'rtl'), str(tmp_path / 'rw_prj_prj' / 'solution1' / 'syn' / 'verilog')],
+        [
+            str(project_path / 'runtime_weights' / 'rtl'),
+            str(project_path / f'{project}_prj' / 'solution1' / 'syn' / 'verilog'),
+        ],
         tb,
     )
     assert passed, f'two-bank RTL simulation failed:\n{log[-6000:]}'
-    assert fingerprint_ip(str(tmp_path), 'rw_prj')['combined'] == before['combined']
+    # comparing before and after is what shows the IP was left alone
+    assert fingerprint_ip(str(project_path), project)['combined'] == before['combined']
 
 
 # --- adapter-specific walking-bit tests -------------------------------------
@@ -408,6 +410,8 @@ def test_latch_rejects_out_of_range_bank(tmp_path, synthesis_config):
     """
     import runtime_weights_sim as sim
 
+    if not synthesis_config['run_synthesis']:
+        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
     if not sim.have_xsim():
         pytest.skip('requires xvlog/xelab/xsim')
 
@@ -436,27 +440,46 @@ def test_package_enforces_manifest_contract(tmp_path, field, value, match):
     path.write_text(json.dumps({**good, field: value}))
 
     with pytest.raises(ValueError, match=match):
-        package(str(tmp_path), 'manifest_prj', n_banks=2)
+        # project_name is passed explicitly only so the mismatch case has
+        # something to disagree with; normally it comes from the manifest
+        package(str(tmp_path), n_banks=2, project_name='rw_prj')
 
 
-def test_rtl_port_parsing_is_exhaustive(tmp_path, synthesis_config):
-    """A header port with no declaration must raise, not be silently dropped."""
+def test_rtl_port_parsing_is_exhaustive(tmp_path):
+    """A header port with no declaration must raise, not be silently dropped.
+
+    Uses synthetic Verilog: this checks the parser, not the HLS flow, so it does
+    not justify a synthesis run.
+    """
     from hls4ml.contrib.runtime_weights import interface
 
-    if not synthesis_config['run_synthesis']:
-        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
+    syn = tmp_path / 'p_prj' / 'solution1' / 'syn' / 'verilog'
+    syn.mkdir(parents=True)
+    rtl = syn / 'p.v'
 
-    hls_model = _convert_dense_for_build(tmp_path)
-    hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
+    rtl.write_text(
+        'module p (ap_clk, ap_rst, ap_start, din, dout);\n'
+        'input   ap_clk;\n'
+        'input   ap_rst;\n'
+        'input   ap_start;\n'
+        'input  [15:0] din;\n'
+        'output [7:0] dout;\n'
+        'endmodule\n'
+    )
+    ports = interface.parse_rtl_ports(str(tmp_path), 'p')
+    assert [p['name'] for p in ports] == ['ap_clk', 'ap_rst', 'ap_start', 'din', 'dout']
+    assert next(p for p in ports if p['name'] == 'din')['width'] == 16
+    assert next(p for p in ports if p['name'] == 'dout')['dir'] == 'output'
 
-    ports = interface.parse_rtl_ports(str(tmp_path), 'rw_prj')
-    assert {p['name'] for p in ports} >= {'ap_clk', 'ap_rst', 'ap_start', 'ap_done', 'input_1'}
-    assert all(p['dir'] in ('input', 'output') for p in ports)
-
-    rtl = Path(tmp_path) / 'rw_prj_prj' / 'solution1' / 'syn' / 'verilog' / 'rw_prj.v'
-    rtl.write_text(rtl.read_text().replace('input   ap_start;', ''))
+    # a header port with no declaration
+    rtl.write_text('module p (ap_clk, missing);\ninput ap_clk;\nendmodule\n')
     with pytest.raises(ValueError, match='no declaration found'):
-        interface.parse_rtl_ports(str(tmp_path), 'rw_prj')
+        interface.parse_rtl_ports(str(tmp_path), 'p')
+
+    # inout is not supported by the wrapper
+    rtl.write_text('module p (ap_clk, bidir);\ninput ap_clk;\ninout [3:0] bidir;\nendmodule\n')
+    with pytest.raises(ValueError, match='inout'):
+        interface.parse_rtl_ports(str(tmp_path), 'p')
 
 
 def _convert_dense_for_build(tmp_path):
@@ -482,7 +505,7 @@ def _convert_dense_for_build(tmp_path):
     return hls_model
 
 
-def test_vivado_synthesizes_the_wrapper(tmp_path, synthesis_config):
+def test_vivado_synthesizes_the_wrapper(synthesized_project):
     """Batch-Vivado smoke test: the generated Tcl runs and the wrapper synthesizes.
 
     This is the only check that exercises the Tcl itself, and the only one that
@@ -495,23 +518,19 @@ def test_vivado_synthesizes_the_wrapper(tmp_path, synthesis_config):
 
     from hls4ml.contrib.runtime_weights import package
 
-    if not synthesis_config['run_synthesis']:
-        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
     if shutil.which('vivado') is None:
         pytest.skip('requires vivado')
 
-    hls_model = _convert_dense_for_build(tmp_path)
-    hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
-    package(str(tmp_path), 'rw_prj', n_banks=2)
+    project_path, _ = synthesized_project
+    package(str(project_path), n_banks=2)
 
-    rw = Path(tmp_path) / 'runtime_weights'
+    rw = Path(project_path) / 'runtime_weights'
     result = subprocess.run(
-        'vivado -mode batch -nojournal -nolog -source create_runtime_weights.tcl',
-        shell=True,
+        ['vivado', '-mode', 'batch', '-nojournal', '-nolog', '-source', 'create_runtime_weights.tcl'],
         cwd=str(rw),
         capture_output=True,
         text=True,
-        timeout=3600,
+        timeout=1800,
     )
     assert 'runtime-weights wrapper synthesized' in result.stdout, (
         f'vivado synthesis did not complete:\n{result.stdout[-4000:]}'
