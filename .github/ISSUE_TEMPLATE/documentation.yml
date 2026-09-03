@@ -1,0 +1,47 @@
+name: Documentation issue
+description: Something in the documentation is wrong, missing or unclear
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This covers the documentation at [hls4ml.org](https://fastmachinelearning.org/hls4ml/), the
+        docstrings, and the guidance files in the repository. Corrections are welcome as pull requests too —
+        you do not have to file an issue first.
+
+  - type: input
+    id: location
+    attributes:
+      label: Where
+      description: Page URL, file path, or the function whose docstring is affected.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of problem
+      options:
+        - Incorrect — it says something that is not true
+        - Missing — the topic is not documented
+        - Unclear — correct but hard to follow
+        - Outdated — describes behaviour that has since changed
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: What it says now, and what it should say instead.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: ai_disclosure
+    attributes:
+      label: AI assistance
+      description: See the [contributing guidelines](https://github.com/fastmachinelearning/hls4ml/blob/main/CONTRIBUTING.md#use-of-ai-tools).
+      options:
+        - label: An AI tool helped produce this report, and I have checked its content myself.
+          required: false
