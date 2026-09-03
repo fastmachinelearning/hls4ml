@@ -57,6 +57,9 @@ module parameter_bank #(
   localparam int PHYS_WORDS      = N_BANKS * BANK_STRIDE_WORDS;
   localparam int PHYS_ADDR_WIDTH = (PHYS_WORDS <= 1) ? 1 : $clog2(PHYS_WORDS);
 
+  // Provisional: forces block RAM regardless of depth, which is likely wrong for
+  // shallow banks (a 4-word memory wastes a tile). Revisit with the 2/4/8-bank
+  // post-route characterization before generalizing this into a parameter.
   (* ram_style = "block" *)
   reg [DATA_WIDTH-1:0] mem [0:PHYS_WORDS-1];
 
