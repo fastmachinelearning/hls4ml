@@ -172,6 +172,22 @@ the packager - not re-running HLS.
 A model whose external parameters are not all describable is **refused**: banking
 only some of them would leave the rest as unconnected top-level ports.
 
+Three boundaries are worth knowing:
+
+* **Fully partitioned weights are out of scope by construction**, not by omission.
+  ``Strategy: Latency`` (and ``ARRAY_PARTITION ... complete`` generally) lowers a
+  weight to one port per element with no address, so there is nothing to
+  concatenate a bank id onto. Such a parameter *can* be banked through the same
+  scalar path used for biases, but the selection mux then scales as
+  ``total_weights x n_banks`` and sits in front of the compute - fine for a bias
+  vector, wrong for a weight matrix.
+* **Losing constant folding is inherent to reloadable weights**, not a cost of
+  banking. Once a weight is a function argument rather than a literal, HLS can no
+  longer fold the multiplication into shift-adds, so full multipliers appear
+  whether or not banks are used. ``BramFactor`` alone already pays this.
+* **Selection is idle-time only.** Per-event switching with transactions in
+  flight is a different and harder feature, currently marked as future work.
+
 The number of banks, the memory geometry and the physical capacity are fixed when
 the design is implemented. Changing values within an existing bank requires only
 memory writes; adding a bank, or changing the network, precision or reuse factor,
