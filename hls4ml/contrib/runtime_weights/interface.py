@@ -64,7 +64,11 @@ def parse_addr_shift(project_dir, project_name, port):
     verilog_dir = os.path.join(_solution_dir(project_dir, project_name), 'syn', 'verilog')
     if not os.path.isdir(verilog_dir):
         return None
-    pattern = re.compile(rf"{re.escape(port)}_Addr_A_local\s*=\s*{re.escape(port)}_Addr_A_orig\s*<<\s*\d+'d(\d+)")
+    # The shifted source has different names in different pipeline styles
+    # (<port>_Addr_A_orig with dataflow, a gep temporary with pipeline), so match
+    # any right-hand side. Being too specific here reports a parse failure instead
+    # of whatever the real incompatibility is.
+    pattern = re.compile(rf"assign\s+{re.escape(port)}_Addr_A_local\s*=\s*.+?<<\s*\d+'d(\d+)\s*;")
     for name in sorted(os.listdir(verilog_dir)):
         if not name.endswith('.v'):
             continue
