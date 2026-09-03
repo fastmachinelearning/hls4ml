@@ -74,7 +74,6 @@ module parameter_bank #(
       .HLS_ADDR_WIDTH   (HLS_ADDR_WIDTH),
       .WORD_BYTES       (WORD_BYTES),
       .LOCAL_WORDS      (LOCAL_WORDS),
-      .N_BANKS          (N_BANKS),
       .BANK_ID_WIDTH    (BANK_ID_WIDTH),
       .BANK_STRIDE_WORDS(BANK_STRIDE_WORDS),
       .PHYS_ADDR_WIDTH  (PHYS_ADDR_WIDTH)
@@ -104,9 +103,9 @@ module parameter_bank #(
   assign addr_padding_violation = hls_EN_A & pad_a;
 
   // ---------------- port B : loader ----------------
-  // Writes to the bank currently selected for inference are PROHIBITED, and no
-  // write is accepted while a transaction is in flight. To update the selected
-  // bank, switch selection to another bank first.
+  // Loader writes are accepted only while the wrapper is quiescent; any in-range
+  // bank may be written. Nothing can read the memory while idle, so there is no
+  // active bank to protect.
   // ld_word is $clog2(LOCAL_WORDS) bits, so when LOCAL_WORDS is not a power of two
   // it can encode words that lie in the inter-bank padding. Reject those rather
   // than acknowledging a write that lands nowhere useful.

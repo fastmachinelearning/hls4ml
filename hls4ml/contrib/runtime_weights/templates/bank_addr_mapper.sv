@@ -18,7 +18,6 @@ module bank_addr_mapper #(
     parameter int HLS_ADDR_WIDTH    = 32,
     parameter int WORD_BYTES        = 32,
     parameter int LOCAL_WORDS       = 2,
-    parameter int N_BANKS           = 2,
     parameter int BANK_ID_WIDTH     = 1,
     parameter int BANK_STRIDE_WORDS = 2,
     parameter int PHYS_ADDR_WIDTH   = 2

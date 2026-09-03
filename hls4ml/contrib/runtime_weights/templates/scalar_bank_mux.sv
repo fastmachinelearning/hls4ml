@@ -31,6 +31,7 @@ module scalar_bank_mux #(
     input  wire [$clog2(N_SCALARS > 1 ? N_SCALARS : 2)-1:0] ld_idx,
     input  wire [SCALAR_WIDTH-1:0]  ld_data,
     output wire                     ld_accept,
+    output wire                     ld_reject,
 
     output wire [SCALAR_WIDTH*N_SCALARS-1:0] q_flat
 );
@@ -46,7 +47,10 @@ module scalar_bank_mux #(
   // same policy as parameter_bank: writes only while the wrapper is idle.
   // ld_idx is $clog2(N_SCALARS) bits, so for a non-power-of-two bundle it can
   // encode indices past the end of the array; reject those.
-  assign ld_accept = ld_we & quiescent & (32'(ld_bank) < N_BANKS) & (32'(ld_idx) < N_SCALARS);
+  wire safe = quiescent & (32'(ld_bank) < N_BANKS) & (32'(ld_idx) < N_SCALARS);
+
+  assign ld_accept = ld_we &  safe;
+  assign ld_reject = ld_we & ~safe;
 
   always @(posedge ap_clk) begin
     if (ld_accept) bank_mem[ld_bank][ld_idx] <= ld_data;

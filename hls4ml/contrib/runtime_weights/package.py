@@ -26,6 +26,11 @@ SUPPORTED_SCHEMA_VERSIONS = frozenset({1})
 # hls4ml backend produced the IP; Vivado is still used to implement the result.
 SUPPORTED_BACKENDS = frozenset({'Vitis'})
 
+
+class InterfaceUnsupported(Exception):
+    """The model has an external parameter this version cannot bank."""
+
+
 # The ownership latch drives ap_start/ap_ready directly, so anything else
 # (ap_ctrl_chain, ap_ctrl_none) would be mis-driven rather than merely unsupported.
 REQUIRED_CONTROL_PROTOCOL = 'ap_ctrl_hs'
@@ -39,7 +44,12 @@ def _next_pow2(n):
 
 
 def fingerprint_ip(project_dir, project_name):
-    """SHA-256 over the exported RTL, to prove the compute IP was not modified."""
+    """SHA-256 over the exported RTL.
+
+    This records the state of the IP; on its own it proves nothing about what the
+    IP looked like earlier. Comparing a fingerprint taken before packaging with
+    one taken after is what shows the IP was left alone.
+    """
     verilog = os.path.join(project_dir, f'{project_name}_prj', 'solution1', 'syn', 'verilog')
     entries = []
     for name in sorted(os.listdir(verilog)):
@@ -50,11 +60,11 @@ def fingerprint_ip(project_dir, project_name):
     return {'combined': combined, 'files': entries}
 
 
-# N_BANKS is an overridable parameter, so the bank-id width must track it rather
-# than being fixed at generation time. An ANSI port list cannot reference a
-# localparam declared in the module body, so derive it inline at every use.
-BANK_W = '$clog2(N_BANKS)'
-
+# The bank count is fixed when the wrapper is generated: the packed memory image,
+# runtime_weights.json and the bank stride all encode it, so an elaboration-time
+# override would produce a design inconsistent with its own artifacts. Re-banking
+# costs a packager run, not an HLS run. Both constants are emitted as localparams
+# ahead of the port list so the ports can reference them.
 CONTROL_PORTS = {'ap_clk', 'ap_rst', 'ap_start', 'ap_done', 'ap_ready', 'ap_idle'}
 BRAM_SUFFIXES = [
     'Addr_A',
@@ -115,9 +125,8 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
     f.write('`timescale 1 ns / 1 ps\n')
     f.write('`default_nettype none\n\n')
     f.write(f'module {project_name}_runtime_weights #(\n')
-    f.write(f'    parameter int N_BANKS = {n_banks}')
-    for p in bram:
-        f.write(f',\n    parameter     {p["name"].upper()}_INIT_HEX = ""')
+    init_params = [f'    parameter {p["name"].upper()}_INIT_HEX = ""' for p in bram]
+    f.write(',\n'.join(init_params) if init_params else '    parameter UNUSED = 0')
     f.write('\n) (\n')
 
     lines = [
@@ -126,7 +135,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         '',
         '    // transaction boundary',
         '    input  wire ext_ap_start',
-        f'    input  wire [{BANK_W}-1:0] ext_bank_id',
+        f'    input  wire [{bank_id_width - 1}:0] ext_bank_id',
         '    output wire ext_ap_ready',
         '    output wire ext_ap_done',
         '    output wire ext_bank_id_bad',
@@ -142,7 +151,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         word_bits = max((p['expected_depth'] - 1).bit_length(), 1)
         lines += [
             f'    input  wire ld_{n}_req',
-            f'    input  wire [{BANK_W}-1:0] ld_{n}_bank',
+            f'    input  wire [{bank_id_width - 1}:0] ld_{n}_bank',
             f'    input  wire [{word_bits - 1}:0] ld_{n}_word',
             f'    input  wire [{p["actual_data_width"] - 1}:0] ld_{n}_wdata',
             f'    output wire ld_{n}_accept',
@@ -153,15 +162,16 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         idx_bits = max((p['n_scalars'] - 1).bit_length(), 1)
         lines += [
             f'    input  wire ld_{n}_we',
-            f'    input  wire [{BANK_W}-1:0] ld_{n}_bank',
+            f'    input  wire [{bank_id_width - 1}:0] ld_{n}_bank',
             f'    input  wire [{idx_bits - 1}:0] ld_{n}_idx',
             f'    input  wire [{p["actual_width"] - 1}:0] ld_{n}_data',
             f'    output wire ld_{n}_accept',
+            f'    output wire ld_{n}_reject',
         ]
     lines += [
         '',
         '    // observability',
-        f'    output wire [{BANK_W}-1:0] cur_bank_id',
+        f'    output wire [{bank_id_width - 1}:0] cur_bank_id',
         '    output wire busy',
         '    output wire quiescent',
     ]
@@ -175,8 +185,10 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
             f.write(ln + ('\n' if last else ',\n'))
     f.write(');\n\n')
 
+    f.write(f'  localparam int N_BANKS       = {n_banks};\n')
+    f.write(f'  localparam int BANK_ID_WIDTH = {bank_id_width};\n\n')
     f.write('  wire hls_ap_start, hls_ap_done, hls_ap_idle, hls_ap_ready;\n\n')
-    f.write(f'  bank_select_latch #(.BANK_ID_WIDTH({BANK_W}), .N_BANKS(N_BANKS)) u_latch (\n')
+    f.write('  bank_select_latch #(.BANK_ID_WIDTH(BANK_ID_WIDTH), .N_BANKS(N_BANKS)) u_latch (\n')
     f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst),\n')
     f.write('      .ext_ap_start(ext_ap_start), .ext_bank_id(ext_bank_id),\n')
     f.write('      .ext_ap_ready(ext_ap_ready), .ext_bank_id_bad(ext_bank_id_bad),\n')
@@ -194,7 +206,7 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         f.write(f'  wire [{dw // 8 - 1}:0] {n}_WEN_A;\n')
         f.write(f'  parameter_bank #(.DATA_WIDTH({dw}), .HLS_ADDR_WIDTH({p["actual_addr_width"]}),\n')
         f.write(f'      .WORD_BYTES({p["actual_word_bytes"]}), .LOCAL_WORDS({p["expected_depth"]}),\n')
-        f.write(f'      .N_BANKS(N_BANKS), .BANK_ID_WIDTH({BANK_W}),\n')
+        f.write('      .N_BANKS(N_BANKS), .BANK_ID_WIDTH(BANK_ID_WIDTH),\n')
         f.write(f'      .BANK_STRIDE_WORDS({stride}), .INIT_HEX({n.upper()}_INIT_HEX)) u_{n} (\n')
         f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
         f.write(f'      .hls_Addr_A({n}_Addr_A), .hls_EN_A({n}_EN_A), .hls_WEN_A({n}_WEN_A),\n')
@@ -208,10 +220,11 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         n, w, count = p['name'], p['actual_width'], p['n_scalars']
         f.write(f'  wire [{w * count - 1}:0] {n}_flat;\n')
         f.write(f'  scalar_bank_mux #(.SCALAR_WIDTH({w}), .N_SCALARS({count}),\n')
-        f.write(f'      .N_BANKS(N_BANKS), .BANK_ID_WIDTH({BANK_W})) u_{n} (\n')
+        f.write(f'      .N_BANKS(N_BANKS), .BANK_ID_WIDTH(BANK_ID_WIDTH)) u_{n} (\n')
         f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
         f.write(f'      .ld_we(ld_{n}_we), .ld_bank(ld_{n}_bank), .ld_idx(ld_{n}_idx),\n')
-        f.write(f'      .ld_data(ld_{n}_data), .ld_accept(ld_{n}_accept), .q_flat({n}_flat));\n\n')
+        f.write(f'      .ld_data(ld_{n}_data), .ld_accept(ld_{n}_accept),\n')
+        f.write(f'      .ld_reject(ld_{n}_reject), .q_flat({n}_flat));\n\n')
 
     conns = [
         '.ap_clk(ap_clk)',
@@ -242,13 +255,27 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
     f.write('  );\n\nendmodule\n\n`default_nettype wire\n')
 
 
-def package(project_dir, project_name=None, n_banks=2, output_dir=None):
+def package(project, n_banks=2, output_dir=None, project_name=None):
     """Generate the banked-weight wrapper for a synthesized hls4ml project.
 
-    Returns a dict describing what was written, including the IP fingerprint.
+    Args:
+        project: a ModelGraph, or the path to its output directory. Passing the
+            model is preferred: the output directory and project name then come
+            from it, rather than being guessed.
+        n_banks: how many banks to provision. Fixed in the generated RTL; changing
+            it means re-running this packager, not re-running HLS.
+        output_dir: where to write the wrapper (default ``<project>/runtime_weights``).
+        project_name: only needed when ``project`` is a path and the manifest is
+            somehow unavailable; normally taken from the manifest.
+
+    Returns a dict describing what was written, including a fingerprint of the
+    exported IP.
     """
-    if project_name is None:
-        project_name = os.path.basename(os.path.normpath(project_dir))
+    if hasattr(project, 'config'):  # a ModelGraph
+        project_dir = project.config.get_output_dir()
+        project_name = project_name or project.config.get_project_name()
+    else:
+        project_dir = str(project)
 
     manifest_path = os.path.join(project_dir, 'firmware', 'weights', MANIFEST_FILENAME)
     if not os.path.exists(manifest_path):
@@ -267,8 +294,15 @@ def package(project_dir, project_name=None, n_banks=2, output_dir=None):
 
     if manifest.get('backend') not in SUPPORTED_BACKENDS:
         raise ValueError(f'manifest backend is {manifest.get("backend")!r}, expected one of {sorted(SUPPORTED_BACKENDS)}')
-    if manifest.get('project_name') != project_name:
+
+    # hls4ml's output directory and project name are independent, so the
+    # directory basename is not a usable default. Take it from the manifest.
+    if project_name is None:
+        project_name = manifest.get('project_name')
+    elif manifest.get('project_name') != project_name:
         raise ValueError(f'manifest is for project {manifest.get("project_name")!r}, not {project_name!r}')
+    if not project_name:
+        raise ValueError('manifest does not name a project')
 
     verified, hardware = interface.verify(manifest, project_dir, project_name)
 
@@ -276,8 +310,14 @@ def package(project_dir, project_name=None, n_banks=2, output_dir=None):
         raise interface.InterfaceMismatch(
             f'control protocol is {hardware["control"]!r}; the idle-time wrapper requires {REQUIRED_CONTROL_PROTOCOL!r}'
         )
+    unsupported = [p['name'] for p in manifest['ports'] if p['expected_interface_kind'] is None]
+    if unsupported:
+        raise InterfaceUnsupported(
+            f'no verified adapter for external parameter(s) {unsupported}; banking only some of a '
+            "model's parameters would leave the rest as unconnected top-level ports"
+        )
     if not verified:
-        raise ValueError('manifest describes no ports within schema scope; nothing to bank')
+        raise ValueError('manifest describes no external parameters; nothing to bank')
 
     rtl_ports = interface.parse_rtl_ports(project_dir, project_name)
 
@@ -290,6 +330,14 @@ def package(project_dir, project_name=None, n_banks=2, output_dir=None):
         if not unused:
             raise interface.InterfaceMismatch(
                 f'{port["name"]}: port B is not provably unused by the IP ({evidence}); the loader cannot borrow it'
+            )
+        # The wrapper clocks the banked memory with ap_clk and leaves Clk_A
+        # dangling, which is only sound if the IP ties them together.
+        same_clk, clk_evidence = interface.bram_port_clk_is_ap_clk(project_dir, project_name, port['name'])
+        if not same_clk:
+            raise interface.InterfaceMismatch(
+                f'{port["name"]}: Clk_A is not provably tied to ap_clk ({clk_evidence}); '
+                'the banked memory would be clocked by a different clock'
             )
 
     if n_banks < 2:
@@ -325,8 +373,8 @@ def package(project_dir, project_name=None, n_banks=2, output_dir=None):
         'bank_id_width': bank_id_width,
         'control_protocol': hardware['control'],
         'bank_selection': 'idle-time (bank committed before ap_start, held to ap_done)',
-        'port_b_proven_unused': True,
-        'port_clk_proven_ap_clk': True,
+        'port_b_verified_unused': True,
+        'port_clk_verified_ap_clk': True,
         'passthrough_ports': [p['name'] for p in _classify_ports(rtl_ports, verified)],
         'banked_ports': [
             {
@@ -340,7 +388,7 @@ def package(project_dir, project_name=None, n_banks=2, output_dir=None):
             }
             for p in verified
         ],
-        'stock_ip_sha256': fingerprint_ip(project_dir, project_name),
+        'exported_ip_sha256': fingerprint_ip(project_dir, project_name),
     }
     with open(os.path.join(output_dir, 'runtime_weights.json'), 'w') as fh:
         json.dump(summary, fh, indent=2)
