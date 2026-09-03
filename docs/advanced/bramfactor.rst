@@ -102,16 +102,17 @@ Runtime-selected weight banks
 ``hls4ml.contrib.runtime_weights`` builds on the manifest to give a synthesized
 design several pre-provisioned weight banks, selected per inference, without
 resynthesizing the HLS IP. **This version supports the Vitis backend only.** It
-runs *after* ``build(synth=True)`` and only reads the generated project - the
-compute IP is never modified, and the summary includes a hash of its RTL so this
-can be verified.
+runs *after* ``build(synth=True)`` and only reads the generated project, so the
+compute IP is never modified. The summary records a fingerprint of the exported
+RTL; comparing one taken before packaging with one taken after is what shows the
+IP was left alone.
 
 .. code-block:: Python
 
     from hls4ml.contrib.runtime_weights import package
 
     hls_model.build(csim=False, synth=True)
-    summary = package(output_dir, n_banks=2)
+    summary = package(hls_model, n_banks=2)
 
 This writes a ``runtime_weights/`` directory containing a generated top level that
 instantiates the unmodified IP alongside banked storage per supported parameter
@@ -126,11 +127,8 @@ Bank images are produced with the same package:
     image, stride = build_bank_image(port, [bank0_weights, bank1_weights])
     write_mem("w2_banks.mem", image, port["expected_data_width"])
 
-The packer is layer-agnostic: ``pack_flat`` consumes a flat scalar sequence and
-the declared ``layout``, and ``flatten`` applies the declared axis permutation. A
-layer whose order is not a permutation of its tensor axes would name an adapter in
-``flat_order['adapter']``; none is implemented yet, and such a manifest is
-rejected rather than packed by the permutation path.
+Packing is driven by the manifest's structured ``flat_order`` and ``layout``.
+Ports without both are rejected.
 
 The image is bound to the wrapper through the generated top's per-port
 ``<PORT>_INIT_HEX`` parameter, which is read with ``$readmemh`` at elaboration:
@@ -157,7 +155,22 @@ not supported, which gives up any back-to-back capability the IP may have.
 Any valid bank may be written while idle; all writes are rejected while an
 inference is active. Out-of-range bank ids, word addresses and scalar indices are
 rejected too, so a write is either performed or reported as refused on
-``ld_<port>_reject``.
+``ld_<port>_reject`` - never silently dropped.
+
+Each banked parameter gets its own loader port on the generated top. A BRAM port
+takes ``ld_<p>_req``, ``ld_<p>_bank``, ``ld_<p>_word`` and ``ld_<p>_wdata``; a
+scalar bundle takes ``ld_<p>_we``, ``ld_<p>_bank``, ``ld_<p>_idx`` and
+``ld_<p>_data``. Both report ``ld_<p>_accept`` and ``ld_<p>_reject``. To reload a
+bank: wait for ``quiescent``, drive one write per word or scalar while checking
+``ld_<p>_accept``, then select that bank on a later inference through
+``ext_bank_id``.
+
+The bank count is fixed when the wrapper is generated, since the packed image,
+the bank stride and the generated RTL all encode it. Changing it means re-running
+the packager - not re-running HLS.
+
+A model whose external parameters are not all describable is **refused**: banking
+only some of them would leave the rest as unconnected top-level ports.
 
 The number of banks, the memory geometry and the physical capacity are fixed when
 the design is implemented. Changing values within an existing bank requires only
