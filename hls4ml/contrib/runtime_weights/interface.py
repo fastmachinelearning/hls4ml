@@ -10,6 +10,10 @@ not reported.
 import os
 import re
 
+# A fully partitioned parameter lowers to plain input ports with no handshake.
+# Anything else would need its own wrapper treatment.
+EXPECTED_SCALAR_MODE = 'ap_none'
+
 
 class InterfaceMismatch(Exception):
     """The synthesized interface disagrees with the manifest."""
@@ -132,9 +136,15 @@ def verify(manifest, project_dir, project_name):
             )
 
         elif kind == 'scalar_bundle':
-            members = sorted(p for p in hardware['scalar'] if re.fullmatch(rf'{re.escape(name)}_\d+', p))
-            if len(members) != port['n_scalars']:
-                problems.append(f'{name}: found {len(members)} scalar ports, expected {port["n_scalars"]}')
+            # Require exactly <name>_0 .. <name>_N-1: a matching count is not
+            # enough, since a gap plus an extra index would also count correctly.
+            expected_members = [f'{name}_{i}' for i in range(port['n_scalars'])]
+            members = sorted(
+                (p for p in hardware['scalar'] if re.fullmatch(rf'{re.escape(name)}_\d+', p)),
+                key=lambda p: int(p.rsplit('_', 1)[1]),
+            )
+            if members != expected_members:
+                problems.append(f'{name}: scalar ports are {members}, expected {expected_members}')
                 continue
             modes = {hardware['scalar'][m][0] for m in members}
             widths = {hardware['scalar'][m][1] for m in members}
@@ -142,6 +152,9 @@ def verify(manifest, project_dir, project_name):
                 problems.append(f'{name}: scalar ports disagree (modes={sorted(modes)}, widths={sorted(widths)})')
                 continue
             mode, bits = modes.pop(), widths.pop()
+            if mode != EXPECTED_SCALAR_MODE:
+                problems.append(f'{name}: scalar interface mode is {mode!r}, expected {EXPECTED_SCALAR_MODE!r}')
+                continue
             if bits != port['expected_data_width']:
                 problems.append(f'{name}: scalar width {bits} but manifest expected {port["expected_data_width"]}')
                 continue

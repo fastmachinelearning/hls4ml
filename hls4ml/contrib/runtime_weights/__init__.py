@@ -19,20 +19,16 @@ Deliberately out of scope: AXI and board support, drivers, a C++ wrapper, any
 automatic change to ``BramFactor``, and overlapping transactions.
 """
 
-from hls4ml.contrib.runtime_weights.interface import InterfaceMismatch, verify  # noqa: F401
+from hls4ml.contrib.runtime_weights.interface import InterfaceMismatch  # noqa: F401
 from hls4ml.contrib.runtime_weights.pack import (  # noqa: F401
     PackingUnsupported,
     build_bank_image,
-    flatten,
     pack_flat,
     pack_tensor,
-    quantize,
-    quantize_port,
     write_mem,
 )
-from hls4ml.contrib.runtime_weights.package import (  # noqa: F401
-    EXPECTED_SCHEMA,
-    SUPPORTED_SCHEMA_VERSIONS,
-    fingerprint_ip,
-    package,
-)
+from hls4ml.contrib.runtime_weights.package import InterfaceUnsupported, package  # noqa: F401
+
+# Internal helpers (interface.verify, pack.quantize_port, package.fingerprint_ip,
+# the schema constants) are deliberately not re-exported: import them from their
+# module if you need them.
