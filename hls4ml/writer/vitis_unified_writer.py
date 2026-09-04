@@ -788,7 +788,7 @@ fi
         self.sanity_check(model, is_multigraph)
 
         self._set_unified_config(model)
-        super().write_hls(model, is_multigraph=False)
+        super().write_hls(model)
         self.write_nnet_utils_unified_overrides(model)
         self.write_wrapper(model)
         self._ensure_export_path(model)
