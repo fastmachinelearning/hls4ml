@@ -171,6 +171,7 @@ class VivadoBackend(FPGABackend):
             'vivado:inplace_stream_flatten',
             'vivado:skip_softmax',
             'vivado:fix_softmax_table_size',
+            'vivado:materialize_softmax_tables',
             'infer_precision_types',
             'vivado:distributed_arithmetic_codegen',
             'vivado:distributed_arithmetic_einsum_codegen',
