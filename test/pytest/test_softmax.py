@@ -20,7 +20,7 @@ def generate_data(input_shape):
 
 
 @pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
-@pytest.mark.parametrize('backend', ['Vitis', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax', 'legacy'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
@@ -110,7 +110,7 @@ def test_softmax(
 
 
 @pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
-@pytest.mark.parametrize('backend', ['Vitis', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_skipped(test_case_id, softmax_impl, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
