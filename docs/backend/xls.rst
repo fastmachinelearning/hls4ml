@@ -31,6 +31,7 @@ hls4ml calls XLS compiler to convert DSLX into `XLS IR <https://google.github.io
 Then, hls4ml uses `XLS Codegen <https://google.github.io/xls/codegen_options/>`_ to generate (System)Verilog (``<ProjectName>.sv``) from IR.
 
 You can override default codegen options:
+
 .. code-block:: python
 
     config = hls4ml.utils.config_from_keras_model(model)

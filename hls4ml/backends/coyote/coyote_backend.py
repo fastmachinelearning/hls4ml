@@ -18,6 +18,7 @@ class CoyoteBackend(VitisBackend):
     Currently, this backend supports batched inference of a single model on hardware.
     In the future, it can easily be extended with the following capabilities, leveraging
     Coyote's features:
+
         - Distributed inference
         - Multiple parallel instances of hls4ml models (same or distinct models)
         - Dynamic, run-time reconfiguration of models

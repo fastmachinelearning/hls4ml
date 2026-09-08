@@ -20,7 +20,7 @@ PQuantML enables efficient deployment of compact neural networks on resource-con
 
 
 Key Characteristics
-------------
+-------------------
 
   - **Joint Quantization + Pruning**: Combine bit-width reduction with structured pruning.
   - **Flexible Precision Control**: Per-layer and mixed-precision configuration.
