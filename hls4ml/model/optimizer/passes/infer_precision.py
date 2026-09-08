@@ -90,6 +90,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         if node_class in ['PReLU']:
             return self._infer_prelu_act_precision(node, types_to_infer)
+
+        if node_class in ['Softmax']:
+            return self._infer_softmax_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -602,6 +605,66 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             node.weights['param'].update_precision(node.types['param_t'].precision)
 
             inferred_types.append('param_t')
+
+        return inferred_types
+
+    def _infer_softmax_precision(self, node, types_to_infer):
+        inferred_types = []
+
+        if 'exp_table_t' in types_to_infer:
+            if node.get_attr('implementation') == 'stable':
+                # this is <= 1
+                prec = FixedPrecisionType(
+                    16, 1, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+                )
+            else:
+                prec = FixedPrecisionType(
+                    18, 8, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+                )
+            node.types['exp_table_t'].precision = prec
+            inferred_types.append('exp_table_t')
+
+        if 'inv_table_t' in types_to_infer:
+            # this is <= 1
+            prec = FixedPrecisionType(
+                16, 1, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+            )
+            node.types['inv_table_t'].precision = prec
+            inferred_types.append('inv_table_t')
+
+        if 'accum_t' in types_to_infer:
+            exp_w = node.types['exp_table_t'].precision.width
+            exp_i = node.types['exp_table_t'].precision.integer
+            exp_s = node.types['exp_table_t'].precision.signed
+            n_slice = node.get_attr('n_in') // node.get_attr('n_inner') // node.get_attr('n_outer')
+            ceillog = math.ceil(np.log2(n_slice))
+            node.types['accum_t'].precision = FixedPrecisionType(exp_w + ceillog, exp_i + ceillog, signed=exp_s)
+            inferred_types.append('accum_t')
+
+        if 'inv_inp_t' in types_to_infer:
+            # if not set, just choose the accumulator type
+            node.types['inv_inp_t'].precision = node.types['accum_t'].precision
+            if node.model.config.backend.name == 'oneAPI':
+                # TODO - Can introduce this on onther backends since it benefits from only using required number of bits
+                # for the integer part. + 1 is for guarding
+                node.types['inv_inp_t'].precision.integer = 1 + math.ceil(math.log2(max(node.get_input_variable().shape)))
+            inferred_types.append('inv_inp_t')
+
+        if 'inp_norm_t' in types_to_infer:
+            in_type = node.get_input_variable().type.precision
+            if node.model.config.backend.name == 'oneAPI':
+                inp_norm_width = in_type.width
+                inp_norm_int = in_type.integer
+            else:
+                inp_norm_width = in_type.width - in_type.signed
+                inp_norm_int = in_type.integer - in_type.signed
+            node.types['inp_norm_t'].precision = FixedPrecisionType(inp_norm_width, inp_norm_int, signed=False)
+            inferred_types.append('inp_norm_t')
+
+        if 'result_t' in types_to_infer:
+            # if not set, just choose the inv_table_t type
+            node.types['result_t'].precision = node.types['inv_table_t'].precision
+            inferred_types.append('result_t')
 
         return inferred_types
 

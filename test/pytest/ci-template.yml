@@ -28,7 +28,7 @@
     - chmod +x cmd_vitis_${VITIS_VERSION}/vitis-run
     - export PATH=$PWD/cmd_vitis_${VITIS_VERSION}:$PATH
 
-    # Load Intel oneAPI environment variables
+    # Load Intel oneAPI environment variables for the Altera backend
     - source /opt/intel/oneapi/setvars.sh --force
   script:
     - cd test/pytest
