@@ -4,12 +4,14 @@ User-facing guide: `docs/advanced/bramfactor.rst`. This file covers how the feat
 works and what it takes to extend it.
 
 Post-export packaging only: the generated project is read, never modified, and the
-summary carries a SHA-256 fingerprint of the exported compute artifacts to show it.
+summary records a SHA-256 fingerprint of the exported compute artifacts; comparing
+one taken before packaging with one taken after is what establishes it.
 
 ## Manifest
 
 `BramFactor` makes the writer emit `firmware/weights/external_parameters.json`
-(schema `hls4ml.external_parameter_manifest/v1`), one entry per external parameter:
+(schema `hls4ml.external_parameter_manifest/v1`), one entry per external parameter.
+For example, a 1-D Dense weight entry is:
 
 ```json
 {"name": "w2", "layer": "dense_1", "role": "weight",
@@ -59,8 +61,9 @@ class, not the origin. It still checks `filt_width`/`filt_height` and the
 3. Register it in `_ADAPTERS`.
 4. Add a two-bank XSim test that shows switching banks changes the result.
 
-No RTL or wrapper change should be needed. If one is, the memory contract has been
-broken rather than extended.
+A layer that satisfies an existing verified memory contract should need only an
+adapter and tests. A genuinely different interface needs a new contract rather than
+being forced into an existing one.
 
 ## Widths: logical, physical, stride
 
@@ -84,8 +87,9 @@ logical→physical explicitly; nothing relies on implicit Verilog width extensio
 `verify()` resolves each parameter's signals against the real port list and returns
 the names; `package.py` consumes them and never rebuilds a name. It also checks
 every signal's direction, the scalar-bundle members, and that the IP is
-**read-only** on each memory (`WEN_A`, `WEN_B`, `Din_A`, `Din_B` all tied off) —
-which is what makes sharing a port with the loader sound. Whether the IP *reads*
+**read-only** on each memory (`WEN_A` and `WEN_B` proved inactive) — which is what
+makes sharing a port with the loader sound. `Din`/`WEN` are then left dangling, so
+the read interface (`Addr`, `EN`, `Dout`) is what the width checks use. Whether the IP *reads*
 port B is deliberately not checked: Dense leaves it idle, pointwise uses it.
 
 `solution_verilog_dir()` is the single place the Vitis project layout appears.

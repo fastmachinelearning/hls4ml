@@ -1,26 +1,10 @@
-"""Runtime-selected weight banks for a stock hls4ml IP.
+"""Runtime-selected parameter banks for synthesized hls4ml designs.
 
-Post-export packaging only: the generated HLS compute IP is read, never modified,
-and its exported compute artifacts stay byte-identical (verified by the
-fingerprint in the summary).
+The compute IP is left unchanged: this package reads an already-synthesized project
+and generates bank storage plus a wrapper around it.
 
-Typical use, after ``hls_model.build(synth=True)`` on a project written with
-``BramFactor`` set::
-
-    from hls4ml.contrib.runtime_weights import package
-
-    summary = package('my-hls-test', n_banks=2)
-
-``pack_banks`` turns one complete parameter set per bank into the memory images the
-wrapper expects; ``pack_tensor`` / ``build_bank_image`` are the primitives under it.
-
-Bank selection is idle-time only: ``bank_id`` is captured when the wrapper takes a
-request, made stable before ``ap_start`` rises, and held through ``ap_done``. Any
-valid bank may be written while idle; all writes are rejected while an inference
-is active.
-
-Deliberately out of scope: AXI and board support, drivers, a C++ wrapper, any
-automatic change to ``BramFactor``, and overlapping transactions.
+See ``docs/advanced/bramfactor.rst`` for usage, and this package's README.md for the
+manifest, the adapter model and how to add a layer.
 """
 
 from hls4ml.contrib.runtime_weights.interface import InterfaceMismatch  # noqa: F401

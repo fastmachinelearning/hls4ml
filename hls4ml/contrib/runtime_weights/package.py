@@ -192,17 +192,16 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         # declared at the PHYSICAL width the IP drives, not the logical word width:
         # parameter_bank pads between the two explicitly
         f.write(f'  wire [{p["actual_addr_width"] - 1}:0] {sig["addr_a"]}, {sig["addr_b"]};\n')
-        f.write(f'  wire {sig["en_a"]}, {sig["en_b"]}, {sig["clk_a"]}, {sig["rst_a"]};\n')
-        f.write(f'  wire [{pw - 1}:0] {sig["din_a"]}, {sig["dout_a"]}, {sig["dout_b"]};\n')
-        f.write(f'  wire [{pw // 8 - 1}:0] {sig["wen_a"]};\n')
+        f.write(f'  wire {sig["en_a"]}, {sig["en_b"]}, {sig["rst_a"]};\n')
+        f.write(f'  wire [{pw - 1}:0] {sig["dout_a"]}, {sig["dout_b"]};\n')
         f.write(f'  parameter_bank #(.DATA_WIDTH({dw}), .PORT_WIDTH({pw}),\n')
         f.write(f'      .HLS_ADDR_WIDTH({p["actual_addr_width"]}),\n')
         f.write(f'      .WORD_BYTES({p["actual_addr_stride"]}), .LOCAL_WORDS({p["expected_depth"]}),\n')
         f.write('      .N_BANKS(N_BANKS), .BANK_ID_WIDTH(BANK_ID_WIDTH),\n')
         f.write(f'      .BANK_STRIDE_WORDS({stride}), .INIT_HEX({n.upper()}_INIT_HEX)) u_{n} (\n')
         f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
-        f.write(f'      .hls_Addr_A({sig["addr_a"]}), .hls_EN_A({sig["en_a"]}), .hls_WEN_A({sig["wen_a"]}),\n')
-        f.write(f'      .hls_Din_A({sig["din_a"]}), .hls_Dout_A({sig["dout_a"]}), .hls_Rst_A({sig["rst_a"]}),\n')
+        f.write(f'      .hls_Addr_A({sig["addr_a"]}), .hls_EN_A({sig["en_a"]}),\n')
+        f.write(f'      .hls_Dout_A({sig["dout_a"]}), .hls_Rst_A({sig["rst_a"]}),\n')
         f.write(f'      .hls_Addr_B({sig["addr_b"]}), .hls_EN_B({sig["en_b"]}), .hls_Dout_B({sig["dout_b"]}),\n')
         f.write(f'      .ld_req(ld_{n}_req), .ld_bank(ld_{n}_bank), .ld_word(ld_{n}_word),\n')
         f.write(f'      .ld_wdata(ld_{n}_wdata),\n')
@@ -234,12 +233,11 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         # Both ports go to the IP as read ports; the bank lends port B to the
         # loader while quiescent. A layer that ignores port B just leaves EN_B low,
         # so this wiring is identical for every layer.
-        for role in ('addr_a', 'en_a', 'din_a', 'dout_a', 'wen_a', 'clk_a', 'rst_a'):
+        for role in ('addr_a', 'en_a', 'dout_a', 'rst_a', 'addr_b', 'en_b', 'dout_b'):
             conns.append(f'.{sig[role]}({sig[role]})')
-        for role in ('addr_b', 'en_b', 'dout_b'):
-            conns.append(f'.{sig[role]}({sig[role]})')
-        # the IP never writes the memory (interface.bram_is_read_only)
-        for role in ('din_b', 'wen_b', 'clk_b', 'rst_b'):
+        # Din/WEN are left dangling: the IP never writes (interface.bram_is_read_only),
+        # and both clocks are ap_clk (interface.bram_ports_use_ap_clk).
+        for role in ('din_a', 'wen_a', 'clk_a', 'din_b', 'wen_b', 'clk_b', 'rst_b'):
             conns.append(f'.{sig[role]}()')
     for p in scalar:
         n, w = p['name'], p['actual_width']
@@ -336,12 +334,12 @@ def package(project, n_banks=2, output_dir=None):
                 f'{port["name"]}: the IP is not provably read-only on this memory ({evidence}); '
                 'the loader cannot share a port with it'
             )
-        # The wrapper clocks the banked memory with ap_clk and leaves Clk_A
-        # dangling, which is only sound if the IP ties them together.
-        same_clk, clk_evidence = interface.bram_port_clk_is_ap_clk(project_dir, project_name, signals)
+        # The wrapper clocks the banked memory with ap_clk and leaves both port
+        # clocks dangling, which is only sound if the IP ties them together.
+        same_clk, clk_evidence = interface.bram_ports_use_ap_clk(project_dir, project_name, signals)
         if not same_clk:
             raise interface.InterfaceMismatch(
-                f'{port["name"]}: Clk_A is not provably tied to ap_clk ({clk_evidence}); '
+                f'{port["name"]}: both port clocks must be ap_clk ({clk_evidence}); '
                 'the banked memory would be clocked by a different clock'
             )
 
