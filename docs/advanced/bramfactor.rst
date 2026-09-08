@@ -2,10 +2,7 @@
 Loading weights from external BRAM
 ==================================
 
-.. note::
-    This feature is being evaluated for re-implementation. We welcome feedback from users how to make the implementation more flexible.
-
-``hls4ml`` can optionally store weights in BRAMs external to the design. This is supported in Vivado/Vitis and Catapult backends. It is the responsibility of the user to ensure the weights are properly loaded during the operation of the design.
+``hls4ml`` can optionally store weights in BRAMs external to the design, so the surrounding FPGA design can supply or replace them without regenerating the HLS compute logic. This is supported in Vivado/Vitis and Catapult backends. It is the responsibility of the user to ensure the weights are properly loaded during the operation of the design.
 
 The feature works as a threshold, exposed through a ``BramFactor`` config parameter. Layers with more weights above the threshold will be exposed as BRAM interface. Consider the following code:
 
@@ -39,101 +36,170 @@ Having set ``BramFactor=100``, only layers with more than 100 weights will be ex
         #pragma HLS INTERFACE bram port=w2,w4
         ...
 
-When integrating the design, users can use the exposed interface to implement weight reloading scheme.
+When integrating the design, users can use the exposed interface to implement weight reloading scheme. Supplying and driving those raw interfaces is otherwise left to the surrounding design; the rest of this page describes tooling that does it for a supported subset.
 
 Runtime-selected weight banks
 =============================
 
-``hls4ml.contrib.runtime_weights`` gives a synthesized design several resident
-weight banks, selected per inference, without re-running HLS. It runs *after*
-``build(synth=True)``, reads the generated project and writes a wrapper around it;
-the compute IP is never modified.
+``hls4ml.contrib.runtime_weights`` allows several trained parameter sets of the
+same network to reside on the FPGA at once. A bank is selected for each inference
+without re-running HLS or modifying the synthesized compute IP.
 
-Enabling it
------------
+A typical use case is one network architecture trained for several operating
+conditions, configurations, or deployment modes.
 
-The parameters you want to switch must be outside the compute IP, so set
-``BramFactor`` and ``Strategy: Resource`` before conversion::
+End-to-end example
+------------------
+
+Assume three trained model variants with the same architecture::
+
+    model_a
+    model_b
+    model_c
+
+Choose one variant, normally the first, to create the hls4ml model. Parameters that
+should change between variants must be externalized with ``BramFactor``::
 
     config["Model"]["Strategy"] = "Resource"
-    config["Model"]["BramFactor"] = 0       # 0 externalizes every parameter
+    config["Model"]["BramFactor"] = 0
 
-``hls4ml`` then also writes ``firmware/weights/external_parameters.json``, the
-manifest describing each external parameter. It is the contract everything below
-consumes.
-
-Packaging
----------
-
-::
-
-    from hls4ml.contrib.runtime_weights import pack_banks, package
-
+    hls_model = ...
     hls_model.build(csim=False, synth=True)
-    summary = package(hls_model, n_banks=4)
 
-``package()`` inspects the synthesized interface, checks it against the manifest,
-and writes ``runtime_weights/``: a generated top that instantiates the unmodified
-IP alongside banked storage, the parameterized RTL, and a Vivado Tcl script. It
-fails rather than guessing if anything disagrees.
+The HLS design is synthesized only once.
 
-Filling the banks
------------------
+Next, generate a wrapper with the required number of resident banks::
 
-``pack_banks()`` takes one **complete** parameter set per bank, keyed by
-``(layer, role)``::
+    from hls4ml.contrib.runtime_weights import package
 
-    images = pack_banks(hls_model, [params_a, params_b, params_c])
+    summary = package(hls_model, n_banks=3)
 
-Only parameters ``BramFactor`` externalized may differ between banks; every other
-parameter is compiled into the IP and must be identical in all of them. Passing the
-model rather than the manifest lets ``pack_banks`` see the full parameter list, so a
-fixed parameter that *disagrees* and one that is merely *missing* are both reported.
-All externalized parameters share one ``bank_id``: banks switch as a whole, never
-per layer.
+``package()`` checks the synthesized parameter interfaces and writes a
+``runtime_weights/`` design containing the original compute IP together with the
+banked parameter storage.
 
-Tensors use hls4ml's declared layout for the parameter -- for a Dense kernel that is
-``(n_in, n_out)``, the Keras orientation. A PyTorch ``nn.Linear.weight`` is its
-transpose and must be transposed first. Shapes are checked exactly.
+Preparing the banks
+-------------------
 
-``pack_tensor``, ``build_bank_image`` and ``write_mem`` are the per-port primitives
-underneath, for callers that want one port at a time.
+Provide one complete parameter set for each trained model variant. Each parameter
+set is keyed by ``(layer, role)``::
 
-Selecting a bank
-----------------
+    params_a = {
+        ("dense_1", "weight"): weights_a,
+        ("dense_1", "bias"): bias_a,
+        ("dense_2", "weight"): common_weights,
+        ("dense_2", "bias"): common_bias,
+    }
 
-Selection is **idle-time only**. The wrapper takes a request only while the IP
-reports ``ap_idle``, captures ``bank_id`` before raising ``ap_start``, and holds it
-for the whole transaction. An out-of-range id is rejected and starts nothing.
+    params_b = {...}
+    params_c = {...}
 
-Any bank may be written while idle; every write is rejected while an inference is
-active, and reported on ``ld_<port>_reject`` rather than dropped. A BRAM port takes
-``ld_<p>_req/_bank/_word/_wdata``; a scalar bundle takes
-``ld_<p>_we/_bank/_idx/_data``. Both report ``_accept`` and ``_reject``.
+Pack all variants together::
 
-A bank is usable once *all* of its parameters have been loaded. Weight memories can
-also be preloaded at elaboration through a ``<PORT>_INIT_HEX`` parameter; scalar
-bundles have no such path in v1 and are loader-only.
+    from hls4ml.contrib.runtime_weights import pack_banks
 
-Sample outputs on their own ``ap_vld``. The wrapper passes the IP's port-level
-validity signals through unchanged, and with more than one output head the slower
-one can assert valid after ``ap_done``.
+    images = pack_banks(
+        hls_model,
+        [params_a, params_b, params_c],
+    )
+
+Each dictionary must contain the complete model parameter set.
+
+Only parameters externalized by ``BramFactor`` may differ between banks.
+Parameters that remain compiled into the compute IP must be identical in every
+variant. ``pack_banks()`` checks both conditions and rejects incomplete or
+incompatible parameter sets.
+
+``hls_model`` must be the model used to build the synthesized IP, normally
+corresponding to bank 0.
+
+Dense layers over rank-1, rank-2 and rank-3 inputs are supported. Parameter shapes
+are checked exactly rather than silently reshaped.
+
+Selecting a bank at runtime
+---------------------------
+
+Each bank has an integer id::
+
+    0  -> parameter set A
+    1  -> parameter set B
+    2  -> parameter set C
+
+For each inference, provide the desired ``ext_bank_id`` together with the normal
+start request.
+
+The wrapper samples ``ext_bank_id`` when the request is accepted and stores it
+internally for the complete inference. Therefore ``ext_bank_id`` does not need to
+remain unchanged while the inference is running; changing it only affects a later
+request.
+
+A controller may choose the bank from any external condition or configuration::
+
+    if condition_a:
+        bank_id = 0
+    elif condition_b:
+        bank_id = 1
+    else:
+        bank_id = 2
+
+    if ext_ap_ready:
+        ext_bank_id = bank_id
+        ext_ap_start = 1
+
+No fixed number of clock cycles needs to be known. A new request is issued when
+``ext_ap_ready`` indicates that the wrapper can accept it.
+
+Updating bank contents
+----------------------
+
+Already initialized banks can be selected from inference to inference without
+rewriting their contents.
+
+Bank contents may also be updated while the design is quiescent. Loader writes
+during an active inference are rejected. Use ``quiescent`` when deciding whether
+memory contents may be modified.
+
+BRAM-backed parameters may also be preloaded when the wrapper is built. Other
+external parameters are initialized through the generated loader interface.
+
+Output handling
+---------------
+
+The wrapper preserves the synthesized IP's output-valid signals. Each output should
+therefore be sampled using its corresponding ``ap_vld`` signal rather than assuming
+that every output becomes valid on ``ap_done``.
+
+API summary
+-----------
+
+``package(hls_model, n_banks)``
+    Wrap an already-synthesized hls4ml design with ``n_banks`` resident parameter
+    banks.
+
+``pack_banks(hls_model, banks)``
+    Validate complete model parameter sets and pack the parameters that were
+    externalized by ``BramFactor``.
+
+The lower-level packing functions and the generated loader/RTL interfaces are
+intended for integration and advanced use. Their details are documented in
+``hls4ml/contrib/runtime_weights/README.md``.
 
 Scope and limitations
 ---------------------
 
-Supported: the **Vitis** backend, ``io_parallel``, ``Strategy: Resource``, and
-``Dense``, ``PointwiseConv1D`` and ``PointwiseConv2D`` layers. The pointwise classes
-are where a ``Dense`` over a 2-D or 3-D input lands, so those are covered too.
+This version supports:
 
-* ``ap_fixed`` with ``TRN``/``WRAP`` only; other rounding or saturation is refused.
-* Reuse factor must leave the memory more than one word deep, and a packed word
-  must not exceed 4096 bits.
-* The bank count is fixed when the wrapper is generated. Changing it is a packager
-  run, not an HLS run.
-* Overlapping transactions are not supported.
-* No AXI, board support, drivers, or automatic ``BramFactor`` selection.
+* the Vitis backend;
+* ``io_parallel``;
+* ``Strategy: Resource``;
+* ``Dense`` layers over rank-1, rank-2 and rank-3 inputs;
+* ``ap_fixed`` parameters using ``TRN``/``WRAP`` quantization;
+* idle-time bank updates and one inference in flight at a time.
 
-Anything outside this is refused, not approximated: the manifest claims no layout
-for it and ``package()`` raises. See ``hls4ml/contrib/runtime_weights/README.md``
-for the implementation and for how to add a layer.
+For Dense weights, reuse factor 1 is unsupported, and packed words wider than
+4096 bits are outside the verified v1 scope. The bank count is fixed by `package()`; changing it requires regenerating the
+wrapper, not re-running HLS. AXI integration, board drivers and automatic `BramFactor` selection are not
+provided. Unsupported layouts are rejected rather than inferred.
+
+Implementation details are documented in
+`hls4ml/contrib/runtime_weights/README.md`.

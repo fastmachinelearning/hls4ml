@@ -160,19 +160,16 @@ def build_bank_image(port, banks, bank_stride_words=None):
     return image, stride
 
 
-def _parameter_inventory(project):
-    """All (layer, role) parameter keys of a ModelGraph, or None for a bare path."""
-    if not hasattr(project, 'get_layers'):
-        return None
-    return {(layer.name, role) for layer in project.get_layers() for role in getattr(layer, 'weights', {})}
+def _parameter_inventory(model):
+    """All (layer, role) parameter keys of a ModelGraph."""
+    return {(layer.name, role) for layer in model.get_layers() for role in getattr(layer, 'weights', {})}
 
 
-def _load_manifest(project):
+def _load_manifest(model):
     """Read the external-parameter manifest a written project carries."""
     from hls4ml.writer.external_parameters import MANIFEST_FILENAME
 
-    project_dir = project.config.get_output_dir() if hasattr(project, 'config') else str(project)
-    path = os.path.join(project_dir, 'firmware', 'weights', MANIFEST_FILENAME)
+    path = os.path.join(model.config.get_output_dir(), 'firmware', 'weights', MANIFEST_FILENAME)
     if not os.path.exists(path):
         raise PackingUnsupported(
             f'no manifest at {path}; the project must be written with BramFactor set so that '
@@ -182,7 +179,7 @@ def _load_manifest(project):
         return json.load(fh)
 
 
-def pack_banks(project, banks):
+def pack_banks(model, banks):
     """Pack one complete parameter set per bank into per-port memory images.
 
     ``banks`` is a list of ``{(layer, role): tensor}``, one per bank, covering *every*
@@ -194,45 +191,41 @@ def pack_banks(project, banks):
     Keras orientation. A PyTorch ``nn.Linear.weight`` is its transpose. Shapes are
     checked exactly, so only a square kernel could pass unnoticed.
 
-    ``project`` is a ModelGraph or a written project path; a ModelGraph also gives the
-    full parameter inventory, which is what lets a *missing* fixed parameter be
-    reported rather than ignored.
+    ``model`` is the written ModelGraph -- not a path, because the completeness check
+    above needs its parameter inventory. It must be the model the IP was built from,
+    i.e. one of the supplied variants (normally bank 0); that the *fixed* parameters
+    supplied here match the ones compiled into the IP is the caller's responsibility
+    and is not verified.
 
     Returns ``{port_name: {...}}``: BRAM ports carry ``image`` and
     ``bank_stride_words``, scalar bundles per-bank ``codes``.
     """
+    if not hasattr(model, 'get_layers'):
+        raise PackingUnsupported(f'pack_banks needs a ModelGraph, got {type(model).__name__}')
     if len(banks) < 2:
         raise PackingUnsupported(f'need at least 2 banks, got {len(banks)}')
 
-    manifest = _load_manifest(project)
-    inventory = _parameter_inventory(project)
+    manifest = _load_manifest(model)
+    inventory = _parameter_inventory(model)
     external = {(p['layer'], p['role']): p for p in manifest['ports']}
 
-    missing = [k for k in external for bank in banks if k not in bank]
-    if missing:
-        raise PackingUnsupported(f'every bank must supply each externalized parameter; missing {sorted(set(missing))}')
-
-    supplied = {k for bank in banks for k in bank}
-    if inventory is not None:
-        unknown = supplied - inventory
+    # Each bank has to be complete on its own: a union would let one bank omit a
+    # fixed parameter that another supplies, and there would be no way to tell that
+    # from a parameter that agrees.
+    for i, bank in enumerate(banks):
+        missing = inventory - set(bank)
+        if missing:
+            raise PackingUnsupported(f'bank {i} is not a complete parameter set; missing {sorted(missing)}')
+        unknown = set(bank) - inventory
         if unknown:
-            raise PackingUnsupported(f'not parameters of this model: {sorted(unknown)}')
-        # Without the full set there is no way to tell a fixed parameter that
-        # agrees from one that was simply never supplied.
-        absent = inventory - supplied
-        if absent:
-            raise PackingUnsupported(
-                f'each bank must be a complete parameter set so the fixed parameters can be '
-                f'checked; missing {sorted(absent)}'
-            )
+            raise PackingUnsupported(f'bank {i} has entries that are not parameters of this model: {sorted(unknown)}')
 
     # A fixed parameter lives in the compute IP and cannot vary per bank.
-    differing = []
-    for key in sorted(supplied - set(external), key=str):
-        values = [bank.get(key) for bank in banks]
-        first = np.asarray(values[0])
-        if any(v is None for v in values) or any(not np.array_equal(first, np.asarray(v)) for v in values[1:]):
-            differing.append(key)
+    differing = [
+        key
+        for key in sorted(inventory - set(external), key=str)
+        if any(not np.array_equal(np.asarray(banks[0][key]), np.asarray(bank[key])) for bank in banks[1:])
+    ]
     if differing:
         raise PackingUnsupported(
             f'{differing} are not externalized by BramFactor, so they are fixed in the compute IP, '
@@ -253,7 +246,7 @@ def pack_banks(project, banks):
         else:
             packed[port['name']] = {
                 'kind': port['expected_interface_kind'],
-                'codes': [pack_flat(port, np.asarray(t).ravel().tolist()) for t in tensors],
+                'codes': [pack_tensor(port, t) for t in tensors],
                 'data_width': port['expected_data_width'],
             }
     return packed

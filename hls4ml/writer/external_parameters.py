@@ -1,29 +1,8 @@
-"""Machine-readable description of external parameter ports.
+"""Describe parameters exposed outside the HLS compute IP.
 
-When ``BramFactor`` exposes parameters outside the compute IP, a consumer that
-wants to populate them needs to know two things that only hls4ml knows: the order
-in which it flattened each tensor, and the ``ARRAY_RESHAPE`` its layer templates
-emitted. This module writes both to
-``firmware/weights/external_parameters.json``.
-
-It is *not* only about BRAM: a fully partitioned parameter (a Dense bias, say)
-becomes a bundle of scalar ports rather than a memory, and is described here too.
-
-Design contract
----------------
-hls4ml owns the *logical* scalar ordering and the pragma it emitted. **HLS owns
-the physical interface.** Every geometry field is therefore named ``expected_*``:
-it states what hls4ml asked for, not what was built. Only C/RTL synthesis or
-export establishes the actual geometry, and consumers must cross-check.
-
-Scope
------
-Descriptions come from a registry keyed by
-``(backend, io_type, strategy, layer_class, role)``. The writer sees *every*
-external parameter, including layers whose packing has never been verified, so an
-unregistered combination gets **no** interface kind, geometry or ordering -- only
-a note telling the consumer to classify from the export report. Silence is the
-default; a guess is never emitted.
+The manifest records logical tensor ordering and the expected external interface
+geometry. Synthesized RTL remains authoritative and is verified separately.
+Unsupported layer/interface combinations are left unclaimed.
 """
 
 import json
@@ -35,18 +14,8 @@ SCHEMA_VERSION = 1
 MANIFEST_FILENAME = 'external_parameters.json'
 
 
-# --------------------------------------------------------------------------
-# Dense, Vitis, io_parallel, Resource
-# --------------------------------------------------------------------------
-
-# Kernel variants whose reshape -> (lane, word) mapping is verified against
-# generated RTL and tool-generated co-simulation memory images.
-#
-# dense_resource_rf_gt_nin is deliberately absent: it is unreachable for Dense.
-# nnet_dense_resource.h dispatches to it when (rf > n_in and rf % n_in != 0), but
-# FPGABackend._validate_reuse_factor asserts ((rf % n_in) == 0) or (rf < n_in) --
-# the exact negation -- and init_dense snaps offending values via
-# set_closest_reuse_factor.
+# dense_resource_rf_gt_nin is intentionally unsupported: hls4ml's reuse-factor
+# validation makes this Dense kernel variant unreachable.
 VERIFIED_DENSE_KERNELS = {
     'dense_resource_rf_leq_nin',
     'dense_resource_rf_gt_nin_rem0',
@@ -54,8 +23,7 @@ VERIFIED_DENSE_KERNELS = {
 
 
 # Quantization a packing consumer can actually encode. A layout is claimed only
-# for these; anything else (integer types, rounding/saturation variants) would
-# promise a mapping that cannot be reproduced, so it is described but unclaimed.
+# for these for now; anything else (int types, rounding/saturation variants) not verified.
 SUPPORTED_ROUNDING = {'TRN'}
 SUPPORTED_SATURATION = {'WRAP'}
 
@@ -189,7 +157,8 @@ def _describe_pointwise_weight(ctx):
     The pointwise path buffers weights internally before the dense multiply, so the
     ``ARRAY_RESHAPE`` never reaches the interface. HLS exposes a plain memory one
     scalar wide and ``n_chan * n_filt`` deep, independent of the reuse factor
-    (verified across reuse factors 2/4/8 and several channel and filter counts).
+    (verified across reuse factors 1/2/8 -- including 1 -- and several channel and
+    filter counts).
 
     hls4ml declares the kernel as ``(filt..., n_chan, n_filt)`` and stores it
     filter-major. A Dense over 2-D/3-D input and a native ``Conv*D`` with a 1-wide

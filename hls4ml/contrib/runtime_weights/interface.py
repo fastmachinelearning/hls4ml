@@ -45,6 +45,13 @@ BRAM_SIGNAL_DIRS = {
     'wen_a': 'output',
     'clk_a': 'output',
     'rst_a': 'output',
+    'addr_b': 'output',
+    'en_b': 'output',
+    'din_b': 'output',
+    'dout_b': 'input',
+    'wen_b': 'output',
+    'clk_b': 'output',
+    'rst_b': 'output',
 }
 
 
@@ -208,10 +215,30 @@ def verify(manifest, project_dir, project_name):
                 problems.append(f'{name}: {"; ".join(wrong_dir)}')
                 continue
 
-            port_width = signals['din_a']['width']
+            # The wrapper drives Addr/EN and reads Dout on both ports; Din and WEN are
+            # left dangling once proven inactive. So the read interface is what has to
+            # be authoritative here -- taking the width from Din would let a future
+            # ABI change surface as an elaboration width warning instead of a refusal.
+            bad = [
+                f'{signals[b]["name"]} is {signals[b]["width"]} bits, {signals[a]["name"]} is {signals[a]["width"]}'
+                for a, b in (('addr_a', 'addr_b'), ('dout_a', 'dout_b'), ('din_a', 'din_b'), ('wen_a', 'wen_b'))
+                if signals[a]['width'] != signals[b]['width']
+            ]
+            bad += [
+                f'{signals[role]["name"]} is {signals[role]["width"]} bits, expected 1'
+                for role in ('en_a', 'en_b', 'clk_a', 'clk_b', 'rst_a', 'rst_b')
+                if signals[role]['width'] != 1
+            ]
+            if signals['addr_a']['width'] != addr_width:
+                bad.append(f'{signals["addr_a"]["name"]} is {signals["addr_a"]["width"]} bits, csynth says {addr_width}')
+            if bad:
+                problems.append(f'{name}: BRAM interface disagrees ({"; ".join(bad)})')
+                continue
+
+            port_width = signals['dout_a']['width']
             if port_width != (addr_stride * 8):
                 problems.append(
-                    f'{name}: csynth reports {data_width} bits but the RTL port is {port_width}; '
+                    f'{name}: csynth reports {data_width} bits but the RTL read port is {port_width}; '
                     f'expected the {addr_stride * 8}-bit rounding'
                 )
                 continue
@@ -319,20 +346,22 @@ def parse_rtl_ports(project_dir, project_name):
     return ports
 
 
-def bram_port_clk_is_ap_clk(project_dir, project_name, signals):
-    """Prove from the RTL that the IP ties this BRAM port's clock to ap_clk.
+def bram_ports_use_ap_clk(project_dir, project_name, signals):
+    """Prove from the RTL that both BRAM port clocks are ap_clk.
 
-    The wrapper clocks the banked memory with ap_clk and leaves Clk_A dangling, so
-    check rather than assume the two are the same clock. ``signals`` is the mapping
-    verify() resolved, so no signal name is reconstructed here.
+    The wrapper clocks the banked memory with ap_clk and leaves Clk_A/Clk_B
+    dangling, and it now drives both ports, so both have to be the same clock.
     """
     path = os.path.join(solution_verilog_dir(project_dir, project_name), f'{project_name}.v')
     if not os.path.exists(path):
         return False, 'exported RTL not found'
     text = open(path).read()
-    clk = signals['clk_a']
-    tied = bool(re.search(rf'assign\s+{re.escape(clk)}\s*=\s*ap_clk\s*;', text))
-    return tied, {f'{clk}_tied_to_ap_clk': tied}
+
+    evidence = {}
+    for role in ('clk_a', 'clk_b'):
+        name = signals[role]
+        evidence[name] = bool(re.search(rf'assign\s+{re.escape(name)}\s*=\s*ap_clk\s*;', text))
+    return all(evidence.values()), evidence
 
 
 def bram_is_read_only(project_dir, project_name, signals):
@@ -347,8 +376,11 @@ def bram_is_read_only(project_dir, project_name, signals):
         return False, 'exported RTL not found'
     text = open(path).read()
 
+    # A zero write enable is what makes the memory read-only. Din may be driven
+    # without meaning anything, so requiring it to be tied off would make this
+    # needlessly sensitive to how a future Vitis spells an unused bus.
     evidence = {}
-    for role in ('wen_a', 'wen_b', 'din_a', 'din_b'):
+    for role in ('wen_a', 'wen_b'):
         name = signals[role]
         evidence[name] = bool(re.search(rf"assign\s+{re.escape(name)}\s*=\s*\d+'[bdh]0\s*;", text))
 

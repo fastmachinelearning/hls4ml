@@ -20,7 +20,7 @@ module parameter_bank #(
     // Width of the RTL port the IP actually drives. Vitis rounds a parameter port
     // up to a power-of-two byte count, so a 96-bit packed word arrives on a 128-bit
     // port. The extra bits carry nothing; they are zero-filled on the read path and
-    // ignored on the write path, explicitly rather than by implicit extension.
+    // zero-filled on the read path, explicitly rather than by implicit extension.
     parameter int PORT_WIDTH        = 256,
     parameter int HLS_ADDR_WIDTH    = 32,
     parameter int WORD_BYTES        = 32,
@@ -39,8 +39,6 @@ module parameter_bank #(
     // facing the stock HLS IP (HLS is the master)
     input  wire [HLS_ADDR_WIDTH-1:0]   hls_Addr_A,
     input  wire                        hls_EN_A,
-    input  wire [PORT_WIDTH/8-1:0]     hls_WEN_A,
-    input  wire [PORT_WIDTH-1:0]       hls_Din_A,
     output wire [PORT_WIDTH-1:0]       hls_Dout_A,
     input  wire                        hls_Rst_A,
 
@@ -64,8 +62,7 @@ module parameter_bank #(
   localparam int PHYS_ADDR_WIDTH = (PHYS_WORDS <= 1) ? 1 : $clog2(PHYS_WORDS);
 
   // v1 deliberately forces block RAM so every bank has one predictable
-  // implementation. Choosing between BRAM, LUTRAM and URAM is out of scope until
-  // the 2/4/8-bank post-route resource characterization exists to justify it.
+  // implementation; memory-style optimization is out of scope.
   (* ram_style = "block" *)
   reg [DATA_WIDTH-1:0] mem [0:PHYS_WORDS-1];
 
@@ -93,7 +90,7 @@ module parameter_bank #(
       .addr_in_padding(pad_a)
   );
 
-  // port A: registered read, byte-enabled write. Plain always blocks (not
+  // port A: registered read. Plain always blocks (not
   // always_ff) because `mem` is shared with the loader port below; always_ff
   // asserts exclusive ownership of the variables it assigns.
   localparam int PAD_BITS = PORT_WIDTH - DATA_WIDTH;
@@ -111,20 +108,8 @@ module parameter_bank #(
     else              assign hls_Dout_A = dout_q;
   endgenerate
 
-  // Write path, whole bytes only. Byte enables above the packed word are ignored,
-  // and a word whose width is not a byte multiple leaves its top partial byte
-  // unwritable from port A. That is not a limitation in practice: hls4ml maps a
-  // parameter port read-only, so HLS never asserts WEN_A. The loader writes whole
-  // words through port B and is unaffected.
-  localparam int WHOLE_BYTES = DATA_WIDTH / 8;
-
-  integer bidx;
-  always @(posedge ap_clk) begin
-    if (hls_EN_A) begin
-      for (bidx = 0; bidx < WHOLE_BYTES; bidx = bidx + 1)
-        if (hls_WEN_A[bidx]) mem[phys_a][bidx*8 +: 8] <= hls_Din_A[bidx*8 +: 8];
-    end
-  end
+  // There is no IP-side write path: interface.bram_is_read_only() proves both write
+  // enables are tied off before packaging, so the loader is the only writer.
 
   assign addr_padding_violation = hls_EN_A & pad_a;
 

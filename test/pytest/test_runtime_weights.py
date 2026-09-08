@@ -1,12 +1,13 @@
 """Runtime-selected weight banks: packing, wrapper generation, and RTL behaviour.
 
-Most tests are plain Python. Four need FPGA tooling and are gated on
+Most tests are plain Python. Six need FPGA tooling and are gated on
 RUN_SYNTHESIS (conftest.py's synthesis_config), which generate_ci_yaml.py sets
 to "true" for the GitLab pipeline (pinned there to Vivado 2020.1 / Vitis 2024.1):
 
-  test_banks_rtl_simulation[2,4]       Vitis HLS + xsim (one shared synthesis)
-  test_latch_rejects_out_of_range_bank xsim only
-  test_vivado_synthesizes_the_wrapper  Vitis HLS + Vivado
+  test_banks_rtl_simulation[2,4]          Vitis HLS + xsim (one shared synthesis)
+  test_pointwise_two_banks_rtl_simulation Vitis HLS + xsim, one per input rank
+  test_latch_rejects_out_of_range_bank    xsim only
+  test_vivado_synthesizes_the_wrapper     Vitis HLS + Vivado
 
 They were verified against Vitis 2025.1/2025.2; older versions are untested. xsim
 on PATH is this file's own requirement, not a repo convention, so they skip
@@ -325,11 +326,22 @@ def test_pack_banks_packs_every_external_parameter(written_project, manifest):
     assert packed['w2']['image'][: weight['expected_depth']] == pack.pack_tensor(weight, _bank_tensors(2)[0]['trunk'][0])
 
 
+def test_pack_banks_checks_scalar_bundle_shapes(written_project):
+    """A bias goes through the same exact-shape check as a weight."""
+    sets = _bank_sets(2)
+    n_out = LAYERS['head_a'][1]
+    for bank in sets:
+        bank[('head_a', 'bias')] = np.zeros((1, n_out))  # manifest declares (n_out,)
+
+    with pytest.raises(PackingUnsupported, match='shape'):
+        pack.pack_banks(written_project, sets)
+
+
 def test_pack_banks_requires_every_bank_to_supply_each_external_parameter(written_project):
     sets = _bank_sets(2)
     del sets[1][('head_a', 'weight')]
 
-    with pytest.raises(PackingUnsupported, match='missing'):
+    with pytest.raises(PackingUnsupported, match='bank 1 is not a complete parameter set'):
         pack.pack_banks(written_project, sets)
 
 
@@ -353,7 +365,7 @@ def test_pack_banks_needs_the_complete_parameter_set(partial_project):
     for bank in sets:
         bank.pop(('head_b', 'bias'))
 
-    with pytest.raises(PackingUnsupported, match='complete parameter set'):
+    with pytest.raises(PackingUnsupported, match='bank 0 is not a complete parameter set'):
         pack.pack_banks(partial_project, sets)
 
 
@@ -362,14 +374,6 @@ def test_pack_banks_rejects_keys_that_are_not_parameters(written_project):
 
     with pytest.raises(PackingUnsupported, match='not parameters of this model'):
         pack.pack_banks(written_project, sets)
-
-
-def test_parameter_inventory_covers_the_manifest(manifest, written_project):
-    """The inventory helper and the manifest must agree on what exists."""
-    inventory = pack._parameter_inventory(written_project)
-
-    assert {(p['layer'], p['role']) for p in manifest['ports']} <= inventory
-    assert inventory == {(layer, role) for layer in LAYERS for role in ('weight', 'bias')}
 
 
 # --- real RTL ----------------------------------------------------------------
@@ -779,13 +783,15 @@ def test_read_only_proof_rejects_a_live_write_enable(tmp_path):
     syn.mkdir(parents=True)
     signals = {role: f'w2_{suffix}' for role, suffix in interface.BRAM_SIGNAL_SUFFIXES.items()}
 
-    tied = "assign w2_WEN_A = 1'b0;\nassign w2_WEN_B = 1'b0;\nassign w2_Din_A = 16'd0;\nassign w2_Din_B = 16'd0;\n"
-    # a live port-B read must not disqualify the memory
-    (syn / 'p.v').write_text(tied + 'assign w2_EN_B = some_kernel_EN_B;\n')
+    tied = "assign w2_WEN_A = 1'b0;\nassign w2_WEN_B = 1'b0;\n"
+
+    # neither a live port-B read nor a driven Din disqualifies the memory: the write
+    # enables are what make it read-only
+    (syn / 'p.v').write_text(tied + 'assign w2_EN_B = kernel_EN_B;\nassign w2_Din_A = kernel_din;\n')
     read_only, evidence = interface.bram_is_read_only(str(tmp_path), 'p', signals)
     assert read_only, evidence
 
-    for live in ('w2_WEN_A', 'w2_WEN_B', 'w2_Din_A', 'w2_Din_B'):
+    for live in ('w2_WEN_A', 'w2_WEN_B'):
         (syn / 'p.v').write_text(tied.replace(f'assign {live} =', f'assign {live} = drive; //'))
         read_only, evidence = interface.bram_is_read_only(str(tmp_path), 'p', signals)
         assert not read_only, f'{live} driven but still called read-only: {evidence}'

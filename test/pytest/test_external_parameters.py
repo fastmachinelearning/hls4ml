@@ -176,6 +176,24 @@ def test_dense_over_any_input_rank_is_described(tmp_path, shape, expected_class,
         assert weight['expected_depth'] == weight['n_scalars'] == 8 * n_out
 
 
+@pytest.mark.parametrize('reuse_factor', [1, 2, 8])
+def test_pointwise_geometry_is_independent_of_reuse_factor(tmp_path, reuse_factor):
+    """No reshape reaches the port, so the geometry does not move with the reuse factor.
+
+    Reuse factor 1 is included deliberately: for a Dense it collapses the memory into
+    a single word and is refused, and the pointwise layout must not inherit that.
+    """
+    inp = Input(shape=(4, 8), name='input_1')
+    model = Model(inp, Dense(6, activation='linear', name='d')(inp))
+    hls_model = _convert(model, tmp_path / f'pw_rf{reuse_factor}', reuse_factor=reuse_factor)
+
+    weight = next(p for p in build_manifest(hls_model)['ports'] if p['role'] == 'weight')
+    assert weight['kernel_variant'] == 'pointwise_unreshaped'
+    assert weight['expected_data_width'] == weight['precision']['width']
+    assert weight['expected_depth'] == weight['n_scalars'] == 8 * 6
+    assert weight['layout']['lanes'] == 1
+
+
 def test_a_wider_kernel_is_not_pointwise(tmp_path):
     """The pointwise adapter must not capture a genuine convolution."""
     inp = Input(shape=(6, 8), name='input_1')
@@ -189,18 +207,64 @@ def test_a_wider_kernel_is_not_pointwise(tmp_path):
         assert 'no adapter for' in port['note']
 
 
-def test_registry_covers_only_verified_combinations():
+# Everything the manifest claims about a port, minus its hls4ml-assigned name: the
+# frontends name layers differently ('dense_1' vs '_0') but must agree on all of this.
+_PORT_CLAIMS = (
+    'layer_class',
+    'role',
+    'expected_interface_kind',
+    'expected_data_width',
+    'expected_depth',
+    'n_scalars',
+    'kernel_variant',
+    'flat_order',
+    'layout',
+    'precision',
+)
+
+
+def _claims_by_role(hls_model):
+    return {p['role']: {k: p.get(k) for k in _PORT_CLAIMS} for p in build_manifest(hls_model)['ports']}
+
+
+def test_pytorch_frontend_produces_the_same_manifest(tmp_path):
+    """The feature lives after conversion, so the frontend must not matter."""
+    torch = pytest.importorskip('torch')
+
+    n_in, n_out = 8, 4
+    w = (np.arange(n_in * n_out, dtype=np.float32).reshape(n_in, n_out) + 1) / 1024.0
+    b = (np.arange(n_out, dtype=np.float32) + 1) / 1024.0
+
+    keras_claims = _claims_by_role(_convert(_dense_model(n_in, n_out), tmp_path / 'keras'))
+
+    model = torch.nn.Sequential(torch.nn.Linear(n_in, n_out))
+    with torch.no_grad():
+        model[0].weight.copy_(torch.tensor(w.T))  # torch keeps (n_out, n_in)
+        model[0].bias.copy_(torch.tensor(b))
+    cfg = hls4ml.utils.config_from_pytorch_model(
+        model,
+        input_shape=(None, n_in),
+        granularity='model',
+        backend='Vitis',
+        default_precision='ap_fixed<16,6>',
+        default_reuse_factor=2,
+    )
+    cfg['Model']['Strategy'] = 'Resource'
+    cfg['Model']['BramFactor'] = 0
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model,
+        hls_config=cfg,
+        output_dir=str(tmp_path / 'torch'),
+        project_name='torch_prj',
+        backend='Vitis',
+        io_type='io_parallel',
+    )
+
+    assert _claims_by_role(hls_model) == keras_claims
+
+
+def test_registry_stays_inside_the_verified_envelope():
     from hls4ml.writer.external_parameters import described_combinations
 
-    keys = set(described_combinations())
-    assert ('Vitis', 'io_parallel', 'resource', 'Dense', 'weight') in keys
-    assert ('Vitis', 'io_parallel', 'resource', 'Dense', 'bias') in keys
-
-    assert ('Vitis', 'io_parallel', 'resource', 'PointwiseConv1D', 'weight') in keys
-    assert ('Vitis', 'io_parallel', 'resource', 'PointwiseConv2D', 'weight') in keys
-
-    for backend, io_type, strategy, layer_class, _role in keys:
-        assert backend == 'Vitis'
-        assert io_type == 'io_parallel'
-        assert strategy == 'resource'
-        assert layer_class in ('Dense', 'PointwiseConv1D', 'PointwiseConv2D')
+    for backend, io_type, strategy, _layer_class, _role in described_combinations():
+        assert (backend, io_type, strategy) == ('Vitis', 'io_parallel', 'resource')
