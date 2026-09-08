@@ -1475,12 +1475,11 @@ class SimpleRNN(Layer):
 
         if self.attributes['return_state']:
             state_shape = [self.attributes['n_out']]
-            state_dims = [f'N_OUT_{self.index}']
             self.add_output_variable(
-                state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
+                state_shape, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
             )
             self.add_output_variable(
-                state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
+                state_shape, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
             )
 
         # weights
@@ -1525,12 +1524,11 @@ class LSTM(Layer):
 
         if self.attributes['return_state']:
             state_shape = [self.attributes['n_out']]
-            state_dims = [f'N_OUT_{self.index}']
             self.add_output_variable(
-                state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
+                state_shape, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
             )
             self.add_output_variable(
-                state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
+                state_shape, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
             )
 
         # weights
@@ -1581,12 +1579,11 @@ class GRU(Layer):
 
         if self.attributes['return_state']:
             state_shape = [self.attributes['n_out']]
-            state_dims = [f'N_OUT_{self.index}']
             self.add_output_variable(
-                state_shape, state_dims, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
+                state_shape, out_name=self.outputs[1], var_name='layer{index}_h', type_name='layer{index}_h_t'
             )
             self.add_output_variable(
-                state_shape, state_dims, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
+                state_shape, out_name=self.outputs[2], var_name='layer{index}_c', type_name='layer{index}_c_t'
             )
 
         # weights
