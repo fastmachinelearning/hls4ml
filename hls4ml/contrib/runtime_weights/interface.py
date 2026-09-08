@@ -14,6 +14,64 @@ import re
 # Anything else would need its own wrapper treatment.
 EXPECTED_SCALAR_MODE = 'ap_none'
 
+# How Vitis spells the signals of one external BRAM parameter port. This map is the
+# only place that spelling appears: verify() resolves it against the real RTL and
+# hands the resulting names to the wrapper generator, which never rebuilds them.
+BRAM_SIGNAL_SUFFIXES = {
+    'addr_a': 'Addr_A',
+    'en_a': 'EN_A',
+    'din_a': 'Din_A',
+    'dout_a': 'Dout_A',
+    'wen_a': 'WEN_A',
+    'clk_a': 'Clk_A',
+    'rst_a': 'Rst_A',
+    'addr_b': 'Addr_B',
+    'en_b': 'EN_B',
+    'din_b': 'Din_B',
+    'dout_b': 'Dout_B',
+    'wen_b': 'WEN_B',
+    'clk_b': 'Clk_B',
+    'rst_b': 'Rst_B',
+}
+
+
+# Direction of each BRAM signal from the IP's point of view. The wrapper drives the
+# memory side, so anything mismatched here would be connected backwards.
+BRAM_SIGNAL_DIRS = {
+    'addr_a': 'output',
+    'en_a': 'output',
+    'din_a': 'output',
+    'dout_a': 'input',
+    'wen_a': 'output',
+    'clk_a': 'output',
+    'rst_a': 'output',
+}
+
+
+def solution_verilog_dir(project_dir, project_name):
+    """Where Vitis writes the exported RTL. Callers should not spell this out."""
+    return os.path.join(_solution_dir(project_dir, project_name), 'syn', 'verilog')
+
+
+def bram_signals(rtl_ports, name):
+    """Resolve one BRAM parameter's signals against the real RTL port list.
+
+    Returns {role: {'name', 'width', 'dir'}}. Raises if the generated RTL does not
+    spell the port the way this module expects, so a renamed or missing signal is
+    reported here rather than becoming a wrapper that will not elaborate.
+    """
+    by_name = {p['name']: p for p in rtl_ports}
+    signals, missing = {}, []
+    for role, suffix in BRAM_SIGNAL_SUFFIXES.items():
+        port = by_name.get(f'{name}_{suffix}')
+        if port is None:
+            missing.append(f'{name}_{suffix}')
+        else:
+            signals[role] = port
+    if missing:
+        raise InterfaceMismatch(f'{name}: generated RTL has no {", ".join(missing)}; the BRAM port naming has changed')
+    return signals
+
 
 class InterfaceMismatch(Exception):
     """The synthesized interface disagrees with the manifest."""
@@ -89,6 +147,7 @@ def verify(manifest, project_dir, project_name):
     describe are skipped, not guessed at.
     """
     hardware = parse_csynth(project_dir, project_name)
+    rtl_ports = parse_rtl_ports(project_dir, project_name)
     verified = []
     problems = []
 
@@ -109,13 +168,21 @@ def verify(manifest, project_dir, project_name):
                 problems.append(f'{name}: data width {data_width} but manifest expected {port["expected_data_width"]}')
                 continue
 
-            word_bytes = data_width // 8
+            # Three widths are in play and only the first comes from the report:
+            #   logical width  the packed word this schema builds        (e.g. 96)
+            #   physical width the RTL port that carries it              (e.g. 128)
+            #   byte stride    how far consecutive words are apart       (e.g. 16)
+            # Ceiling division, because a fixed-point word need not be byte-aligned.
+            word_bytes = -(-data_width // 8)
+            addr_stride = 1 << (word_bytes - 1).bit_length()
             shift = parse_addr_shift(project_dir, project_name, name)
             if shift is None:
                 problems.append(f'{name}: could not determine the byte-address shift from the generated RTL')
                 continue
-            if (1 << shift) != word_bytes:
-                problems.append(f'{name}: RTL shifts address by {shift} but word is {word_bytes} bytes')
+            if (1 << shift) != addr_stride:
+                problems.append(
+                    f'{name}: RTL shifts address by {shift} but a {word_bytes}-byte word strides by {addr_stride}'
+                )
                 continue
 
             scalars_per_word = data_width // port['precision']['width']
@@ -124,12 +191,40 @@ def verify(manifest, project_dir, project_name):
                 problems.append(f'{name}: implied depth {depth} but manifest expected {port["expected_depth"]}')
                 continue
 
+            try:
+                signals = bram_signals(rtl_ports, name)
+            except InterfaceMismatch as exc:
+                problems.append(str(exc))
+                continue
+            # csynth reports the logical width; the RTL port is rounded up to a
+            # power of two (a 96-bit word is carried on a 128-bit port). Accept the
+            # rounding, refuse anything else.
+            wrong_dir = [
+                f'{signals[role]["name"]} is {signals[role]["dir"]}, expected {want}'
+                for role, want in BRAM_SIGNAL_DIRS.items()
+                if signals[role]['dir'] != want
+            ]
+            if wrong_dir:
+                problems.append(f'{name}: {"; ".join(wrong_dir)}')
+                continue
+
+            port_width = signals['din_a']['width']
+            if port_width != (addr_stride * 8):
+                problems.append(
+                    f'{name}: csynth reports {data_width} bits but the RTL port is {port_width}; '
+                    f'expected the {addr_stride * 8}-bit rounding'
+                )
+                continue
+
             verified.append(
                 {
                     **port,
+                    'actual_signals': {role: sig['name'] for role, sig in signals.items()},
+                    'actual_port_width': port_width,
                     'actual_data_width': data_width,
                     'actual_addr_width': addr_width,
                     'actual_word_bytes': word_bytes,
+                    'actual_addr_stride': addr_stride,
                     'actual_depth': depth,
                     'actual_scalars_per_word': scalars_per_word,
                 }
@@ -158,6 +253,22 @@ def verify(manifest, project_dir, project_name):
             if bits != port['expected_data_width']:
                 problems.append(f'{name}: scalar width {bits} but manifest expected {port["expected_data_width"]}')
                 continue
+            # csynth names the ports; the wrapper connects them, so confirm they are
+            # really there, are inputs, and are the width csynth claimed.
+            by_name = {p['name']: p for p in rtl_ports}
+            rtl_problems = []
+            for member in members:
+                rtl_port = by_name.get(member)
+                if rtl_port is None:
+                    rtl_problems.append(f'{member} is not a port of the generated RTL')
+                elif rtl_port['dir'] != 'input':
+                    rtl_problems.append(f'{member} is {rtl_port["dir"]}, expected input')
+                elif rtl_port['width'] != bits:
+                    rtl_problems.append(f'{member} is {rtl_port["width"]} bits, csynth says {bits}')
+            if rtl_problems:
+                problems.append(f'{name}: {"; ".join(rtl_problems)}')
+                continue
+
             verified.append({**port, 'actual_ports': members, 'actual_mode': mode, 'actual_width': bits})
 
         else:
@@ -208,39 +319,37 @@ def parse_rtl_ports(project_dir, project_name):
     return ports
 
 
-def bram_port_clk_is_ap_clk(project_dir, project_name, port):
+def bram_port_clk_is_ap_clk(project_dir, project_name, signals):
     """Prove from the RTL that the IP ties this BRAM port's clock to ap_clk.
 
     The wrapper clocks the banked memory with ap_clk and leaves Clk_A dangling, so
-    check rather than assume the two are the same clock.
+    check rather than assume the two are the same clock. ``signals`` is the mapping
+    verify() resolved, so no signal name is reconstructed here.
     """
-    path = os.path.join(_solution_dir(project_dir, project_name), 'syn', 'verilog', f'{project_name}.v')
+    path = os.path.join(solution_verilog_dir(project_dir, project_name), f'{project_name}.v')
     if not os.path.exists(path):
         return False, 'exported RTL not found'
     text = open(path).read()
-    tied = bool(re.search(rf'assign\s+{re.escape(port)}_Clk_A\s*=\s*ap_clk\s*;', text))
-    return tied, {'Clk_A_tied_to_ap_clk': tied}
+    clk = signals['clk_a']
+    tied = bool(re.search(rf'assign\s+{re.escape(clk)}\s*=\s*ap_clk\s*;', text))
+    return tied, {f'{clk}_tied_to_ap_clk': tied}
 
 
-def bram_port_b_is_unused(project_dir, project_name, port):
-    """Prove from the RTL that HLS leaves port B of a BRAM interface idle.
+def bram_is_read_only(project_dir, project_name, signals):
+    """Prove from the RTL that the IP never writes this parameter memory.
 
-    csynth declares both PORTA and PORTB for a ``bram`` interface, but hls4ml's
-    generated top drives only port A and ties port B off. The wrapper may only
-    borrow port B for the loader if that is actually true, so check rather than
-    assume. Returns (is_unused, evidence).
+    That is what makes lending port B to the loader sound. Whether the IP *reads*
+    port B is deliberately not checked: Dense leaves it idle, pointwise uses it, and
+    the wrapper serves both. Returns (is_read_only, evidence).
     """
-    path = os.path.join(_solution_dir(project_dir, project_name), 'syn', 'verilog', f'{project_name}.v')
+    path = os.path.join(solution_verilog_dir(project_dir, project_name), f'{project_name}.v')
     if not os.path.exists(path):
         return False, 'exported RTL not found'
     text = open(path).read()
 
     evidence = {}
-    for signal, pattern in (
-        ('EN_B', rf"assign\s+{re.escape(port)}_EN_B\s*=\s*1'b0\s*;"),
-        ('WEN_B', rf"assign\s+{re.escape(port)}_WEN_B\s*=\s*\d+'[bd]0\s*;"),
-        ('Addr_B', rf"assign\s+{re.escape(port)}_Addr_B\s*=\s*\d+'[bd]0\s*;"),
-    ):
-        evidence[signal] = bool(re.search(pattern, text))
+    for role in ('wen_a', 'wen_b', 'din_a', 'din_b'):
+        name = signals[role]
+        evidence[name] = bool(re.search(rf"assign\s+{re.escape(name)}\s*=\s*\d+'[bdh]0\s*;", text))
 
-    return evidence.get('EN_B', False), evidence
+    return all(evidence.values()), evidence

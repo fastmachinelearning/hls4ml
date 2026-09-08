@@ -3,16 +3,12 @@
 // Depth-stacked replacement for the single-bank memory a stock hls4ml IP expects
 // on an external BRAM parameter port.
 //
-// PORT A faces the HLS IP and reproduces the contract of the memory model Vitis
-// generates for co-simulation:
-//     always_ff @(posedge clk) if (EN) Dout <= mem[Addr / WORD_BYTES];
-// i.e. 1-cycle synchronous read, enable-gated. bank_addr_mapper is combinational,
-// so this latency is identical to the unbanked memory.
-//
-// PORT B is the loader. hls4ml drives only port A of a BRAM parameter interface;
-// interface.bram_port_b_is_unused() PROVES from the exported RTL that EN_B/WEN_B/
-// Addr_B are tied off before the wrapper borrows port B, rather than assuming it.
-// Loads are additionally accepted only while the wrapper is idle.
+// Both ports are 1-cycle enable-gated reads for the IP, matching the memory model
+// Vitis generates; bank_addr_mapper is combinational, so the latency is that of the
+// unbanked memory. A Dense leaves port B idle, a pointwise convolution reads through
+// it, and the loader takes port B only while quiescent -- so nothing here depends on
+// how many ports the IP uses. It does depend on the IP never WRITING the memory,
+// which interface.bram_is_read_only() proves from the exported RTL.
 //
 // Banks are stacked in depth: phys_word = bank_id*BANK_STRIDE_WORDS + local_word.
 // N_BANKS, BANK_STRIDE_WORDS and the physical depth are build-time constants.
@@ -21,6 +17,11 @@
 
 module parameter_bank #(
     parameter int DATA_WIDTH        = 256,
+    // Width of the RTL port the IP actually drives. Vitis rounds a parameter port
+    // up to a power-of-two byte count, so a 96-bit packed word arrives on a 128-bit
+    // port. The extra bits carry nothing; they are zero-filled on the read path and
+    // ignored on the write path, explicitly rather than by implicit extension.
+    parameter int PORT_WIDTH        = 256,
     parameter int HLS_ADDR_WIDTH    = 32,
     parameter int WORD_BYTES        = 32,
     parameter int LOCAL_WORDS       = 2,
@@ -38,12 +39,17 @@ module parameter_bank #(
     // facing the stock HLS IP (HLS is the master)
     input  wire [HLS_ADDR_WIDTH-1:0]   hls_Addr_A,
     input  wire                        hls_EN_A,
-    input  wire [DATA_WIDTH/8-1:0]     hls_WEN_A,
-    input  wire [DATA_WIDTH-1:0]       hls_Din_A,
-    output reg  [DATA_WIDTH-1:0]       hls_Dout_A,
+    input  wire [PORT_WIDTH/8-1:0]     hls_WEN_A,
+    input  wire [PORT_WIDTH-1:0]       hls_Din_A,
+    output wire [PORT_WIDTH-1:0]       hls_Dout_A,
     input  wire                        hls_Rst_A,
 
-    // native loader
+    // facing the stock HLS IP, port B (read only; idle for layers that do not use it)
+    input  wire [HLS_ADDR_WIDTH-1:0]   hls_Addr_B,
+    input  wire                        hls_EN_B,
+    output wire [PORT_WIDTH-1:0]       hls_Dout_B,
+
+    // native loader, granted port B while quiescent
     input  wire                        ld_req,
     input  wire [BANK_ID_WIDTH-1:0]    ld_bank,
     input  wire [$clog2(LOCAL_WORDS > 1 ? LOCAL_WORDS : 2)-1:0] ld_word,
@@ -57,9 +63,9 @@ module parameter_bank #(
   localparam int PHYS_WORDS      = N_BANKS * BANK_STRIDE_WORDS;
   localparam int PHYS_ADDR_WIDTH = (PHYS_WORDS <= 1) ? 1 : $clog2(PHYS_WORDS);
 
-  // Provisional: forces block RAM regardless of depth, which is likely wrong for
-  // shallow banks (a 4-word memory wastes a tile). Revisit with the 2/4/8-bank
-  // post-route characterization before generalizing this into a parameter.
+  // v1 deliberately forces block RAM so every bank has one predictable
+  // implementation. Choosing between BRAM, LUTRAM and URAM is out of scope until
+  // the 2/4/8-bank post-route resource characterization exists to justify it.
   (* ram_style = "block" *)
   reg [DATA_WIDTH-1:0] mem [0:PHYS_WORDS-1];
 
@@ -90,15 +96,32 @@ module parameter_bank #(
   // port A: registered read, byte-enabled write. Plain always blocks (not
   // always_ff) because `mem` is shared with the loader port below; always_ff
   // asserts exclusive ownership of the variables it assigns.
+  localparam int PAD_BITS = PORT_WIDTH - DATA_WIDTH;
+
+  reg [DATA_WIDTH-1:0] dout_q;
+
   always @(posedge ap_clk or posedge hls_Rst_A) begin
-    if (hls_Rst_A) hls_Dout_A <= {DATA_WIDTH{1'b0}};
-    else if (hls_EN_A) hls_Dout_A <= mem[phys_a];
+    if (hls_Rst_A) dout_q <= {DATA_WIDTH{1'b0}};
+    else if (hls_EN_A) dout_q <= mem[phys_a];
   end
+
+  // logical -> physical: the padding bits the IP does not use are driven to zero
+  generate
+    if (PAD_BITS > 0) assign hls_Dout_A = {{PAD_BITS{1'b0}}, dout_q};
+    else              assign hls_Dout_A = dout_q;
+  endgenerate
+
+  // Write path, whole bytes only. Byte enables above the packed word are ignored,
+  // and a word whose width is not a byte multiple leaves its top partial byte
+  // unwritable from port A. That is not a limitation in practice: hls4ml maps a
+  // parameter port read-only, so HLS never asserts WEN_A. The loader writes whole
+  // words through port B and is unaffected.
+  localparam int WHOLE_BYTES = DATA_WIDTH / 8;
 
   integer bidx;
   always @(posedge ap_clk) begin
     if (hls_EN_A) begin
-      for (bidx = 0; bidx < DATA_WIDTH / 8; bidx = bidx + 1)
+      for (bidx = 0; bidx < WHOLE_BYTES; bidx = bidx + 1)
         if (hls_WEN_A[bidx]) mem[phys_a][bidx*8 +: 8] <= hls_Din_A[bidx*8 +: 8];
     end
   end
@@ -121,17 +144,48 @@ module parameter_bank #(
   // Widen before combining: ld_word is only $clog2(LOCAL_WORDS) bits, so a
   // part-select of PHYS_ADDR_WIDTH bits from it can read past its width and
   // yield x, silently sending every loader write to an undefined address.
-  wire [31:0] phys_b_full = (32'(ld_bank) * BANK_STRIDE_WORDS) + 32'(ld_word);
-  wire [PHYS_ADDR_WIDTH-1:0] phys_b = phys_b_full[PHYS_ADDR_WIDTH-1:0];
+  wire [31:0] phys_ld_full = (32'(ld_bank) * BANK_STRIDE_WORDS) + 32'(ld_word);
+  wire [PHYS_ADDR_WIDTH-1:0] phys_ld = phys_ld_full[PHYS_ADDR_WIDTH-1:0];
 
-  // port B: loader writes, accepted only while the wrapper is idle
+  // The IP's own port-B address, translated exactly like port A.
+  wire [PHYS_ADDR_WIDTH-1:0] phys_hls_b;
+  wire                       pad_b;
+
+  bank_addr_mapper #(
+      .HLS_ADDR_WIDTH   (HLS_ADDR_WIDTH),
+      .WORD_BYTES       (WORD_BYTES),
+      .LOCAL_WORDS      (LOCAL_WORDS),
+      .BANK_ID_WIDTH    (BANK_ID_WIDTH),
+      .BANK_STRIDE_WORDS(BANK_STRIDE_WORDS),
+      .PHYS_ADDR_WIDTH  (PHYS_ADDR_WIDTH)
+  ) u_map_b (
+      .hls_byte_addr  (hls_Addr_B),
+      .bank_id        (cur_bank_id),
+      .phys_word_addr (phys_hls_b),
+      .addr_in_padding(pad_b)
+  );
+
+  // One physical port B, owned by the loader while quiescent and by the IP
+  // otherwise. ld_accept already requires quiescent, so the two never collide.
+  wire [PHYS_ADDR_WIDTH-1:0] phys_b = quiescent ? phys_ld : phys_hls_b;
+
+  reg [DATA_WIDTH-1:0] dout_b_q;
+
   always @(posedge ap_clk) begin
     if (ld_accept) mem[phys_b] <= ld_wdata;
+    else if (hls_EN_B) dout_b_q <= mem[phys_b];
   end
+
+  generate
+    if (PAD_BITS > 0) assign hls_Dout_B = {{PAD_BITS{1'b0}}, dout_b_q};
+    else              assign hls_Dout_B = dout_b_q;
+  endgenerate
 
 `ifdef RUNTIME_WEIGHTS_ASSERT
   a_no_padding_access   : assert property (@(posedge ap_clk) disable iff (ap_rst)
                             !(hls_EN_A & pad_a));
+  a_no_padding_access_b : assert property (@(posedge ap_clk) disable iff (ap_rst)
+                            !(hls_EN_B & ~quiescent & pad_b));
   a_write_only_when_idle: assert property (@(posedge ap_clk) disable iff (ap_rst)
                             (ld_req & ld_accept) |-> quiescent);
   a_write_in_bounds     : assert property (@(posedge ap_clk) disable iff (ap_rst)

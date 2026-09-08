@@ -1,104 +1,117 @@
-# Runtime-selected weight banks
+# Runtime-selected weight banks — implementation notes
 
-Give a synthesized hls4ml IP several pre-provisioned weight banks and choose one
-per inference, without re-running HLS.
+User-facing guide: `docs/advanced/bramfactor.rst`. This file covers how the feature
+works and what it takes to extend it.
 
-This is **post-export packaging**. It reads a project that has already been
-synthesized and writes a wrapper around it; the compute IP is never modified.
+Post-export packaging only: the generated project is read, never modified, and the
+summary carries a SHA-256 fingerprint of the exported compute artifacts to show it.
 
-## Requirements
+## Manifest
 
-The IP must have been produced with parameters exposed outside it:
+`BramFactor` makes the writer emit `firmware/weights/external_parameters.json`
+(schema `hls4ml.external_parameter_manifest/v1`), one entry per external parameter:
 
-```python
-config['Model']['BramFactor'] = 0      # or a threshold; nothing is automatic
-config['Model']['Strategy'] = 'Resource'
+```json
+{"name": "w2", "layer": "dense_1", "role": "weight",
+ "kernel_variant": "dense_resource_rf_leq_nin",
+ "flat_order": {"tensor_axes": ["n_in","n_out"], "axes": ["n_out","n_in"], "shape": [8,4]},
+ "layout": {"mode": "block", "block_size": 2, "lanes": 16},
+ "expected_interface_kind": "bram", "expected_data_width": 256, "expected_depth": 2}
 ```
 
-`BramFactor` makes hls4ml write `firmware/weights/external_parameters.json`
-describing each external parameter. That manifest is the contract this package
-consumes.
+`flat_order` is a transpose then a ravel. `layout` maps that flat sequence into
+words: for `mode: "block"`, scalar `f` lands in word `f % block_size` at lane
+`f // block_size`. Both are structured, so no consumer parses an expression.
 
-## Use
+Every geometry field is named `expected_*`: the writer records what hls4ml *asked*
+HLS for. Only synthesis establishes what was built, which is what `interface.py`
+cross-checks before anything is generated.
 
-```python
-from hls4ml.contrib.runtime_weights import package
+## Adapters — the extension point
 
-hls_model.build(csim=False, synth=True)
-summary = package(hls_model, n_banks=4)
+Descriptions come from `_ADAPTERS` in `hls4ml/writer/external_parameters.py`, keyed
+`(backend, io_type, strategy, layer_class, role)`. The writer sees *every* external
+parameter, so an unregistered combination gets no interface kind, geometry or
+ordering — only a note. Nothing is ever guessed.
+
+Two geometries are registered today, and they are genuinely different:
+
+| | Dense | PointwiseConv1D/2D |
+|---|---|---|
+| reshape reaches the port | yes, `ARRAY_RESHAPE block factor=N` | **no** |
+| word width | `block_factor × precision` | one scalar |
+| depth | `block_size` (= reuse factor) | `n_chan × n_filt` |
+| depends on reuse factor | yes | no |
+| IP reads port B | no | **yes** |
+
+A `Dense` over a 2-D/3-D input and a native `Conv*D` with a 1-wide kernel produce
+the same layer with the same declared shape, so the pointwise adapter keys on the
+class, not the origin. It still checks `filt_width`/`filt_height` and the
+`linebuffer` implementation rather than trusting the class name.
+
+### Adding a layer
+
+1. Characterize it: synthesize a few configurations and read the real BRAM width,
+   depth and address shift from the csynth report and generated RTL. Do not reason
+   by analogy with an existing layer — the pointwise geometry is nothing like Dense.
+2. Write a `_describe_*` function returning `flat_order` and `layout`, refusing with
+   a `note` for anything it cannot prove.
+3. Register it in `_ADAPTERS`.
+4. Add a two-bank XSim test that shows switching banks changes the result.
+
+No RTL or wrapper change should be needed. If one is, the memory contract has been
+broken rather than extended.
+
+## Widths: logical, physical, stride
+
+Three quantities, and only the first comes from the report:
+
+```
+logical width   the packed word this schema builds     e.g. 96
+physical width  the RTL port that carries it           e.g. 128
+byte stride     spacing between consecutive words      e.g. 16
 ```
 
-This writes, under `<output_dir>/runtime_weights/`:
+Vitis rounds a parameter port up to a power-of-two byte count, so a 96-bit word
+travels on a 128-bit port and strides by 16 rather than 12. `verify()` computes
+`ceil(width/8)` — fixed-point words need not be byte-aligned — rounds up to the
+stride, and requires the RTL's address shift to match. `parameter_bank` pads
+logical→physical explicitly; nothing relies on implicit Verilog width extension.
 
-| | |
-| --- | --- |
-| `rtl/<project>_runtime_weights.sv` | generated top: the unmodified IP plus banked storage |
-| `rtl/*.sv` | the parameterized wrapper modules |
-| `create_runtime_weights.tcl` | Vivado synthesis of the wrapper, no board constraints |
-| `runtime_weights.json` | what was generated, including a fingerprint of the exported IP |
+## RTL inspection
 
-Bank images are packed from the manifest:
+`interface.py` is the only module that knows how Vitis spells anything.
+`verify()` resolves each parameter's signals against the real port list and returns
+the names; `package.py` consumes them and never rebuilds a name. It also checks
+every signal's direction, the scalar-bundle members, and that the IP is
+**read-only** on each memory (`WEN_A`, `WEN_B`, `Din_A`, `Din_B` all tied off) —
+which is what makes sharing a port with the loader sound. Whether the IP *reads*
+port B is deliberately not checked: Dense leaves it idle, pointwise uses it.
 
-```python
-from hls4ml.contrib.runtime_weights import build_bank_image, write_mem
+`solution_verilog_dir()` is the single place the Vitis project layout appears.
 
-port = manifest['ports'][0]
-image, stride = build_bank_image(port, [w_bank0, w_bank1])
-write_mem('w2_banks.mem', image, port['expected_data_width'])
-```
+## Memories and the loader
 
-and bound at elaboration through the per-port `<PORT>_INIT_HEX` parameter, or
-written at run time through the native loader.
+`parameter_bank.sv` is a depth-stacked memory, `bank_id * BANK_STRIDE_WORDS +
+local_word`, with `bank_addr_mapper` translating the IP's byte address on each port.
+Both ports are read ports for the IP; the loader takes **port B only while
+quiescent**, when the IP is not reading. That is why the wrapper is layer-agnostic.
 
-## Native loader
+`scalar_bank_mux.sv` handles fully partitioned parameters — a Dense bias lowers to
+one `ap_none` port per element regardless of size. Its select is combinational, so
+the selected bank is present on the cycle the IP starts. It has per-bank storage but
+no `INIT_HEX` path in v1: loader-only.
 
-Each banked parameter gets a loader port on the generated top:
+`bank_select_latch.sv` owns the transaction. Acceptance requires `hls_ap_idle`, not
+merely `!busy` — under `ap_ctrl_hs` idle follows done by a cycle — and a transaction
+whose `ap_ready` and `ap_done` coincide (a pointwise convolution does) must not
+latch `busy`, or nothing would ever clear it.
 
-| BRAM port | Scalar bundle |
-| --- | --- |
-| `ld_<p>_req`, `ld_<p>_bank`, `ld_<p>_word`, `ld_<p>_wdata` | `ld_<p>_we`, `ld_<p>_bank`, `ld_<p>_idx`, `ld_<p>_data` |
-| `ld_<p>_accept`, `ld_<p>_reject` | `ld_<p>_accept`, `ld_<p>_reject` |
+## Synthesis artifacts
 
-A write is accepted only while `quiescent` is high. Out-of-range bank ids, word
-addresses and scalar indices are refused on `ld_<p>_reject`, so every request is
-either performed or reported as refused — it is never silently dropped.
-
-Sequence to reload a bank:
-
-1. wait for `quiescent`
-2. drive one write per word (or per scalar) and check `ld_<p>_accept`
-3. select the bank on a later inference via `ext_bank_id`
-
-## Bank selection
-
-`bank_id` is captured when the wrapper takes a request, made stable *before*
-`ap_start` rises, and held through `ap_done`, so every parameter read belongs to
-the selected bank. An out-of-range id is rejected and starts nothing.
-
-Selection is **idle-time only**: a new start is gated away while a transaction is
-in flight. That gives up any back-to-back capability the IP has. Overlapping
-transactions are not supported.
-
-The bank count is fixed when the wrapper is generated — the packed image, the
-bank stride and `runtime_weights.json` all encode it. Changing it means re-running
-this packager, not re-running HLS.
-
-## Scope
-
-Verified for the **Vitis** backend, `io_parallel`, `Strategy: Resource`, Dense
-weights and biases, `ap_fixed` with `AP_TRN`/`AP_WRAP`, one inference at a time.
-
-Anything outside that is **refused**, not guessed at: a model with an external
-parameter this version cannot describe raises rather than banking only part of it.
-Adding a layer means adding a manifest adapter in
-`hls4ml/writer/external_parameters.py` plus evidence that its packing was checked
-against generated RTL.
-
-Not provided: AXI or board support, drivers, a C++ wrapper, automatic changes to
-`BramFactor`, and overlapping transactions.
-
-## Example
-
-A runnable end-to-end example — C simulation, co-simulation, two-bank RTL
-simulation and Vivado synthesis, all compared bit-exact — is described in
-`docs/advanced/bramfactor.rst`.
+Vitis initializes generated ROMs with `$readmemh("./<name>.dat")`, resolved against
+the working directory. `dense_resource_rf_gt_nin_rem0` emits one. The packager
+copies these next to the generated Tcl, the Tcl `cd`s there, and they are included
+in the fingerprint — their contents change what the IP computes exactly as the
+Verilog does. They are deliberately **not** `add_files`'d: Vivado deletes a data
+file added as a source.

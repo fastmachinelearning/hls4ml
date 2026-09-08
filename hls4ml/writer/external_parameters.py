@@ -59,6 +59,17 @@ VERIFIED_DENSE_KERNELS = {
 SUPPORTED_ROUNDING = {'TRN'}
 SUPPORTED_SATURATION = {'WRAP'}
 
+# A reshaped weight array is only an addressable memory if it has more than one
+# word. reuse_factor == 1 collapses the whole array into a single word, which has
+# no address to concatenate a bank id onto, and which HLS does not build as asked.
+MIN_ADDRESSABLE_DEPTH = 2
+
+# Scope boundary for schema v1, not a tool limit: reshaped words up to 4096 bits
+# are verified end-to-end. 4096 is an established HLS array-partition threshold,
+# and wider reshaped interfaces have no trustworthy packing contract here yet, so
+# they are refused rather than guessed.
+MAX_RESHAPED_PORT_BITS = 4096
+
 
 def _unsupported_precision_reason(precision):
     """Return why this precision cannot be packed, or None if it can."""
@@ -112,6 +123,20 @@ def _describe_dense_weight(ctx):
     if kernel not in VERIFIED_DENSE_KERNELS or not block_size:
         described['note'] = f"kernel variant '{kernel}' is not verified; no layout or ordering is claimed"
         return described
+    if block_size < MIN_ADDRESSABLE_DEPTH:
+        described['note'] = (
+            f'reuse_factor={reuse_factor} reshapes all {n_scalars} scalars into a single word, so the '
+            'port has no address to bank. Raise the reuse factor (the memory depth equals it) to make '
+            'this parameter bankable.'
+        )
+        return described
+    port_bits = block_factor * ctx['precision']['width']
+    if port_bits > MAX_RESHAPED_PORT_BITS:
+        described['note'] = (
+            f'reshaped port would be {port_bits} bits, above the {MAX_RESHAPED_PORT_BITS}-bit word this '
+            'schema verifies; raise the reuse factor to narrow the word'
+        )
+        return described
 
     described.update(
         expected_interface_kind='bram',
@@ -158,6 +183,84 @@ def _describe_dense_bias(ctx):
     }
 
 
+def _describe_pointwise_weight(ctx):
+    """PointwiseConv kernel: not reshaped at the external port.
+
+    The pointwise path buffers weights internally before the dense multiply, so the
+    ``ARRAY_RESHAPE`` never reaches the interface. HLS exposes a plain memory one
+    scalar wide and ``n_chan * n_filt`` deep, independent of the reuse factor
+    (verified across reuse factors 2/4/8 and several channel and filter counts).
+
+    hls4ml declares the kernel as ``(filt..., n_chan, n_filt)`` and stores it
+    filter-major. A Dense over 2-D/3-D input and a native ``Conv*D`` with a 1-wide
+    kernel give the same layer with the same declared shape, so this describes the
+    class, not one origin.
+    """
+    layer = ctx['layer']
+    n_chan = layer.get_attr('n_chan')
+    n_filt = layer.get_attr('n_filt')
+    filt_width = layer.get_attr('filt_width')
+    filt_height = layer.get_attr('filt_height')
+    two_d = filt_height is not None
+
+    described = {'kernel_variant': 'pointwise_unreshaped'}
+
+    unsupported = _unsupported_precision_reason(ctx['precision'])
+    if unsupported:
+        described['note'] = f'{unsupported}; no layout or ordering is claimed'
+        return described
+    # The class name already implies a 1-wide kernel; check it rather than trust it,
+    # since the layout below is only correct for that.
+    if filt_width != 1 or (two_d and filt_height != 1):
+        described['note'] = f'filter is {filt_height}x{filt_width}, not 1-wide; the pointwise layout does not apply'
+        return described
+    if layer.get_attr('implementation') != 'linebuffer':
+        described['note'] = (
+            f'conv implementation is {layer.get_attr("implementation")!r}, but only linebuffer has been verified'
+        )
+        return described
+
+    n_scalars = ctx['n_scalars']
+    if n_scalars != n_chan * n_filt:
+        described['note'] = f'{n_scalars} scalars is not n_chan*n_filt ({n_chan}*{n_filt}); layout unclear'
+        return described
+    if n_scalars < MIN_ADDRESSABLE_DEPTH:
+        described['note'] = f'{n_scalars} scalars leaves no address to bank'
+        return described
+
+    if two_d:
+        tensor_axes = ['filt_height', 'filt_width', 'n_chan', 'n_filt']
+        shape = [1, 1, n_chan, n_filt]
+        axes = ['n_filt', 'filt_height', 'filt_width', 'n_chan']
+    else:
+        tensor_axes = ['filt_width', 'n_chan', 'n_filt']
+        shape = [1, n_chan, n_filt]
+        axes = ['n_filt', 'filt_width', 'n_chan']
+
+    described.update(
+        expected_interface_kind='bram',
+        expected_data_width=ctx['precision']['width'],  # one scalar per word
+        expected_depth=n_scalars,
+        flat_order={'tensor_axes': tensor_axes, 'axes': axes, 'shape': shape},
+        layout={'mode': 'block', 'block_size': n_scalars, 'lanes': 1},
+    )
+    return described
+
+
+def _describe_pointwise_bias(ctx):
+    """PointwiseConv bias: one scalar port per filter, as for a Dense bias."""
+    unsupported = _unsupported_precision_reason(ctx['precision'])
+    if unsupported:
+        return {'note': f'{unsupported}; no layout or ordering is claimed'}
+    return {
+        'expected_interface_kind': 'scalar_bundle',
+        'expected_data_width': ctx['precision']['width'],
+        'expected_depth': None,
+        'flat_order': {'tensor_axes': ['n_filt'], 'axes': ['n_filt'], 'shape': [ctx['n_scalars']]},
+        'layout': {'mode': 'complete'},
+    }
+
+
 # (backend, io_type, strategy, layer_class, role) -> describe(context) -> dict.
 # strategy is matched lower-case; backend and layer_class keep hls4ml's casing.
 # Adding an entry is the only way to widen the manifest's scope, and requires
@@ -165,6 +268,10 @@ def _describe_dense_bias(ctx):
 _ADAPTERS = {
     ('Vitis', 'io_parallel', 'resource', 'Dense', 'weight'): _describe_dense_weight,
     ('Vitis', 'io_parallel', 'resource', 'Dense', 'bias'): _describe_dense_bias,
+    ('Vitis', 'io_parallel', 'resource', 'PointwiseConv1D', 'weight'): _describe_pointwise_weight,
+    ('Vitis', 'io_parallel', 'resource', 'PointwiseConv1D', 'bias'): _describe_pointwise_bias,
+    ('Vitis', 'io_parallel', 'resource', 'PointwiseConv2D', 'weight'): _describe_pointwise_weight,
+    ('Vitis', 'io_parallel', 'resource', 'PointwiseConv2D', 'bias'): _describe_pointwise_bias,
 }
 
 

@@ -16,6 +16,12 @@
 //
 // Overlapped per-transaction switching is not implemented: a new start is gated
 // away from the IP until the current transaction reports ap_done.
+//
+// Acceptance additionally requires hls_ap_idle. Under ap_ctrl_hs the IP raises
+// ap_idle the cycle AFTER ap_done, so clearing busy on ap_done alone would let the
+// next request -- and with it cur_bank_id -- be captured while the IP has not yet
+// returned to idle. Gating on ap_idle is what makes "idle-time only" literally
+// true, and it puts acceptance in the same state the loader already waits for.
 
 `default_nettype none
 
@@ -44,7 +50,7 @@ module bank_select_latch #(
   reg start_pending;
 
   wire bank_ok  = (ext_bank_id < N_BANKS[BANK_ID_WIDTH:0]);
-  wire can_take = ~busy & ~start_pending;
+  wire can_take = ~busy & ~start_pending & hls_ap_idle;
   wire capture  = ext_ap_start & can_take & bank_ok;
 
   // held high until the IP accepts, per ap_ctrl_hs
@@ -54,8 +60,9 @@ module bank_select_latch #(
   assign ext_ap_ready    = can_take;
   assign ext_bank_id_bad = ext_ap_start & can_take & ~bank_ok;
 
-  // idle: nothing pending and nothing in flight -> loader may write any bank
-  assign quiescent = ~busy & ~start_pending & hls_ap_idle;
+  // idle: nothing pending and nothing in flight -> loader may write any bank.
+  // Same condition as can_take: acceptance and loading share one idle state.
+  assign quiescent = can_take;
 
   always_ff @(posedge ap_clk) begin
     if (ap_rst) begin
@@ -69,7 +76,10 @@ module bank_select_latch #(
       end
       if (accept) begin
         start_pending <= 1'b0;
-        busy          <= 1'b1;
+        // A short transaction can report ap_ready and ap_done in the SAME cycle --
+        // a pointwise convolution does -- and then it is already over, so latching
+        // busy would strand it high with no later done to clear it.
+        busy          <= ~hls_ap_done;
       end else if (hls_ap_done) begin
         busy          <= 1'b0;
       end
