@@ -311,7 +311,7 @@ class AlteraWriter(Writer):
                             or layer.get_attr('recurrent_activation') == 'softmax'
                             or layer.get_attr('activation') == 'softmax_multidim'
                             or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                        ) and 'implementation' in layer.attributes:
+                        ):
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_exp_table.h"\n'
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_inv_table.h"\n'
 
@@ -700,275 +700,70 @@ class AlteraWriter(Writer):
         h_file.write('};\n')
         h_file.close()
 
-    def __write_exp_tables_stable(self, model, path):
-
+    def __write_softmax_tables(self, model, path):
         for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
+            activations = (layer.get_attr('activation'), layer.get_attr('recurrent_activation'))
+            implementation = layer.get_attr('implementation')
+            is_softmax = any(activation in ('softmax', 'softmax_multidim') for activation in activations)
 
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'stable'
-            ):
-                table_name = layer.name + '_exp_table'
-                table_size = min(int(layer.get_attr('table_size')), int(layer.get_attr('exp_table_size')))
+            if is_softmax:
+                for table_kind in ('exp', 'inv'):
+                    table_name = f'{layer.name}_{table_kind}_table'
+                    table_size = int(layer.get_attr(f'{table_kind}_table_size', layer.get_attr('table_size')))
+                    index_bits = ceil_log2(table_size)
 
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
+                    with open(f'{path}/{table_name}.h', 'w') as h_file:
+                        h_file.write(f'#ifndef {table_name.upper()}_H_\n')
+                        h_file.write(f'#define {table_name.upper()}_H_\n\n')
+                        h_file.write(
+                            f'static constexpr nnet::array<{layer.get_attr(f"{table_kind}_table_t").name},{table_size}> '
+                            f'{table_name} = {{'
+                        )
 
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("exp_table_t").name},{table_size}> {table_name} = {{'
-                    )
+                        if implementation == 'stable':
+                            table_lookup_type = layer.get_attr('inp_norm_t' if table_kind == 'exp' else 'inv_inp_t')
+                        if implementation == 'latency':
+                            if table_kind == 'exp':
+                                table_lookup_type = layer.get_input_variable().type
+                            else:
+                                table_lookup_type = layer.get_attr('exp_table_t')
 
-                    ac_type = layer.get_attr('inp_norm_t')
-                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                    fp_integer = ac_type.precision.integer
+                        sep = ''
+                        for i in range(table_size):
+                            if implementation == 'legacy':
+                                if table_kind == 'exp':
+                                    in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
+                                    real_val = np.exp(in_val)
+                                else:
+                                    in_val = 64.0 * i / float(table_size)
+                                    real_val = 1.0 / in_val if in_val > 0.0 else 0
+                            elif implementation in ('stable', 'latency'):
+                                f = FixedPointEmulator(
+                                    table_lookup_type.precision.width,
+                                    table_lookup_type.precision.integer,
+                                    signed=table_lookup_type.precision.signed,
+                                )
+                                f.set_msb_bits(uint_to_binary(i, index_bits))
 
-                    # Copy scaling from attributes
-                    scale = (
-                        layer.attributes['exp_scale']
-                        if (('exp_scale' in layer.attributes) and (layer.attributes['exp_scale'] is not None))
-                        else 1.0
-                    )
+                                if implementation == 'stable':
+                                    if table_kind == 'exp':
+                                        scale = layer.attributes.get('exp_scale', 1)  # only implemented in stable?
+                                        real_val = (1.0 / f.exp_float()) * scale
+                                    else:
+                                        real_val = f.inv_float()
+                                elif implementation == 'latency':
+                                    if table_kind == 'exp':
+                                        real_val = f.exp_float()
+                                    else:
+                                        real_val = f.inv_float()
+                            else:
+                                real_val = 0  # dummy value, for argmax
 
-                    N = ceil_log2(table_size)
-                    if N > 2**fp_bits:
-                        raise Exception('Table size is bigger than what precision allows')
-                    maxval = 2**fp_integer - 1
+                            h_file.write(sep + str(real_val))
+                            sep = ', '
 
-                    sep = ''
-                    # Use the top bits if table_size < 2**bit_width
-                    for i in range(table_size):
-                        # Norm type is always > 1 so if input quantiser is set to be signed for any reason,
-                        # force unsigned but keep the width
-                        f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
-                        b = uint_to_binary(i, N)
-                        f.set_msb_bits(b)
-                        real_val = (1.0 / f.exp_float()) * scale
-                        if real_val > maxval:
-                            real_val = maxval
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
-
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
-
-    def __write_invert_tables_stable(self, model, path):
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'stable'
-            ):
-                table_name = layer.name + '_inv_table'
-                table_size = min(int(layer.get_attr('table_size')), int(layer.get_attr('inv_table_size')))
-
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
-
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("inv_table_t").name},{table_size}> {table_name} = {{'
-                    )
-
-                    ac_type = layer.get_attr('inv_inp_t')
-                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                    fp_integer = ac_type.precision.integer
-
-                    N = ceil_log2(table_size)
-                    if N > 2**fp_bits:
-                        raise Exception('Table size is bigger than what precision allows')
-                    maxval = 2**fp_integer - 1
-
-                    # Use the top bits if table_size < 2**bit_width
-                    sep = ''
-                    for i in range(table_size):
-                        # Norm type is always > 1 so if input quantiser is set to be signed for any reason,
-                        # force unsigned but keep the width
-                        f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
-                        b = uint_to_binary(i, N)
-                        f.set_msb_bits(b)
-                        real_val = f.inv_float()
-                        if real_val > maxval:
-                            real_val = maxval
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
-
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
-
-    def __write_exp_tables_latency(self, model, path):
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'latency'
-            ):
-                table_name = layer.name + '_exp_table'
-                table_size = int(layer.get_attr('exp_table_size'))
-
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
-
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("exp_table_t").name},{table_size}> {table_name} = {{'
-                    )
-
-                    ac_type = layer.get_input_variable().type
-                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                    fp_integer = ac_type.precision.integer
-                    fp_signed = ac_type.precision.signed
-
-                    sep = ''
-                    N = ceil_log2(table_size)
-                    for i in range(table_size):
-                        f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-                        f.set_msb_bits(uint_to_binary(i, N))
-                        real_val = f.exp_float()
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
-
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
-
-    def __write_invert_tables_latency(self, model, path):
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'latency'
-            ):
-                table_name = layer.name + '_inv_table'
-                table_size = int(layer.get_attr('inv_table_size'))
-
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
-
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("inv_table_t").name},{table_size}> {table_name} = {{'
-                    )
-
-                    ac_type = layer.get_attr('exp_table_t')
-                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                    fp_integer = ac_type.precision.integer
-                    fp_signed = ac_type.precision.signed
-
-                    sep = ''
-                    N = ceil_log2(table_size)
-                    for i in range(table_size):
-                        f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-                        f.set_msb_bits(uint_to_binary(i, N))
-                        real_val = f.inv_float()
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
-
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
-
-    def __write_exp_table_legacy(self, model, path):
-
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'legacy'
-            ):
-                table_name = layer.name + '_exp_table'
-                table_size = int(layer.get_attr('exp_table_size'))  # not sure if it works, have to test first
-
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
-
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("exp_table_t").name},{table_size}> {table_name} = {{'
-                    )
-
-                    sep = ''
-                    for i in range(table_size):
-                        in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
-                        real_val = np.exp(in_val)
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
-
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
-
-    def __write_invert_table_legacy(self, model, path):
-
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'legacy'
-            ):
-                table_name = layer.name + '_inv_table'
-                table_size = int(layer.get_attr('inv_table_size'))
-
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
-
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("inv_table_t").name},{table_size}> {table_name} = {{'
-                    )
-
-                    sep = ''
-                    for i in range(table_size):
-                        real_val = 0
-                        in_val = 64.0 * i / float(table_size)
-                        if in_val > 0.0:
-                            real_val = 1.0 / in_val
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
-
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
+                        h_file.write('};\n\n')
+                        h_file.write('#endif')
 
     def write_activation_tables(self, model):
         """Write the lookup tables for activation functions
@@ -989,12 +784,7 @@ class AlteraWriter(Writer):
         self.__write_softplus_table(model, dstpath)
         self.__write_softsign_table(model, dstpath)
         self.__write_selu_table(model, dstpath)
-        self.__write_exp_tables_stable(model, dstpath)
-        self.__write_invert_tables_stable(model, dstpath)
-        self.__write_exp_tables_latency(model, dstpath)
-        self.__write_invert_tables_latency(model, dstpath)
-        self.__write_exp_table_legacy(model, dstpath)
-        self.__write_invert_table_legacy(model, dstpath)
+        self.__write_softmax_tables(model, dstpath)
 
     def write_generated_code(self, model):
         """Write the generated code (nnet_code_gen.h)
