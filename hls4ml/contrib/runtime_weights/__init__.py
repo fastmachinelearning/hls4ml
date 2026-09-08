@@ -1,7 +1,8 @@
 """Runtime-selected weight banks for a stock hls4ml IP.
 
 Post-export packaging only: the generated HLS compute IP is read, never modified,
-and its RTL stays byte-identical (verified by the fingerprint in the summary).
+and its exported compute artifacts stay byte-identical (verified by the
+fingerprint in the summary).
 
 Typical use, after ``hls_model.build(synth=True)`` on a project written with
 ``BramFactor`` set::
@@ -9,6 +10,9 @@ Typical use, after ``hls_model.build(synth=True)`` on a project written with
     from hls4ml.contrib.runtime_weights import package
 
     summary = package('my-hls-test', n_banks=2)
+
+``pack_banks`` turns one complete parameter set per bank into the memory images the
+wrapper expects; ``pack_tensor`` / ``build_bank_image`` are the primitives under it.
 
 Bank selection is idle-time only: ``bank_id`` is captured when the wrapper takes a
 request, made stable before ``ap_start`` rises, and held through ``ap_done``. Any
@@ -23,6 +27,7 @@ from hls4ml.contrib.runtime_weights.interface import InterfaceMismatch  # noqa: 
 from hls4ml.contrib.runtime_weights.pack import (  # noqa: F401
     PackingUnsupported,
     build_bank_image,
+    pack_banks,
     pack_flat,
     pack_tensor,
     write_mem,

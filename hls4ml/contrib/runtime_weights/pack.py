@@ -15,6 +15,8 @@ cannot be packed, and a mismatch between the supplied data and the manifest is a
 error rather than something to pad, truncate or transpose around.
 """
 
+import json
+import os
 from fractions import Fraction
 
 import numpy as np
@@ -156,3 +158,102 @@ def build_bank_image(port, banks, bank_stride_words=None):
         image.extend(words)
         image.extend([0] * (stride - depth))  # padding words are never addressed
     return image, stride
+
+
+def _parameter_inventory(project):
+    """All (layer, role) parameter keys of a ModelGraph, or None for a bare path."""
+    if not hasattr(project, 'get_layers'):
+        return None
+    return {(layer.name, role) for layer in project.get_layers() for role in getattr(layer, 'weights', {})}
+
+
+def _load_manifest(project):
+    """Read the external-parameter manifest a written project carries."""
+    from hls4ml.writer.external_parameters import MANIFEST_FILENAME
+
+    project_dir = project.config.get_output_dir() if hasattr(project, 'config') else str(project)
+    path = os.path.join(project_dir, 'firmware', 'weights', MANIFEST_FILENAME)
+    if not os.path.exists(path):
+        raise PackingUnsupported(
+            f'no manifest at {path}; the project must be written with BramFactor set so that '
+            'parameters are exposed outside the compute IP'
+        )
+    with open(path) as fh:
+        return json.load(fh)
+
+
+def pack_banks(project, banks):
+    """Pack one complete parameter set per bank into per-port memory images.
+
+    ``banks`` is a list of ``{(layer, role): tensor}``, one per bank, covering *every*
+    parameter of the model. Only parameters ``BramFactor`` externalized may differ
+    between them; the rest are compiled into the IP, so banks that disagree on a fixed
+    parameter describe hardware that cannot be built and are rejected here.
+
+    Tensors use hls4ml's declared layout: ``(n_in, n_out)`` for a Dense kernel, the
+    Keras orientation. A PyTorch ``nn.Linear.weight`` is its transpose. Shapes are
+    checked exactly, so only a square kernel could pass unnoticed.
+
+    ``project`` is a ModelGraph or a written project path; a ModelGraph also gives the
+    full parameter inventory, which is what lets a *missing* fixed parameter be
+    reported rather than ignored.
+
+    Returns ``{port_name: {...}}``: BRAM ports carry ``image`` and
+    ``bank_stride_words``, scalar bundles per-bank ``codes``.
+    """
+    if len(banks) < 2:
+        raise PackingUnsupported(f'need at least 2 banks, got {len(banks)}')
+
+    manifest = _load_manifest(project)
+    inventory = _parameter_inventory(project)
+    external = {(p['layer'], p['role']): p for p in manifest['ports']}
+
+    missing = [k for k in external for bank in banks if k not in bank]
+    if missing:
+        raise PackingUnsupported(f'every bank must supply each externalized parameter; missing {sorted(set(missing))}')
+
+    supplied = {k for bank in banks for k in bank}
+    if inventory is not None:
+        unknown = supplied - inventory
+        if unknown:
+            raise PackingUnsupported(f'not parameters of this model: {sorted(unknown)}')
+        # Without the full set there is no way to tell a fixed parameter that
+        # agrees from one that was simply never supplied.
+        absent = inventory - supplied
+        if absent:
+            raise PackingUnsupported(
+                f'each bank must be a complete parameter set so the fixed parameters can be '
+                f'checked; missing {sorted(absent)}'
+            )
+
+    # A fixed parameter lives in the compute IP and cannot vary per bank.
+    differing = []
+    for key in sorted(supplied - set(external), key=str):
+        values = [bank.get(key) for bank in banks]
+        first = np.asarray(values[0])
+        if any(v is None for v in values) or any(not np.array_equal(first, np.asarray(v)) for v in values[1:]):
+            differing.append(key)
+    if differing:
+        raise PackingUnsupported(
+            f'{differing} are not externalized by BramFactor, so they are fixed in the compute IP, '
+            'but the supplied banks disagree on them; every bank must share the same fixed parameters'
+        )
+
+    packed = {}
+    for key, port in external.items():
+        tensors = [bank[key] for bank in banks]
+        if port['expected_interface_kind'] == 'bram':
+            image, stride = build_bank_image(port, tensors)
+            packed[port['name']] = {
+                'kind': 'bram',
+                'image': image,
+                'bank_stride_words': stride,
+                'data_width': port['expected_data_width'],
+            }
+        else:
+            packed[port['name']] = {
+                'kind': port['expected_interface_kind'],
+                'codes': [pack_flat(port, np.asarray(t).ravel().tolist()) for t in tensors],
+                'data_width': port['expected_data_width'],
+            }
+    return packed

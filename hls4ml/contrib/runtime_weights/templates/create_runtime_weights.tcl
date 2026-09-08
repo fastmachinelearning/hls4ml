@@ -15,7 +15,9 @@ set n_banks       @N_BANKS@
 set clock_period  @CLOCK_PERIOD@
 
 set here [file normalize [file dirname [info script]]]
-set hls_rtl "$here/../${project_name}_prj/solution1/syn/verilog"
+# Substituted by the packager from interface.solution_verilog_dir(): this script
+# does not reconstruct the Vitis project layout, so a custom output_dir is fine.
+set hls_rtl "@HLS_RTL_DIR@"
 set wrap_rtl "$here/rtl"
 
 if {![file isdirectory $hls_rtl]} {
@@ -34,6 +36,13 @@ create_project -in_memory -part $part
 
 # unmodified HLS IP
 add_files -norecurse [glob "$hls_rtl/*.v"]
+
+# Generated ROMs are initialized with $readmemh("./<name>.dat"), resolved against
+# the working directory. The packager copied them next to this script, so run from
+# here rather than relying on wherever vivado was launched. They are deliberately
+# NOT add_files'd: they are data read at elaboration, not sources, and Vivado
+# removes a data file that is added as one.
+cd $here
 # wrapper
 add_files -norecurse [glob "$wrap_rtl/*.sv"]
 set_property file_type SystemVerilog [get_files "$wrap_rtl/*.sv"]

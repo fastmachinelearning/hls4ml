@@ -44,16 +44,19 @@ def _next_pow2(n):
 
 
 def fingerprint_ip(project_dir, project_name):
-    """SHA-256 over the exported RTL.
+    """SHA-256 over the exported compute artifacts: the RTL and the data files that
+    initialize its generated ROMs.
 
     This records the state of the IP; on its own it proves nothing about what the
     IP looked like earlier. Comparing a fingerprint taken before packaging with
     one taken after is what shows the IP was left alone.
     """
-    verilog = os.path.join(project_dir, f'{project_name}_prj', 'solution1', 'syn', 'verilog')
+    verilog = interface.solution_verilog_dir(project_dir, project_name)
     entries = []
     for name in sorted(os.listdir(verilog)):
-        if name.endswith('.v'):
+        # A .dat is part of the compute artifact: $readmemh loads it into a
+        # generated ROM at elaboration, so it changes what the IP computes.
+        if name.endswith(('.v', '.dat')):
             digest = hashlib.sha256(open(os.path.join(verilog, name), 'rb').read()).hexdigest()
             entries.append(f'{digest}  {name}')
     combined = hashlib.sha256('\n'.join(entries).encode()).hexdigest()
@@ -66,38 +69,22 @@ def fingerprint_ip(project_dir, project_name):
 # costs a packager run, not an HLS run. Both constants are emitted as localparams
 # ahead of the port list so the ports can reference them.
 CONTROL_PORTS = {'ap_clk', 'ap_rst', 'ap_start', 'ap_done', 'ap_ready', 'ap_idle'}
-BRAM_SUFFIXES = [
-    'Addr_A',
-    'EN_A',
-    'Din_A',
-    'Dout_A',
-    'WEN_A',
-    'Clk_A',
-    'Rst_A',
-    'Addr_B',
-    'EN_B',
-    'Din_B',
-    'Dout_B',
-    'WEN_B',
-    'Clk_B',
-    'Rst_B',
-]
 
 
 def _classify_ports(rtl_ports, banked):
-    """Split the IP's real port list into control / banked / pass-through."""
-    bram_names = [p['name'] for p in banked if p['expected_interface_kind'] == 'bram']
-    scalar_members = set()
+    """Split the IP's real port list into control / banked / pass-through.
+
+    The banked names come from interface.verify(), which resolved them against the
+    generated RTL; nothing here reconstructs a Vitis signal name.
+    """
+    owned = set(CONTROL_PORTS)
     for p in banked:
-        if p['expected_interface_kind'] == 'scalar_bundle':
-            scalar_members.update(p['actual_ports'])
+        if p['expected_interface_kind'] == 'bram':
+            owned.update(p['actual_signals'].values())
+        elif p['expected_interface_kind'] == 'scalar_bundle':
+            owned.update(p['actual_ports'])
 
-    owned = set(CONTROL_PORTS) | scalar_members
-    for name in bram_names:
-        owned.update(f'{name}_{suffix}' for suffix in BRAM_SUFFIXES)
-
-    passthrough = [p for p in rtl_ports if p['name'] not in owned]
-    return passthrough
+    return [p for p in rtl_ports if p['name'] not in owned]
 
 
 def _decl(port, prefix=''):
@@ -199,18 +186,24 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
 
     for p in bram:
         n, dw = p['name'], p['actual_data_width']
+        pw = p['actual_port_width']
+        sig = p['actual_signals']
         stride = _next_pow2(p['expected_depth'])
-        f.write(f'  wire [{p["actual_addr_width"] - 1}:0] {n}_Addr_A;\n')
-        f.write(f'  wire {n}_EN_A, {n}_Clk_A, {n}_Rst_A;\n')
-        f.write(f'  wire [{dw - 1}:0] {n}_Din_A, {n}_Dout_A;\n')
-        f.write(f'  wire [{dw // 8 - 1}:0] {n}_WEN_A;\n')
-        f.write(f'  parameter_bank #(.DATA_WIDTH({dw}), .HLS_ADDR_WIDTH({p["actual_addr_width"]}),\n')
-        f.write(f'      .WORD_BYTES({p["actual_word_bytes"]}), .LOCAL_WORDS({p["expected_depth"]}),\n')
+        # declared at the PHYSICAL width the IP drives, not the logical word width:
+        # parameter_bank pads between the two explicitly
+        f.write(f'  wire [{p["actual_addr_width"] - 1}:0] {sig["addr_a"]}, {sig["addr_b"]};\n')
+        f.write(f'  wire {sig["en_a"]}, {sig["en_b"]}, {sig["clk_a"]}, {sig["rst_a"]};\n')
+        f.write(f'  wire [{pw - 1}:0] {sig["din_a"]}, {sig["dout_a"]}, {sig["dout_b"]};\n')
+        f.write(f'  wire [{pw // 8 - 1}:0] {sig["wen_a"]};\n')
+        f.write(f'  parameter_bank #(.DATA_WIDTH({dw}), .PORT_WIDTH({pw}),\n')
+        f.write(f'      .HLS_ADDR_WIDTH({p["actual_addr_width"]}),\n')
+        f.write(f'      .WORD_BYTES({p["actual_addr_stride"]}), .LOCAL_WORDS({p["expected_depth"]}),\n')
         f.write('      .N_BANKS(N_BANKS), .BANK_ID_WIDTH(BANK_ID_WIDTH),\n')
         f.write(f'      .BANK_STRIDE_WORDS({stride}), .INIT_HEX({n.upper()}_INIT_HEX)) u_{n} (\n')
         f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
-        f.write(f'      .hls_Addr_A({n}_Addr_A), .hls_EN_A({n}_EN_A), .hls_WEN_A({n}_WEN_A),\n')
-        f.write(f'      .hls_Din_A({n}_Din_A), .hls_Dout_A({n}_Dout_A), .hls_Rst_A({n}_Rst_A),\n')
+        f.write(f'      .hls_Addr_A({sig["addr_a"]}), .hls_EN_A({sig["en_a"]}), .hls_WEN_A({sig["wen_a"]}),\n')
+        f.write(f'      .hls_Din_A({sig["din_a"]}), .hls_Dout_A({sig["dout_a"]}), .hls_Rst_A({sig["rst_a"]}),\n')
+        f.write(f'      .hls_Addr_B({sig["addr_b"]}), .hls_EN_B({sig["en_b"]}), .hls_Dout_B({sig["dout_b"]}),\n')
         f.write(f'      .ld_req(ld_{n}_req), .ld_bank(ld_{n}_bank), .ld_word(ld_{n}_word),\n')
         f.write(f'      .ld_wdata(ld_{n}_wdata),\n')
         f.write(f'      .ld_accept(ld_{n}_accept), .ld_reject(ld_{n}_reject),\n')
@@ -237,13 +230,17 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
     for p in passthrough:
         conns.append(f'.{p["name"]}({p["name"]})')
     for p in bram:
-        n, dw = p['name'], p['actual_data_width']
-        for suffix in ('Addr_A', 'EN_A', 'Din_A', 'Dout_A', 'WEN_A', 'Clk_A', 'Rst_A'):
-            conns.append(f'.{n}_{suffix}({n}_{suffix})')
-        # port B is proven unused by the IP (interface.bram_port_b_is_unused)
-        for suffix in ('Addr_B', 'EN_B', 'Din_B', 'WEN_B', 'Clk_B', 'Rst_B'):
-            conns.append(f'.{n}_{suffix}()')
-        conns.append(f".{n}_Dout_B({{{dw}{{1'b0}}}})")
+        sig = p['actual_signals']
+        # Both ports go to the IP as read ports; the bank lends port B to the
+        # loader while quiescent. A layer that ignores port B just leaves EN_B low,
+        # so this wiring is identical for every layer.
+        for role in ('addr_a', 'en_a', 'din_a', 'dout_a', 'wen_a', 'clk_a', 'rst_a'):
+            conns.append(f'.{sig[role]}({sig[role]})')
+        for role in ('addr_b', 'en_b', 'dout_b'):
+            conns.append(f'.{sig[role]}({sig[role]})')
+        # the IP never writes the memory (interface.bram_is_read_only)
+        for role in ('din_b', 'wen_b', 'clk_b', 'rst_b'):
+            conns.append(f'.{sig[role]}()')
     for p in scalar:
         n, w = p['name'], p['actual_width']
         for i in range(p['n_scalars']):
@@ -255,7 +252,21 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
     f.write('  );\n\nendmodule\n\n`default_nettype wire\n')
 
 
-def package(project, n_banks=2, output_dir=None, project_name=None):
+def _describe_banked_port(port):
+    """Geometry keys are omitted for a scalar bundle, which has no memory."""
+    entry = {
+        'name': port['name'],
+        'kind': port['expected_interface_kind'],
+        'data_width': port.get('actual_data_width') or port.get('actual_width'),
+        'n_scalars': port['n_scalars'],
+    }
+    if port['expected_interface_kind'] == 'bram':
+        entry['depth'] = port['actual_depth']
+        entry['bank_stride_words'] = _next_pow2(port['expected_depth'])
+    return entry
+
+
+def package(project, n_banks=2, output_dir=None):
     """Generate the banked-weight wrapper for a synthesized hls4ml project.
 
     Args:
@@ -265,17 +276,11 @@ def package(project, n_banks=2, output_dir=None, project_name=None):
         n_banks: how many banks to provision. Fixed in the generated RTL; changing
             it means re-running this packager, not re-running HLS.
         output_dir: where to write the wrapper (default ``<project>/runtime_weights``).
-        project_name: only needed when ``project`` is a path and the manifest is
-            somehow unavailable; normally taken from the manifest.
 
     Returns a dict describing what was written, including a fingerprint of the
     exported IP.
     """
-    if hasattr(project, 'config'):  # a ModelGraph
-        project_dir = project.config.get_output_dir()
-        project_name = project_name or project.config.get_project_name()
-    else:
-        project_dir = str(project)
+    project_dir = project.config.get_output_dir() if hasattr(project, 'config') else str(project)
 
     manifest_path = os.path.join(project_dir, 'firmware', 'weights', MANIFEST_FILENAME)
     if not os.path.exists(manifest_path):
@@ -295,12 +300,9 @@ def package(project, n_banks=2, output_dir=None, project_name=None):
     if manifest.get('backend') not in SUPPORTED_BACKENDS:
         raise ValueError(f'manifest backend is {manifest.get("backend")!r}, expected one of {sorted(SUPPORTED_BACKENDS)}')
 
-    # hls4ml's output directory and project name are independent, so the
-    # directory basename is not a usable default. Take it from the manifest.
-    if project_name is None:
-        project_name = manifest.get('project_name')
-    elif manifest.get('project_name') != project_name:
-        raise ValueError(f'manifest is for project {manifest.get("project_name")!r}, not {project_name!r}')
+    # hls4ml's output directory and project name are independent, so the directory
+    # basename is not a usable default; the manifest is the only source.
+    project_name = manifest.get('project_name')
     if not project_name:
         raise ValueError('manifest does not name a project')
 
@@ -321,19 +323,22 @@ def package(project, n_banks=2, output_dir=None, project_name=None):
 
     rtl_ports = interface.parse_rtl_ports(project_dir, project_name)
 
-    # The loader borrows port B of each BRAM interface. That is only sound if the
-    # IP really leaves it idle, so prove it from the exported RTL.
+    # The loader shares port B with the IP, which is sound only if the IP never
+    # writes the memory, so prove that from the exported RTL. Whether the IP reads
+    # port B does not matter -- Dense leaves it idle, pointwise uses it.
     for port in verified:
         if port['expected_interface_kind'] != 'bram':
             continue
-        unused, evidence = interface.bram_port_b_is_unused(project_dir, project_name, port['name'])
-        if not unused:
+        signals = port['actual_signals']
+        read_only, evidence = interface.bram_is_read_only(project_dir, project_name, signals)
+        if not read_only:
             raise interface.InterfaceMismatch(
-                f'{port["name"]}: port B is not provably unused by the IP ({evidence}); the loader cannot borrow it'
+                f'{port["name"]}: the IP is not provably read-only on this memory ({evidence}); '
+                'the loader cannot share a port with it'
             )
         # The wrapper clocks the banked memory with ap_clk and leaves Clk_A
         # dangling, which is only sound if the IP ties them together.
-        same_clk, clk_evidence = interface.bram_port_clk_is_ap_clk(project_dir, project_name, port['name'])
+        same_clk, clk_evidence = interface.bram_port_clk_is_ap_clk(project_dir, project_name, signals)
         if not same_clk:
             raise interface.InterfaceMismatch(
                 f'{port["name"]}: Clk_A is not provably tied to ap_clk ({clk_evidence}); '
@@ -350,6 +355,14 @@ def package(project, n_banks=2, output_dir=None, project_name=None):
     for module in STATIC_MODULES:
         shutil.copyfile(os.path.join(TEMPLATE_DIR, module), os.path.join(rtl_dir, module))
 
+    # Vitis initializes generated ROMs with $readmemh("./<name>.dat"), resolved
+    # against the simulator's or synthesizer's working directory. Vivado runs the
+    # generated Tcl from output_dir, so the data has to be there too.
+    hls_rtl_dir = interface.solution_verilog_dir(project_dir, project_name)
+    rom_data = [n for n in sorted(os.listdir(hls_rtl_dir)) if n.endswith('.dat')]
+    for name in rom_data:
+        shutil.copyfile(os.path.join(hls_rtl_dir, name), os.path.join(output_dir, name))
+
     top_name = f'{project_name}_runtime_weights'
     with open(os.path.join(rtl_dir, f'{top_name}.sv'), 'w') as fh:
         _emit_top(fh, project_name, verified, rtl_ports, n_banks, bank_id_width, hardware['control'])
@@ -359,6 +372,7 @@ def package(project, n_banks=2, output_dir=None, project_name=None):
     tcl = (
         tcl.replace('@PROJECT_NAME@', project_name)
         .replace('@TOP_NAME@', top_name)
+        .replace('@HLS_RTL_DIR@', os.path.abspath(hls_rtl_dir))
         .replace('@PART@', str(manifest['part']))
         .replace('@N_BANKS@', str(n_banks))
         .replace('@CLOCK_PERIOD@', str(manifest['clock_period']))
@@ -373,21 +387,9 @@ def package(project, n_banks=2, output_dir=None, project_name=None):
         'bank_id_width': bank_id_width,
         'control_protocol': hardware['control'],
         'bank_selection': 'idle-time (bank committed before ap_start, held to ap_done)',
-        'port_b_verified_unused': True,
-        'port_clk_verified_ap_clk': True,
         'passthrough_ports': [p['name'] for p in _classify_ports(rtl_ports, verified)],
-        'banked_ports': [
-            {
-                'name': p['name'],
-                'kind': p['expected_interface_kind'],
-                'data_width': p.get('actual_data_width') or p.get('actual_width'),
-                'depth': p.get('actual_depth'),
-                'word_bytes': p.get('actual_word_bytes'),
-                'bank_stride_words': _next_pow2(p['expected_depth']) if p['expected_depth'] else None,
-                'n_scalars': p['n_scalars'],
-            }
-            for p in verified
-        ],
+        'banked_ports': [_describe_banked_port(p) for p in verified],
+        'rom_data_files': rom_data,
         'exported_ip_sha256': fingerprint_ip(project_dir, project_name),
     }
     with open(os.path.join(output_dir, 'runtime_weights.json'), 'w') as fh:

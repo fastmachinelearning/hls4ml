@@ -41,157 +41,99 @@ Having set ``BramFactor=100``, only layers with more than 100 weights will be ex
 
 When integrating the design, users can use the exposed interface to implement weight reloading scheme.
 
-External parameter manifest
-===========================
-
-When ``BramFactor`` exposes parameters externally, ``hls4ml`` also writes
-``firmware/weights/external_parameters.json``. It records, per external port, what
-the generated design is expected to look like: the order in which ``hls4ml``
-flattened the tensor, the ``ARRAY_RESHAPE`` it emitted, the resulting word width
-and depth, and the fixed-point format. This is what a weight-reloading scheme
-needs in order to know which logical scalar lands in which physical memory word
-and lane.
-
-It covers more than memories: a fully partitioned parameter such as a Dense bias
-becomes a bundle of scalar ports, and is described here too.
-
-.. code-block:: json
-
-    {
-      "schema": "hls4ml.external_parameter_manifest/v1",
-      "ports": [
-        {
-          "name": "w2", "layer": "dense_1", "role": "weight",
-          "kernel_variant": "dense_resource_rf_leq_nin",
-          "flat_order": {"tensor_axes": ["n_in", "n_out"], "axes": ["n_out", "n_in"]},
-          "layout": {"mode": "block", "block_size": 2, "lanes": 16},
-          "expected_interface_kind": "bram",
-          "expected_data_width": 256, "expected_depth": 2
-        }
-      ]
-    }
-
-``flat_order`` gives the tensor's own axis names and the order to enumerate them
-in, so flattening is a transpose followed by a ravel. ``layout`` says how that
-flat sequence maps into memory words: with ``mode: "block"``, lane is
-``f // block_size`` and word is ``f % block_size``. Both are structured values, so
-a consumer never has to parse an expression.
-
-Two properties of the manifest are worth understanding:
-
-* Every geometry field is named ``expected_*``. ``hls4ml`` knows what it *asked*
-  HLS for; only C/RTL synthesis or export establishes what was actually built.
-  Consumers should cross-check against the synthesis report before relying on it.
-* Descriptions come from a registry of adapters keyed by
-  ``(backend, io_type, strategy, layer_class, role)``. ``hls4ml`` sees every
-  external parameter, including layers whose packing has not been checked, so an
-  unregistered combination gets no interface kind, geometry or ordering - only a
-  note, never a guess. Schema v1 registers the **Vitis backend only**, and within
-  it ``Dense`` weights and biases with ``io_parallel`` and ``Strategy: Resource``.
-  The Vivado backend also implements ``BramFactor`` but has not been verified, so
-  it receives no claims.
-
-Note that a ``Dense`` bias is *not* exposed as a memory even when ``BramFactor``
-selects it: ``nnet_dense_resource.h`` fully partitions ``biases``, so it lowers to
-individual scalar ports regardless of size. The manifest reports this as
-``expected_interface_kind: "scalar_bundle"``.
-
 Runtime-selected weight banks
 =============================
 
-``hls4ml.contrib.runtime_weights`` builds on the manifest to give a synthesized
-design several pre-provisioned weight banks, selected per inference, without
-resynthesizing the HLS IP. **This version supports the Vitis backend only.** It
-runs *after* ``build(synth=True)`` and only reads the generated project, so the
-compute IP is never modified. The summary records a fingerprint of the exported
-RTL; comparing one taken before packaging with one taken after is what shows the
-IP was left alone.
+``hls4ml.contrib.runtime_weights`` gives a synthesized design several resident
+weight banks, selected per inference, without re-running HLS. It runs *after*
+``build(synth=True)``, reads the generated project and writes a wrapper around it;
+the compute IP is never modified.
 
-.. code-block:: Python
+Enabling it
+-----------
 
-    from hls4ml.contrib.runtime_weights import package
+The parameters you want to switch must be outside the compute IP, so set
+``BramFactor`` and ``Strategy: Resource`` before conversion::
+
+    config["Model"]["Strategy"] = "Resource"
+    config["Model"]["BramFactor"] = 0       # 0 externalizes every parameter
+
+``hls4ml`` then also writes ``firmware/weights/external_parameters.json``, the
+manifest describing each external parameter. It is the contract everything below
+consumes.
+
+Packaging
+---------
+
+::
+
+    from hls4ml.contrib.runtime_weights import pack_banks, package
 
     hls_model.build(csim=False, synth=True)
-    summary = package(hls_model, n_banks=2)
+    summary = package(hls_model, n_banks=4)
 
-This writes a ``runtime_weights/`` directory containing a generated top level that
-instantiates the unmodified IP alongside banked storage per supported parameter
-interface - a depth-stacked memory for a BRAM port, a scalar bank for a bundle
-such as a Dense bias - plus the parameterized RTL and a Vivado Tcl script.
-Bank images are produced with the same package:
+``package()`` inspects the synthesized interface, checks it against the manifest,
+and writes ``runtime_weights/``: a generated top that instantiates the unmodified
+IP alongside banked storage, the parameterized RTL, and a Vivado Tcl script. It
+fails rather than guessing if anything disagrees.
 
-.. code-block:: Python
+Filling the banks
+-----------------
 
-    from hls4ml.contrib.runtime_weights import build_bank_image, write_mem
+``pack_banks()`` takes one **complete** parameter set per bank, keyed by
+``(layer, role)``::
 
-    image, stride = build_bank_image(port, [bank0_weights, bank1_weights])
-    write_mem("w2_banks.mem", image, port["expected_data_width"])
+    images = pack_banks(hls_model, [params_a, params_b, params_c])
 
-Packing is driven by the manifest's structured ``flat_order`` and ``layout``.
-Ports without both are rejected.
+Only parameters ``BramFactor`` externalized may differ between banks; every other
+parameter is compiled into the IP and must be identical in all of them. Passing the
+model rather than the manifest lets ``pack_banks`` see the full parameter list, so a
+fixed parameter that *disagrees* and one that is merely *missing* are both reported.
+All externalized parameters share one ``bank_id``: banks switch as a whole, never
+per layer.
 
-The image is bound to the wrapper through the generated top's per-port
-``<PORT>_INIT_HEX`` parameter, which is read with ``$readmemh`` at elaboration:
+Tensors use hls4ml's declared layout for the parameter -- for a Dense kernel that is
+``(n_in, n_out)``, the Keras orientation. A PyTorch ``nn.Linear.weight`` is its
+transpose and must be transposed first. Shapes are checked exactly.
 
-.. code-block:: systemverilog
+``pack_tensor``, ``build_bank_image`` and ``write_mem`` are the per-port primitives
+underneath, for callers that want one port at a time.
 
-    my_prj_runtime_weights #(
-        .N_BANKS(2),
-        .W2_INIT_HEX("w2_banks.mem")
-    ) u_wrapper ( ... );
+Selecting a bank
+----------------
 
-Banks can equally be written at run time through the loader ports, which is the
-point of the feature; ``INIT_HEX`` just gives the memory a defined starting state.
+Selection is **idle-time only**. The wrapper takes a request only while the IP
+reports ``ap_idle``, captures ``bank_id`` before raising ``ap_start``, and holds it
+for the whole transaction. An out-of-range id is rejected and starts nothing.
 
-Bank selection is **idle-time only**. The wrapper captures ``bank_id`` when it
-takes a request, makes it stable *before* asserting ``ap_start``, and holds it
-through ``ap_done``. Acceptance follows the real ``ap_ctrl_hs`` handshake:
-``ap_start`` is held until the IP asserts ``ap_ready``. Every parameter read
-therefore belongs to the selected bank, including any read in the first cycle.
-An out-of-range ``bank_id`` is rejected and starts nothing. While a transaction
-is in flight a new start is gated away from the IP; overlapping transactions are
-not supported, which gives up any back-to-back capability the IP may have.
+Any bank may be written while idle; every write is rejected while an inference is
+active, and reported on ``ld_<port>_reject`` rather than dropped. A BRAM port takes
+``ld_<p>_req/_bank/_word/_wdata``; a scalar bundle takes
+``ld_<p>_we/_bank/_idx/_data``. Both report ``_accept`` and ``_reject``.
 
-Any valid bank may be written while idle; all writes are rejected while an
-inference is active. Out-of-range bank ids, word addresses and scalar indices are
-rejected too, so a write is either performed or reported as refused on
-``ld_<port>_reject`` - never silently dropped.
+A bank is usable once *all* of its parameters have been loaded. Weight memories can
+also be preloaded at elaboration through a ``<PORT>_INIT_HEX`` parameter; scalar
+bundles have no such path in v1 and are loader-only.
 
-Each banked parameter gets its own loader port on the generated top. A BRAM port
-takes ``ld_<p>_req``, ``ld_<p>_bank``, ``ld_<p>_word`` and ``ld_<p>_wdata``; a
-scalar bundle takes ``ld_<p>_we``, ``ld_<p>_bank``, ``ld_<p>_idx`` and
-``ld_<p>_data``. Both report ``ld_<p>_accept`` and ``ld_<p>_reject``. To reload a
-bank: wait for ``quiescent``, drive one write per word or scalar while checking
-``ld_<p>_accept``, then select that bank on a later inference through
-``ext_bank_id``.
+Sample outputs on their own ``ap_vld``. The wrapper passes the IP's port-level
+validity signals through unchanged, and with more than one output head the slower
+one can assert valid after ``ap_done``.
 
-The bank count is fixed when the wrapper is generated, since the packed image,
-the bank stride and the generated RTL all encode it. Changing it means re-running
-the packager - not re-running HLS.
+Scope and limitations
+---------------------
 
-A model whose external parameters are not all describable is **refused**: banking
-only some of them would leave the rest as unconnected top-level ports.
+Supported: the **Vitis** backend, ``io_parallel``, ``Strategy: Resource``, and
+``Dense``, ``PointwiseConv1D`` and ``PointwiseConv2D`` layers. The pointwise classes
+are where a ``Dense`` over a 2-D or 3-D input lands, so those are covered too.
 
-Three boundaries are worth knowing:
+* ``ap_fixed`` with ``TRN``/``WRAP`` only; other rounding or saturation is refused.
+* Reuse factor must leave the memory more than one word deep, and a packed word
+  must not exceed 4096 bits.
+* The bank count is fixed when the wrapper is generated. Changing it is a packager
+  run, not an HLS run.
+* Overlapping transactions are not supported.
+* No AXI, board support, drivers, or automatic ``BramFactor`` selection.
 
-* **Fully partitioned weights are out of scope by construction**, not by omission.
-  ``Strategy: Latency`` (and ``ARRAY_PARTITION ... complete`` generally) lowers a
-  weight to one port per element with no address, so there is nothing to
-  concatenate a bank id onto. Such a parameter *can* be banked through the same
-  scalar path used for biases, but the selection mux then scales as
-  ``total_weights x n_banks`` and sits in front of the compute - fine for a bias
-  vector, wrong for a weight matrix.
-* **Losing constant folding is inherent to reloadable weights**, not a cost of
-  banking. Once a weight is a function argument rather than a literal, HLS can no
-  longer fold the multiplication into shift-adds, so full multipliers appear
-  whether or not banks are used. ``BramFactor`` alone already pays this.
-* **Selection is idle-time only.** Per-event switching with transactions in
-  flight is a different and harder feature, currently marked as future work.
-
-The number of banks, the memory geometry and the physical capacity are fixed when
-the design is implemented. Changing values within an existing bank requires only
-memory writes; adding a bank, or changing the network, precision or reuse factor,
-requires regenerating and re-implementing.
-
-Not provided: AXI or board support, any driver, a C++ wrapper, and any automatic
-change to ``BramFactor`` - which parameters are exposed remains the user's choice.
+Anything outside this is refused, not approximated: the manifest claims no layout
+for it and ``package()`` raises. See ``hls4ml/contrib/runtime_weights/README.md``
+for the implementation and for how to add a layer.
