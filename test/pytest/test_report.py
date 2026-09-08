@@ -26,8 +26,8 @@ def copy_vivado_report(output_dir, test_report_dir):
     return
 
 
-def copy_oneapi_report(output_dir, test_report_dir):
-    # copy pregenerated oneAPI reports
+def copy_altera_report(output_dir, test_report_dir):
+    # copy pregenerated Altera reports
     json_dir = f'{output_dir}/build/myproject.fpga.prj/reports/resources/json'
     os.makedirs(json_dir, exist_ok=True)
     shutil.copy(test_report_dir / 'quartus.ndjson', f'{json_dir}/quartus.ndjson')
@@ -74,13 +74,13 @@ def backend_configs():
             + '    LUT:      1526\n'
             + '    URAM:     N/A\n\n',
         },
-        'oneAPI': {
-            'backend': 'oneAPI',
+        'Altera': {
+            'backend': 'Altera',
             'part': 'Agilex7',
             'build': {'build_type': 'fpga'},
-            'copy_func': copy_oneapi_report,
-            'parse_func': hls4ml.report.parse_oneapi_report,
-            'print_func': hls4ml.report.print_oneapi_report,
+            'copy_func': copy_altera_report,
+            'parse_func': hls4ml.report.parse_altera_report,
+            'print_func': hls4ml.report.print_altera_report,
             'expected_outcome': '\n'
             + '==================================================\n'
             + '== FPGA Hardware Synthesis\n'
@@ -128,7 +128,7 @@ def hls_model_setup(request, test_case_id, backend_configs, tmp_path):
     )
     hls_model.write()
 
-    # to actually generate the reports (using Vivado 2020.1 or oneAPI 2025.0)
+    # to actually generate the reports (using Vivado 2020.1 or Altera 2025.0)
     # hls_model.build(**(backend_config['build']))
 
     backend_config['copy_func'](output_dir, test_report_dir)
@@ -136,7 +136,7 @@ def hls_model_setup(request, test_case_id, backend_configs, tmp_path):
     yield output_dir, backend_config
 
 
-@pytest.mark.parametrize('hls_model_setup', ['Vivado', 'oneAPI'], indirect=True)
+@pytest.mark.parametrize('hls_model_setup', ['Vivado', 'Altera'], indirect=True)
 def test_report(hls_model_setup, capsys):
     """Tests that the report parsing and printing functions work for different backends."""
     output_dir, backend_config = hls_model_setup
