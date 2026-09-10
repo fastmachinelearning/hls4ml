@@ -75,9 +75,10 @@ InstanceNorm_Stats:
         mean[i] =
             CONFIG_T::template product<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t>::product(sums[i], k_inv);
         typename CONFIG_T::accum_t variance =
-            CONFIG_T::template product<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t>::product(sums_sq[i], k_inv)
-            - mean[i] * mean[i];
-        inv_std[i] = static_cast<typename CONFIG_T::accum_t>(1.0f / std::sqrt(static_cast<float>(variance) + CONFIG_T::epsilon));
+            CONFIG_T::template product<typename CONFIG_T::accum_t, typename CONFIG_T::accum_t>::product(sums_sq[i], k_inv) -
+            mean[i] * mean[i];
+        inv_std[i] =
+            static_cast<typename CONFIG_T::accum_t>(1.0f / std::sqrt(static_cast<float>(variance) + CONFIG_T::epsilon));
     }
 
 // Normalize the input and apply the affine transform
@@ -90,8 +91,8 @@ InstanceNorm_Result:
             unsigned index = j * CONFIG_T::n_filt + i;
             typename CONFIG_T::accum_t val = static_cast<typename CONFIG_T::accum_t>(data[index]);
             typename CONFIG_T::accum_t normalized = (val - mean[i]) * inv_std[i];
-            res[index] = normalized * static_cast<typename CONFIG_T::accum_t>(scale[i])
-                       + static_cast<typename CONFIG_T::accum_t>(bias[i]);
+            res[index] = normalized * static_cast<typename CONFIG_T::accum_t>(scale[i]) +
+                         static_cast<typename CONFIG_T::accum_t>(bias[i]);
         }
     }
 }
