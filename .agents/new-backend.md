@@ -4,8 +4,9 @@ description: >-
   Create a new in-tree hls4ml FPGA backend — its Backend subclass, Writer, passes, and code templates — by
   forking an existing backend and pruning it to what is actually supported. Use when standing up a backend
   for a new toolchain or a variant of an existing one. Covers deciding whether a new backend is warranted,
-  what to subclass, the pass discovery and namespacing rules, registration, and how to avoid carrying dead
-  copied code.
+  what to subclass, the pass discovery and namespacing rules, registration, how to avoid carrying dead
+  copied code, the rules for deriving from a concrete backend, and the contracts (bridge symbols, build
+  report, relocatable output) every backend must honour.
 globs:
   - "hls4ml/backends/**"
   - "hls4ml/writer/**"
@@ -36,7 +37,8 @@ the next piece fresh from the source backend when you add each new feature.
 
 - **Backend:** inherit from `FPGABackend` (`backends/fpga/fpga_backend.py`), not from `VivadoBackend` or
   `VitisBackend`, unless you genuinely want their whole pass set. `FPGABackend` provides the shared FPGA
-  plumbing without toolchain-specific passes.
+  plumbing without toolchain-specific passes. If you do inherit from a concrete backend, read
+  "Deriving from a concrete backend" below.
 - **Writer:** there is no `FPGAWriter`. Writers subclass either `Writer` (`writer/writers.py`) or an existing
   backend's writer. For a backend that is not a variant of another, subclass `Writer` directly.
 - **Types, passes, templates:** fork the closest existing backend's `*_types.py`, `passes/` and its
@@ -47,6 +49,40 @@ the kernel typedef dispatch and the `hls::stream` representation are conventions
 other backends in the tree follow only partly. Defining your own variable types, your own `Template`
 subclasses and your own project layout is a supported extension, not a workaround. Say explicitly which
 convention you are diverging from and why.
+
+## Deriving from a concrete backend
+
+A backend that wraps another backend's flow — an accelerator integration, a tool variant — legitimately
+subclasses that backend and its writer instead of `FPGABackend`. That inheritance is where derived backends
+have accumulated most of their defects, and each rule below closes a failure that reached users.
+
+- **The constructor.** Parent backends hard-code their names in `__init__`, so derived backends bypass the
+  direct parent with `super(GrandParent, self).__init__(name='Yours')` and then repeat the parent's
+  registration calls by hand. Every step the parent later gains is silently missing in the subclass, and
+  the breakage surfaces as an unrelated model class failing to convert. If you must bypass, state in a
+  comment exactly which parent calls you are repeating, and add a test that compares your registered flows
+  and layer attributes against a fresh parent instance, so that a new parent step becomes a test failure
+  instead of a latent hole.
+- **The writer.** The parent's `write_hls` runs a fixed sequence of steps (listed in the
+  [architecture map](architecture-map.md)). A derived writer must account for every one of them: use it as
+  is, override it, or override it with a documented no-op. The two known failure modes are opposites of
+  each other — re-opening a file the parent wrote and patching it by string matching (after which any
+  parent change breaks the subclass silently), and calling `super().write_hls()` whole and leaving parent
+  output the flow does not use as dead files beside your own (after which nobody can tell which files
+  matter). Own templates for your own files; explicit no-ops for parent steps you replace.
+- **`create_initial_config`.** Name your own parameters and forward the rest:
+  `super().create_initial_config(..., **kwargs)`. A bare `**_` sink swallows the shared writer options
+  (`namespace`, `write_tar`, ...) without a message — the user sets an option, nothing happens, and no
+  test that only checks numbers will notice.
+- **Validation timing.** Validate at conversion, not at write time. Checks that need no graph (board,
+  interface, interface types) belong in `create_initial_config`; checks that need the graph (input and
+  output counts against the interface) belong in a pass in your default flow. Raise exceptions, not
+  asserts — asserts disappear under `python -O`. A configuration error that first appears in `compile()`
+  has already cost the user the whole conversion.
+- **`build()`.** Keep the keyword surface of the sibling backends; a flag you accept must either act or
+  raise, never be ignored. Run tools with `subprocess` and check exit codes — `os.system` inside
+  `try/except` never raises on a failing tool. Return the report dictionary that `hls4ml/report/` and the
+  CI synthesis helper expect; returning `None` fails the shared synthesis test on its report assertion.
 
 ## Pass discovery and namespacing — the rule that governs everything
 
@@ -94,6 +130,35 @@ After forking, delete what the backend does not support and trim what remains:
   scripts you do use.
 - **Configuration structs:** emit only the fields the kernel reads. Fields inherited from a base config
   struct and never used mislead readers into thinking the kernel honours them.
+
+## Contracts the rest of hls4ml imposes
+
+- **The bridge exports two symbols.** `ModelGraph._get_top_function` selects `<project>_float` or
+  `<project>_double` by the dtype of the incoming array. Generate working bodies for both, converting at
+  the boundary; an empty body makes `predict()` return zeros with no error for that dtype, which is the
+  worst failure mode a backend can have.
+- **The top function's ports are not fixed.** Configuration features add ports — weights above
+  `BramFactor` become top-level arguments. Anything that wraps the top function must forward every port it
+  exposes, or the backend must reject the feature at conversion with a message that names it.
+- **Generated projects must be relocatable.** Users archive them, move them and build on other machines.
+  No absolute paths in generated scripts or tool configuration files; make every path relative to the
+  project.
+
+## If the backend targets a board
+
+- Boards are data, not code. One driver template per interface kind, filled by the writer; the board list
+  supplies the part and the platform. Accept the platform (or board support file) path as a configuration
+  argument, so an unlisted board works without editing the package. Byte-identical driver or script files
+  copied per board are the pattern that has made board-support requests stall as unmergeable pull
+  requests.
+- Do not put vendor headers or backend-specific helpers in another backend's `templates/` tree. Your
+  backend owns `templates/<yourbackend>/`, and a writer step copies from there into the project. A vendor
+  file needs a license that permits redistribution, recorded at the top of the file together with where it
+  came from.
+- Write down the external interface contract the wrapper implements — beats consumed and produced per
+  invocation, TLAST behaviour in both directions, which side channels exist and who sets them — in the
+  documentation and in the driver. Boards that hang or return zeros with no way to debug them are the
+  dominant class of accelerator issue report, and the written contract is what makes them debuggable.
 
 ## Verify end to end
 

@@ -53,6 +53,11 @@ Everything about a layer lives in `layer.attributes` (`model/attributes.py`), a 
 - Attribute kinds: `Attribute`, `ConfigurableAttribute` (user may set it), `TypeAttribute` (name always ends
   in `_t`), `ChoiceAttribute`, `WeightAttribute`, `CodeAttrubute` (spelling as in the source).
 
+Defaults declared in `_expected_attributes` are applied by `_validate_attributes()`, which runs **after**
+`initialize()`. Inside `initialize()`, read any attribute a frontend might not have set with
+`get_attr(name, default)` — and assume such a frontend exists: an option one frontend always sets is absent
+when the model arrives through another.
+
 **How a user config value reaches a layer:** `HLSConfig` (`model/graph.py`) reads the `HLSConfig` dict; in
 `Layer.__init__` each key of the layer's config is converted from pascal case to snake case
 (`ReuseFactor` -> `reuse_factor`), and any key ending in `_t` whose value is a string is converted into a
@@ -143,12 +148,18 @@ Resulting project layout:
 The writer should stay simple: it copies text that passes and templates already produced. If you find
 yourself adding model logic to the writer, it belongs in a pass instead.
 
+A writer that subclasses another owns the difference: every parent step must be used as is, overridden, or
+overridden by a documented no-op. Never re-open a file the parent wrote to patch it by string matching, and
+never leave parent output the flow does not use sitting in the project.
+
 Three of those outputs are easy to forget when changing the project structure, and each has a consumer:
 
 - **The bridge** (`write_bridge`, from `templates/<backend>/myproject_bridge.cpp`) is what `compile()` builds
   and `predict()` calls through ctypes, and it also carries the trace-collection entry points used by
-  `trace()`. Change the top function's interface and the bridge must change with it, or Python-side
-  verification breaks while synthesis still succeeds.
+  `trace()`. The contract is by symbol name: `predict()` selects `<project>_float` or `<project>_double`
+  by the dtype of the input array, so both must exist with working bodies — an empty body returns zeros
+  for that dtype with no error. Change the top function's interface and the bridge must change with it, or
+  Python-side verification breaks while synthesis still succeeds.
 - **The testbench** (`write_test_bench`, plus `tb_data/`) is what C simulation and co-simulation run.
 - **The build scripts** (`write_build_script`) are copied from the backend's `templates/` directory and are
   what `build()` ultimately invokes; the report that `build()` returns is parsed by `hls4ml/report/`.

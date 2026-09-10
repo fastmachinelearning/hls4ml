@@ -162,6 +162,12 @@ same pattern at smaller scale.
 
 - Do not put model logic in the writer. If the writer needs to branch on a layer property, add a pass that
   sets an attribute and let the writer copy it.
+- Do not call, from inside `transform()`, model operations that are themselves passes or flow steps —
+  `model.write()`, `model.build()`, `model.compile()`. Writing is a pass scheduled by the writer flow and
+  building is the entry point that runs after flows, so a pass that invokes them re-enters the machinery it
+  is running under and fixes an ordering that flows exist to express. A pass that needs tool feedback
+  (enlarge, run, measure, apply) is really two passes, with the write and build scheduled by the flow
+  between them.
 - Do not read `node.get_output_variable().type` for a final bit width in a pass that runs before precision
   inference.
 - Do not assume a pass in another backend's directory is available to you. Cross-backend names resolve, but

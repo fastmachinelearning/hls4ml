@@ -74,3 +74,6 @@ Working method:
 - Do not treat a large numerical error as a precision problem before checking the weight layout, and do not
   treat a small one as a bug.
 - Do not conclude anything from a project directory you did not regenerate cleanly.
+- Do not take a registered template, or a kernel that compiles, as evidence of correctness — only a numeric
+  comparison against the source framework is. And a backend absent from an existing test's backend grid may
+  be deliberate: treat it as a hole to investigate before extending the grid, not as free coverage.
