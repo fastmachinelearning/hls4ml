@@ -83,11 +83,36 @@ Same idea, function-based instead of class-based:
   `register_keras_v2_layer_handler(name, func)`. Conversion tries v3 first and falls back to v2 unless
   `allow_v2_fallback=False`, so a model may reach either path — when a layer parses in one and not the other,
   this is why.
+  The dispatcher in `parse_keras_model` splits any returned dictionary that contains an `activation` key
+  into the layer plus a separate `Activation` layer, unless the dictionary's `class_name` is in the
+  dispatcher's `activation_layers` list. A handler that rewrites `class_name` to an activation type must
+  have that name in the list, or every such layer is emitted twice.
 - **PyTorch** (`converters/pytorch_to_hls.py`): `@pytorch_handler('ClassName', ...)`.
+  Two rules of the fx trace: read call arguments positionally as well as by keyword — models use both
+  spellings, and `get_call_arg` in `converters/pytorch_to_hls.py` handles that; and for an operation that
+  returns a tuple, the `getitem` index records which element the model consumes — a handler that ignores
+  the index parses a different model than the one written (`parse_rnn_layer` shows the pattern).
 - **ONNX** (`converters/onnx_to_hls.py`): `@onnx_handler('OpName', ...)`.
 
 Supporting a layer in one frontend does not support it in the others. Decide explicitly which frontends the
 task covers, and say so.
+
+## An option you parse is an option you must account for
+
+Storing a layer option in the parsed dictionary is not support. If nothing downstream consumes the
+attribute — no kernel reads it, no template emits it, no pass acts on it — the model converts cleanly and
+computes something different from the trained model, which is the worst failure mode hls4ml has. Before
+parsing an option, find its consumer: grep the backends for the attribute name.
+
+Every option a frontend can encounter belongs to one of three categories, and silently dropping it is never
+one of them:
+
+- **The IR represents it and a kernel computes it**: parse it faithfully.
+- **The IR can represent it but no kernel computes it yet**: parse it faithfully *and* ensure the backends
+  reject it until one does. The parser and the backends split the responsibility; a faithful parse with no
+  backend guard is a silent wrong answer.
+- **Out of scope for hls4ml** (dynamic behavior, training-time options, features no backend could reasonably
+  implement): reject in the parser with an error naming the layer and the option.
 
 ## Registering the hls4ml layer
 
@@ -110,7 +135,8 @@ The full path, with the skill that covers each step:
 1. In-tree or extension API — this skill.
 2. Write the frontend handler for each frontend in scope — this skill.
 3. Define the `Layer` subclass: `_expected_attributes` and `initialize()` (output shape, weights) —
-   [**architecture map**](architecture-map.md).
+   [**architecture map**](architecture-map.md). Inside `initialize()`, read optional attributes with
+   `get_attr(name, default)`: defaults from `_expected_attributes` are not applied yet at that point.
 4. Register it in `layer_map` — this skill.
 5. Add a branch to `model/optimizer/passes/infer_precision.py` if the layer's types should be inferable;
    without one it falls to the default rule — [**optimizer passes**](optimizer-passes.md).
