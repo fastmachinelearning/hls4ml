@@ -183,6 +183,20 @@ def test_predict_any_numpy_dtype(test_case_id, simple_unet, vitis_reference, axi
     np.testing.assert_array_equal(prediction, reference)
 
 
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_bram_weights_rejected_at_conversion(test_case_id, simple_unet, axi_mode):
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    config['Model']['Strategy'] = 'Resource'
+    config['Model']['BramFactor'] = 10
+    with pytest.raises(Exception, match='BramFactor weights'):
+        hls4ml.converters.convert_from_keras_model(
+            simple_unet,
+            hls_config=config,
+            output_dir=str(test_root_path / test_case_id),
+            **_vitis_unified_convert_kwargs('io_stream', axi_mode),
+        )
+
+
 @pytest.mark.parametrize('io_type', ['io_stream'])
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])

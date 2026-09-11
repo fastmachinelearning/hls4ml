@@ -170,12 +170,13 @@ class VitisUnifiedBackend(VitisBackend):
         return self._writer_flow
 
     def _register_flows(self):
-        vitis_ip = 'vitis:ip'
+        validation_passes = ['vitisunified:validate_bram_weights']
+        self._default_flow = register_flow('ip', validation_passes, requires=['vitis:ip'], backend=self.name)
+
         writer_passes = ['make_stamp', 'vitisunified:write_hls']
-        self._writer_flow = register_flow('write', writer_passes, requires=['vitis:ip'], backend=self.name)
-        self._default_flow = vitis_ip
+        self._writer_flow = register_flow('write', writer_passes, requires=[self._default_flow], backend=self.name)
 
         # register fifo depth optimization
         fifo_depth_opt_passes = ['vitisunified:fifo_depth_optimization'] + writer_passes
 
-        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vitis:ip'], backend=self.name)
+        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[self._default_flow], backend=self.name)

@@ -124,6 +124,9 @@ Example:
                                                            in_stream_buf_size=256,
                                                            out_stream_buf_size=256)
 
+The ``BramFactor`` option of the model configuration is not supported by this backend.
+If a weight is larger than ``BramFactor`` and would become an external BRAM port, the conversion stops with an error.
+
 
 Output directory layout
 -----------------------
