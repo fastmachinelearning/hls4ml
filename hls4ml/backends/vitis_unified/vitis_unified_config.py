@@ -25,20 +25,25 @@ class VitisUnifiedConfig:
         self.in_stream_buf_size = unified_config['in_stream_buf_size']
         self.out_stream_buf_size = unified_config['out_stream_buf_size']
 
-        # Platform is resolved from supported_boards.json based on board + axi_mode
-        board_info = self.supported_boards[self.board]
-        tcl_rel = platform_generator_tcl(board_info, self.axi_mode)
-        if tcl_rel:
+        # Platform is the user's own file, or resolved from supported_boards.json based on board + axi_mode
+        board_info = self.supported_boards.get(self.board, {})
+        platform = unified_config.get('Platform')
+        tcl_rel = None if platform else platform_generator_tcl(board_info, self.axi_mode)
+        if platform:
+            self._platform_path = platform
+            self._platform_generator_tcl = None
+            self._platform_output_path = None
+        elif tcl_rel:
             out_rel = mode_config(board_info, self.axi_mode).get('platform_output') or board_info.get(
                 'platform_output', 'output/platform.xsa'
             )
             output_dir = config.get_output_dir()
             workspace_root = os.path.join(output_dir, 'vitis_workspace')
             tcl_path = tcl_rel if os.path.isabs(tcl_rel) else os.path.join(workspace_root, tcl_rel)
-            self._platform_generator_tcl = os.path.abspath(os.path.expanduser(tcl_path))
             out_path = out_rel if os.path.isabs(out_rel) else os.path.join(workspace_root, out_rel)
-            self._platform_output_path = os.path.abspath(out_path)
-            self._platform_path = self._platform_output_path
+            self._platform_path = os.path.abspath(out_path)
+            self._platform_generator_tcl = os.path.abspath(os.path.expanduser(tcl_path))
+            self._platform_output_path = self._platform_path
         else:
             self._platform_path = self._get_xpfm_path_from_board()
             self._platform_generator_tcl = None
@@ -55,8 +60,7 @@ class VitisUnifiedConfig:
             )
         # Resolve relative to XILINX_VITIS if path is relative
         if not os.path.isabs(platform_rel):
-            xilinx_vitis = os.environ.get('XILINX_VITIS', '/opt/Xilinx/Vitis/2023.2')
-            return os.path.join(xilinx_vitis, platform_rel)
+            return os.path.join('${XILINX_VITIS}', platform_rel)
         return platform_rel
 
     def get_board_info(self, board=None):
@@ -70,22 +74,11 @@ class VitisUnifiedConfig:
 
     # main driver generation
     def get_driver_file(self):
-        """Return driver filename for current settings"""
-        board_info = self.get_board_info()
-        driver_file = board_info.get(self.axi_mode, {}).get('python_driver')
-        if not driver_file:
-            raise Exception(
-                f'No python_driver for axi_mode "{self.axi_mode}" in supported_boards.json for board "{self.board}"'
-            )
-        return driver_file
+        return f'{self.axi_mode}_driver.py'
 
     def get_driver_template_path(self):
-        """Return absolute path to main driver template for current board.
-        Derives path from python_drivers in supported_boards: {board}/python_drivers/{driver_file}.hls4ml
-        """
-        driver_file = self.get_driver_file()
-        template_rel = f'{self.board}/python_drivers/{driver_file}.hls4ml'
-        return os.path.join(os.path.dirname(__file__), '../../templates/vitis_unified', template_rel)
+        template_dir = os.path.join(os.path.dirname(__file__), '../../templates/vitis_unified/drivers')
+        return os.path.join(template_dir, f'{self.get_driver_file()}.hls4ml')
 
     def get_corrected_types(self):
         return self.input_type, self.output_type, self.inps, self.outs

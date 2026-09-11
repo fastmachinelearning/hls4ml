@@ -8,7 +8,15 @@ class ValidateConfig(ModelOptimizerPass):
 
     def transform(self, model):
         cfg = model.config.get_config_value('VitisUnifiedConfig')
-        validate_config(cfg['Board'], cfg['axi_mode'], cfg['Driver'], cfg['InputDtype'], cfg['OutputDtype'])
+        validate_config(
+            cfg['Board'],
+            cfg['axi_mode'],
+            cfg['Driver'],
+            cfg['InputDtype'],
+            cfg['OutputDtype'],
+            platform=cfg.get('Platform'),
+            part=model.config.get_config_value('Part'),
+        )
 
         n_inputs = len(model.get_input_variables())
         n_outputs = len(model.get_output_variables())

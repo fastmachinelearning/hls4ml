@@ -78,8 +78,11 @@ class VitisUnifiedWriter(VitisWriter):
         suffix = 'axi_master' if is_axi_master else 'axi_stream'
         return f'{self._get_project_name(model)}_{suffix}'
 
-    def _get_sim_file_name(self):
-        return 'myproject_test'
+    def _get_sim_file_name(self, model):
+        return f'{self._get_project_name(model)}_test'
+
+    def _get_ip_version(self, model):
+        return model.config.get_config_value('Version', '1.0.0')
 
     def _get_kernel_declaration(self, model):
         top_module_name = self._get_top_wrap_func_name(model, False)
@@ -124,10 +127,6 @@ class VitisUnifiedWriter(VitisWriter):
         if clock_period_ns <= 0:
             raise ValueError('ClockPeriod must be positive')
         return clock_period_ns
-
-    @staticmethod
-    def _gen_hex_addr_list(start_addr, stride, size, indent):
-        return [f'{indent}{hex(start_addr + index * stride)}' for index in range(size)]
 
     def _gen_io_signature(self, indent, input_type, output_type, inputs, outputs):
         input_ptrs = [f'{indent}{input_type}* {self._get_io_port_name(inp, True, idx)}' for idx, inp in enumerate(inputs)]
@@ -195,7 +194,9 @@ class VitisUnifiedWriter(VitisWriter):
                 if '{FILE_NAME_WRAP}' in line:
                     line = line.replace('{FILE_NAME_WRAP}', self._get_wrapper_file_name(model, self._is_axi_master()))
                 if '{SIM_FILE_NAME}' in line:
-                    line = line.replace('{SIM_FILE_NAME}', self._get_sim_file_name())
+                    line = line.replace('{SIM_FILE_NAME}', self._get_sim_file_name(model))
+                if '{IP_VERSION}' in line:
+                    line = line.replace('{IP_VERSION}', self._get_ip_version(model))
                 if '{FILE_NAME_BASE}' in line:
                     line = line.replace('{FILE_NAME_BASE}', self._get_project_name(model))
                 if '{OUTPUT_KERNEL_TYPE}' in line:
@@ -232,7 +233,7 @@ class VitisUnifiedWriter(VitisWriter):
             self._copy_board_platform_files(model)
 
     def _copy_board_platform_files(self, model):
-        """Copy board folder (tcl_scripts, python_drivers, etc.) to vitis_workspace for local use."""
+        """Copy board folder (tcl_scripts) to vitis_workspace for local use."""
         filedir = os.path.dirname(os.path.abspath(__file__))
         board = self.vitis_unified_config.get_board()
         src = os.path.join(filedir, '../templates/vitis_unified', board)
@@ -259,8 +260,12 @@ fi
 '''
             platform_path_for_vpp = local_xsa_path
         else:
-            platform_generator_block = ''
             platform_path_for_vpp = self.vitis_unified_config.get_platform_path()
+            platform_generator_block = ''
+            if '${XILINX_VITIS}' in platform_path_for_vpp:
+                platform_generator_block = (
+                    ': "${XILINX_VITIS:?XILINX_VITIS is not set. Source the Vitis settings64.sh first.}"\n'
+                )
 
         with (
             open(os.path.join(filedir, '../templates/vitis_unified/vitis_workspace/system_link/link_system.sh')) as fin,
@@ -634,6 +639,8 @@ fi
                     line = line.replace('<TOP_WRAPPER_NAME>', self._get_wrap_ip_name(model, False))
                 if '<TOP_NAME>' in line:
                     line = line.replace('<TOP_NAME>', self._get_top_wrap_func_name(model, False))
+                if '<IP_VERSION>' in line:
+                    line = line.replace('<IP_VERSION>', '.'.join(self._get_ip_version(model).split('.')[:2]))
                 fout.write(line)
 
     def _write_driver_axi_master(self, model):
@@ -643,45 +650,32 @@ fi
             open(driver_template_path) as fin,
             open(f'{model.config.get_output_dir()}/export/{driver_file}', 'w') as fout,
         ):
-            _, _, inputs, outputs = self.vitis_unified_config.get_corrected_types()
-            stride_in_ptr_addr = 4 * 3
-            stride_out_ptr_addr = 4 * 3
-            start_in_ptr_addr = 0x10
-            start_out_ptr_addr = start_in_ptr_addr + stride_in_ptr_addr * len(inputs)
-            start_batch_size_addr = start_out_ptr_addr + stride_out_ptr_addr * len(outputs)
+            inputs = model.get_input_variables()
+            outputs = model.get_output_variables()
             indent = ' ' * 12
 
             for line in fin.readlines():
-                if 'REG_ADDR_BATCH_SIZE' in line:
-                    line = line.replace('VAL', str(hex(start_batch_size_addr)))
-                if '# hls-driver-input-dbg-name' in line:
-                    names = [f'{indent}"{self._get_io_port_name(inp, True, idx)}"' for idx, inp in enumerate(inputs)]
+                if '# hls-driver-input-names' in line:
+                    names = [f"{indent}'{self._get_io_port_name(inp, True, idx)}'" for idx, inp in enumerate(inputs)]
                     line += ',\n'.join(names) + '\n'
-                if '# hls-driver-input-ptr' in line:
-                    line += (
-                        ',\n'.join(self._gen_hex_addr_list(start_in_ptr_addr, stride_in_ptr_addr, len(inputs), indent))
-                        + '\n'
-                    )
-                if '# hls-driver-output-dbg-name' in line:
-                    names = [f'{indent}"{self._get_io_port_name(out, False, idx)}"' for idx, out in enumerate(outputs)]
+                if '# hls-driver-output-names' in line:
+                    names = [f"{indent}'{self._get_io_port_name(out, False, idx)}'" for idx, out in enumerate(outputs)]
                     line += ',\n'.join(names) + '\n'
-                if '# hls-driver-output-ptr' in line:
-                    line += (
-                        ',\n'.join(self._gen_hex_addr_list(start_out_ptr_addr, stride_out_ptr_addr, len(outputs), indent))
-                        + '\n'
-                    )
                 if '<TOP_WRAPPER_NAME>' in line:
                     line = line.replace('<TOP_WRAPPER_NAME>', self._get_wrap_ip_name(model, True))
                 if '<TOP_NAME>' in line:
                     line = line.replace('<TOP_NAME>', self._get_top_wrap_func_name(model, True))
+                if '<IP_VERSION>' in line:
+                    line = line.replace('<IP_VERSION>', '.'.join(self._get_ip_version(model).split('.')[:2]))
                 fout.write(line)
 
     # ===== Test generation =====
-    def write_wrapper_test(self, model):
+    def write_test_bench(self, model):
+        self.write_tb_data(model)
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
             open(os.path.join(filedir, '../templates/vitis_unified/myproject_test.cpp')) as fin,
-            open(f'{model.config.get_output_dir()}/{self._get_sim_file_name()}.cpp', 'w') as fout,
+            open(f'{model.config.get_output_dir()}/{self._get_sim_file_name(model)}.cpp', 'w') as fout,
         ):
             _, _, _, _ = self.vitis_unified_config.get_corrected_types()
             model_inputs = model.get_input_variables()
@@ -823,5 +817,4 @@ fi
         self.write_wrapper(model)
         self._ensure_export_path(model)
         self.write_driver(model)
-        self.write_wrapper_test(model)
         self.write_tar(model)

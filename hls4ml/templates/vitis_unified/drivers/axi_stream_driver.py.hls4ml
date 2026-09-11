@@ -1,0 +1,90 @@
+import asyncio
+import time
+
+import numpy as np
+from pynq import PL, DefaultIP, Interrupt, Overlay, allocate
+
+
+class NeuralNetworkOverlay(Overlay):
+    def __init__(
+        self,
+        bitfile_name,
+        x_shape,
+        y_shape,
+        input_dtype=np.float32,
+        output_dtype=None,
+        dma_name='axi_dma_0',
+        reset_pl=True,
+        dtbo=None,
+        download=True,
+        ignore_version=False,
+        device=None,
+    ):
+        if reset_pl:
+            PL.reset()
+        super().__init__(bitfile_name, dtbo=dtbo, download=download, ignore_version=ignore_version, device=device)
+        output_dtype = output_dtype or input_dtype
+        self.input_buffer = allocate(shape=x_shape, dtype=input_dtype)
+        self.output_buffer = allocate(shape=y_shape, dtype=output_dtype)
+        self.ip = self.<TOP_WRAPPER_NAME>
+        self.dma = getattr(self, dma_name)
+        self.interrupt = Interrupt(f'{dma_name}/s2mm_introut')
+
+    def calculate_performance(self, N, execution_time):
+        rate = N / execution_time if execution_time > 0 else float('inf')
+        print(f'Processed elements: {N}, Execution time: {execution_time:.4f} seconds, Performance rate: {rate:.2f} inferences/second')
+        return rate
+
+    def predict(self, X, profile=False):
+        """
+        Obtain the predictions of the NN implemented in the FPGA.
+        Parameters:
+        - X : the input vector. Should be numpy ndarray. The first dimension is the batch.
+              Its dtype must match `input_dtype` given to the constructor, which in turn must match the
+              interface of the accelerator: 'np.float32' for a 'float' interface and 'np.float64' for 'double'.
+        - profile : boolean. Set it to `True` to print the performance of the algorithm in term of `inference/s`.
+        - return: an output array based on `np.ndarray` with a shape equal to `y_shape` and a `dtype` equal to
+                  `output_dtype`. With `profile=True` it returns a tuple (output, execution time in seconds,
+                  inferences per second).
+        """
+        np.copyto(self.input_buffer, X)
+        exec_time = self.ip.transfer(self.dma, self.input_buffer, self.output_buffer, self.interrupt, profile)
+        if profile:
+            return self.output_buffer, exec_time, self.calculate_performance(len(X), exec_time)
+        return self.output_buffer
+
+
+class HLS4ML_IP(DefaultIP):
+    bindto = ['xilinx.com:hls:<TOP_NAME>:<IP_VERSION>']
+
+    REG_ADDR_AP_CTRL = 0x00
+
+    def __init__(self, description):
+        super().__init__(description=description)
+        registers = description.get('registers') or {}
+        if not registers:
+            raise RuntimeError('no register map for <TOP_WRAPPER_NAME>; load the overlay together with its .hwh file')
+        self.REG_ADDR_BATCH_SIZE = registers['batch_size']['address_offset']
+
+    def ctrl_start(self):
+        self.write(self.REG_ADDR_AP_CTRL, 0x01)
+
+    def transfer(self, dma, input_buffer, output_buffer, intr, profile=False):
+        input_buffer.flush()
+        self.write(self.REG_ADDR_BATCH_SIZE, input_buffer.shape[0])
+        self.ctrl_start()
+
+        async def wait_for_acc():
+            t_start = time.perf_counter()
+            dma.recvchannel.transfer(output_buffer)
+            dma.sendchannel.transfer(input_buffer)
+            await intr.wait()
+            exec_time = time.perf_counter() - t_start
+            if profile:
+                print(f'Accelerator execution time: {exec_time * 1e3:.3f} ms')
+            return exec_time
+
+        loop = asyncio.get_event_loop()
+        exec_time = loop.run_until_complete(loop.create_task(wait_for_acc()))
+        output_buffer.invalidate()
+        return exec_time

@@ -86,9 +86,12 @@ class VitisUnifiedBackend(VitisBackend):
             commands.append(('kerlink', kerlink_cmd, kerlink_cwd))
 
         if commands and 'linux' in sys.platform:
-            for tool in ['v++', 'vitis-run']:
+            tools = ['v++', 'vitis-run'] + (['xclbinutil', 'vivado'] if bitfile else [])
+            for tool in tools:
                 if os.system(f'command -v {tool} > /dev/null') != 0:
                     raise Exception(f'Vitis installation not found. Make sure "{tool}" is on PATH.')
+        if bitfile and not os.environ.get('XILINX_VITIS'):
+            raise Exception('XILINX_VITIS is not set. Source the Vitis settings64.sh before building the bitfile.')
 
         for task_name, command, cwd in commands:
             stdout_log = os.path.join(output_dir, f'{task_name}_stdout.log')
@@ -115,8 +118,9 @@ class VitisUnifiedBackend(VitisBackend):
         self,
         board='zcu102',
         part=None,
+        platform=None,
         clock_period=5,
-        clock_uncertainty='12.5%',
+        clock_uncertainty=None,
         io_type='io_stream',
         driver='python',
         input_type='float',
@@ -127,8 +131,10 @@ class VitisUnifiedBackend(VitisBackend):
         **kwargs,
     ):
         supported_boards = load_supported_boards()
-        validate_config(board, axi_mode, driver, input_type, output_type, supported_boards)
+        validate_config(board, axi_mode, driver, input_type, output_type, supported_boards, platform, part)
         part = part or supported_boards[board]['part']
+        if platform is not None:
+            platform = os.path.abspath(os.path.expanduser(platform))
 
         config = super().create_initial_config(
             part=part, clock_period=clock_period, clock_uncertainty=clock_uncertainty, io_type=io_type, **kwargs
@@ -136,6 +142,7 @@ class VitisUnifiedBackend(VitisBackend):
 
         config['VitisUnifiedConfig'] = {}
         config['VitisUnifiedConfig']['Board'] = board
+        config['VitisUnifiedConfig']['Platform'] = platform
         config['VitisUnifiedConfig']['axi_mode'] = axi_mode
         config['VitisUnifiedConfig']['in_stream_buf_size'] = in_stream_buf_size
         config['VitisUnifiedConfig']['out_stream_buf_size'] = out_stream_buf_size

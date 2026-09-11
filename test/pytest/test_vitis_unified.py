@@ -85,7 +85,7 @@ def _vitis_unified_convert_kwargs(io_type, axi_mode, board='zcu102', **extra):
 
 def _driver_port_counts(driver_path):
     """Length of each per-port list the writer emits into the generated AXI-master driver."""
-    wanted = {'INP_PORT_NAMEs', 'REG_ADDR_INP_PTRs', 'OUT_PORT_NAMEs', 'REG_ADDR_OUT_PTRs'}
+    wanted = {'INP_PORT_NAMEs', 'OUT_PORT_NAMEs'}
     with open(driver_path) as f:
         tree = ast.parse(f.read())
     counts = {}
@@ -328,11 +328,10 @@ def test_config_files_resolved_at_write(test_case_id, simple_unet, axi_mode):
             assert (comp_dir / line.split('=', 1)[1]).exists()
 
 
-# review U12
-@pytest.mark.xfail(strict=True, reason='test bench and cfg files still use the myproject name')
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
 def test_custom_project_name(test_case_id, simple_unet, axi_mode):
     output_dir = test_root_path / test_case_id
+    shutil.rmtree(output_dir, ignore_errors=True)
     config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
     hls_model = hls4ml.converters.convert_from_keras_model(
         simple_unet,
@@ -349,6 +348,80 @@ def test_custom_project_name(test_case_id, simple_unet, axi_mode):
         if 'myproject' in path.name or 'myproject' in path.read_text(errors='ignore'):
             leftovers.append(str(path.relative_to(output_dir)))
     assert leftovers == []
+    assert (output_dir / 'custom_test.cpp').is_file()
+
+
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_ip_version_forwarded(test_case_id, simple_unet, axi_mode):
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        version='2.3.0',
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode),
+    )
+    hls_model.write()
+
+    cfg = (output_dir / 'vitis_workspace' / 'max_length_project' / 'hls_kernel_config_csim.cfg').read_text()
+    assert 'package.ip.version=2.3.0' in cfg
+    driver = (output_dir / 'export' / f'{axi_mode}_driver.py').read_text()
+    assert f'xilinx.com:hls:max_length_project_{axi_mode}:2.3' in driver
+
+
+@pytest.mark.parametrize(
+    'model_name, axi_mode, expected_counts',
+    [
+        ('multi_io_net', 'axi_master', {'INP_PORT_NAMEs': 2, 'OUT_PORT_NAMEs': 2}),
+        ('simple_unet', 'axi_master', {'INP_PORT_NAMEs': 1, 'OUT_PORT_NAMEs': 1}),
+        ('simple_unet', 'axi_stream', {}),
+    ],
+)
+def test_driver_generated(request, test_case_id, model_name, axi_mode, expected_counts):
+    model = request.getfixturevalue(model_name)
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode),
+    )
+    hls_model.write()
+
+    driver_path = output_dir / 'export' / f'{axi_mode}_driver.py'
+    assert _driver_port_counts(driver_path) == expected_counts
+    driver = driver_path.read_text()
+    assert '<TOP_' not in driver and '<IP_VERSION>' not in driver
+
+
+def test_custom_platform(test_case_id, simple_unet):
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    kwargs = {'backend': 'VitisUnified', 'io_type': 'io_stream', 'clock_period': 10, 'board': 'myboard'}
+    convert = hls4ml.converters.convert_from_keras_model
+
+    with pytest.raises(Exception, match='part'):
+        convert(simple_unet, hls_config=config, output_dir=str(output_dir), platform='/opt/pf/myboard.xpfm', **kwargs)
+    with pytest.raises(Exception, match='xpfm'):
+        convert(simple_unet, hls_config=config, output_dir=str(output_dir), platform='/opt/pf/myboard.txt', **kwargs)
+
+    hls_model = convert(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        platform='/opt/pf/myboard.xpfm',
+        part='xc7z020clg400-1',
+        **kwargs,
+    )
+    hls_model.write()
+
+    link = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.sh').read_text()
+    assert '--platform /opt/pf/myboard.xpfm ' in link
+    assert 'XILINX_VITIS' not in link
+    cfg = (output_dir / 'vitis_workspace' / 'myproject' / 'hls_kernel_config_csim.cfg').read_text()
+    assert 'part=xc7z020clg400-1' in cfg
 
 
 @pytest.mark.parametrize(
@@ -596,11 +669,7 @@ def test_gen_unified_multi_io(test_case_id, multi_io_net, io_type, strategy, gra
     counts = _driver_port_counts(driver_path)
     n_in, n_out = len(model.inputs), len(model.outputs)
     assert counts.get('INP_PORT_NAMEs') == n_in, f'expected {n_in} input port names, got {counts}'
-    assert counts.get('REG_ADDR_INP_PTRs') == n_in, f'expected {n_in} input pointer regs, got {counts}'
     assert counts.get('OUT_PORT_NAMEs') == n_out, f'expected {n_out} output port names, got {counts}'
-    assert counts.get('REG_ADDR_OUT_PTRs') == n_out, f'expected {n_out} output pointer regs, got {counts}'
-    # every pointer register must be distinct, otherwise ports would alias each other
-    assert len(set(counts)) == 4, f'missing per-port lists in generated driver: {counts}'
 
     # predict and save for hardware comparison purpose
     y_pred = vitis_unified_model.predict(X_inputs)

@@ -36,6 +36,7 @@ In both modes the CPU controls the kernel through AXI-Lite and receives an inter
 ``axi_master`` (default)
     The kernel reads its input and writes its output in DDR by itself through an AXI master port.
     The driver allocates one DDR buffer per model input and output, so models with several inputs or outputs are supported.
+    It takes the offsets of the pointer and batch-size registers from the hardware handoff file through PYNQ, so it does not depend on the register layout.
 
     .. image:: ../img/vitis_unified_axi_master.png
       :width: 450px
@@ -45,6 +46,7 @@ In both modes the CPU controls the kernel through AXI-Lite and receives an inter
 ``axi_stream``
     The kernel has one AXI-Stream input and one AXI-Stream output. An AXI DMA in the platform moves the data between DDR and the kernel.
     Only models with one input and one output are supported.
+    The driver expects the DMA instance to be called ``axi_dma_0``; another name can be passed with its ``dma_name`` argument.
 
     .. image:: ../img/vitis_unified_axi_stream.png
       :width: 450px
@@ -75,19 +77,25 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
      - | Target board.
        | It selects the FPGA part, the platform, and the Python driver template.
        | The current version only supports the boards in ``supported_boards.json`` (``zcu102`` and ``kv260``).
-       | Any other board name is rejected with an error.
-       | You can add your own board: build its platform and add it to the backend by following the platform setup tutorial in the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
+       | Any other board name is rejected with an error, unless ``platform`` and ``part`` are given.
+       | You can use your own board: build its platform by following the platform setup tutorial in the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository and pass it with ``platform``.
    * - ``part``
      - from board
      - | FPGA part name.
        | If not given, it is taken from the board entry in ``supported_boards.json``.
+   * - ``platform``
+     - ``None``
+     - | Path to your own platform file, ``.xpfm`` or ``.xsa``.
+       | When given, the platform of the board entry is not used, so a board that is not in ``supported_boards.json`` works together with ``part``.
+       | The driver does not depend on the platform, only on the linked design. For ``axi_master`` any Vitis embedded platform with a PS, DDR, and an interrupt input works.
+       | For ``axi_stream`` the platform must expose the two AXI-Stream ports of an AXI DMA with the tags ``DMA_MM2S`` and ``DMA_S2MM``, and the DMA's ``s2mm_introut`` must reach the PS. The shipped Tcl scripts show how.
    * - ``clock_period``
      - ``5``
      - | Kernel clock period in ns.
        | The same clock is used when the kernel is linked to the platform.
    * - ``clock_uncertainty``
-     - ``12.5%``
-     - | Clock uncertainty passed to Vitis HLS.
+     - ``27%``
+     - | Clock uncertainty passed to Vitis HLS. The default is the same as in the Vitis backend.
    * - ``io_type``
      - ``io_stream``
      - | hls4ml I/O type of the model.
@@ -133,6 +141,8 @@ Example:
                                                            in_stream_buf_size=256,
                                                            out_stream_buf_size=256)
 
+The ``version`` argument of the converter (default ``1.0.0``) sets ``package.ip.version`` of the kernel, and the generated driver binds to ``xilinx.com:hls:<top>:<major.minor>``.
+
 
 Output directory layout
 -----------------------
@@ -144,7 +154,7 @@ All paths inside the generated files are relative, so the output directory can b
     <output_dir>/
     ├── firmware/                          HLS sources: model, AXI wrapper, weights
     ├── tb_data/                           testbench input and reference output
-    ├── myproject_test.cpp                 C testbench
+    ├── <project_name>_test.cpp            C testbench of the AXI wrapper
     ├── <project_name>_bridge.cpp          bridge used by hls_model.predict()
     ├── build_lib.sh                       builds the shared library for predict()
     ├── hls4ml_config.yml
@@ -162,8 +172,7 @@ All paths inside the generated files are relative, so the output directory can b
     │   │   ├── <project_name>.xclbin      link output (bitfile=True)
     │   │   └── _x/                        Vivado project of the system link
     │   └── <board>/
-    │       ├── tcl_scripts/               create_xsa.tcl, platform tcl, output/<board>_*.xsa
-    │       └── python_drivers/            driver templates
+    │       └── tcl_scripts/               create_xsa.tcl, platform tcl, output/<board>_*.xsa
     ├── export/
     │   ├── system.bit                     bitstream (bitfile=True)
     │   ├── system.hwh                     hardware handoff (bitfile=True)
@@ -192,7 +201,7 @@ Build options
    * - ``vitis_fifo_sizing=True``
      - Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on ``cosim`` by itself.
    * - ``bitfile=True``
-     - Links the packaged kernel to the board platform and writes the bitstream and the hardware handoff file to ``export/``. It needs the ``.xo`` file from ``synth=True``.
+     - Links the packaged kernel to the board platform and writes the bitstream and the hardware handoff file to ``export/``. It needs the ``.xo`` file from ``synth=True``, ``xclbinutil`` and ``vivado`` on the PATH, and ``XILINX_VITIS`` set, which sourcing the Vitis ``settings64.sh`` does.
    * - ``log_to_stdout=False``
      - Writes the output of each step to ``<step>_stdout.log`` and ``<step>_stderr.log`` instead of the terminal.
    * - ``reset=True``

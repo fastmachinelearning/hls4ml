@@ -9,7 +9,10 @@ v++ -l -t hw --platform {PLATFORM_PATH} {KERNEL_XO} --config link_system.cfg -o 
 [ -f ../../export/system.hwh ] && rm -f ../../export/system.hwh
 
 xclbinutil --dump-section BITSTREAM:RAW:../../export/system.bit --input {PROJECT_NAME}.xclbin
-cp _x/link/vivado/vpl/prj/prj.gen/sources_1/bd/vitis_design/hw_handoff/vitis_design.hwh ../../export/system.hwh
+# the linked design is always named vitis_design; skip the sub-block and platform copies of the handoff
+HWH=$(find _x/link/vivado/vpl/prj -name vitis_design.hwh -not -path "*/ip/*")
+[ "$(printf '%s\n' "$HWH" | grep -c .)" -eq 1 ] || { echo "ERROR: expected exactly one vitis_design.hwh under _x/link/vivado/vpl/prj, found:"; echo "$HWH"; exit 1; }
+cp "$HWH" ../../export/system.hwh
 
 # Generate routed vectorless power estimate
 POWER_REPORT_TCL=report_power.tcl
