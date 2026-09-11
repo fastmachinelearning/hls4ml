@@ -197,8 +197,6 @@ def test_bram_weights_rejected_at_conversion(test_case_id, simple_unet, axi_mode
         )
 
 
-# review U4
-@pytest.mark.xfail(strict=True, reason='create_initial_config drops namespace and write_tar')
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
 def test_writer_options_forwarded(test_case_id, simple_unet, axi_mode):
     output_dir = test_root_path / test_case_id
@@ -209,11 +207,14 @@ def test_writer_options_forwarded(test_case_id, simple_unet, axi_mode):
         output_dir=str(output_dir),
         **_vitis_unified_convert_kwargs('io_stream', axi_mode, namespace='nsone', write_tar=True),
     )
-    hls_model.write()
+    hls_model.compile()
 
     header = (output_dir / 'firmware' / 'max_length_project.h').read_text()
     assert 'namespace nsone' in header
     assert output_dir.with_name(output_dir.name + '.tar.gz').exists()
+
+    X_input = np.random.rand(2, 4, 4, 1).astype(np.float32)
+    assert np.any(hls_model.predict(X_input) != 0)
 
 
 # review U12

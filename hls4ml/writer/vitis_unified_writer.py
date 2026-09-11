@@ -114,6 +114,10 @@ class VitisUnifiedWriter(VitisWriter):
     def _get_dma_type_name(self):
         return 'dma_data_packet'
 
+    def _get_using_namespace(self, model):
+        namespace = model.config.get_writer_config().get('Namespace', None)
+        return f'using namespace {namespace};\n' if namespace is not None else ''
+
     @staticmethod
     def _get_clock_period_ns(model):
         clock_period_ns = float(model.config.get_config_value('ClockPeriod'))
@@ -483,6 +487,7 @@ fi
                     newline = line.replace('MYPROJECT', self._get_project_name(model).upper())
                 elif '// hls-fpga-machine-learning insert include' in line:
                     newline = f'#include "{self._get_project_name(model)}.h"\n#include "ap_axi_sdata.h"\n'
+                    newline += self._get_using_namespace(model)
                 elif 'MY_PROJECT_TOP_FUNC' in line:
                     newline = line.replace('MY_PROJECT_TOP_FUNC', self._get_top_wrap_func_name(model, False))
                 elif '// hls-fpga-machine-learning insert definitions' in line:
@@ -601,6 +606,7 @@ fi
                     line = line.replace('FILENAME', self._get_wrapper_file_name(model, True).upper())
                 elif 'MY_PROJECT_INC.h' in line:
                     line = line.replace('MY_PROJECT_INC', self._get_project_name(model))
+                    line += self._get_using_namespace(model)
                 elif 'MY_PROJECT_TOP_FUNC' in line:
                     line = line.replace('MY_PROJECT_TOP_FUNC', self._get_top_wrap_func_name(model, True))
                 elif '// vitis-unified-wrapper-io' in line:

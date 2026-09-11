@@ -129,7 +129,7 @@ class VitisUnifiedBackend(VitisBackend):
         in_stream_buf_size=128,
         out_stream_buf_size=128,
         axi_mode='axi_master',
-        **_,
+        **kwargs,
     ):
         supported_boards_path = os.path.join(os.path.dirname(__file__), 'supported_boards.json')
         if os.path.exists(supported_boards_path):
@@ -142,7 +142,9 @@ class VitisUnifiedBackend(VitisBackend):
         if part is None:
             part = 'xczu9eg-ffvb1156-2-e'
 
-        config = super().create_initial_config(part, clock_period, clock_uncertainty, io_type)
+        config = super().create_initial_config(
+            part=part, clock_period=clock_period, clock_uncertainty=clock_uncertainty, io_type=io_type, **kwargs
+        )
 
         config['VitisUnifiedConfig'] = {}
         config['VitisUnifiedConfig']['Board'] = board
