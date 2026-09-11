@@ -340,12 +340,13 @@ fi
             inp_stream = inp_func + '_ap'
             out_func = self._get_io_port_name(out, False, 0)
             out_stream = out_func + '_ap'
-            newline += indent + f'hls::stream<{self._get_dma_type_name()}> {inp_stream};\n'
-            newline += indent + f'nnet::convert_data_axis<{dtype}, {in_type}, N_IN>({inp_func}, {inp_stream});\n'
-            newline += indent + f'hls::stream<{self._get_dma_type_name()}> {out_stream};\n'
+            dma = self._get_dma_type_name()
+            newline += indent + f'hls::stream<{dma}> {inp_stream};\n'
+            newline += indent + f'nnet::convert_data_axis<{dma}, {dtype}, N_IN>({inp_func}, {inp_stream});\n'
+            newline += indent + f'hls::stream<{dma}> {out_stream};\n'
             newline += indent + self._get_top_wrap_func_name(model, False) + '('
             newline += inp_stream + ', ' + out_stream + ', 1);\n'
-            newline += indent + f'nnet::convert_data_axis<{out_type}, {dtype}, N_OUT>({out_stream}, {out_func});\n'
+            newline += indent + f'nnet::convert_data_axis<{dma}, {dtype}, N_OUT>({out_stream}, {out_func});\n'
 
         return newline
 
@@ -707,10 +708,11 @@ fi
                     else:
                         assert len(model_inputs) == 1, 'Only support one input for axi stream'
                         assert len(model_outputs) == 1, 'Only support one output for axi stream'
-                        newline += 3 * indent + f'hls::stream<{self._get_dma_type_name()}> inputs;\n'
-                        newline += 3 * indent + 'nnet::convert_data_axis<float,float, N_IN>(in, inputs);\n'
+                        dma = self._get_dma_type_name()
+                        newline += 3 * indent + f'hls::stream<{dma}> inputs;\n'
+                        newline += 3 * indent + f'nnet::convert_data_axis<{dma}, float, N_IN>(in, inputs);\n'
                         newline += 3 * indent + 'std::cout << "input size inputs: " << inputs.size() << std::endl;\n'
-                        newline += 3 * indent + f'hls::stream<{self._get_dma_type_name()}> outputs;\n\n'
+                        newline += 3 * indent + f'hls::stream<{dma}> outputs;\n\n'
                 elif '// hls-fpga-machine-learning insert top-level-function' in line:
                     newline = line
                     input_ios = []

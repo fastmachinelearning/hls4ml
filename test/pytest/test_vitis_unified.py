@@ -158,7 +158,7 @@ def vitis_reference(simple_unet):
         ('axi_master', 'float'),
         ('axi_master', 'double'),
         ('axi_stream', 'float'),
-        # axi_stream with double does not compile yet (review finding U2), so it is not covered here
+        ('axi_stream', 'double'),
     ],
 )
 @pytest.mark.parametrize('np_dtype', [np.float32, np.float64])

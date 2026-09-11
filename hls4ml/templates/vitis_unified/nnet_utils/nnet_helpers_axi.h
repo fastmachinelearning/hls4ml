@@ -10,34 +10,27 @@ namespace nnet {
 
 #ifndef __SYNTHESIS__
 
-template <class srcType, typename dstType, size_t SIZE>
-void convert_data_axis(srcType *src, hls::stream<hls::axis<float, 0, 0, 0>> &dst) {
+template <class pack_T, class src_T, size_t SIZE> void convert_data_axis(src_T *src, hls::stream<pack_T> &dst) {
     for (size_t i = 0; i < SIZE; i++) {
-        hls::axis<float, 0, 0, 0> ctype;
-        ctype.data = dstType(src[i]);
-        dst.write(ctype);
-    }
-}
-
-template <class srcType, typename dstType, size_t SIZE>
-void convert_data_axis(std::vector<srcType> &src, hls::stream<hls::axis<float, 0, 0, 0>> &dst) {
-    for (auto i = 0; i < SIZE; i++) {
-        hls::axis<float, 0, 0, 0> pack;
+        pack_T pack;
         pack.data = src[i];
-        if (i == SIZE - 1) {
-            pack.last = 1;
-        } else {
-            pack.last = 0;
-        }
         dst.write(pack);
     }
 }
 
-template <typename srcType, class dstType, size_t SIZE>
-void convert_data_axis(hls::stream<hls::axis<float, 0, 0, 0>> &src, dstType *dst) {
+template <class pack_T, class src_T, size_t SIZE> void convert_data_axis(std::vector<src_T> &src, hls::stream<pack_T> &dst) {
     for (size_t i = 0; i < SIZE; i++) {
-        hls::axis<float, 0, 0, 0> ctype = src.read();
-        dst[i] = dstType(ctype.data);
+        pack_T pack;
+        pack.data = src[i];
+        pack.last = (i == SIZE - 1) ? 1 : 0;
+        dst.write(pack);
+    }
+}
+
+template <class pack_T, class dst_T, size_t SIZE> void convert_data_axis(hls::stream<pack_T> &src, dst_T *dst) {
+    for (size_t i = 0; i < SIZE; i++) {
+        pack_T pack = src.read();
+        dst[i] = dst_T(pack.data);
     }
 }
 
