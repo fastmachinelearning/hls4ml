@@ -2,6 +2,7 @@ import ast
 import json
 import os
 import shutil
+import tarfile
 import zipfile
 from pathlib import Path
 
@@ -214,7 +215,9 @@ def test_writer_options_forwarded(test_case_id, simple_unet, axi_mode):
 
     header = (output_dir / 'firmware' / 'max_length_project.h').read_text()
     assert 'namespace nsone' in header
-    assert output_dir.with_name(output_dir.name + '.tar.gz').exists()
+    with tarfile.open(output_dir.with_name(output_dir.name + '.tar.gz')) as archive:
+        names = archive.getnames()
+    assert any(name.endswith(f'export/{axi_mode}_driver.py') for name in names)
 
     X_input = np.random.rand(2, 4, 4, 1).astype(np.float32)
     assert np.any(hls_model.predict(X_input) != 0)
@@ -303,6 +306,9 @@ def test_config_files_resolved_at_write(test_case_id, simple_unet, axi_mode):
         **_vitis_unified_convert_kwargs('io_stream', axi_mode),
     )
     hls_model.write()
+
+    for stale in ['project.tcl', 'build_prj.tcl', 'build_opt.tcl', 'vivado_synth.tcl']:
+        assert not (output_dir / stale).exists()
 
     comp_dir = output_dir / 'vitis_workspace' / 'max_length_project'
     cfgs = {}

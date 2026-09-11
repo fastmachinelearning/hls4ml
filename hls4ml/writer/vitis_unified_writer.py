@@ -20,7 +20,8 @@ class VitisUnifiedWriter(VitisWriter):
         self.vitis_unified_config = None
 
     def write_tar(self, model):
-        super().write_tar(model)
+        """No-op for the parent write steps: the tar is written once at the end of write_hls, after all files exist."""
+        pass
 
     def write_nnet_utils_unified_overrides(self, model):
         """Copy VitisUnified-specific headers (AXI stream helpers and types) to the project."""
@@ -34,6 +35,14 @@ class VitisUnifiedWriter(VitisWriter):
 
     def write_board_script_override(self, model):
         """No-op: Vitis Unified uses vitis-comp.json and hls_kernel_config, not project.tcl."""
+        pass
+
+    def write_build_prj_override(self, model):
+        """No-op: Vitis Unified builds with v++ and the cfg files, not build_prj.tcl."""
+        pass
+
+    def write_build_opts(self, model):
+        """No-op: Vitis Unified builds with v++ and the cfg files, not build_opt.tcl."""
         pass
 
     # ===== sanity check function =====
@@ -817,4 +826,4 @@ fi
         self.write_wrapper(model)
         self._ensure_export_path(model)
         self.write_driver(model)
-        self.write_tar(model)
+        super().write_tar(model)
