@@ -184,7 +184,7 @@ Build options
    * - ``csim=True``
      - Runs the C simulation of the AXI wrapper with the generated test bench.
    * - ``cosim=True``
-     - Runs RTL co-simulation. It needs a synthesized project, so use it together with ``synth=True``.
+     - Runs RTL co-simulation. It turns on ``synth`` by itself.
    * - ``fifo_opt=True``
      - Runs the FIFO depth optimization. It turns on ``cosim`` by itself.
    * - ``vitis_fifo_sizing=True``
@@ -193,11 +193,13 @@ Build options
      - Links the packaged kernel to the board platform and writes the bitstream and the hardware handoff file to ``export/``. It needs the ``.xo`` file from ``synth=True``.
    * - ``log_to_stdout=False``
      - Writes the output of each step to ``<step>_stdout.log`` and ``<step>_stderr.log`` instead of the terminal.
-   * - ``reset``, ``vsynth``
-     - Accepted for compatibility with the other backends, but not used in this version.
+   * - ``reset=True``
+     - Deletes the Vitis HLS project and the link work directory before the selected steps run.
+   * - ``validation``, ``export``, ``vsynth``
+     - Accepted for compatibility with the other backends. They are ignored with a warning. The kernel is always packaged by ``synth=True``.
 
-Differences from the other backends: ``validation`` and ``export`` are not available, ``synth`` always packages the kernel, and ``build()`` does not return a report in this version.
-The reports are written under ``vitis_workspace/<project_name>/vitis_unified_project/reports/`` and ``final_reports/``.
+``build()`` returns a dictionary with the same keys as the Vitis backend: ``CSynthesisReport`` after ``synth=True`` and ``CosimReport`` after ``cosim=True``.
+The raw reports are under ``vitis_workspace/<project_name>/vitis_unified_project/`` and, after ``bitfile=True``, under ``final_reports/``.
 
 
 Limitations

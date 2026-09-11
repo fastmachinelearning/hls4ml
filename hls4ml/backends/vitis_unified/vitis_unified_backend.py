@@ -2,10 +2,11 @@ import os
 import subprocess
 import sys
 import warnings
-from shutil import copy2
+from shutil import copy2, rmtree
 
 from hls4ml.backends import VitisBackend, VivadoBackend
 from hls4ml.model.flow import register_flow
+from hls4ml.report import parse_vitis_unified_report
 
 
 class VitisUnifiedBackend(VitisBackend):
@@ -21,12 +22,18 @@ class VitisUnifiedBackend(VitisBackend):
         csim=False,
         synth=False,
         cosim=False,
+        validation=False,
+        export=False,
         vsynth=False,
         fifo_opt=False,
         bitfile=False,
         log_to_stdout=True,
         vitis_fifo_sizing=False,
     ):
+        for name, value in [('validation', validation), ('export', export), ('vsynth', vsynth)]:
+            if value:
+                warnings.warn(f'{name} is not supported by the VitisUnified backend and is ignored.', stacklevel=2)
+
         if fifo_opt and not cosim:
             warnings.warn('fifo_opt requires cosim to be enabled; cosim will be run automatically.', stacklevel=2)
             cosim = True
@@ -35,17 +42,19 @@ class VitisUnifiedBackend(VitisBackend):
             warnings.warn('vitis_fifo_sizing requires cosim to be enabled; cosim will be run automatically.', stacklevel=2)
             cosim = True
 
-        # it builds and return vivado reports
-        if 'linux' in sys.platform:
-            found = os.system('command -v v++ > /dev/null')
-            if found != 0:
-                raise Exception('Vitis installation not found. Make sure "vitis" is on PATH.')
-
-            found = os.system('command -v vitis-run > /dev/null')
-            if found != 0:
-                raise Exception('Vitis installation not found. Make sure "vitis-run" is on PATH.')
+        if cosim and not synth:
+            warnings.warn('cosim requires synth to be enabled; synth will be run automatically.', stacklevel=2)
+            synth = True
 
         output_dir = model.config.get_output_dir()
+        writer = model.config.backend.writer
+
+        if reset:
+            for path in [writer.get_vitis_hls_exec_dir(model), os.path.join(writer.get_vitis_linker_dir(model), '_x')]:
+                rmtree(path, ignore_errors=True)
+            xclbin = os.path.join(writer.get_vitis_linker_dir(model), f'{model.config.get_project_name()}.xclbin')
+            if os.path.isfile(xclbin):
+                os.remove(xclbin)
 
         hls_config_file = os.path.join(output_dir, 'hls_kernel_config.cfg')
         # build command
@@ -81,6 +90,11 @@ class VitisUnifiedBackend(VitisBackend):
         if bitfile:
             commands.append(('kerlink', kerlink_cmd, kerlink_cwd))
 
+        if commands and 'linux' in sys.platform:
+            for tool in ['v++', 'vitis-run']:
+                if os.system(f'command -v {tool} > /dev/null') != 0:
+                    raise Exception(f'Vitis installation not found. Make sure "{tool}" is on PATH.')
+
         for task_name, command, cwd in commands:
             stdout_log = os.path.join(output_dir, f'{task_name}_stdout.log')
             stderr_log = os.path.join(output_dir, f'{task_name}_stderr.log')
@@ -99,6 +113,8 @@ class VitisUnifiedBackend(VitisBackend):
                 if not log_to_stdout:
                     stdout_target.close()
                     stderr_target.close()
+
+        return parse_vitis_unified_report(output_dir)
 
     def prepare_sim_config_file(self, model, is_csim, enable_fifo_sizing=False):
         if is_csim and enable_fifo_sizing:

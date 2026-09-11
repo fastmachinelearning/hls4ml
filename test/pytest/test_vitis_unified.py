@@ -217,6 +217,78 @@ def test_writer_options_forwarded(test_case_id, simple_unet, axi_mode):
     assert np.any(hls_model.predict(X_input) != 0)
 
 
+FAKE_CSYNTH_XML = """<profile>
+<UserAssignments>
+<TargetClockPeriod>10.00</TargetClockPeriod>
+</UserAssignments>
+<PerformanceEstimates>
+<SummaryOfTimingAnalysis>
+<EstimatedClockPeriod>8.750</EstimatedClockPeriod>
+</SummaryOfTimingAnalysis>
+<SummaryOfOverallLatency>
+<Best-caseLatency>undef</Best-caseLatency>
+<Worst-caseLatency>undef</Worst-caseLatency>
+<Interval-min>undef</Interval-min>
+<Interval-max>undef</Interval-max>
+</SummaryOfOverallLatency>
+</PerformanceEstimates>
+<AreaEstimates>
+<Resources>
+<BRAM_18K>4</BRAM_18K>
+<DSP>171</DSP>
+<FF>9744</FF>
+<LUT>19834</LUT>
+<URAM>0</URAM>
+</Resources>
+<AvailableResources>
+<BRAM_18K>1824</BRAM_18K>
+<DSP>2520</DSP>
+<FF>548160</FF>
+<LUT>274080</LUT>
+<URAM>0</URAM>
+</AvailableResources>
+</AreaEstimates>
+</profile>
+"""
+
+FAKE_COSIM_RPT = """+--------+--------+-----+-----+-----+-----+-----+-----+
+|  RTL   | Status | min | avg | max | min | avg | max |
++--------+--------+-----+-----+-----+-----+-----+-----+
+|    VHDL|      NA|   NA|   NA|   NA|   NA|   NA|   NA|
+| Verilog|    Pass|  248|  251|  278|  248|  251|  278|
++--------+--------+-----+-----+-----+-----+-----+-----+
+"""
+
+
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_build_returns_report_and_reset(test_case_id, simple_unet, axi_mode):
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode),
+    )
+    hls_model.write()
+
+    hls_prj = output_dir / 'vitis_workspace' / 'max_length_project' / 'vitis_unified_project' / 'hls'
+    (hls_prj / 'syn' / 'report').mkdir(parents=True, exist_ok=True)
+    (hls_prj / 'sim' / 'report').mkdir(parents=True, exist_ok=True)
+    (hls_prj / 'syn' / 'report' / f'max_length_project_{axi_mode}_csynth.xml').write_text(FAKE_CSYNTH_XML)
+    (hls_prj / 'sim' / 'report' / f'max_length_project_{axi_mode}_cosim.rpt').write_text(FAKE_COSIM_RPT)
+
+    with pytest.warns(UserWarning, match='vsynth'):
+        report = hls_model.build(vsynth=True)
+    assert report['CSynthesisReport']['LUT'] == '19834'
+    assert report['CSynthesisReport']['AvailableDSP'] == '2520'
+    assert report['CosimReport']['Status'] == 'Pass'
+    assert report['CosimReport']['LatencyMax'] == '278'
+
+    hls_model.build(reset=True)
+    assert not hls_prj.parent.exists()
+
+
 # review U12
 @pytest.mark.xfail(strict=True, reason='test bench and cfg files still use the myproject name')
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
