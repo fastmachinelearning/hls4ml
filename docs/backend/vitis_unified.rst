@@ -148,7 +148,7 @@ Output directory layout
     ├── hls4ml_config.yml
     ├── hls_kernel_config_csim.cfg         Vitis HLS config for csynth, package, and csim
     ├── hls_kernel_config_cosim.cfg        Vitis HLS config for cosim
-    ├── hls_kernel_config.cfg              copy of the config used by the last step
+    ├── hls_kernel_config_cosim_fifo_sizing.cfg   the same with FIFO sizing on (vitis_fifo_sizing=True)
     ├── fifo_depths.json                   with FIFO depth optimization only
     ├── <step>_stdout.log, <step>_stderr.log   with log_to_stdout=False only
     ├── vitis_workspace/

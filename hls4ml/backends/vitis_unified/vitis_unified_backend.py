@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 import warnings
-from shutil import copy2, rmtree
+from shutil import rmtree
 
 from hls4ml.backends import VitisBackend
 from hls4ml.backends.vitis_unified.vitis_unified_validation import load_supported_boards, validate_config
@@ -55,35 +55,32 @@ class VitisUnifiedBackend(VitisBackend):
             if os.path.isfile(xclbin):
                 os.remove(xclbin)
 
-        hls_config_file = os.path.join(output_dir, 'hls_kernel_config.cfg')
+        csim_cfg = os.path.join(output_dir, 'hls_kernel_config_csim.cfg')
+        cosim_suffix = 'cosim_fifo_sizing' if vitis_fifo_sizing else 'cosim'
+        cosim_cfg = os.path.join(output_dir, f'hls_kernel_config_{cosim_suffix}.cfg')
         # build command
-        csynth_cmd = ('v++ -c --mode hls --config {configPath} --work_dir vitis_unified_project').format(
-            configPath=hls_config_file
-        )
+        csynth_cmd = f'v++ -c --mode hls --config {csim_cfg} --work_dir vitis_unified_project'
         # util template (used in csim/cosim/package)
         util_command = 'vitis-run --mode hls --{op} --config {configPath} --work_dir vitis_unified_project'
 
         # command for each configuration
-        vitis_hls_dir = model.config.backend.writer.get_vitis_hls_dir(model)
-        package_cmd = util_command.format(op='package', configPath=hls_config_file)
-        cosim_cmd = util_command.format(op='cosim', configPath=hls_config_file)
-        csim_cmd = util_command.format(op='csim', configPath=hls_config_file)
+        vitis_hls_dir = writer.get_vitis_hls_dir(model)
+        package_cmd = util_command.format(op='package', configPath=csim_cfg)
+        cosim_cmd = util_command.format(op='cosim', configPath=cosim_cfg)
+        csim_cmd = util_command.format(op='csim', configPath=csim_cfg)
 
         kerlink_cmd = './link_system.sh'
-        kerlink_cwd = model.config.backend.writer.get_vitis_linker_dir(model)
+        kerlink_cwd = writer.get_vitis_linker_dir(model)
 
         commands = []
         if synth:
-            self.prepare_sim_config_file(model, True, False)
             commands.append(('csynth', csynth_cmd, vitis_hls_dir))
             commands.append(('package', package_cmd, vitis_hls_dir))
 
         if csim:
-            self.prepare_sim_config_file(model, True, False)
             commands.append(('csim', csim_cmd, vitis_hls_dir))
 
         if cosim or fifo_opt:
-            self.prepare_sim_config_file(model, False, vitis_fifo_sizing)
             commands.append(('cosim', cosim_cmd, vitis_hls_dir))
 
         if bitfile:
@@ -114,22 +111,6 @@ class VitisUnifiedBackend(VitisBackend):
                     stderr_target.close()
 
         return parse_vitis_unified_report(output_dir)
-
-    def prepare_sim_config_file(self, model, is_csim, enable_fifo_sizing=False):
-        if is_csim and enable_fifo_sizing:
-            raise ValueError('enable_fifo_sizing requires cosim; cannot use fifo sizing with csim config.')
-
-        suffix = 'csim' if is_csim else 'cosim'
-        src = f'{model.config.get_output_dir()}/hls_kernel_config_{suffix}.cfg'
-        des = f'{model.config.get_output_dir()}/hls_kernel_config.cfg'
-        copy2(src, des)
-
-        with open(des) as f:
-            content = f.read()
-        with open(des, 'w') as f:
-            f.write(content.replace('{ENABLE_FIFO_SIZING}', 'true' if enable_fifo_sizing else 'false'))
-
-        return des
 
     def create_initial_config(
         self,

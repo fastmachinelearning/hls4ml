@@ -1,4 +1,5 @@
 import ast
+import json
 import os
 from pathlib import Path
 
@@ -287,6 +288,31 @@ def test_build_returns_report_and_reset(test_case_id, simple_unet, axi_mode):
 
     hls_model.build(reset=True)
     assert not hls_prj.parent.exists()
+
+
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_config_files_resolved_at_write(test_case_id, simple_unet, axi_mode):
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode),
+    )
+    hls_model.write()
+
+    cfgs = {}
+    for name in ['csim', 'cosim', 'cosim_fifo_sizing']:
+        cfgs[name] = (output_dir / f'hls_kernel_config_{name}.cfg').read_text()
+        assert '{' not in cfgs[name]
+        assert not any(line.startswith('#') for line in cfgs[name].splitlines())
+    assert 'RTL_SIM' not in cfgs['csim'] and 'enable_fifo_sizing' not in cfgs['csim']
+    assert '-DRTL_SIM' in cfgs['cosim'] and 'cosim.enable_fifo_sizing=false' in cfgs['cosim']
+    assert 'cosim.enable_fifo_sizing=true' in cfgs['cosim_fifo_sizing']
+
+    comp = json.loads((output_dir / 'vitis_workspace' / 'max_length_project' / 'vitis-comp.json').read_text())
+    assert all(os.path.isfile(path) for path in comp['configuration']['configFiles'])
 
 
 # review U12

@@ -144,8 +144,10 @@ class VitisUnifiedWriter(VitisWriter):
     def write_build_script(self, model):
         self._write_bridge_build_script(model)
         self._build_unified_project_skeleton(model)
-        self._write_hls_kernel_config(model, is_csim=True)
-        self._write_hls_kernel_config(model, is_csim=False)
+        rtl_sim = 'tb.file_cflags={OUTDIR}/{SIM_FILE_NAME}.cpp,-DRTL_SIM'
+        self._write_hls_kernel_config(model, 'csim', [])
+        self._write_hls_kernel_config(model, 'cosim', [rtl_sim, 'cosim.enable_fifo_sizing=false'])
+        self._write_hls_kernel_config(model, 'cosim_fifo_sizing', [rtl_sim, 'cosim.enable_fifo_sizing=true'])
         self._write_linker_dir(model)
         self._write_linker_launcher(model)
         self._write_linker_config(model)
@@ -168,15 +170,16 @@ class VitisUnifiedWriter(VitisWriter):
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
-    def _write_hls_kernel_config(self, model, is_csim=False):
+    def _write_hls_kernel_config(self, model, suffix, cosim_options):
         filedir = os.path.dirname(os.path.abspath(__file__))
-        suffix = 'csim' if is_csim else 'cosim'
         clock_period_ns = self._get_clock_period_ns(model)
         with (
             open(os.path.join(filedir, '../templates/vitis_unified/hls_kernel_config.cfg')) as fin,
             open(f'{model.config.get_output_dir()}/hls_kernel_config_{suffix}.cfg', 'w') as fout,
         ):
             for line in fin.readlines():
+                if '# hls-fpga-machine-learning insert cosim options' in line:
+                    line = ''.join(f'{option}\n' for option in cosim_options)
                 if '{PART}' in line:
                     line = line.replace('{PART}', model.config.get_config_value('Part'))
                 if '{CLK}' in line:
@@ -195,8 +198,6 @@ class VitisUnifiedWriter(VitisWriter):
                     line = line.replace('{FILE_NAME_BASE}', self._get_project_name(model))
                 if '{OUTPUT_KERNEL_TYPE}' in line:
                     line = line.replace('{OUTPUT_KERNEL_TYPE}', 'xo')
-                if is_csim and (('enable_fifo_sizing' in line) or ('-DRTL_SIM' in line)):
-                    line = '#' + line
                 fout.write(line)
 
     def _build_unified_project_skeleton(self, model):
@@ -218,7 +219,7 @@ class VitisUnifiedWriter(VitisWriter):
                 if '{HLS_NAME}' in line:
                     line = line.replace('{HLS_NAME}', self._get_project_name(model))
                 if '{CONFIG_FILE}' in line:
-                    line = line.replace('{CONFIG_FILE}', f'{model.config.get_output_dir()}/hls_kernel_config.cfg')
+                    line = line.replace('{CONFIG_FILE}', f'{model.config.get_output_dir()}/hls_kernel_config_csim.cfg')
                 fout.write(line)
 
     def _write_linker_dir(self, model):
