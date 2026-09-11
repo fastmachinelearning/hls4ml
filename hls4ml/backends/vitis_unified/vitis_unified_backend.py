@@ -169,7 +169,12 @@ class VitisUnifiedBackend(VitisBackend):
         writer_passes = ['make_stamp', 'vitisunified:write_hls']
         self._writer_flow = register_flow('write', writer_passes, requires=[self._default_flow], backend=self.name)
 
-        # register fifo depth optimization
-        fifo_depth_opt_passes = ['vitisunified:fifo_depth_optimization'] + writer_passes
-
-        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=[self._default_flow], backend=self.name)
+        profiling_passes = (
+            ['vitisunified:fifo_depth_optimization']
+            + writer_passes
+            + ['vitisunified:fifo_depth_optimization_profile', 'vitisunified:fifo_depth_optimization_post']
+        )
+        profiling_flow = register_flow(
+            'fifo_depth_profiling', profiling_passes, requires=[self._default_flow], backend=self.name
+        )
+        register_flow('fifo_depth_optimization', writer_passes, requires=[profiling_flow], backend=self.name)

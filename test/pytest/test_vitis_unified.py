@@ -2,6 +2,7 @@ import ast
 import json
 import os
 import shutil
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -422,6 +423,50 @@ def test_custom_platform(test_case_id, simple_unet):
     assert 'XILINX_VITIS' not in link
     cfg = (output_dir / 'vitis_workspace' / 'myproject' / 'hls_kernel_config_csim.cfg').read_text()
     assert 'part=xc7z020clg400-1' in cfg
+
+
+def test_fifo_depth_passes(test_case_id, simple_unet):
+    from hls4ml.model.flow import get_flow
+    from hls4ml.model.optimizer import get_optimizer
+
+    for backend in ['vitis', 'vitisunified']:
+        flow = get_flow(f'{backend}:fifo_depth_optimization')
+        profiling = get_flow(f'{backend}:fifo_depth_profiling')
+        assert flow.requires == [f'{backend}:fifo_depth_profiling']
+        assert profiling.optimizers[0] == f'{backend}:fifo_depth_optimization'
+        assert profiling.optimizers[-2:] == [
+            f'{backend}:fifo_depth_optimization_profile',
+            f'{backend}:fifo_depth_optimization_post',
+        ]
+        for name in profiling.optimizers + flow.optimizers:
+            get_optimizer(name)
+
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_stream'),
+    )
+    fifos = {var.name: var for var in hls_model.output_vars.values()}
+
+    get_optimizer('vitisunified:fifo_depth_optimization').transform(hls_model)
+    depths = json.loads((output_dir / 'fifo_depths.json').read_text())
+    assert depths and all(set(entry) == {'initial'} for entry in depths.values())
+    assert all(fifos[name].pragma[1] == 100_000 for name in depths)
+
+    db = Path(hls_model.config.backend.writer.get_vitis_hls_exec_dir(hls_model)) / 'hls' / '.autopilot' / 'db'
+    (db / 'channel_depth_info').mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(db / 'channel_depth_info' / 'channel.zip', 'w') as archive, open(db / 'channel_info.csv', 'w') as f:
+        for idx, name in enumerate(depths):
+            archive.writestr(f'chan_status_{idx}.csv', 'a\nb\nc\n7\n')
+            f.write(f'{idx},{name}_i_U,x,chan_status_{idx}.csv\n')
+
+    get_optimizer('vitisunified:fifo_depth_optimization_post').transform(hls_model)
+    depths = json.loads((output_dir / 'fifo_depths.json').read_text())
+    assert all(entry['optimized'] == 7 for entry in depths.values())
+    assert all(fifos[name].pragma[1] == 7 for name in depths)
 
 
 @pytest.mark.parametrize(

@@ -46,12 +46,15 @@ class VitisBackend(VivadoBackend):
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
-        # Register the fifo depth optimization flow which is different from the one for vivado
-        fifo_depth_opt_passes = [
-            'vitis:fifo_depth_optimization'
-        ] + writer_passes  # After optimization, a new project will be written
-
-        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vitis:ip'], backend=self.name)
+        # FIFO depth optimization: enlarge the FIFOs, write, synthesize and co-simulate, read the measured depths,
+        # then write the optimized project once more
+        profiling_passes = (
+            ['vitis:fifo_depth_optimization']
+            + writer_passes
+            + ['vitis:fifo_depth_optimization_profile', 'vitis:fifo_depth_optimization_post']
+        )
+        profiling_flow = register_flow('fifo_depth_profiling', profiling_passes, requires=['vitis:ip'], backend=self.name)
+        register_flow('fifo_depth_optimization', writer_passes, requires=[profiling_flow], backend=self.name)
 
     def create_initial_config(
         self,
