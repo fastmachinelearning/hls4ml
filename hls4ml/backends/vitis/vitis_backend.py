@@ -18,10 +18,8 @@ from hls4ml.utils.simulation_utils import (
 
 
 class VitisBackend(VivadoBackend):
-    def __init__(self):
-        super(VivadoBackend, self).__init__(name='Vitis')
-        self._register_layer_attributes()
-        self._register_flows()
+    def __init__(self, name='Vitis'):
+        super().__init__(name=name)
 
     def _register_flows(self):
         validation_passes = [

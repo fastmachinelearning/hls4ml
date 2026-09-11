@@ -4,16 +4,14 @@ import sys
 import warnings
 from shutil import copy2, rmtree
 
-from hls4ml.backends import VitisBackend, VivadoBackend
+from hls4ml.backends import VitisBackend
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vitis_unified_report
 
 
 class VitisUnifiedBackend(VitisBackend):
-    def __init__(self):
-        super(VivadoBackend, self).__init__(name='VitisUnified')
-        self._register_layer_attributes()
-        self._register_flows()
+    def __init__(self, name='VitisUnified'):
+        super().__init__(name=name)
 
     def build(
         self,
