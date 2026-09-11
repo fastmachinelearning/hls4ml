@@ -299,6 +299,56 @@ fi
                 fout.write(line)
 
     # ===== Bridge generation =====
+    def _gen_bridge_body(self, model, dtype, indent):
+
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        in_type = self.vitis_unified_config.get_input_type()
+        out_type = self.vitis_unified_config.get_output_type()
+        newline = ''
+
+        if self._is_axi_master():
+            in_bufs = []
+            for idx, inp in enumerate(model_inputs):
+                port = self._get_io_port_name(inp, True, idx)
+                buf = port + '_ap'
+                newline += indent + f'{in_type} {buf}[{inp.size_cpp()}];\n'
+                newline += indent + f'nnet::convert_data<{dtype}, {in_type}, {inp.size_cpp()}>({port}, {buf});\n'
+                in_bufs.append(buf)
+            out_bufs = []
+            for idx, out in enumerate(model_outputs):
+                port = self._get_io_port_name(out, False, idx)
+                buf = port + '_ap'
+                newline += indent + f'{out_type} {buf}[{out.size_cpp()}];\n'
+                out_bufs.append(buf)
+            newline += '\n'
+            newline += indent + self._get_top_wrap_func_name(model, True) + '(\n'
+            newline += indent + ', '.join(in_bufs) + ',\n'
+            newline += indent + ', '.join(out_bufs) + ',\n'
+            newline += indent + '1);\n'
+            newline += '\n'
+            for idx, out in enumerate(model_outputs):
+                port = self._get_io_port_name(out, False, idx)
+                buf = port + '_ap'
+                newline += indent + f'nnet::convert_data<{out_type}, {dtype}, {out.size_cpp()}>({buf}, {port});\n'
+        else:
+            assert len(model_inputs) == 1
+            assert len(model_outputs) == 1
+            inp = model_inputs[0]
+            out = model_outputs[0]
+            inp_func = self._get_io_port_name(inp, True, 0)
+            inp_stream = inp_func + '_ap'
+            out_func = self._get_io_port_name(out, False, 0)
+            out_stream = out_func + '_ap'
+            newline += indent + f'hls::stream<{self._get_dma_type_name()}> {inp_stream};\n'
+            newline += indent + f'nnet::convert_data_axis<{dtype}, {in_type}, N_IN>({inp_func}, {inp_stream});\n'
+            newline += indent + f'hls::stream<{self._get_dma_type_name()}> {out_stream};\n'
+            newline += indent + self._get_top_wrap_func_name(model, False) + '('
+            newline += inp_stream + ', ' + out_stream + ', 1);\n'
+            newline += indent + f'nnet::convert_data_axis<{out_type}, {dtype}, N_OUT>({out_stream}, {out_func});\n'
+
+        return newline
+
     def write_bridge(self, model):
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
@@ -336,34 +386,7 @@ fi
                     newline += indent + ', '.join(output_ios) + '\n'
                 elif '// hls-fpga-machine-learning insert wrapper' in line:
                     dtype = line.split('#', 1)[1].strip()
-                    newline = ''
-                    if dtype == self.vitis_unified_config.get_input_type():
-                        if self._is_axi_master():
-                            input_vars = [self._get_io_port_name(inp, True, idx) for idx, inp in enumerate(model_inputs)]
-                            output_vars = [self._get_io_port_name(out, False, idx) for idx, out in enumerate(model_outputs)]
-                            newline += indent + self._get_top_wrap_func_name(model, True) + '(\n'
-                            newline += indent + ', '.join(input_vars) + ',\n'
-                            newline += indent + ', '.join(output_vars) + ',\n'
-                            newline += indent + '1);\n'
-                        else:
-                            assert len(model_inputs) == 1
-                            assert len(model_outputs) == 1
-                            inp = model_inputs[0]
-                            out = model_outputs[0]
-                            inp_func = self._get_io_port_name(inp, True, 0)
-                            inp_stream = inp_func + '_ap'
-                            out_func = self._get_io_port_name(out, False, 0)
-                            out_stream = out_func + '_ap'
-                            newline = indent + f'hls::stream<{self._get_dma_type_name()}> {inp_stream};\n'
-                            newline += (
-                                indent + f'nnet::convert_data_axis<{dtype},{dtype}, N_IN>({inp_func}, {inp_stream});\n'
-                            )
-                            newline += indent + f'hls::stream<{self._get_dma_type_name()}> {out_stream};\n'
-                            newline += indent + self._get_top_wrap_func_name(model, False) + '('
-                            newline += inp_stream + ', ' + out_stream + ', 1);\n'
-                            newline += (
-                                indent + f'nnet::convert_data_axis<{dtype},{dtype}, N_OUT>({out_stream}, {out_func});\n'
-                            )
+                    newline = self._gen_bridge_body(model, dtype, indent)
                 elif '// hls-fpga-machine-learning insert trace_outputs' in line:
                     newline = ''
                     for layer in model.get_layers():

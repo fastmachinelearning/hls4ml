@@ -134,6 +134,55 @@ def test_backend_predict(test_case_id, simple_unet, io_type, strategy, granulari
     np.testing.assert_array_equal(hls_unified_prediction, hls_vitis_prediction)
 
 
+@pytest.fixture(scope='module')
+def vitis_reference(simple_unet):
+    """Plain Vitis backend build of simple_unet, compiled once and shared as the numeric reference."""
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    config['Model']['Strategy'] = 'latency'
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(test_root_path / 'hls4mlprj_test_vitis_unified_vitis_reference'),
+        backend='Vitis',
+        io_type='io_stream',
+        part='xczu9eg-ffvb1156-2-e',
+        clock_period=10,
+    )
+    hls_model.compile()
+    return hls_model
+
+
+@pytest.mark.parametrize(
+    'axi_mode, interface_type',
+    [
+        ('axi_master', 'float'),
+        ('axi_master', 'double'),
+        ('axi_stream', 'float'),
+        # axi_stream with double does not compile yet (review finding U2), so it is not covered here
+    ],
+)
+@pytest.mark.parametrize('np_dtype', [np.float32, np.float64])
+def test_predict_any_numpy_dtype(test_case_id, simple_unet, vitis_reference, axi_mode, interface_type, np_dtype):
+    # Draw the values as float32 first so the same numbers are exactly representable in both dtypes.
+    X_input = np.random.rand(10, 4, 4, 1).astype(np.float32).astype(np_dtype)
+
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    config['Model']['Strategy'] = 'latency'
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(test_root_path / test_case_id),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode, input_type=interface_type, output_type=interface_type),
+    )
+    hls_model.compile()
+
+    prediction = hls_model.predict(X_input)
+    reference = vitis_reference.predict(X_input)
+
+    assert np.any(prediction != 0), 'predict() returned all zeros, so the bridge entry point for this dtype is empty'
+    np.testing.assert_array_equal(prediction, reference)
+
+
 @pytest.mark.parametrize('io_type', ['io_stream'])
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
