@@ -4,6 +4,8 @@ VitisUnified
 
 The **VitisUnified** backend provides an end-to-end workflow for AMD SoC boards, from an ML model to a design that is ready to deploy on `PYNQ <http://pynq.io/>`_. It is inherited from the :doc:`Vitis <vitis>` backend. We use the new Vitis Unified software, which can automatically link the HLS kernel to the system hardware. The current version supports only SoC boards with a PYNQ Python driver.
 
+It is the recommended flow for AMD SoC boards with Vitis 2023.2 or newer. Models with ``io_parallel`` or with ``ap_fixed`` interface types stay with the :doc:`VivadoAccelerator <accelerator>` backend.
+
 Currently ``hls4ml`` officially supports the following boards and tool versions:
 
 * `zcu102 <https://www.xilinx.com/products/boards-and-kits/ek-u1-zcu102-g.html>`_ (Vitis and Vivado 2023.2)
@@ -49,6 +51,12 @@ In both modes the CPU controls the kernel through AXI-Lite and receives an inter
       :align: center
       :alt: axi_stream mode
 
+    The stream interface follows this contract:
+
+    * Each beat carries one element. The data field uses the ``input_type`` format, 32 bits for ``float`` and 64 bits for ``double``.
+    * For each kernel start the kernel reads exactly ``batch_size × N_IN`` input beats and writes exactly ``batch_size × N_OUT`` output beats. ``N_IN`` and ``N_OUT`` are the flattened input and output sizes of the model.
+    * ``TLAST`` is set only on the last output beat of the batch. ``TLAST`` on the input is ignored, so a transfer with fewer beats than expected makes the kernel wait.
+
 Configuration options
 =====================
 
@@ -67,11 +75,12 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
      - | Target board.
        | It selects the FPGA part, the platform, and the Python driver template.
        | The current version only supports the boards in ``supported_boards.json`` (``zcu102`` and ``kv260``).
+       | Any other board name is rejected with an error.
+       | You can add your own board: build its platform and add it to the backend by following the platform setup tutorial in the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
    * - ``part``
      - from board
      - | FPGA part name.
        | If not given, it is taken from the board entry in ``supported_boards.json``.
-       | If the board is not in the list and no part is given, the zcu102 part is used.
    * - ``clock_period``
      - ``5``
      - | Kernel clock period in ns.
@@ -104,11 +113,11 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
    * - ``in_stream_buf_size``
      - ``128``
      - | Depth of the FIFO between the wrapper input (AXI master read or AXI-Stream) and the HLS model.
-       | Used in both AXI modes.
+       | Used in both AXI modes. The unit is one entry of the model stream type (one chunk of the input array), not one element.
    * - ``out_stream_buf_size``
      - ``128``
      - | Depth of the FIFO between the HLS model and the wrapper output (AXI master write or AXI-Stream).
-       | Used in both AXI modes.
+       | Used in both AXI modes. The unit is one entry of the model stream type (one chunk of the output array), not one element.
 
 Example:
 
@@ -123,9 +132,6 @@ Example:
                                                            clock_period=10,
                                                            in_stream_buf_size=256,
                                                            out_stream_buf_size=256)
-
-The ``BramFactor`` option of the model configuration is not supported by this backend.
-If a weight is larger than ``BramFactor`` and would become an external BRAM port, the conversion stops with an error.
 
 
 Output directory layout
@@ -161,6 +167,52 @@ Output directory layout
     │   ├── system.hwh                     hardware handoff (bitfile=True)
     │   └── axi_master_driver.py or axi_stream_driver.py
     └── final_reports/                     timing, utilization, power, link summary, hls_compile.rpt
+
+Build options
+=============
+
+``hls_model.build()`` runs the Vitis tools on the written project. Each step is selected with a keyword argument.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 26 74
+
+   * - Argument
+     - Effect
+   * - ``synth=True``
+     - Runs C synthesis with ``v++`` and then packages the kernel as a ``.xo`` file.
+   * - ``csim=True``
+     - Runs the C simulation of the AXI wrapper with the generated test bench.
+   * - ``cosim=True``
+     - Runs RTL co-simulation. It needs a synthesized project, so use it together with ``synth=True``.
+   * - ``fifo_opt=True``
+     - Runs the FIFO depth optimization. It turns on ``cosim`` by itself.
+   * - ``vitis_fifo_sizing=True``
+     - Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on ``cosim`` by itself.
+   * - ``bitfile=True``
+     - Links the packaged kernel to the board platform and writes the bitstream and the hardware handoff file to ``export/``. It needs the ``.xo`` file from ``synth=True``.
+   * - ``log_to_stdout=False``
+     - Writes the output of each step to ``<step>_stdout.log`` and ``<step>_stderr.log`` instead of the terminal.
+   * - ``reset``, ``vsynth``
+     - Accepted for compatibility with the other backends, but not used in this version.
+
+Differences from the other backends: ``validation`` and ``export`` are not available, ``synth`` always packages the kernel, and ``build()`` does not return a report in this version.
+The reports are written under ``vitis_workspace/<project_name>/vitis_unified_project/reports/`` and ``final_reports/``.
+
+
+Limitations
+===========
+
+The following are not supported in this version:
+
+* ``io_parallel`` models. Only ``io_stream`` is supported.
+* Fixed-point interface types. ``input_type`` and ``output_type`` must be ``float`` or ``double``, and they must be the same.
+* Weights that become external BRAM ports through ``BramFactor``. The conversion stops with an error.
+* Models with several inputs or outputs in ``axi_stream`` mode. Use ``axi_master`` for them.
+* Multigraph models.
+* A C or C++ host driver. Only the Python (PYNQ) driver is generated.
+* Boards other than SoC boards with a PYNQ driver.
+
 
 Tutorial
 ========
