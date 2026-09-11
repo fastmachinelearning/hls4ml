@@ -197,6 +197,76 @@ def test_bram_weights_rejected_at_conversion(test_case_id, simple_unet, axi_mode
         )
 
 
+# review U4
+@pytest.mark.xfail(strict=True, reason='create_initial_config drops namespace and write_tar')
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_writer_options_forwarded(test_case_id, simple_unet, axi_mode):
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode, namespace='nsone', write_tar=True),
+    )
+    hls_model.write()
+
+    header = (output_dir / 'firmware' / 'max_length_project.h').read_text()
+    assert 'namespace nsone' in header
+    assert output_dir.with_name(output_dir.name + '.tar.gz').exists()
+
+
+# review U12
+@pytest.mark.xfail(strict=True, reason='test bench and cfg files still use the myproject name')
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_custom_project_name(test_case_id, simple_unet, axi_mode):
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode, project_name='custom'),
+    )
+    hls_model.write()
+
+    leftovers = []
+    for path in output_dir.rglob('*'):
+        if not path.is_file() or 'nnet_utils' in path.parts:
+            continue
+        if 'myproject' in path.name or 'myproject' in path.read_text(errors='ignore'):
+            leftovers.append(str(path.relative_to(output_dir)))
+    assert leftovers == []
+
+
+# review U7
+@pytest.mark.xfail(strict=True, reason='the config is only checked at write time')
+@pytest.mark.parametrize(
+    'model_name, bad_kwargs, match',
+    [
+        ('simple_unet', {'board': 'pynq-z2'}, '(?i)board'),
+        ('simple_unet', {'input_type': 'float', 'output_type': 'double'}, '(?i)type'),
+        ('multi_io_net', {'axi_mode': 'axi_stream'}, '(?i)axi_stream'),
+    ],
+    ids=['unknown_board', 'mismatched_types', 'multi_input_axi_stream'],
+)
+def test_invalid_config_rejected_at_conversion(request, test_case_id, model_name, bad_kwargs, match):
+    model = request.getfixturevalue(model_name)
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    kwargs = {
+        'backend': 'VitisUnified',
+        'io_type': 'io_stream',
+        'board': 'zcu102',
+        'clock_period': 10,
+        'axi_mode': 'axi_master',
+        **bad_kwargs,
+    }
+    with pytest.raises(Exception, match=match):
+        hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, output_dir=str(test_root_path / test_case_id), **kwargs
+        )
+
+
 @pytest.mark.parametrize('io_type', ['io_stream'])
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
