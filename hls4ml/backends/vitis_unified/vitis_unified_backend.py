@@ -5,6 +5,7 @@ import warnings
 from shutil import copy2, rmtree
 
 from hls4ml.backends import VitisBackend
+from hls4ml.backends.vitis_unified.vitis_unified_validation import load_supported_boards, validate_config
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vitis_unified_report
 
@@ -145,16 +146,9 @@ class VitisUnifiedBackend(VitisBackend):
         axi_mode='axi_master',
         **kwargs,
     ):
-        supported_boards_path = os.path.join(os.path.dirname(__file__), 'supported_boards.json')
-        if os.path.exists(supported_boards_path):
-            import json
-
-            with open(supported_boards_path) as f:
-                supported_boards = json.load(f)
-            if board in supported_boards:
-                part = part or supported_boards[board]['part']
-        if part is None:
-            part = 'xczu9eg-ffvb1156-2-e'
+        supported_boards = load_supported_boards()
+        validate_config(board, axi_mode, driver, input_type, output_type, supported_boards)
+        part = part or supported_boards[board]['part']
 
         config = super().create_initial_config(
             part=part, clock_period=clock_period, clock_uncertainty=clock_uncertainty, io_type=io_type, **kwargs
@@ -172,10 +166,6 @@ class VitisUnifiedBackend(VitisBackend):
 
         if io_type != 'io_stream':
             raise Exception('io_type must be io_stream')
-        if input_type not in ['double', 'float']:
-            raise Exception('input_type must be float or double')
-        if output_type not in ['double', 'float']:
-            raise Exception('output_type must be float or double')
 
         return config
 
@@ -186,7 +176,7 @@ class VitisUnifiedBackend(VitisBackend):
         return self._writer_flow
 
     def _register_flows(self):
-        validation_passes = ['vitisunified:validate_bram_weights']
+        validation_passes = ['vitisunified:validate_config', 'vitisunified:validate_bram_weights']
         self._default_flow = register_flow('ip', validation_passes, requires=['vitis:ip'], backend=self.name)
 
         writer_passes = ['make_stamp', 'vitisunified:write_hls']

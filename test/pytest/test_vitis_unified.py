@@ -312,8 +312,6 @@ def test_custom_project_name(test_case_id, simple_unet, axi_mode):
     assert leftovers == []
 
 
-# review U7
-@pytest.mark.xfail(strict=True, reason='the config is only checked at write time')
 @pytest.mark.parametrize(
     'model_name, bad_kwargs, match',
     [
@@ -334,10 +332,11 @@ def test_invalid_config_rejected_at_conversion(request, test_case_id, model_name
         'axi_mode': 'axi_master',
         **bad_kwargs,
     }
-    with pytest.raises(Exception, match=match):
+    with pytest.raises(Exception, match=match) as excinfo:
         hls4ml.converters.convert_from_keras_model(
             model, hls_config=config, output_dir=str(test_root_path / test_case_id), **kwargs
         )
+    assert not isinstance(excinfo.value, AssertionError)
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])

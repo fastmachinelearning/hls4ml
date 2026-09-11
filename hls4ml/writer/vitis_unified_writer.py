@@ -336,8 +336,6 @@ fi
                 buf = port + '_ap'
                 newline += indent + f'nnet::convert_data<{out_type}, {dtype}, {out.size_cpp()}>({buf}, {port});\n'
         else:
-            assert len(model_inputs) == 1
-            assert len(model_outputs) == 1
             inp = model_inputs[0]
             out = model_outputs[0]
             inp_func = self._get_io_port_name(inp, True, 0)
@@ -712,8 +710,6 @@ fi
                         for output_idx, out in enumerate(model_outputs):
                             newline += indent + f'float {self._get_io_port_name(out, False, output_idx)}[{out.size()}];\n'
                     else:
-                        assert len(model_inputs) == 1, 'Only support one input for axi stream'
-                        assert len(model_outputs) == 1, 'Only support one output for axi stream'
                         dma = self._get_dma_type_name()
                         newline += 3 * indent + f'hls::stream<{dma}> inputs;\n'
                         newline += 3 * indent + f'nnet::convert_data_axis<{dma}, float, N_IN>(in, inputs);\n'
