@@ -9,45 +9,45 @@ hls4ml.report.catapult\_report module
 
 .. automodule:: hls4ml.report.catapult_report
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.report.libero\_report module
 -----------------------------------
 
 .. automodule:: hls4ml.report.libero_report
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.report.oneapi\_report module
 -----------------------------------
 
 .. automodule:: hls4ml.report.oneapi_report
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.report.quartus\_report module
 ------------------------------------
 
 .. automodule:: hls4ml.report.quartus_report
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.report.vivado\_report module
 -----------------------------------
 
 .. automodule:: hls4ml.report.vivado_report
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.report
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

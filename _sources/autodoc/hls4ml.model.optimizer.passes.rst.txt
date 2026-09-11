@@ -9,221 +9,221 @@ hls4ml.model.optimizer.passes.batchnorm\_opt module
 
 .. automodule:: hls4ml.model.optimizer.passes.batchnorm_opt
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.bipolar\_quant\_opt module
 --------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.bipolar_quant_opt
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.bit\_exact module
 -----------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.bit_exact
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.bn\_fuse module
 ---------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.bn_fuse
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.conv\_to\_convxd module
 -----------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.conv_to_convxd
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.conv\_to\_depthwiseconvxd module
 --------------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.convert\_to\_channels\_last module
 ----------------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.convert_to_channels_last
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.expand\_layer\_group module
 ---------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.expand_layer_group
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.expand\_time\_distributed module
 --------------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.expand_time_distributed
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.fuse\_biasadd module
 --------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.fuse_biasadd
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.hgq\_proxy\_model module
 ------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.hgq_proxy_model
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.infer\_precision module
 -----------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.infer_precision
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.linear module
 -------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.linear
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.matmul\_const\_to\_dense module
 -------------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.matmul_const_to_dense
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.merge\_const module
 -------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.merge_const
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.move\_scales module
 -------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.move_scales
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.multi\_dense module
 -------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.multi_dense
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.pad\_const module
 -----------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.pad_const
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.qkeras module
 -------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.qkeras
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.quant\_opt module
 -----------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.quant_opt
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.reshape\_const module
 ---------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.reshape_const
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.resize\_remove\_constants module
 --------------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.resize_remove_constants
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.seperable\_to\_dw\_conv module
 ------------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.seperable_to_dw_conv
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.snn module
 ----------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.snn
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.sparsepixels\_flatten module
 ----------------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.sparsepixels_flatten
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.stamp module
 ------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.stamp
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.optimizer.passes.transpose\_opt module
 ---------------------------------------------------
 
 .. automodule:: hls4ml.model.optimizer.passes.transpose_opt
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.model.optimizer.passes
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

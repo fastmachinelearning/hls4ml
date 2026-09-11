@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>High Granularity Quantization (HGQ2) &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,8 +16,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -145,13 +145,18 @@
 <p>New projects are encouraged to use <code class="docutils literal notranslate"><span class="pre">HGQ2</span></code> instead of the original <code class="docutils literal notranslate"><span class="pre">HGQ</span></code> (doc page moved <a class="reference external" href="./hgq1.html">here</a>).
 HGQ2 is a major improvement over HGQ with more supported layers, more quantizer options, better performance. As HGQ2 moves to Keras v3, it can be used natively with <code class="docutils literal notranslate"><span class="pre">JAX</span></code>, <code class="docutils literal notranslate"><span class="pre">PyTorch</span></code>, and <code class="docutils literal notranslate"><span class="pre">TensorFlow</span></code> backends.</p>
 </div>
-<a class="reference external image-reference" href="https://www.gnu.org/licenses/lgpl-3.0.en.html"><img alt="https://img.shields.io/badge/License-LGPLv3-blue.svg" src="https://img.shields.io/badge/License-LGPLv3-blue.svg" /></a>
-<a class="reference external image-reference" href="https://calad0i.github.io/HGQ2/"><img alt="https://github.com/calad0i/HGQ2/actions/workflows/sphinx-build.yml/badge.svg" src="https://github.com/calad0i/HGQ2/actions/workflows/sphinx-build.yml/badge.svg" /></a>
-<a class="reference external image-reference" href="https://badge.fury.io/py/hgq2"><img alt="https://badge.fury.io/py/hgq2.svg" src="https://badge.fury.io/py/hgq2.svg" /></a>
-<a class="reference external image-reference" href="https://arxiv.org/abs/2405.00645"><img alt="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" src="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" /></a>
+<a class="reference external image-reference" href="https://www.gnu.org/licenses/lgpl-3.0.en.html"><img alt="https://img.shields.io/badge/License-LGPLv3-blue.svg" src="https://img.shields.io/badge/License-LGPLv3-blue.svg" />
+</a>
+<a class="reference external image-reference" href="https://calad0i.github.io/HGQ2/"><img alt="https://github.com/calad0i/HGQ2/actions/workflows/sphinx-build.yml/badge.svg" src="https://github.com/calad0i/HGQ2/actions/workflows/sphinx-build.yml/badge.svg" />
+</a>
+<a class="reference external image-reference" href="https://badge.fury.io/py/hgq2"><img alt="https://badge.fury.io/py/hgq2.svg" src="https://badge.fury.io/py/hgq2.svg" />
+</a>
+<a class="reference external image-reference" href="https://arxiv.org/abs/2405.00645"><img alt="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" src="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" />
+</a>
 <p>HGQ2 (High Granularity Quantization 2) is a quantization-aware training framework built on Keras v3, targeting real-time deep learning applications on edge devices like FPGAs. It provides a comprehensive set of tools for creating and training quantized neural networks with minimal effort.</p>
 <p>HGQ2 implements an gradient-based automatic bitwidth optimization and quantization-aware training algorithm. By laveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.</p>
-<a class="light reference internal image-reference" href="../_images/hgq-overview.svg"><img alt="HGQ-overview" class="light" src="../_images/hgq-overview.svg" width="600" /></a>
+<a class="light reference internal image-reference" href="../_images/hgq-overview.svg"><img alt="HGQ-overview" class="light" src="../_images/hgq-overview.svg" width="600" />
+</a>
 <section id="key-features">
 <h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading"></a></h2>
 <ul class="simple">

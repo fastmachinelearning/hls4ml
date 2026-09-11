@@ -20,45 +20,45 @@ hls4ml.converters.keras\_v2\_to\_hls module
 
 .. automodule:: hls4ml.converters.keras_v2_to_hls
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.keras\_v3\_to\_hls module
 -------------------------------------------
 
 .. automodule:: hls4ml.converters.keras_v3_to_hls
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.onnx\_to\_hls module
 --------------------------------------
 
 .. automodule:: hls4ml.converters.onnx_to_hls
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.pytorch\_to\_hls module
 -----------------------------------------
 
 .. automodule:: hls4ml.converters.pytorch_to_hls
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.utils module
 ------------------------------
 
 .. automodule:: hls4ml.converters.utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.converters
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

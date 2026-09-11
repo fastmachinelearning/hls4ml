@@ -17,29 +17,29 @@ hls4ml.backends.fpga.fpga\_backend module
 
 .. automodule:: hls4ml.backends.fpga.fpga_backend
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.fpga\_layers module
 ----------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.fpga_layers
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.fpga\_types module
 ---------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.fpga_types
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.fpga
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

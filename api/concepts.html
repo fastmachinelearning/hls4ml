@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Concepts &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,9 +16,9 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -146,7 +146,8 @@
 <h1>Concepts<a class="headerlink" href="#concepts" title="Link to this heading"></a></h1>
 <section id="how-it-works">
 <h2>How it Works<a class="headerlink" href="#how-it-works" title="Link to this heading"></a></h2>
-<a class="reference internal image-reference" href="../_images/nn_map_paper_fig_2.png"><img alt="../_images/nn_map_paper_fig_2.png" class="align-center" src="../_images/nn_map_paper_fig_2.png" style="width: 70%;" /></a>
+<a class="reference internal image-reference" href="../_images/nn_map_paper_fig_2.png"><img alt="../_images/nn_map_paper_fig_2.png" class="align-center" src="../_images/nn_map_paper_fig_2.png" style="width: 70%;" />
+</a>
 <p>Consider a multilayer neural network. At each neuron in a layer <span class="math notranslate nohighlight">\(m\)</span>  (containing <span class="math notranslate nohighlight">\(N_m\)</span> neurons), we calculate an output value (part of the output vector <span class="math notranslate nohighlight">\(\mathbf{x}_m\)</span> of said layer) using the sum of output values of the previous layer multiplied by independent weights for each of these values and a bias value. An activation function is performed on the result to get the final output value for the neuron. Representing the weights as a <span class="math notranslate nohighlight">\(N_m\)</span> by <span class="math notranslate nohighlight">\(N_{m-1}\)</span>  matrix  <span class="math notranslate nohighlight">\(W_{m,m-1}\)</span>, the bias values as <span class="math notranslate nohighlight">\(\mathbf{b}_m\)</span>, and the activation function as <span class="math notranslate nohighlight">\(g_m\)</span>, we can express this compactly as:</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{x}_m = g_m (W_{m,m-1} \mathbf{x}_{m-1} +\mathbf{b}_m)\]</div>
@@ -159,7 +160,8 @@ The activations, if nontrivial, are precomputed.</p>
 <li><p><strong>Dataflow/Resource Reuse</strong> - Control parallel or streaming model implementations with varying levels of pipelining</p></li>
 <li><p><strong>Quantization Aware Training</strong> - Achieve best performance at low precision with tools like QKeras, and benefit automatically during inference with <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> parsing of QKeras models</p></li>
 </ul>
-<a class="reference internal image-reference" href="../_images/reuse_factor_paper_fig_8.png"><img alt="../_images/reuse_factor_paper_fig_8.png" class="align-center" src="../_images/reuse_factor_paper_fig_8.png" style="width: 70%;" /></a>
+<a class="reference internal image-reference" href="../_images/reuse_factor_paper_fig_8.png"><img alt="../_images/reuse_factor_paper_fig_8.png" class="align-center" src="../_images/reuse_factor_paper_fig_8.png" style="width: 70%;" />
+</a>
 <p>Often, these decisions will be hardware dependent to maximize performance.
 Of note is that simplifying the input network must be done before using <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> to generate HLS code, for optimal compression to provide a sizable speedup.
 Also important to note is the use of fixed point arithmetic in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>.

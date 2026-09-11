@@ -17,21 +17,21 @@ hls4ml.backends.coyote.coyote\_backend module
 
 .. automodule:: hls4ml.backends.coyote.coyote_backend
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.coyote.coyote\_overlay module
 ---------------------------------------------
 
 .. automodule:: hls4ml.backends.coyote.coyote_overlay
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.coyote
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

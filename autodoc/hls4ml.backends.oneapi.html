@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.backends.oneapi package &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,8 +16,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -571,7 +571,7 @@
 <span id="hls4ml-backends-oneapi-oneapi-backend-module"></span><h2>hls4ml.backends.oneapi.oneapi_backend module<a class="headerlink" href="#module-hls4ml.backends.oneapi.oneapi_backend" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_backend.</span></span><span class="sig-name descname"><span class="pre">OneAPIBackend</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_backend.</span></span><span class="sig-name descname"><span class="pre">OneAPIBackend</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend" title="hls4ml.backends.fpga.fpga_backend.FPGABackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">FPGABackend</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_backend.OneAPIBackend.build">
@@ -715,7 +715,7 @@
 <p>This package includes oneAPI-specific templates</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_template.StreamFunctionCallTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_template.</span></span><span class="sig-name descname"><span class="pre">StreamFunctionCallTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_template.StreamFunctionCallTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_template.</span></span><span class="sig-name descname"><span class="pre">StreamFunctionCallTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_template.StreamFunctionCallTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.Template" title="hls4ml.backends.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a></p>
 <p>Base class for the streaming function call templates in oneAPI:  provides the ‘stream_function_cpp’ attribute.
 This generally provides the async call to the task sequence that executes the streaming function.</p>
@@ -744,7 +744,7 @@ This generally provides the async call to the task sequence that executes the st
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_template.TaskSequenceTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_template.</span></span><span class="sig-name descname"><span class="pre">TaskSequenceTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_template.TaskSequenceTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_template.</span></span><span class="sig-name descname"><span class="pre">TaskSequenceTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_template.TaskSequenceTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.Template" title="hls4ml.backends.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a></p>
 <p>Base class for the task sequence definition in oneAPI:  provides the ‘task_sequence_cpp’ attribute.
 This defines the task sequence that is then called by the StreamFunctionCallTemplate.</p>
@@ -776,7 +776,7 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 <p>This package includes oneAPI-specific customizations to the variable types</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.ACExponentPrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">ACExponentPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.ACExponentPrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">ACExponentPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.ACExponentPrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.ACExponentPrecisionDefinition.definition_cpp">
@@ -787,7 +787,7 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">AggregratedArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">AggregratedArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This is a bit of an extension of the standard ArrayVariableConverter</p>
 <dl class="py method">
@@ -799,19 +799,19 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIACTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIACTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIACTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIACTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIACTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter" title="hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">FPGAPrecisionConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter" title="hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">AggregratedArrayVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIArrayVariableDefinition.definition_cpp">
@@ -822,7 +822,7 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPICompressedTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPICompressedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPICompressedTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPICompressedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPICompressedTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="hls4ml.backends.fpga.fpga_types.TypeDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeDefinition</span></code></a>, <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypePrecisionConverter</span></code></a></p>
 <p>Use a tuple for storing a compressed type for oneAPI since it’s better supported. (Currently unused)</p>
 <dl class="py method">
@@ -840,7 +840,7 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIExponentTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIExponentTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIExponentTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIExponentTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIExponentTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="hls4ml.backends.fpga.fpga_types.TypeDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeDefinition</span></code></a>, <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypePrecisionConverter</span></code></a></p>
 <p>Use a pair for storing a exponent type for oneAPI since it’s better supported</p>
 <dl class="py method">
@@ -857,19 +857,19 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIHLSTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIHLSTypeConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIHLSTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIHLSTypeConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIHLSTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.HLSTypeConverter" title="hls4ml.backends.fpga.fpga_types.HLSTypeConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">HLSTypeConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInplaceArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInplaceArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter" title="hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">AggregratedArrayVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInplaceArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInplaceArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceArrayVariableDefinition.definition_cpp">
@@ -880,13 +880,13 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter" title="hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">AggregratedArrayVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInplaceStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInplaceStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIInplaceStreamVariableDefinition.definition_cpp">
@@ -897,13 +897,13 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInterfaceVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInterfaceVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter" title="hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">AggregratedArrayVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInterfaceVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIInterfaceVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIInterfaceVariableDefinition.declare_cpp">
@@ -919,7 +919,7 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIPackedTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIPackedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIPackedTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIPackedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIPackedTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="hls4ml.backends.fpga.fpga_types.TypeDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeDefinition</span></code></a>, <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypePrecisionConverter</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIPackedTypeConverter.convert_precision">
@@ -935,7 +935,7 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIStaticWeightVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIStaticWeightVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableConverter.convert">
@@ -946,7 +946,7 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIStaticWeightVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIStaticWeightVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIStaticWeightVariableDefinition.definition_cpp">
@@ -958,13 +958,13 @@ This defines the task sequence that is then called by the StreamFunctionCallTemp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter" title="hls4ml.backends.oneapi.oneapi_types.AggregratedArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">AggregratedArrayVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.oneapi.oneapi_types.</span></span><span class="sig-name descname"><span class="pre">OneAPIStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.oneapi.oneapi_types.OneAPIStreamVariableDefinition.declare_cpp">

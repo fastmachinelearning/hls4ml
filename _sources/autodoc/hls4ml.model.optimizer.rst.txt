@@ -17,13 +17,13 @@ hls4ml.model.optimizer.optimizer module
 
 .. automodule:: hls4ml.model.optimizer.optimizer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.model.optimizer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

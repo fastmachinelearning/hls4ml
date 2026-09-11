@@ -17,13 +17,13 @@ hls4ml.backends.vitis.vitis\_backend module
 
 .. automodule:: hls4ml.backends.vitis.vitis_backend
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.vitis
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

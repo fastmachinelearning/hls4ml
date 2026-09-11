@@ -18,53 +18,53 @@ hls4ml.model.attributes module
 
 .. automodule:: hls4ml.model.attributes
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.graph module
 -------------------------
 
 .. automodule:: hls4ml.model.graph
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.layers module
 --------------------------
 
 .. automodule:: hls4ml.model.layers
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.profiling module
 -----------------------------
 
 .. automodule:: hls4ml.model.profiling
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.quantizers module
 ------------------------------
 
 .. automodule:: hls4ml.model.quantizers
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.model.types module
 -------------------------
 
 .. automodule:: hls4ml.model.types
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.model
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

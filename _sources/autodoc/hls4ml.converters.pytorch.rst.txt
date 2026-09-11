@@ -9,69 +9,69 @@ hls4ml.converters.pytorch.convolution module
 
 .. automodule:: hls4ml.converters.pytorch.convolution
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.pytorch.core module
 -------------------------------------
 
 .. automodule:: hls4ml.converters.pytorch.core
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.pytorch.merge module
 --------------------------------------
 
 .. automodule:: hls4ml.converters.pytorch.merge
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.pytorch.pooling module
 ----------------------------------------
 
 .. automodule:: hls4ml.converters.pytorch.pooling
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.pytorch.pquant module
 ---------------------------------------
 
 .. automodule:: hls4ml.converters.pytorch.pquant
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.pytorch.recurrent module
 ------------------------------------------
 
 .. automodule:: hls4ml.converters.pytorch.recurrent
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.pytorch.reshape module
 ----------------------------------------
 
 .. automodule:: hls4ml.converters.pytorch.reshape
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.converters.pytorch.snn module
 ------------------------------------
 
 .. automodule:: hls4ml.converters.pytorch.snn
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.converters.pytorch
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

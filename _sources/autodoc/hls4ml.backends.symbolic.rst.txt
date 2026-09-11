@@ -17,13 +17,13 @@ hls4ml.backends.symbolic.symbolic\_backend module
 
 .. automodule:: hls4ml.backends.symbolic.symbolic_backend
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.symbolic
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

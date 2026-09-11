@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.converters.keras_v3 package &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,8 +16,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -250,7 +250,7 @@
 <span id="hls4ml-converters-keras-v3-conv-module"></span><h2>hls4ml.converters.keras_v3.conv module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.conv" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.conv.ConvHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.conv.</span></span><span class="sig-name descname"><span class="pre">ConvHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.conv.ConvHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.conv.</span></span><span class="sig-name descname"><span class="pre">ConvHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.conv.ConvHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.conv.ConvHandler.handle">
@@ -259,7 +259,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.conv.ConvHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.convolutional.conv1d.Conv1D',</span> <span class="pre">'keras.src.layers.convolutional.conv2d.Conv2D',</span> <span class="pre">'keras.src.layers.convolutional.depthwise_conv1d.DepthwiseConv1D',</span> <span class="pre">'keras.src.layers.convolutional.depthwise_conv2d.DepthwiseConv2D',</span> <span class="pre">'keras.src.layers.convolutional.separable_conv1d.SeparableConv1D',</span> <span class="pre">'keras.src.layers.convolutional.separable_conv2d.SeparableConv2D')</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.conv.ConvHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.convolutional.conv1d.Conv1D',</span> <span class="pre">'keras.src.layers.convolutional.conv2d.Conv2D',</span> <span class="pre">'keras.src.layers.convolutional.depthwise_conv1d.DepthwiseConv1D',</span> <span class="pre">'keras.src.layers.convolutional.depthwise_conv2d.DepthwiseConv2D',</span> <span class="pre">'keras.src.layers.convolutional.separable_conv1d.SeparableConv1D',</span> <span class="pre">'keras.src.layers.convolutional.separable_conv2d.SeparableConv2D')</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.conv.ConvHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -274,7 +274,7 @@
 <span id="hls4ml-converters-keras-v3-core-module"></span><h2>hls4ml.converters.keras_v3.core module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.core" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.ActivationHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">ActivationHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ActivationHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">ActivationHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ActivationHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.ActivationHandler.handle">
@@ -283,14 +283,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.ActivationHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.activations.activation.Activation',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ActivationHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.activations.activation.Activation',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ActivationHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.DenseHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">DenseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.DenseHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">DenseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.DenseHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.DenseHandler.handle">
@@ -299,14 +299,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.DenseHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.core.dense.Dense',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.core.DenseHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.core.dense.Dense',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.DenseHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.EluHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">EluHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.EluHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">EluHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.EluHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.EluHandler.handle">
@@ -315,14 +315,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.EluHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.activations.elu.ELU',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.core.EluHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.activations.elu.ELU',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.EluHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.InputHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">InputHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.InputHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">InputHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.InputHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.InputHandler.handle">
@@ -331,14 +331,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.InputHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.core.input_layer.InputLayer',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.core.InputHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.core.input_layer.InputLayer',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.InputHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.NoOp">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">NoOp</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.NoOp" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">NoOp</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.NoOp" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.NoOp.handle">
@@ -347,14 +347,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.NoOp.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.preprocessing.image_preprocessing.random_brightness.RandomBrightness',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_color_degeneration.RandomColorDegeneration',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_color_jitter.RandomColorJitter',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_contrast.RandomContrast',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_crop.RandomCrop',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_elastic_transform.RandomElasticTransform',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_erasing.RandomErasing',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_flip.RandomFlip',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_gaussian_blur.RandomGaussianBlur',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_grayscale.RandomGrayscale',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_hue.RandomHue',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_invert.RandomInvert',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_perspective.RandomPerspective',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_posterization.RandomPosterization',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_rotation.RandomRotation',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_saturation.RandomSaturation',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_sharpness.RandomSharpness',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_shear.RandomShear',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_translation.RandomTranslation',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_zoom.RandomZoom',</span> <span class="pre">'keras.src.layers.regularization.alpha_dropout.AlphaDropout',</span> <span class="pre">'keras.src.layers.regularization.dropout.Dropout',</span> <span class="pre">'keras.src.layers.regularization.gaussian_dropout.GaussianDropout',</span> <span class="pre">'keras.src.layers.regularization.spatial_dropout.SpatialDropout1D',</span> <span class="pre">'keras.src.layers.regularization.spatial_dropout.SpatialDropout2D',</span> <span class="pre">'keras.src.layers.regularization.spatial_dropout.SpatialDropout3D')</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.core.NoOp.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.preprocessing.image_preprocessing.random_brightness.RandomBrightness',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_color_degeneration.RandomColorDegeneration',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_color_jitter.RandomColorJitter',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_contrast.RandomContrast',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_crop.RandomCrop',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_elastic_transform.RandomElasticTransform',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_erasing.RandomErasing',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_flip.RandomFlip',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_gaussian_blur.RandomGaussianBlur',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_grayscale.RandomGrayscale',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_hue.RandomHue',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_invert.RandomInvert',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_perspective.RandomPerspective',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_posterization.RandomPosterization',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_rotation.RandomRotation',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_saturation.RandomSaturation',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_sharpness.RandomSharpness',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_shear.RandomShear',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_translation.RandomTranslation',</span> <span class="pre">'keras.src.layers.preprocessing.image_preprocessing.random_zoom.RandomZoom',</span> <span class="pre">'keras.src.layers.regularization.alpha_dropout.AlphaDropout',</span> <span class="pre">'keras.src.layers.regularization.dropout.Dropout',</span> <span class="pre">'keras.src.layers.regularization.gaussian_dropout.GaussianDropout',</span> <span class="pre">'keras.src.layers.regularization.spatial_dropout.SpatialDropout1D',</span> <span class="pre">'keras.src.layers.regularization.spatial_dropout.SpatialDropout2D',</span> <span class="pre">'keras.src.layers.regularization.spatial_dropout.SpatialDropout3D')</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.NoOp.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.PermuteHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">PermuteHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.PermuteHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">PermuteHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.PermuteHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.PermuteHandler.handle">
@@ -363,14 +363,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.PermuteHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.reshaping.permute.Permute',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.core.PermuteHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.reshaping.permute.Permute',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.PermuteHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.ReLUHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">ReLUHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ReLUHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">ReLUHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ReLUHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.ReLUHandler.handle">
@@ -379,14 +379,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.ReLUHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.activations.leaky_relu.LeakyReLU',</span> <span class="pre">'keras.src.layers.activations.prelu.PReLU',</span> <span class="pre">'keras.src.layers.activations.relu.ReLU')</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ReLUHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.activations.leaky_relu.LeakyReLU',</span> <span class="pre">'keras.src.layers.activations.prelu.PReLU',</span> <span class="pre">'keras.src.layers.activations.relu.ReLU')</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ReLUHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.ReshapeHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">ReshapeHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ReshapeHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">ReshapeHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ReshapeHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.ReshapeHandler.handle">
@@ -395,14 +395,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.ReshapeHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.reshaping.reshape.Reshape',</span> <span class="pre">'keras.src.layers.reshaping.flatten.Flatten')</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ReshapeHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.reshaping.reshape.Reshape',</span> <span class="pre">'keras.src.layers.reshaping.flatten.Flatten')</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.ReshapeHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.SoftmaxHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">SoftmaxHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.SoftmaxHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.core.</span></span><span class="sig-name descname"><span class="pre">SoftmaxHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.SoftmaxHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.SoftmaxHandler.handle">
@@ -411,7 +411,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.core.SoftmaxHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.activations.softmax.Softmax',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.core.SoftmaxHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.activations.softmax.Softmax',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.core.SoftmaxHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -421,7 +421,7 @@
 <span id="hls4ml-converters-keras-v3-einsum-dense-module"></span><h2>hls4ml.converters.keras_v3.einsum_dense module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.einsum_dense" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.einsum_dense.EinsumDenseHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.einsum_dense.EinsumDenseHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.einsum_dense.EinsumDenseHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.einsum_dense.EinsumDenseHandler.handle">
@@ -430,7 +430,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.einsum_dense.EinsumDenseHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.core.einsum_dense.EinsumDense',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.einsum_dense.EinsumDenseHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.core.einsum_dense.EinsumDense',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.einsum_dense.EinsumDenseHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -460,7 +460,7 @@
 <span id="hls4ml-converters-keras-v3-merge-module"></span><h2>hls4ml.converters.keras_v3.merge module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.merge" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.merge.MergeHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.merge.</span></span><span class="sig-name descname"><span class="pre">MergeHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.merge.MergeHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.merge.</span></span><span class="sig-name descname"><span class="pre">MergeHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.merge.MergeHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.merge.MergeHandler.handle">
@@ -469,7 +469,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.merge.MergeHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.merging.add.Add',</span> <span class="pre">'keras.src.layers.merging.multiply.Multiply',</span> <span class="pre">'keras.src.layers.merging.average.Average',</span> <span class="pre">'keras.src.layers.merging.maximum.Maximum',</span> <span class="pre">'keras.src.layers.merging.minimum.Minimum',</span> <span class="pre">'keras.src.layers.merging.concatenate.Concatenate',</span> <span class="pre">'keras.src.layers.merging.subtract.Subtract',</span> <span class="pre">'keras.src.layers.merging.dot.Dot')</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.merge.MergeHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.merging.add.Add',</span> <span class="pre">'keras.src.layers.merging.multiply.Multiply',</span> <span class="pre">'keras.src.layers.merging.average.Average',</span> <span class="pre">'keras.src.layers.merging.maximum.Maximum',</span> <span class="pre">'keras.src.layers.merging.minimum.Minimum',</span> <span class="pre">'keras.src.layers.merging.concatenate.Concatenate',</span> <span class="pre">'keras.src.layers.merging.subtract.Subtract',</span> <span class="pre">'keras.src.layers.merging.dot.Dot')</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.merge.MergeHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -479,7 +479,7 @@
 <span id="hls4ml-converters-keras-v3-pooling-module"></span><h2>hls4ml.converters.keras_v3.pooling module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.pooling" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.pooling.PoolingHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.pooling.</span></span><span class="sig-name descname"><span class="pre">PoolingHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.pooling.PoolingHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.pooling.</span></span><span class="sig-name descname"><span class="pre">PoolingHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.pooling.PoolingHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.pooling.PoolingHandler.handle">
@@ -488,7 +488,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.pooling.PoolingHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.pooling.max_pooling1d.MaxPooling1D',</span> <span class="pre">'keras.src.layers.pooling.max_pooling2d.MaxPooling2D',</span> <span class="pre">'keras.src.layers.pooling.max_pooling3d.MaxPooling3D',</span> <span class="pre">'keras.src.layers.pooling.average_pooling1d.AveragePooling1D',</span> <span class="pre">'keras.src.layers.pooling.average_pooling2d.AveragePooling2D',</span> <span class="pre">'keras.src.layers.pooling.average_pooling3d.AveragePooling3D',</span> <span class="pre">'keras.src.layers.pooling.global_average_pooling1d.GlobalAveragePooling1D',</span> <span class="pre">'keras.src.layers.pooling.global_average_pooling2d.GlobalAveragePooling2D',</span> <span class="pre">'keras.src.layers.pooling.global_average_pooling3d.GlobalAveragePooling3D',</span> <span class="pre">'keras.src.layers.pooling.global_max_pooling1d.GlobalMaxPooling1D',</span> <span class="pre">'keras.src.layers.pooling.global_max_pooling2d.GlobalMaxPooling2D',</span> <span class="pre">'keras.src.layers.pooling.global_max_pooling3d.GlobalMaxPooling3D')</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.pooling.PoolingHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.pooling.max_pooling1d.MaxPooling1D',</span> <span class="pre">'keras.src.layers.pooling.max_pooling2d.MaxPooling2D',</span> <span class="pre">'keras.src.layers.pooling.max_pooling3d.MaxPooling3D',</span> <span class="pre">'keras.src.layers.pooling.average_pooling1d.AveragePooling1D',</span> <span class="pre">'keras.src.layers.pooling.average_pooling2d.AveragePooling2D',</span> <span class="pre">'keras.src.layers.pooling.average_pooling3d.AveragePooling3D',</span> <span class="pre">'keras.src.layers.pooling.global_average_pooling1d.GlobalAveragePooling1D',</span> <span class="pre">'keras.src.layers.pooling.global_average_pooling2d.GlobalAveragePooling2D',</span> <span class="pre">'keras.src.layers.pooling.global_average_pooling3d.GlobalAveragePooling3D',</span> <span class="pre">'keras.src.layers.pooling.global_max_pooling1d.GlobalMaxPooling1D',</span> <span class="pre">'keras.src.layers.pooling.global_max_pooling2d.GlobalMaxPooling2D',</span> <span class="pre">'keras.src.layers.pooling.global_max_pooling3d.GlobalMaxPooling3D')</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.pooling.PoolingHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -498,7 +498,7 @@
 <span id="hls4ml-converters-keras-v3-recurrent-module"></span><h2>hls4ml.converters.keras_v3.recurrent module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.recurrent" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.recurrent.BidirectionalHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.recurrent.</span></span><span class="sig-name descname"><span class="pre">BidirectionalHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.recurrent.</span></span><span class="sig-name descname"><span class="pre">BidirectionalHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.recurrent.BidirectionalHandler.handle">
@@ -507,14 +507,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.recurrent.BidirectionalHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.rnn.bidirectional.Bidirectional',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.rnn.bidirectional.Bidirectional',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.recurrent.RecurentHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.recurrent.</span></span><span class="sig-name descname"><span class="pre">RecurentHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.recurrent.RecurentHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.recurrent.</span></span><span class="sig-name descname"><span class="pre">RecurentHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.recurrent.RecurentHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.recurrent.RecurentHandler.handle">
@@ -523,7 +523,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.recurrent.RecurentHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.rnn.simple_rnn.SimpleRNN',</span> <span class="pre">'keras.src.layers.rnn.lstm.LSTM',</span> <span class="pre">'keras.src.layers.rnn.gru.GRU')</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.recurrent.RecurentHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('keras.src.layers.rnn.simple_rnn.SimpleRNN',</span> <span class="pre">'keras.src.layers.rnn.lstm.LSTM',</span> <span class="pre">'keras.src.layers.rnn.gru.GRU')</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.recurrent.RecurentHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -533,7 +533,7 @@
 <span id="hls4ml-converters-keras-v3-sparsepixels-module"></span><h2>hls4ml.converters.keras_v3.sparsepixels module<a class="headerlink" href="#module-hls4ml.converters.keras_v3.sparsepixels" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.AveragePooling2DSparseHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">AveragePooling2DSparseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.AveragePooling2DSparseHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">AveragePooling2DSparseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.AveragePooling2DSparseHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.AveragePooling2DSparseHandler.handle">
@@ -542,14 +542,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.AveragePooling2DSparseHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sparsepixels.layers.AveragePooling2DSparse',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.AveragePooling2DSparseHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sparsepixels.layers.AveragePooling2DSparse',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.AveragePooling2DSparseHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.InputReduceHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">InputReduceHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.InputReduceHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">InputReduceHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.InputReduceHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.InputReduceHandler.handle">
@@ -558,14 +558,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.InputReduceHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sparsepixels.layers.InputReduce',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.InputReduceHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sparsepixels.layers.InputReduce',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.InputReduceHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.MaxPooling2DSparseHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">MaxPooling2DSparseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.MaxPooling2DSparseHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">MaxPooling2DSparseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.MaxPooling2DSparseHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.MaxPooling2DSparseHandler.handle">
@@ -574,14 +574,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.MaxPooling2DSparseHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sparsepixels.layers.MaxPooling2DSparse',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.MaxPooling2DSparseHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sparsepixels.layers.MaxPooling2DSparse',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.MaxPooling2DSparseHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.QConv2DSparseHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">QConv2DSparseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.QConv2DSparseHandler" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.converters.keras_v3.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">QConv2DSparseHandler</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.QConv2DSparseHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KerasV3LayerHandler</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.QConv2DSparseHandler.handle">
@@ -590,7 +590,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.converters.keras_v3.sparsepixels.QConv2DSparseHandler.handles">
-<span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sparsepixels.layers.QConv2DSparse',)</span></em><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.QConv2DSparseHandler.handles" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handles</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('sparsepixels.layers.QConv2DSparse',)</span></span><a class="headerlink" href="#hls4ml.converters.keras_v3.sparsepixels.QConv2DSparseHandler.handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>

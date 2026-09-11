@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.backends.fpga package &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,8 +16,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -287,7 +287,7 @@
 <span id="hls4ml-backends-fpga-fpga-backend-module"></span><h2>hls4ml.backends.fpga.fpga_backend module<a class="headerlink" href="#module-hls4ml.backends.fpga.fpga_backend" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_backend.FPGABackend">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_backend.</span></span><span class="sig-name descname"><span class="pre">FPGABackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_backend.</span></span><span class="sig-name descname"><span class="pre">FPGABackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.backend.Backend" title="hls4ml.backends.backend.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">Backend</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_backend.FPGABackend.compile">
@@ -321,7 +321,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_backend.FPGABackend.convert_precision_string">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_precision_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend.convert_precision_string" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">convert_precision_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend.convert_precision_string" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -486,7 +486,7 @@ directory specified in the <cite>config</cite>.</p>
 <span id="hls4ml-backends-fpga-fpga-layers-module"></span><h2>hls4ml.backends.fpga.fpga_layers module<a class="headerlink" href="#module-hls4ml.backends.fpga.fpga_layers" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_layers.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_layers.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
 <p>Merged Batch Normalization and quantized (binary or ternary) Tanh layer.
 The mean, variance, beta, gamma parameters are folded into the threshold(s) at which the
@@ -505,7 +505,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_layers.PointwiseConv1D">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_layers.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.PointwiseConv1D" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_layers.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv1D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.PointwiseConv1D" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Conv1D" title="hls4ml.model.layers.Conv1D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv1D</span></code></a></p>
 <p>Optimized Conv1D implementation for 1x1 kernels.</p>
 <dl class="py method">
@@ -517,7 +517,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_layers.PointwiseConv2D">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_layers.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.PointwiseConv2D" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_layers.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.PointwiseConv2D" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Conv2D" title="hls4ml.model.layers.Conv2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv2D</span></code></a></p>
 <p>Optimized Conv2D implementation for 1x1 kernels.</p>
 <dl class="py method">
@@ -532,7 +532,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 <span id="hls4ml-backends-fpga-fpga-types-module"></span><h2>hls4ml.backends.fpga.fpga_types module<a class="headerlink" href="#module-hls4ml.backends.fpga.fpga_types" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ACFixedPrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACFixedPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACFixedPrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACFixedPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACFixedPrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ACFixedPrecisionDefinition.definition_cpp">
@@ -543,7 +543,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ACFloatPrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACFloatPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACFloatPrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACFloatPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACFloatPrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ACFloatPrecisionDefinition.definition_cpp">
@@ -554,7 +554,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ACIntegerPrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACIntegerPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACIntegerPrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACIntegerPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACIntegerPrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ACIntegerPrecisionDefinition.definition_cpp">
@@ -565,7 +565,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ACStandardFloatPrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACStandardFloatPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACStandardFloatPrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACStandardFloatPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACStandardFloatPrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ACStandardFloatPrecisionDefinition.definition_cpp">
@@ -576,13 +576,13 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ACTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ACTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ACTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter" title="hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">FPGAPrecisionConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.APFixedPrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APFixedPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APFixedPrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APFixedPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APFixedPrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.APFixedPrecisionDefinition.definition_cpp">
@@ -593,7 +593,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.APFloatPrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APFloatPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APFloatPrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APFloatPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APFloatPrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.APFloatPrecisionDefinition.definition_cpp">
@@ -604,7 +604,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.APIntegerPrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APIntegerPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APIntegerPrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APIntegerPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APIntegerPrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.APIntegerPrecisionDefinition.definition_cpp">
@@ -615,7 +615,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.APStandardFloatPrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APStandardFloatPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APStandardFloatPrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APStandardFloatPrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APStandardFloatPrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="hls4ml.backends.fpga.fpga_types.PrecisionDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.APStandardFloatPrecisionDefinition.definition_cpp">
@@ -626,13 +626,13 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.APTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">APTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.APTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter" title="hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">FPGAPrecisionConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter.convert">
@@ -643,18 +643,18 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">BramWeightVariableConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">BramWeightVariableConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter.convert">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight_var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter.convert" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight_var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.BramWeightVariableConverter.convert" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CompressedTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CompressedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CompressedTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">CompressedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.CompressedTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="hls4ml.backends.fpga.fpga_types.TypeDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeDefinition</span></code></a>, <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypePrecisionConverter</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.CompressedTypeConverter.convert_precision">
@@ -670,7 +670,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ExponentTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ExponentTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ExponentTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">ExponentTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.ExponentTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="hls4ml.backends.fpga.fpga_types.TypeDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeDefinition</span></code></a>, <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypePrecisionConverter</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.ExponentTypeConverter.convert_precision">
@@ -686,7 +686,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">FPGAPrecisionConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">FPGAPrecisionConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.PrecisionConverter" title="hls4ml.backends.fpga.fpga_types.PrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionConverter</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.FPGAPrecisionConverter.convert">
@@ -697,7 +697,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.HLSTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">HLSTypeConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.HLSTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">HLSTypeConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.HLSTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.HLSTypeConverter.convert">
@@ -708,7 +708,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">InplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">InplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.StreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.StreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamVariableConverter</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter.convert">
@@ -719,7 +719,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.NamedTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">NamedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.NamedTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">NamedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.NamedTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="hls4ml.backends.fpga.fpga_types.TypeDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeDefinition</span></code></a>, <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypePrecisionConverter</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.NamedTypeConverter.definition_cpp">
@@ -730,7 +730,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.PackedTypeConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">PackedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.PackedTypeConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">PackedTypeConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.PackedTypeConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="hls4ml.backends.fpga.fpga_types.TypeDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeDefinition</span></code></a>, <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypePrecisionConverter</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.PackedTypeConverter.definition_cpp">
@@ -741,7 +741,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.PrecisionConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">PrecisionConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.PrecisionConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">PrecisionConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.PrecisionConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.PrecisionConverter.convert">
@@ -752,7 +752,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.PrecisionDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">PrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">PrecisionDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.PrecisionDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.PrecisionDefinition.definition_cpp">
@@ -763,7 +763,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.StaticWeightVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">StaticWeightVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.StaticWeightVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">StaticWeightVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.StaticWeightVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.StaticWeightVariableConverter.convert">
@@ -774,7 +774,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.StaticWeightVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">StaticWeightVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.StaticWeightVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">StaticWeightVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.StaticWeightVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.StaticWeightVariableDefinition.definition_cpp">
@@ -785,7 +785,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.StreamVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">StreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.StreamVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">StreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.StreamVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.StreamVariableConverter.convert">
@@ -796,7 +796,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">StructMemberVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">StructMemberVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definition_cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter.convert">
@@ -807,7 +807,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.TypeDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">TypeDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">TypeDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.TypeDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.TypeDefinition.definition_cpp">
@@ -818,7 +818,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">TypePrecisionConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">TypePrecisionConverter</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.TypePrecisionConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.TypePrecisionConverter.convert_precision">
@@ -829,7 +829,7 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.VariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">VariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.fpga_types.</span></span><span class="sig-name descname"><span class="pre">VariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_types.VariableDefinition.definition_cpp">

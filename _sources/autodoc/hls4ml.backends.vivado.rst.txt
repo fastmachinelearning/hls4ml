@@ -17,21 +17,21 @@ hls4ml.backends.vivado.vivado\_backend module
 
 .. automodule:: hls4ml.backends.vivado.vivado_backend
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.vivado.vivado\_types module
 -------------------------------------------
 
 .. automodule:: hls4ml.backends.vivado.vivado_types
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.vivado
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

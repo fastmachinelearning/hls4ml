@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.backends.quartus package &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,8 +16,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -382,7 +382,7 @@
 <span id="hls4ml-backends-quartus-quartus-backend-module"></span><h2>hls4ml.backends.quartus.quartus_backend module<a class="headerlink" href="#module-hls4ml.backends.quartus.quartus_backend" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_backend.QuartusBackend">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_backend.</span></span><span class="sig-name descname"><span class="pre">QuartusBackend</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_backend.QuartusBackend" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_backend.</span></span><span class="sig-name descname"><span class="pre">QuartusBackend</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_backend.QuartusBackend" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend" title="hls4ml.backends.fpga.fpga_backend.FPGABackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">FPGABackend</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_backend.QuartusBackend.build">
@@ -487,13 +487,13 @@ device resources</p></li>
 <span id="hls4ml-backends-quartus-quartus-types-module"></span><h2>hls4ml.backends.quartus.quartus_types module<a class="headerlink" href="#module-hls4ml.backends.quartus.quartus_types" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusArrayVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusArrayVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusArrayVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusArrayVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusArrayVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusArrayVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusArrayVariableDefinition.definition_cpp">
@@ -504,13 +504,13 @@ device resources</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceArrayVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ArrayVariableConverter" title="hls4ml.backends.fpga.fpga_types.ArrayVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceArrayVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusInplaceArrayVariableDefinition.definition_cpp">
@@ -521,13 +521,13 @@ device resources</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.InplaceStreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">InplaceStreamVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusInplaceStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusInplaceStreamVariableDefinition.definition_cpp">
@@ -538,13 +538,13 @@ device resources</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusStreamVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusStreamVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusStreamVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.StreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusStreamVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusStreamVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusStreamVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusStreamVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusStreamVariableDefinition.definition_cpp">
@@ -555,13 +555,13 @@ device resources</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableConverter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusStructMemberVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableConverter" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusStructMemberVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableConverter" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter" title="hls4ml.backends.fpga.fpga_types.StructMemberVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">StructMemberVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableDefinition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusStructMemberVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableDefinition" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.quartus.quartus_types.</span></span><span class="sig-name descname"><span class="pre">QuartusStructMemberVariableDefinition</span></span><a class="headerlink" href="#hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableDefinition" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition" title="hls4ml.backends.fpga.fpga_types.VariableDefinition"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariableDefinition</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.quartus.quartus_types.QuartusStructMemberVariableDefinition.definition_cpp">

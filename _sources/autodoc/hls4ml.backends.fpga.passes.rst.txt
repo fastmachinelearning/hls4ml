@@ -9,93 +9,93 @@ hls4ml.backends.fpga.passes.bram\_weights module
 
 .. automodule:: hls4ml.backends.fpga.passes.bram_weights
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.clone module
 ----------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.clone
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.embedding module
 --------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.embedding
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.final\_reshape module
 -------------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.final_reshape
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.fix\_softmax\_table\_size module
 ------------------------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.fix_softmax_table_size
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.hgq\_proxy\_model module
 ----------------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.hgq_proxy_model
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.inplace\_parallel\_reshape module
 -------------------------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.inplace_parallel_reshape
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.inplace\_stream\_flatten module
 -----------------------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.inplace_stream_flatten
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.remove\_softmax module
 --------------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.remove_softmax
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.repack\_stream module
 -------------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.repack_stream
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.fpga.passes.xnor\_pooling module
 ------------------------------------------------
 
 .. automodule:: hls4ml.backends.fpga.passes.xnor_pooling
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.fpga.passes
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

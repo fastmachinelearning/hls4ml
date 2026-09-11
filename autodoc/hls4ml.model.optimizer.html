@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.model.optimizer package &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,8 +16,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -529,7 +529,7 @@
 <span id="hls4ml-model-optimizer-optimizer-module"></span><h2>hls4ml.model.optimizer.optimizer module<a class="headerlink" href="#module-hls4ml.model.optimizer.optimizer" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">ConfigurableOptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">ConfigurableOptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>An optimizer that can be configured.</p>
 <p>Existing instances of this class in the registry can be configured with the configure() method. Multiple instances
@@ -548,7 +548,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.GlobalOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">GlobalOptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">GlobalOptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Global optimizer that matches on every node in the model graph.</p>
 <dl class="py method">
@@ -566,7 +566,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.LayerOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">LayerOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.LayerOptimizerPass" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">LayerOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.LayerOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass" title="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">WrappedOptimizerPass</span></code></a></p>
 <p>An wrapper optimizer specific to a layer class.</p>
 <p>Commonly used by backends to add extra initialization to a layer instance.</p>
@@ -574,7 +574,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.ModelOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">ModelOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">ModelOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>A special optimizer that works with the model itself.</p>
 <p>Examples include writing the model to C++/HLS.</p>
@@ -597,12 +597,12 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.OptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">OptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">OptimizerPass</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base optimizer class from which all other optimizer types are derived.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.OptimizerPass.get_name">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.get_name" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.get_name" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -618,7 +618,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.OptimizerPass.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.name" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.OptimizerPass.name" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -640,7 +640,7 @@ with different configuration can co-exist if registered with different names.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.optimizer.WrappedOptimizerPass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">WrappedOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.optimizer.</span></span><span class="sig-name descname"><span class="pre">WrappedOptimizerPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.optimizer.WrappedOptimizerPass" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>An optimizer class created by wrapping a function call.</p>
 <p>Users should generally not create any wrapped optimizer passes manually.</p>

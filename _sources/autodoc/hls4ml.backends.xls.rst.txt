@@ -9,29 +9,29 @@ hls4ml.backends.xls.xls\_backend module
 
 .. automodule:: hls4ml.backends.xls.xls_backend
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.xls.xls\_layer\_util module
 -------------------------------------------
 
 .. automodule:: hls4ml.backends.xls.xls_layer_util
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.xls.xls\_types module
 -------------------------------------
 
 .. automodule:: hls4ml.backends.xls.xls_types
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.xls
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

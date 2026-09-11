@@ -9,13 +9,13 @@ hls4ml.model.flow.flow module
 
 .. automodule:: hls4ml.model.flow.flow
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.model.flow
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

@@ -9,21 +9,21 @@ hls4ml.backends.libero.libero\_backend module
 
 .. automodule:: hls4ml.backends.libero.libero_backend
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.libero.libero\_types module
 -------------------------------------------
 
 .. automodule:: hls4ml.backends.libero.libero_types
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.libero
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

@@ -22,5 +22,5 @@ Module contents
 
 .. automodule:: hls4ml
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

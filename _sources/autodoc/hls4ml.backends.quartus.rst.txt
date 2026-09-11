@@ -17,21 +17,21 @@ hls4ml.backends.quartus.quartus\_backend module
 
 .. automodule:: hls4ml.backends.quartus.quartus_backend
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.quartus.quartus\_types module
 ---------------------------------------------
 
 .. automodule:: hls4ml.backends.quartus.quartus_types
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.quartus
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

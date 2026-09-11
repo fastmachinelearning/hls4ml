@@ -9,133 +9,133 @@ hls4ml.utils.attribute\_descriptions module
 
 .. automodule:: hls4ml.utils.attribute_descriptions
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.config module
 --------------------------
 
 .. automodule:: hls4ml.utils.config
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.dependency module
 ------------------------------
 
 .. automodule:: hls4ml.utils.dependency
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.einsum\_utils module
 ---------------------------------
 
 .. automodule:: hls4ml.utils.einsum_utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.example\_models module
 -----------------------------------
 
 .. automodule:: hls4ml.utils.example_models
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.fixed\_point\_utils module
 ---------------------------------------
 
 .. automodule:: hls4ml.utils.fixed_point_utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.link module
 ------------------------
 
 .. automodule:: hls4ml.utils.link
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.plot module
 ------------------------
 
 .. automodule:: hls4ml.utils.plot
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.profiling\_utils module
 ------------------------------------
 
 .. automodule:: hls4ml.utils.profiling_utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.qinterval module
 -----------------------------
 
 .. automodule:: hls4ml.utils.qinterval
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.serialization module
 ---------------------------------
 
 .. automodule:: hls4ml.utils.serialization
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.simulation\_utils module
 -------------------------------------
 
 .. automodule:: hls4ml.utils.simulation_utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.string\_utils module
 ---------------------------------
 
 .. automodule:: hls4ml.utils.string_utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.symbolic\_utils module
 -----------------------------------
 
 .. automodule:: hls4ml.utils.symbolic_utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.torch module
 -------------------------
 
 .. automodule:: hls4ml.utils.torch
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.utils.transpose\_utils module
 ------------------------------------
 
 .. automodule:: hls4ml.utils.transpose_utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.utils
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

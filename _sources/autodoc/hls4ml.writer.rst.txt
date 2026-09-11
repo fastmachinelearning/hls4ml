@@ -9,93 +9,93 @@ hls4ml.writer.catapult\_writer module
 
 .. automodule:: hls4ml.writer.catapult_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.coyote\_writer module
 -----------------------------------
 
 .. automodule:: hls4ml.writer.coyote_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.libero\_writer module
 -----------------------------------
 
 .. automodule:: hls4ml.writer.libero_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.oneapi\_writer module
 -----------------------------------
 
 .. automodule:: hls4ml.writer.oneapi_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.quartus\_writer module
 ------------------------------------
 
 .. automodule:: hls4ml.writer.quartus_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.symbolic\_writer module
 -------------------------------------
 
 .. automodule:: hls4ml.writer.symbolic_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.vitis\_writer module
 ----------------------------------
 
 .. automodule:: hls4ml.writer.vitis_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.vivado\_accelerator\_writer module
 ------------------------------------------------
 
 .. automodule:: hls4ml.writer.vivado_accelerator_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.vivado\_writer module
 -----------------------------------
 
 .. automodule:: hls4ml.writer.vivado_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.writers module
 ----------------------------
 
 .. automodule:: hls4ml.writer.writers
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.writer.xls\_writer module
 --------------------------------
 
 .. automodule:: hls4ml.writer.xls_writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

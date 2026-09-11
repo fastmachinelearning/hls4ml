@@ -14,5 +14,5 @@ Module contents
 
 .. automodule:: hls4ml.optimization
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

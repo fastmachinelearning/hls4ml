@@ -17,29 +17,29 @@ hls4ml.backends.oneapi.oneapi\_backend module
 
 .. automodule:: hls4ml.backends.oneapi.oneapi_backend
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.oneapi.oneapi\_template module
 ----------------------------------------------
 
 .. automodule:: hls4ml.backends.oneapi.oneapi_template
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 hls4ml.backends.oneapi.oneapi\_types module
 -------------------------------------------
 
 .. automodule:: hls4ml.backends.oneapi.oneapi_types
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: hls4ml.backends.oneapi
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

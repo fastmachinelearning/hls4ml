@@ -6,5 +6,5 @@ Module contents
 
 .. automodule:: hls4ml.cli
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

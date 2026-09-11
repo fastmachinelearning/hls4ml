@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.backends.fpga.passes package &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,8 +16,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -154,7 +154,7 @@
 <span id="hls4ml-backends-fpga-passes-bram-weights-module"></span><h2>hls4ml.backends.fpga.passes.bram_weights module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.bram_weights" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.bram_weights.</span></span><span class="sig-name descname"><span class="pre">RegisterBramWeights</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.bram_weights.</span></span><span class="sig-name descname"><span class="pre">RegisterBramWeights</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.bram_weights.RegisterBramWeights.match">
@@ -189,7 +189,7 @@
 <span id="hls4ml-backends-fpga-passes-clone-module"></span><h2>hls4ml.backends.fpga.passes.clone module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.clone" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.clone.Clone">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.clone.</span></span><span class="sig-name descname"><span class="pre">Clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.clone.Clone" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.clone.</span></span><span class="sig-name descname"><span class="pre">Clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.clone.Clone" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
 <p>Inserted after the layer whose output is used more than once.</p>
 <dl class="py method">
@@ -201,7 +201,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.clone.CloneFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.clone.</span></span><span class="sig-name descname"><span class="pre">CloneFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.clone.CloneFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.clone.</span></span><span class="sig-name descname"><span class="pre">CloneFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.clone.CloneFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.clone.CloneFunctionTemplate.format">
@@ -212,7 +212,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.clone.CloneOutput">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.clone.</span></span><span class="sig-name descname"><span class="pre">CloneOutput</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.clone.CloneOutput" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.clone.</span></span><span class="sig-name descname"><span class="pre">CloneOutput</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.clone.CloneOutput" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Clones streams that are used multiple times</p>
 <dl class="py method">
@@ -253,7 +253,7 @@
 <span id="hls4ml-backends-fpga-passes-embedding-module"></span><h2>hls4ml.backends.fpga.passes.embedding module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.embedding" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.embedding.EmbeddingConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.embedding.</span></span><span class="sig-name descname"><span class="pre">EmbeddingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.embedding.EmbeddingConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.embedding.</span></span><span class="sig-name descname"><span class="pre">EmbeddingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.embedding.EmbeddingConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.embedding.EmbeddingConfigTemplate.format">
@@ -264,7 +264,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.embedding.EmbeddingFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.embedding.</span></span><span class="sig-name descname"><span class="pre">EmbeddingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.embedding.EmbeddingFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.embedding.</span></span><span class="sig-name descname"><span class="pre">EmbeddingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.embedding.EmbeddingFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.embedding.EmbeddingFunctionTemplate.format">
@@ -278,7 +278,7 @@
 <span id="hls4ml-backends-fpga-passes-final-reshape-module"></span><h2>hls4ml.backends.fpga.passes.final_reshape module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.final_reshape" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.final_reshape.</span></span><span class="sig-name descname"><span class="pre">RemoveFinalReshape</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.final_reshape.</span></span><span class="sig-name descname"><span class="pre">RemoveFinalReshape</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.final_reshape.RemoveFinalReshape" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Remove reshape if final layer</p>
 <dl class="py method">
@@ -314,7 +314,7 @@
 <span id="hls4ml-backends-fpga-passes-fix-softmax-table-size-module"></span><h2>hls4ml.backends.fpga.passes.fix_softmax_table_size module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.fix_softmax_table_size" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.fix_softmax_table_size.</span></span><span class="sig-name descname"><span class="pre">FixSoftmaxTableSize</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.fix_softmax_table_size.</span></span><span class="sig-name descname"><span class="pre">FixSoftmaxTableSize</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.fix_softmax_table_size.FixSoftmaxTableSize.match">
@@ -354,7 +354,7 @@
 <span id="hls4ml-backends-fpga-passes-hgq-proxy-model-module"></span><h2>hls4ml.backends.fpga.passes.hgq_proxy_model module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.hgq_proxy_model" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerCall">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">ProcessFixedPointQuantizerCall</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerCall" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">ProcessFixedPointQuantizerCall</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerCall" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerCall.format">
@@ -365,7 +365,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">ProcessFixedPointQuantizerLayer</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">ProcessFixedPointQuantizerLayer</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessFixedPointQuantizerLayer.match">
@@ -397,7 +397,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessUnaryLUTCall">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">ProcessUnaryLUTCall</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessUnaryLUTCall" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.hgq_proxy_model.</span></span><span class="sig-name descname"><span class="pre">ProcessUnaryLUTCall</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessUnaryLUTCall" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.hgq_proxy_model.ProcessUnaryLUTCall.format">
@@ -432,7 +432,7 @@
 <span id="hls4ml-backends-fpga-passes-inplace-parallel-reshape-module"></span><h2>hls4ml.backends.fpga.passes.inplace_parallel_reshape module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.inplace_parallel_reshape" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.inplace_parallel_reshape.</span></span><span class="sig-name descname"><span class="pre">InplaceParallelReshape</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.inplace_parallel_reshape.</span></span><span class="sig-name descname"><span class="pre">InplaceParallelReshape</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_parallel_reshape.InplaceParallelReshape" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Replaces the output variable of Reshape layer with an inplace variable when using io_parallel.</p>
 <p>This is done because in io_parallel tensors are stored as flat arrays, requiring no reshaping.</p>
@@ -469,7 +469,7 @@
 <span id="hls4ml-backends-fpga-passes-inplace-stream-flatten-module"></span><h2>hls4ml.backends.fpga.passes.inplace_stream_flatten module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.inplace_stream_flatten" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.inplace_stream_flatten.</span></span><span class="sig-name descname"><span class="pre">InplaceStreamFlatten</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.inplace_stream_flatten.</span></span><span class="sig-name descname"><span class="pre">InplaceStreamFlatten</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.inplace_stream_flatten.InplaceStreamFlatten" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Replaces the output variable of Reshape (flatten) layer with an inplace variable when using io_stream.</p>
 <p>This optimizer avoids the expensive repacking of the stream when Reshape layer flattens the tensor to 1d.</p>
@@ -506,7 +506,7 @@
 <span id="hls4ml-backends-fpga-passes-remove-softmax-module"></span><h2>hls4ml.backends.fpga.passes.remove_softmax module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.remove_softmax" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.remove_softmax.</span></span><span class="sig-name descname"><span class="pre">SkipSoftmax</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.remove_softmax.</span></span><span class="sig-name descname"><span class="pre">SkipSoftmax</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.remove_softmax.SkipSoftmax.match">
@@ -541,7 +541,7 @@
 <span id="hls4ml-backends-fpga-passes-repack-stream-module"></span><h2>hls4ml.backends.fpga.passes.repack_stream module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.repack_stream" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.Repack">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">Repack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.Repack" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">Repack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.Repack" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
 <p>Inserted between layers with different packing factors.</p>
 <dl class="py method">
@@ -553,7 +553,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">RepackFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">RepackFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.RepackFunctionTemplate.format">
@@ -564,7 +564,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.repack_stream.ReshapeStream">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">ReshapeStream</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.ReshapeStream" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.repack_stream.</span></span><span class="sig-name descname"><span class="pre">ReshapeStream</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.repack_stream.ReshapeStream" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Repacks stream for Reshape layer</p>
 <dl class="py method">
@@ -605,7 +605,7 @@
 <span id="hls4ml-backends-fpga-passes-xnor-pooling-module"></span><h2>hls4ml.backends.fpga.passes.xnor_pooling module<a class="headerlink" href="#module-hls4ml.backends.fpga.passes.xnor_pooling" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.passes.xnor_pooling.XnorPooling">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.xnor_pooling.</span></span><span class="sig-name descname"><span class="pre">XnorPooling</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.xnor_pooling.XnorPooling" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.fpga.passes.xnor_pooling.</span></span><span class="sig-name descname"><span class="pre">XnorPooling</span></span><a class="headerlink" href="#hls4ml.backends.fpga.passes.xnor_pooling.XnorPooling" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>For correct behavior, for MaxPooling and similar, for XnorPrecisionType, have to propagate
 the type to the output.</p>

@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hls4ml.backends.vivado.passes package &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,8 +16,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -154,7 +154,7 @@
 <span id="hls4ml-backends-vivado-passes-bn-quant-module"></span><h2>hls4ml.backends.vivado.passes.bn_quant module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.bn_quant" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format">
@@ -165,7 +165,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format">
@@ -176,7 +176,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">MergeBatchNormAndQuantizedTanh</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">MergeBatchNormAndQuantizedTanh</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match">
@@ -208,7 +208,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">QuantizeDenseOutput</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">QuantizeDenseOutput</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.bn_quant.QuantizeDenseOutput.match">
@@ -248,7 +248,7 @@
 <span id="hls4ml-backends-vivado-passes-broadcast-stream-module"></span><h2>hls4ml.backends.vivado.passes.broadcast_stream module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.broadcast_stream" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.Broadcast">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">Broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.Broadcast" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">Broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.Broadcast" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
 <p>Inserted between layers for broadcasting.</p>
 <dl class="py method">
@@ -260,7 +260,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastConfigTemplate.format">
@@ -271,7 +271,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastFunctionTemplate.format">
@@ -282,7 +282,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastStream</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.broadcast_stream.</span></span><span class="sig-name descname"><span class="pre">BroadcastStream</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.broadcast_stream.BroadcastStream.match">
@@ -322,7 +322,7 @@
 <span id="hls4ml-backends-vivado-passes-conv-same-pad-module"></span><h2>hls4ml.backends.vivado.passes.conv_same_pad module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.conv_same_pad" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.conv_same_pad.</span></span><span class="sig-name descname"><span class="pre">InsertZeroPaddingBeforeConv1D</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.conv_same_pad.</span></span><span class="sig-name descname"><span class="pre">InsertZeroPaddingBeforeConv1D</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.match">
@@ -337,7 +337,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'insert_zero_padding_before_conv1d'</span></em><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.name" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'insert_zero_padding_before_conv1d'</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.name" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -359,7 +359,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.conv_same_pad.</span></span><span class="sig-name descname"><span class="pre">InsertZeroPaddingBeforeConv2D</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.conv_same_pad.</span></span><span class="sig-name descname"><span class="pre">InsertZeroPaddingBeforeConv2D</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.match">
@@ -374,7 +374,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'insert_zero_padding_before_conv2d'</span></em><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.name" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'insert_zero_padding_before_conv2d'</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.name" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -399,7 +399,7 @@
 <span id="hls4ml-backends-vivado-passes-conv-stream-module"></span><h2>hls4ml.backends.vivado.passes.conv_stream module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.conv_stream" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.conv_stream.</span></span><span class="sig-name descname"><span class="pre">GenerateConvStreamingInstructions</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.conv_stream.</span></span><span class="sig-name descname"><span class="pre">GenerateConvStreamingInstructions</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Generates the instructions for streaming implementation of CNNs</p>
 <dl class="py method">
@@ -435,7 +435,7 @@
 <span id="hls4ml-backends-vivado-passes-convolution-templates-module"></span><h2>hls4ml.backends.vivado.passes.convolution_templates module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.convolution_templates" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv1DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv1DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate.format">
@@ -457,7 +457,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate.format">
@@ -479,7 +479,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.Conv2DConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv2DConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv2DConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.Conv2DConfigTemplate.format">
@@ -501,7 +501,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate.format">
@@ -523,19 +523,19 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.DepthwiseConv1DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">DepthwiseConv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.DepthwiseConv1DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">DepthwiseConv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.DepthwiseConv1DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate" title="hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv1DFunctionTemplate</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.DepthwiseConv2DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">DepthwiseConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.DepthwiseConv2DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">DepthwiseConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.DepthwiseConv2DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate" title="hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv2DFunctionTemplate</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">SeparableConv1DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">SeparableConv1DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DConfigTemplate.format">
@@ -546,7 +546,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">SeparableConv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">SeparableConv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DFunctionTemplate.format">
@@ -557,7 +557,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.SeparableConv2DConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">SeparableConv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv2DConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">SeparableConv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv2DConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.SeparableConv2DConfigTemplate.format">
@@ -568,7 +568,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.SeparableConv2DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">SeparableConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv2DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">SeparableConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv2DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.convolution_templates.SeparableConv2DFunctionTemplate.format">
@@ -582,7 +582,7 @@
 <span id="hls4ml-backends-vivado-passes-core-templates-module"></span><h2>hls4ml.backends.vivado.passes.core_templates module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.core_templates" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.ActivationConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.ActivationConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.ActivationConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.ActivationConfigTemplate.format">
@@ -593,7 +593,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.ActivationFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ActivationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.ActivationFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ActivationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.ActivationFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.ActivationFunctionTemplate.format">
@@ -604,7 +604,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.BatchNormalizationConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.BatchNormalizationConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.BatchNormalizationConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.BatchNormalizationConfigTemplate.format">
@@ -615,7 +615,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.BatchNormalizationFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.BatchNormalizationFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.BatchNormalizationFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.BatchNormalizationFunctionTemplate.format">
@@ -626,7 +626,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.DenseConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">DenseConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.DenseConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">DenseConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.DenseConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.DenseConfigTemplate.format">
@@ -648,7 +648,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.DenseFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">DenseFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.DenseFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">DenseFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.DenseFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.DenseFunctionTemplate.format">
@@ -670,7 +670,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.HardActivationConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">HardActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.HardActivationConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">HardActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.HardActivationConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.HardActivationConfigTemplate.format">
@@ -681,7 +681,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.LayerNormalizationConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">LayerNormalizationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.LayerNormalizationConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">LayerNormalizationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.LayerNormalizationConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.LayerNormalizationConfigTemplate.format">
@@ -692,7 +692,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.LayerNormalizationFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">LayerNormalizationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.LayerNormalizationFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">LayerNormalizationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.LayerNormalizationFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.LayerNormalizationFunctionTemplate.format">
@@ -703,7 +703,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.PReLUFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">PReLUFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.PReLUFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">PReLUFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.PReLUFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.PReLUFunctionTemplate.format">
@@ -714,7 +714,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.ParamActivationConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ParamActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.ParamActivationConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ParamActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.ParamActivationConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.ParamActivationConfigTemplate.format">
@@ -725,7 +725,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.ParametrizedActivationFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ParametrizedActivationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.ParametrizedActivationFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ParametrizedActivationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.ParametrizedActivationFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.ParametrizedActivationFunctionTemplate.format">
@@ -736,7 +736,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.SoftmaxConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">SoftmaxConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.SoftmaxConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">SoftmaxConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.SoftmaxConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.vivado.passes.core_templates.ActivationConfigTemplate" title="hls4ml.backends.vivado.passes.core_templates.ActivationConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActivationConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.SoftmaxConfigTemplate.format">
@@ -747,7 +747,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.SoftmaxFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">SoftmaxFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.SoftmaxFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">SoftmaxFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.core_templates.SoftmaxFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.core_templates.SoftmaxFunctionTemplate.format">
@@ -761,7 +761,7 @@
 <span id="hls4ml-backends-vivado-passes-distributed-arithmetic-module"></span><h2>hls4ml.backends.vivado.passes.distributed_arithmetic module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.distributed_arithmetic" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.distributed_arithmetic.DACombinationalTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DACombinationalTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DACombinationalTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DACombinationalTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DACombinationalTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.distributed_arithmetic.DACombinationalTemplate.match">
@@ -793,7 +793,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.distributed_arithmetic.DALatencyConvTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DALatencyConvTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DALatencyConvTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DALatencyConvTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DALatencyConvTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.distributed_arithmetic.DALatencyConvTemplate.match">
@@ -825,7 +825,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.distributed_arithmetic.DALatencyDenseTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DALatencyDenseTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DALatencyDenseTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DALatencyDenseTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DALatencyDenseTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.distributed_arithmetic.DALatencyDenseTemplate.match">
@@ -857,7 +857,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticCodegen">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DistributedArithmeticCodegen</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticCodegen" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DistributedArithmeticCodegen</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticCodegen" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Generates C++ code for distributed arithmetic implementation of Dense and Conv1/2D layers</p>
 <dl class="py method">
@@ -890,7 +890,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticEinsumCodegen">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DistributedArithmeticEinsumCodegen</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticEinsumCodegen" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">DistributedArithmeticEinsumCodegen</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticEinsumCodegen" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Generates C++ code for distributed arithmetic implementation of Dense layers</p>
 <dl class="py method">
@@ -923,7 +923,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">FuseQuantizerIntoDALayers</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.distributed_arithmetic.</span></span><span class="sig-name descname"><span class="pre">FuseQuantizerIntoDALayers</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Heterogeneous quantizer can be fused into the DA CMVM kernel in some cases.
 This would allow heterogeenous quantizarion for io stream in some cases.</p>
@@ -979,7 +979,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-einsum-module"></span><h2>hls4ml.backends.vivado.passes.einsum module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.einsum" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.einsum.EinsumConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.einsum.</span></span><span class="sig-name descname"><span class="pre">EinsumConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.einsum.EinsumConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.einsum.</span></span><span class="sig-name descname"><span class="pre">EinsumConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.einsum.EinsumConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.einsum.EinsumConfigTemplate.format">
@@ -990,7 +990,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.einsum.EinsumFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.einsum.</span></span><span class="sig-name descname"><span class="pre">EinsumFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.einsum.EinsumFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.einsum.</span></span><span class="sig-name descname"><span class="pre">EinsumFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.einsum.EinsumFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.einsum.EinsumFunctionTemplate.format">
@@ -1004,7 +1004,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-einsum-dense-module"></span><h2>hls4ml.backends.vivado.passes.einsum_dense module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.einsum_dense" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseConfigTemplate.dense_config">
@@ -1020,7 +1020,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseFunctionTemplate.format">
@@ -1034,7 +1034,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-fifo-depth-optimization-module"></span><h2>hls4ml.backends.vivado.passes.fifo_depth_optimization module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.fifo_depth_optimization" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.fifo_depth_optimization.</span></span><span class="sig-name descname"><span class="pre">FifoDepthOptimization</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.fifo_depth_optimization.</span></span><span class="sig-name descname"><span class="pre">FifoDepthOptimization</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurableOptimizerPass</span></code></a>, <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="hls4ml.model.optimizer.optimizer.ModelOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization.transform">
@@ -1083,7 +1083,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-garnet-templates-module"></span><h2>hls4ml.backends.vivado.passes.garnet_templates module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.garnet_templates" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.garnet_templates.GarNetConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.garnet_templates.</span></span><span class="sig-name descname"><span class="pre">GarNetConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.garnet_templates.</span></span><span class="sig-name descname"><span class="pre">GarNetConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.garnet_templates.GarNetConfigTemplate.format">
@@ -1099,7 +1099,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.garnet_templates.GarNetFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.garnet_templates.</span></span><span class="sig-name descname"><span class="pre">GarNetFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.garnet_templates.</span></span><span class="sig-name descname"><span class="pre">GarNetFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.garnet_templates.GarNetFunctionTemplate.format">
@@ -1110,7 +1110,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.garnet_templates.GarNetStackConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.garnet_templates.</span></span><span class="sig-name descname"><span class="pre">GarNetStackConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetStackConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.garnet_templates.</span></span><span class="sig-name descname"><span class="pre">GarNetStackConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetStackConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetConfigTemplate" title="hls4ml.backends.vivado.passes.garnet_templates.GarNetConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">GarNetConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.garnet_templates.GarNetStackConfigTemplate.get_transforms_config">
@@ -1121,7 +1121,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.garnet_templates.GarNetStackFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.garnet_templates.</span></span><span class="sig-name descname"><span class="pre">GarNetStackFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetStackFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.garnet_templates.</span></span><span class="sig-name descname"><span class="pre">GarNetStackFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetStackFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.vivado.passes.garnet_templates.GarNetFunctionTemplate" title="hls4ml.backends.vivado.passes.garnet_templates.GarNetFunctionTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">GarNetFunctionTemplate</span></code></a></p>
 </dd></dl>
 
@@ -1130,7 +1130,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-im2col-codegen-module"></span><h2>hls4ml.backends.vivado.passes.im2col_codegen module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.im2col_codegen" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.im2col_codegen.</span></span><span class="sig-name descname"><span class="pre">GenerateConvIm2col</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.im2col_codegen.</span></span><span class="sig-name descname"><span class="pre">GenerateConvIm2col</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Generates tcode for im2col step of 1D/2d convolution</p>
 <dl class="py method">
@@ -1166,7 +1166,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-merge-templates-module"></span><h2>hls4ml.backends.vivado.passes.merge_templates module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.merge_templates" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.merge_templates.ConcatenateConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">ConcatenateConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.merge_templates.ConcatenateConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">ConcatenateConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.merge_templates.ConcatenateConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.merge_templates.ConcatenateConfigTemplate.format">
@@ -1177,7 +1177,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.merge_templates.DotConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">DotConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.merge_templates.DotConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">DotConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.merge_templates.DotConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.merge_templates.DotConfigTemplate.format">
@@ -1188,7 +1188,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.merge_templates.MergeConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">MergeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.merge_templates.MergeConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">MergeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.merge_templates.MergeConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.merge_templates.MergeConfigTemplate.format">
@@ -1199,7 +1199,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.merge_templates.MergeFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">MergeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.merge_templates.MergeFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">MergeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.merge_templates.MergeFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.merge_templates.MergeFunctionTemplate.format">
@@ -1213,7 +1213,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-pipeline-style-module"></span><h2>hls4ml.backends.vivado.passes.pipeline_style module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.pipeline_style" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pipeline_style.</span></span><span class="sig-name descname"><span class="pre">SetPipelineStyle</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pipeline_style.</span></span><span class="sig-name descname"><span class="pre">SetPipelineStyle</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ModelOptimizerPass" title="hls4ml.model.optimizer.optimizer.ModelOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle.transform">
@@ -1237,7 +1237,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-pointwise-module"></span><h2>hls4ml.backends.vivado.passes.pointwise module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.pointwise" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">OptimizePointwiseConv</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">OptimizePointwiseConv</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pointwise.OptimizePointwiseConv.match">
@@ -1269,25 +1269,25 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pointwise.PointwiseConv1DConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv1DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.PointwiseConv1DConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv1DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.PointwiseConv1DConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate" title="hls4ml.backends.vivado.passes.convolution_templates.Conv1DConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv1DConfigTemplate</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pointwise.PointwiseConv1DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.PointwiseConv1DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.PointwiseConv1DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate" title="hls4ml.backends.vivado.passes.convolution_templates.Conv1DFunctionTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv1DFunctionTemplate</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pointwise.PointwiseConv2DConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.PointwiseConv2DConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.PointwiseConv2DConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv2DConfigTemplate" title="hls4ml.backends.vivado.passes.convolution_templates.Conv2DConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv2DConfigTemplate</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pointwise.PointwiseConv2DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.PointwiseConv2DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pointwise.PointwiseConv2DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate" title="hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv2DFunctionTemplate</span></code></a></p>
 </dd></dl>
 
@@ -1301,7 +1301,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-pooling-templates-module"></span><h2>hls4ml.backends.vivado.passes.pooling_templates module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.pooling_templates" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pooling_templates.PoolingConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pooling_templates.</span></span><span class="sig-name descname"><span class="pre">PoolingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pooling_templates.PoolingConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pooling_templates.</span></span><span class="sig-name descname"><span class="pre">PoolingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pooling_templates.PoolingConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pooling_templates.PoolingConfigTemplate.format">
@@ -1312,7 +1312,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pooling_templates.PoolingFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pooling_templates.</span></span><span class="sig-name descname"><span class="pre">PoolingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pooling_templates.PoolingFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.pooling_templates.</span></span><span class="sig-name descname"><span class="pre">PoolingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.pooling_templates.PoolingFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.pooling_templates.PoolingFunctionTemplate.format">
@@ -1326,7 +1326,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-quantization-templates-module"></span><h2>hls4ml.backends.vivado.passes.quantization_templates module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.quantization_templates" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.quantization_templates.</span></span><span class="sig-name descname"><span class="pre">ApplyAlphaConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.quantization_templates.</span></span><span class="sig-name descname"><span class="pre">ApplyAlphaConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaConfigTemplate.format">
@@ -1337,7 +1337,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.quantization_templates.</span></span><span class="sig-name descname"><span class="pre">ApplyAlphaFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.quantization_templates.</span></span><span class="sig-name descname"><span class="pre">ApplyAlphaFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.quantization_templates.ApplyAlphaFunctionTemplate.format">
@@ -1351,7 +1351,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-recurrent-templates-module"></span><h2>hls4ml.backends.vivado.passes.recurrent_templates module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.recurrent_templates" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">BidirectionalConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">BidirectionalConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalConfigTemplate.format">
@@ -1362,7 +1362,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">BidirectionalFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">BidirectionalFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.BidirectionalFunctionTemplate.format">
@@ -1373,7 +1373,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.RecurrentConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">RecurrentConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">RecurrentConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.RecurrentConfigTemplate.format">
@@ -1384,7 +1384,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">RecurrentFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">RecurrentFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.RecurrentFunctionTemplate.format">
@@ -1395,7 +1395,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">TimeDistributedConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">TimeDistributedConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate.format">
@@ -1406,7 +1406,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">TimeDistributedFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">TimeDistributedFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedFunctionTemplate.format">
@@ -1420,7 +1420,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-reshaping-templates-module"></span><h2>hls4ml.backends.vivado.passes.reshaping_templates module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.reshaping_templates" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.CroppingConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">CroppingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.CroppingConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">CroppingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.CroppingConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.CroppingConfigTemplate.format">
@@ -1431,7 +1431,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.CroppingFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">CroppingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.CroppingFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">CroppingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.CroppingFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.CroppingFunctionTemplate.format">
@@ -1442,7 +1442,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ResizeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ResizeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.ResizeConfigTemplate.format">
@@ -1453,7 +1453,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.ResizeFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ResizeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.ResizeFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ResizeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.ResizeFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.ResizeFunctionTemplate.format">
@@ -1464,7 +1464,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.TransposeConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">TransposeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.TransposeConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">TransposeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.TransposeConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.TransposeConfigTemplate.format">
@@ -1475,7 +1475,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.TransposeFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">TransposeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.TransposeFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">TransposeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.TransposeFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.TransposeFunctionTemplate.format">
@@ -1486,7 +1486,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ZeroPaddingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ZeroPaddingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingConfigTemplate.format">
@@ -1497,7 +1497,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ZeroPaddingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ZeroPaddingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.reshaping_templates.ZeroPaddingFunctionTemplate.format">
@@ -1511,7 +1511,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-resource-strategy-module"></span><h2>hls4ml.backends.vivado.passes.resource_strategy module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.resource_strategy" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.resource_strategy.</span></span><span class="sig-name descname"><span class="pre">ApplyResourceStrategy</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.resource_strategy.</span></span><span class="sig-name descname"><span class="pre">ApplyResourceStrategy</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Transposes the weights to use the dense_resource matrix multiply routine</p>
 <dl class="py method">
@@ -1547,7 +1547,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-snn-templates-module"></span><h2>hls4ml.backends.vivado.passes.snn_templates module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.snn_templates" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.IFNeuronConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">IFNeuronConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.IFNeuronConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">IFNeuronConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.IFNeuronConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.IFNeuronConfigTemplate.format">
@@ -1558,7 +1558,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.IFNeuronFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">IFNeuronFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.IFNeuronFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">IFNeuronFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.IFNeuronFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.IFNeuronFunctionTemplate.format">
@@ -1569,7 +1569,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.LIFNeuronConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">LIFNeuronConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.LIFNeuronConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">LIFNeuronConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.LIFNeuronConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.LIFNeuronConfigTemplate.format">
@@ -1580,7 +1580,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.LIFNeuronFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">LIFNeuronFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.LIFNeuronFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">LIFNeuronFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.LIFNeuronFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.LIFNeuronFunctionTemplate.format">
@@ -1591,7 +1591,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.SNNReadoutConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">SNNReadoutConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.SNNReadoutConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">SNNReadoutConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.SNNReadoutConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.SNNReadoutConfigTemplate.format">
@@ -1602,7 +1602,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.SNNReadoutFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">SNNReadoutFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.SNNReadoutFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.snn_templates.</span></span><span class="sig-name descname"><span class="pre">SNNReadoutFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.snn_templates.SNNReadoutFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.snn_templates.SNNReadoutFunctionTemplate.format">
@@ -1621,7 +1621,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 <span id="hls4ml-backends-vivado-passes-sparsepixels-module"></span><h2>hls4ml.backends.vivado.passes.sparsepixels module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.sparsepixels" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseActivationConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseActivationConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseActivationConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseActivationConfigTemplate.format">
@@ -1632,7 +1632,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseActivationFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseActivationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseActivationFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseActivationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseActivationFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseActivationFunctionTemplate.format">
@@ -1643,7 +1643,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseConv2DConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseConv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseConv2DConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseConv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseConv2DConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseConv2DConfigTemplate.format">
@@ -1654,7 +1654,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseConv2DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseConv2DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseConv2DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseConv2DFunctionTemplate.format">
@@ -1665,7 +1665,7 @@ This would allow heterogeenous quantizarion for io stream in some cases.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseFixInputPrecision">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseFixInputPrecision</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseFixInputPrecision" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseFixInputPrecision</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseFixInputPrecision" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Fix Input precision for sparse models.</p>
 <p>The standard FixInputPrecision cannot find FixedPointQuantizer nodes through
@@ -1702,7 +1702,7 @@ FPQ’s mask, then re-registers SparseInputReduce with the corrected type.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseFlattenConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseFlattenConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseFlattenConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseFlattenConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseFlattenConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseFlattenConfigTemplate.format">
@@ -1713,7 +1713,7 @@ FPQ’s mask, then re-registers SparseInputReduce with the corrected type.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseFlattenFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseFlattenFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseFlattenFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseFlattenFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseFlattenFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseFlattenFunctionTemplate.format">
@@ -1724,7 +1724,7 @@ FPQ’s mask, then re-registers SparseInputReduce with the corrected type.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseGraphOptimizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseGraphOptimizer</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseGraphOptimizer" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseGraphOptimizer</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseGraphOptimizer" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Triggered by SparseInputReduce. Walks the full graph to wire hash variable names,
 track spatial dims, and replace Flatten-&gt;SparseFlatten.</p>
@@ -1758,7 +1758,7 @@ track spatial dims, and replace Flatten-&gt;SparseFlatten.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseInputReduceConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseInputReduceConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseInputReduceConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseInputReduceConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseInputReduceConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseInputReduceConfigTemplate.format">
@@ -1769,7 +1769,7 @@ track spatial dims, and replace Flatten-&gt;SparseFlatten.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseInputReduceFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseInputReduceFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseInputReduceFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparseInputReduceFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparseInputReduceFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparseInputReduceFunctionTemplate.format">
@@ -1780,7 +1780,7 @@ track spatial dims, and replace Flatten-&gt;SparseFlatten.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparsePooling2DConfigTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparsePooling2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparsePooling2DConfigTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparsePooling2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparsePooling2DConfigTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparsePooling2DConfigTemplate.format">
@@ -1791,7 +1791,7 @@ track spatial dims, and replace Flatten-&gt;SparseFlatten.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparsePooling2DFunctionTemplate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparsePooling2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparsePooling2DFunctionTemplate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.sparsepixels.</span></span><span class="sig-name descname"><span class="pre">SparsePooling2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.sparsepixels.SparsePooling2DFunctionTemplate" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.sparsepixels.SparsePooling2DFunctionTemplate.format">
@@ -1810,7 +1810,7 @@ track spatial dims, and replace Flatten-&gt;SparseFlatten.</p>
 <span id="hls4ml-backends-vivado-passes-transform-types-module"></span><h2>hls4ml.backends.vivado.passes.transform_types module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.transform_types" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.transform_types.TransformTypes">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.transform_types.</span></span><span class="sig-name descname"><span class="pre">TransformTypes</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.transform_types.TransformTypes" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.transform_types.</span></span><span class="sig-name descname"><span class="pre">TransformTypes</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.transform_types.TransformTypes" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass" title="hls4ml.model.optimizer.optimizer.GlobalOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">GlobalOptimizerPass</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.transform_types.TransformTypes.transform">
@@ -1834,7 +1834,7 @@ track spatial dims, and replace Flatten-&gt;SparseFlatten.</p>
 <span id="hls4ml-backends-vivado-passes-unrolled-codegen-module"></span><h2>hls4ml.backends.vivado.passes.unrolled_codegen module<a class="headerlink" href="#module-hls4ml.backends.vivado.passes.unrolled_codegen" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.unrolled_codegen.GenerateUnrolledDenseResource">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.unrolled_codegen.</span></span><span class="sig-name descname"><span class="pre">GenerateUnrolledDenseResource</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.unrolled_codegen.GenerateUnrolledDenseResource" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.unrolled_codegen.</span></span><span class="sig-name descname"><span class="pre">GenerateUnrolledDenseResource</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.unrolled_codegen.GenerateUnrolledDenseResource" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>Generates C++ code for unrolled Dense resource</p>
 <dl class="py method">

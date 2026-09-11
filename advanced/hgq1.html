@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>High Granularity Quantization (HGQ) &mdash; hls4ml 1.3.0 documentation</title>
@@ -16,8 +16,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
@@ -139,11 +139,15 @@
 <p class="admonition-title">Warning</p>
 <p>While still supported and maintained, HGQ is deprecated in favor of <a class="reference external" href="./hgq.html">HGQ2</a>. New projects are strongly encouraged to use HGQ2 instead.</p>
 </div>
-<a class="reference external image-reference" href="https://calad0i.github.io/HGQ/"><img alt="https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg" src="https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg" /></a>
-<a class="reference external image-reference" href="https://badge.fury.io/py/hgq"><img alt="https://badge.fury.io/py/hgq.svg" src="https://badge.fury.io/py/hgq.svg" /></a>
-<a class="reference external image-reference" href="https://arxiv.org/abs/2405.00645"><img alt="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" src="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" /></a>
+<a class="reference external image-reference" href="https://calad0i.github.io/HGQ/"><img alt="https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg" src="https://github.com/calad0i/HGQ/actions/workflows/sphinx-build.yml/badge.svg" />
+</a>
+<a class="reference external image-reference" href="https://badge.fury.io/py/hgq"><img alt="https://badge.fury.io/py/hgq.svg" src="https://badge.fury.io/py/hgq.svg" />
+</a>
+<a class="reference external image-reference" href="https://arxiv.org/abs/2405.00645"><img alt="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" src="https://img.shields.io/badge/arXiv-2405.00645-b31b1b.svg" />
+</a>
 <p><a class="reference external" href="https://github.com/calad0i/HGQ/">High Granularity Quantization (HGQ)</a> is a library that performs gradient-based automatic bitwidth optimization and quantization-aware training algorithm for neural networks to be deployed on FPGAs. By leveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.</p>
-<img alt="Overview of HGQ" class="align-center" src="https://calad0i.github.io/HGQ/_images/overview.svg" /><p>Conversion of models made with HGQ library is fully supported. The HGQ models are first converted to proxy model format, which can then be parsed by hls4ml bit-accurately. Below is an example of how to create a model with HGQ and convert it to hls4ml model.</p>
+<img alt="Overview of HGQ" class="align-center" src="https://calad0i.github.io/HGQ/_images/overview.svg" />
+<p>Conversion of models made with HGQ library is fully supported. The HGQ models are first converted to proxy model format, which can then be parsed by hls4ml bit-accurately. Below is an example of how to create a model with HGQ and convert it to hls4ml model.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">HGQ.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDense</span><span class="p">,</span> <span class="n">HDenseBatchNorm</span><span class="p">,</span> <span class="n">HQuantize</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">HGQ</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResetMinMax</span><span class="p">,</span> <span class="n">FreeBOPs</span>
