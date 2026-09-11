@@ -55,9 +55,8 @@ class VitisUnifiedBackend(VitisBackend):
             if os.path.isfile(xclbin):
                 os.remove(xclbin)
 
-        csim_cfg = os.path.join(output_dir, 'hls_kernel_config_csim.cfg')
-        cosim_suffix = 'cosim_fifo_sizing' if vitis_fifo_sizing else 'cosim'
-        cosim_cfg = os.path.join(output_dir, f'hls_kernel_config_{cosim_suffix}.cfg')
+        csim_cfg = 'hls_kernel_config_csim.cfg'
+        cosim_cfg = 'hls_kernel_config_cosim_fifo_sizing.cfg' if vitis_fifo_sizing else 'hls_kernel_config_cosim.cfg'
         # build command
         csynth_cmd = f'v++ -c --mode hls --config {csim_cfg} --work_dir vitis_unified_project'
         # util template (used in csim/cosim/package)

@@ -1,6 +1,7 @@
 import ast
 import json
 import os
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -302,17 +303,29 @@ def test_config_files_resolved_at_write(test_case_id, simple_unet, axi_mode):
     )
     hls_model.write()
 
+    comp_dir = output_dir / 'vitis_workspace' / 'max_length_project'
     cfgs = {}
     for name in ['csim', 'cosim', 'cosim_fifo_sizing']:
-        cfgs[name] = (output_dir / f'hls_kernel_config_{name}.cfg').read_text()
+        cfgs[name] = (comp_dir / f'hls_kernel_config_{name}.cfg').read_text()
         assert '{' not in cfgs[name]
         assert not any(line.startswith('#') for line in cfgs[name].splitlines())
+        assert str(output_dir) not in cfgs[name]
     assert 'RTL_SIM' not in cfgs['csim'] and 'enable_fifo_sizing' not in cfgs['csim']
     assert '-DRTL_SIM' in cfgs['cosim'] and 'cosim.enable_fifo_sizing=false' in cfgs['cosim']
     assert 'cosim.enable_fifo_sizing=true' in cfgs['cosim_fifo_sizing']
 
-    comp = json.loads((output_dir / 'vitis_workspace' / 'max_length_project' / 'vitis-comp.json').read_text())
-    assert all(os.path.isfile(path) for path in comp['configuration']['configFiles'])
+    comp = json.loads((comp_dir / 'vitis-comp.json').read_text())
+    assert str(output_dir) not in json.dumps(comp)
+
+    moved = output_dir.with_name(output_dir.name + '_moved')
+    shutil.rmtree(moved, ignore_errors=True)
+    shutil.move(str(output_dir), str(moved))
+    comp_dir = moved / 'vitis_workspace' / 'max_length_project'
+    for path in comp['configuration']['configFiles']:
+        assert (comp_dir / path).is_file()
+    for line in cfgs['cosim'].splitlines():
+        if line.startswith(('syn.file=', 'tb.file=')):
+            assert (comp_dir / line.split('=', 1)[1]).exists()
 
 
 # review U12

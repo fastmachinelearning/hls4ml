@@ -137,6 +137,8 @@ Example:
 Output directory layout
 -----------------------
 
+All paths inside the generated files are relative, so the output directory can be moved or copied to another machine.
+
 .. code-block:: text
 
     <output_dir>/
@@ -146,14 +148,14 @@ Output directory layout
     ├── <project_name>_bridge.cpp          bridge used by hls_model.predict()
     ├── build_lib.sh                       builds the shared library for predict()
     ├── hls4ml_config.yml
-    ├── hls_kernel_config_csim.cfg         Vitis HLS config for csynth, package, and csim
-    ├── hls_kernel_config_cosim.cfg        Vitis HLS config for cosim
-    ├── hls_kernel_config_cosim_fifo_sizing.cfg   the same with FIFO sizing on (vitis_fifo_sizing=True)
     ├── fifo_depths.json                   with FIFO depth optimization only
     ├── <step>_stdout.log, <step>_stderr.log   with log_to_stdout=False only
     ├── vitis_workspace/
     │   ├── <project_name>/
     │   │   ├── vitis-comp.json            Vitis Unified component
+    │   │   ├── hls_kernel_config_csim.cfg     Vitis HLS config for csynth, package, and csim
+    │   │   ├── hls_kernel_config_cosim.cfg    the same for cosim
+    │   │   ├── hls_kernel_config_cosim_fifo_sizing.cfg   cosim with FIFO sizing on (vitis_fifo_sizing=True)
     │   │   └── vitis_unified_project/     hls/, logs/, reports/, <project_name>_axi_*.xo
     │   ├── system_link/
     │   │   ├── link_system.cfg, link_system.sh

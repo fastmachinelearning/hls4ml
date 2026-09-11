@@ -173,9 +173,11 @@ class VitisUnifiedWriter(VitisWriter):
     def _write_hls_kernel_config(self, model, suffix, cosim_options):
         filedir = os.path.dirname(os.path.abspath(__file__))
         clock_period_ns = self._get_clock_period_ns(model)
+        hls_dir = self.get_vitis_hls_dir(model)
+        outdir_rel = os.path.relpath(model.config.get_output_dir(), hls_dir)
         with (
             open(os.path.join(filedir, '../templates/vitis_unified/hls_kernel_config.cfg')) as fin,
-            open(f'{model.config.get_output_dir()}/hls_kernel_config_{suffix}.cfg', 'w') as fout,
+            open(os.path.join(hls_dir, f'hls_kernel_config_{suffix}.cfg'), 'w') as fout,
         ):
             for line in fin.readlines():
                 if '# hls-fpga-machine-learning insert cosim options' in line:
@@ -187,7 +189,7 @@ class VitisUnifiedWriter(VitisWriter):
                 if '{CLK_UC}' in line:
                     line = line.replace('{CLK_UC}', model.config.get_config_value('ClockUncertainty'))
                 if '{OUTDIR}' in line:
-                    line = line.replace('{OUTDIR}', model.config.get_output_dir())
+                    line = line.replace('{OUTDIR}', outdir_rel)
                 if '{TOP_NAME}' in line:
                     line = line.replace('{TOP_NAME}', self._get_top_wrap_func_name(model, self._is_axi_master()))
                 if '{FILE_NAME_WRAP}' in line:
@@ -219,7 +221,7 @@ class VitisUnifiedWriter(VitisWriter):
                 if '{HLS_NAME}' in line:
                     line = line.replace('{HLS_NAME}', self._get_project_name(model))
                 if '{CONFIG_FILE}' in line:
-                    line = line.replace('{CONFIG_FILE}', f'{model.config.get_output_dir()}/hls_kernel_config_csim.cfg')
+                    line = line.replace('{CONFIG_FILE}', 'hls_kernel_config_csim.cfg')
                 fout.write(line)
 
     def _write_linker_dir(self, model):
