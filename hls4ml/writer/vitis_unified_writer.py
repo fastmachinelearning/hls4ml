@@ -46,13 +46,14 @@ class VitisUnifiedWriter(VitisWriter):
         pass
 
     # ===== sanity check function =====
-    def sanity_check(self, model, is_multigraph=False):
-        if is_multigraph:
-            raise Exception('Vitis Unified does not support multigraphs.')
+    def sanity_check(self, model):
         decl = self._get_kernel_declaration(model)
         if len(decl) > 64:
+            name = self._get_project_name(model)
+            max_name = len(name) - (len(decl) - 64 + 1) // 2
             raise ValueError(
-                f"Project name must not exceed 18 characters; kernel declaration exceeds 64 characters: '{decl}'"
+                f'The kernel declaration "{decl}" is {len(decl)} characters, Vitis allows 64. '
+                f'Use a project name of at most {max_name} characters (now {len(name)}).'
             )
 
     # ===== Public helpers used by backend/passes =====
@@ -93,10 +94,12 @@ class VitisUnifiedWriter(VitisWriter):
     def _get_ip_version(self, model):
         return model.config.get_config_value('Version', '1.0.0')
 
+    def _get_ip_vlnv_version(self, model):
+        return '.'.join(self._get_ip_version(model).split('.')[:2])
+
     def _get_kernel_declaration(self, model):
-        top_module_name = self._get_top_wrap_func_name(model, False)
-        top_mod_inst_name = top_module_name + '_1'
-        return f'{top_module_name}:1:{top_mod_inst_name}'
+        top_module_name = self._get_top_wrap_func_name(model, self._is_axi_master())
+        return f'{top_module_name}:1:{top_module_name}_1'
 
     def _get_top_wrap_func_name(self, model, is_axi_master):
         return self._get_wrapper_file_name(model, is_axi_master)
@@ -126,9 +129,9 @@ class VitisUnifiedWriter(VitisWriter):
     def _get_dma_type_name(self):
         return 'dma_data_packet'
 
-    def _get_using_namespace(self, model):
+    def _get_using_namespace(self, model, indent=''):
         namespace = model.config.get_writer_config().get('Namespace', None)
-        return f'using namespace {namespace};\n' if namespace is not None else ''
+        return f'{indent}using namespace {namespace};\n' if namespace is not None else ''
 
     @staticmethod
     def _get_clock_period_ns(model):
@@ -148,6 +151,24 @@ class VitisUnifiedWriter(VitisWriter):
         export_path = Path(model.config.get_output_dir()) / 'export'
         export_path.mkdir(parents=True, exist_ok=True)
 
+    def _fill_template(self, template, output_path, replacements=None, blocks=None):
+        """Copy a template to output_path. Placeholders in `replacements` are substituted on every template line.
+        A line that contains a marker of `blocks` is replaced by the text the block returns for the line's indent.
+        """
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        if not os.path.isabs(template):
+            template = os.path.join(filedir, '../templates/vitis_unified', template)
+        with open(template) as fin, open(output_path, 'w') as fout:
+            for line in fin.readlines():
+                indent = line[: len(line) - len(line.lstrip(' '))]
+                block = next((block for marker, block in (blocks or {}).items() if marker in line), None)
+                if block is not None:
+                    fout.write(block(indent))
+                    continue
+                for token, value in (replacements or {}).items():
+                    line = line.replace(token, value)
+                fout.write(line)
+
     # ===== Build/config generation =====
     def write_build_script(self, model):
         self._write_bridge_build_script(model)
@@ -161,78 +182,57 @@ class VitisUnifiedWriter(VitisWriter):
         self._write_linker_config(model)
 
     def _write_bridge_build_script(self, model):
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/build_lib.sh')) as fin,
-            open(f'{model.config.get_output_dir()}/build_lib.sh', 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if 'myprojectBaseName' in line:
-                    line = line.replace('myprojectBaseName', self._get_project_name(model))
-                if 'myprojectWrapName' in line:
-                    line = line.replace('myprojectWrapName', self._get_wrapper_file_name(model, self._is_axi_master()))
-                if 'mystamp' in line:
-                    line = line.replace('mystamp', model.config.get_config_value('Stamp'))
-                fout.write(line)
-
-        build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
+        output_path = f'{model.config.get_output_dir()}/build_lib.sh'
+        self._fill_template(
+            'build_lib.sh',
+            output_path,
+            replacements={
+                'myprojectBaseName': self._get_project_name(model),
+                'myprojectWrapName': self._get_wrapper_file_name(model, self._is_axi_master()),
+                'mystamp': model.config.get_config_value('Stamp'),
+            },
+        )
+        build_lib_dst = Path(output_path).resolve()
         build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     def _write_hls_kernel_config(self, model, suffix, cosim_options):
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        clock_period_ns = self._get_clock_period_ns(model)
         hls_dir = self.get_vitis_hls_dir(model)
-        outdir_rel = os.path.relpath(model.config.get_output_dir(), hls_dir)
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/hls_kernel_config.cfg')) as fin,
-            open(os.path.join(hls_dir, f'hls_kernel_config_{suffix}.cfg'), 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if '# hls-fpga-machine-learning insert cosim options' in line:
-                    line = ''.join(f'{option}\n' for option in cosim_options)
-                if '{PART}' in line:
-                    line = line.replace('{PART}', model.config.get_config_value('Part'))
-                if '{CLK}' in line:
-                    line = line.replace('{CLK}', f'{clock_period_ns:g}ns')
-                if '{CLK_UC}' in line:
-                    line = line.replace('{CLK_UC}', model.config.get_config_value('ClockUncertainty'))
-                if '{OUTDIR}' in line:
-                    line = line.replace('{OUTDIR}', outdir_rel)
-                if '{TOP_NAME}' in line:
-                    line = line.replace('{TOP_NAME}', self._get_top_wrap_func_name(model, self._is_axi_master()))
-                if '{FILE_NAME_WRAP}' in line:
-                    line = line.replace('{FILE_NAME_WRAP}', self._get_wrapper_file_name(model, self._is_axi_master()))
-                if '{SIM_FILE_NAME}' in line:
-                    line = line.replace('{SIM_FILE_NAME}', self._get_sim_file_name(model))
-                if '{IP_VERSION}' in line:
-                    line = line.replace('{IP_VERSION}', self._get_ip_version(model))
-                if '{FILE_NAME_BASE}' in line:
-                    line = line.replace('{FILE_NAME_BASE}', self._get_project_name(model))
-                if '{OUTPUT_KERNEL_TYPE}' in line:
-                    line = line.replace('{OUTPUT_KERNEL_TYPE}', 'xo')
-                fout.write(line)
+        replacements = {
+            '{PART}': model.config.get_config_value('Part'),
+            '{CLK}': f'{self._get_clock_period_ns(model):g}ns',
+            '{CLK_UC}': model.config.get_config_value('ClockUncertainty'),
+            '{OUTDIR}': os.path.relpath(model.config.get_output_dir(), hls_dir),
+            '{TOP_NAME}': self._get_top_wrap_func_name(model, self._is_axi_master()),
+            '{FILE_NAME_WRAP}': self._get_wrapper_file_name(model, self._is_axi_master()),
+            '{SIM_FILE_NAME}': self._get_sim_file_name(model),
+            '{FILE_NAME_BASE}': self._get_project_name(model),
+            '{IP_VERSION}': self._get_ip_version(model),
+            '{OUTPUT_KERNEL_TYPE}': 'xo',
+        }
+
+        def cosim_block(indent):
+            lines = ''
+            for option in cosim_options:
+                for token, value in replacements.items():
+                    option = option.replace(token, value)
+                lines += option + '\n'
+            return lines
+
+        self._fill_template(
+            'hls_kernel_config.cfg',
+            os.path.join(hls_dir, f'hls_kernel_config_{suffix}.cfg'),
+            replacements=replacements,
+            blocks={'# hls-fpga-machine-learning insert cosim options': cosim_block},
+        )
 
     def _build_unified_project_skeleton(self, model):
-        workspace_dir = self.get_vitis_unified_working_directory(model)
         hls_dir = self.get_vitis_hls_dir(model)
-        exec_dir = self.get_vitis_hls_dir(model)
-        vitis_comp = os.path.join(str(hls_dir), 'vitis-comp.json')
-
-        os.makedirs(workspace_dir, exist_ok=True)
         os.makedirs(hls_dir, exist_ok=True)
-        os.makedirs(exec_dir, exist_ok=True)
-
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/vitis_workspace/kernel_project/vitis-comp.json')) as fin,
-            open(vitis_comp, 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if '{HLS_NAME}' in line:
-                    line = line.replace('{HLS_NAME}', self._get_project_name(model))
-                if '{CONFIG_FILE}' in line:
-                    line = line.replace('{CONFIG_FILE}', 'hls_kernel_config_csim.cfg')
-                fout.write(line)
+        self._fill_template(
+            'vitis_workspace/kernel_project/vitis-comp.json',
+            os.path.join(hls_dir, 'vitis-comp.json'),
+            replacements={'{HLS_NAME}': self._get_project_name(model), '{CONFIG_FILE}': 'hls_kernel_config_csim.cfg'},
+        )
 
     def _write_linker_dir(self, model):
         os.makedirs(self.get_vitis_linker_dir(model), exist_ok=True)
@@ -251,7 +251,6 @@ class VitisUnifiedWriter(VitisWriter):
             copytree(src, dst, dirs_exist_ok=True)
 
     def _write_linker_launcher(self, model):
-        filedir = os.path.dirname(os.path.abspath(__file__))
         platform_generator_tcl = self.vitis_unified_config.get_platform_generator_tcl()
         if platform_generator_tcl:
             # Use local copy in vitis_workspace (relative to system_link)
@@ -276,52 +275,45 @@ fi
                     ': "${XILINX_VITIS:?XILINX_VITIS is not set. Source the Vitis settings64.sh first.}"\n'
                 )
 
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/vitis_workspace/system_link/link_system.sh')) as fin,
-            open(f'{self.get_vitis_linker_dir(model)}/link_system.sh', 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if '{XSA_GENERATOR_BLOCK}' in line:
-                    line = line.replace('{XSA_GENERATOR_BLOCK}', platform_generator_block)
-                if '{PLATFORM_PATH}' in line:
-                    line = line.replace('{PLATFORM_PATH}', platform_path_for_vpp)
-                if '{PLATFORM_XPFM}' in line:
-                    line = line.replace('{PLATFORM_XPFM}', self.vitis_unified_config.get_platform_path())
-                if '{KERNEL_XO}' in line:
-                    line = line.replace('{KERNEL_XO}', self._get_xo_file_path(model))
-                if '{PROJECT_NAME}' in line:
-                    line = line.replace('{PROJECT_NAME}', self._get_project_name(model))
-                fout.write(line)
-
-        link_lib_dst = Path(f'{self.get_vitis_linker_dir(model)}/link_system.sh').resolve()
+        output_path = f'{self.get_vitis_linker_dir(model)}/link_system.sh'
+        self._fill_template(
+            'vitis_workspace/system_link/link_system.sh',
+            output_path,
+            replacements={
+                '{XSA_GENERATOR_BLOCK}': platform_generator_block,
+                '{PLATFORM_PATH}': platform_path_for_vpp,
+                '{KERNEL_XO}': self._get_xo_file_path(model),
+                '{PROJECT_NAME}': self._get_project_name(model),
+            },
+        )
+        link_lib_dst = Path(output_path).resolve()
         link_lib_dst.chmod(link_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     def _write_linker_config(self, model):
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        clock_frequency_hz = round(1_000_000_000 / self._get_clock_period_ns(model))
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/vitis_workspace/system_link/link_system.cfg')) as fin,
-            open(f'{self.get_vitis_linker_dir(model)}/link_system.cfg', 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if '{CLK}' in line:
-                    line = line.replace('{CLK}', str(clock_frequency_hz))
-                if '{KERNEL_NAME}' in line:
-                    line = line.replace('{KERNEL_NAME}', self._get_top_wrap_func_name(model, self._is_axi_master()))
-                if '{GUI_STATUS}' in line:
-                    line = line.replace('{GUI_STATUS}', 'true')
-                if '# hls-fpga-machine-learning insert custom connection' in line and self._is_axi_stream():
-                    top_mod_inst_name = self._get_top_wrap_func_name(model, False) + '_1'
-                    line += '\n'
-                    line += '[connectivity]\n'
-                    line += f'nk={self._get_kernel_declaration(model)}\n'
-                    line += f'stream_connect=DMA_MM2S:{top_mod_inst_name}.axi_input_stream\n'
-                    line += f'stream_connect={top_mod_inst_name}.axi_output_stream:DMA_S2MM\n'
-                fout.write(line)
+        def connectivity(indent):
+            if not self._is_axi_stream():
+                return ''
+            top_mod_inst_name = self._get_wrap_ip_name(model, False)
+            return (
+                '\n[connectivity]\n'
+                f'nk={self._get_kernel_declaration(model)}\n'
+                f'stream_connect=DMA_MM2S:{top_mod_inst_name}.axi_input_stream\n'
+                f'stream_connect={top_mod_inst_name}.axi_output_stream:DMA_S2MM\n'
+            )
+
+        self._fill_template(
+            'vitis_workspace/system_link/link_system.cfg',
+            f'{self.get_vitis_linker_dir(model)}/link_system.cfg',
+            replacements={
+                '{CLK}': str(round(1_000_000_000 / self._get_clock_period_ns(model))),
+                '{KERNEL_NAME}': self._get_top_wrap_func_name(model, self._is_axi_master()),
+                '{GUI_STATUS}': 'true',
+            },
+            blocks={'# hls-fpga-machine-learning insert custom connection': connectivity},
+        )
 
     # ===== Bridge generation =====
     def _gen_bridge_body(self, model, dtype, indent):
-
         model_inputs = model.get_input_variables()
         model_outputs = model.get_output_variables()
         in_type = self.vitis_unified_config.get_input_type()
@@ -370,62 +362,57 @@ fi
         return newline
 
     def write_bridge(self, model):
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/myproject_bridge.cpp')) as fin,
-            open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_bridge.cpp', 'w') as fout,
-        ):
-            model_inputs = model.get_input_variables()
-            model_outputs = model.get_output_variables()
-            model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
-            indent = '    '
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
 
-            for line in fin.readlines():
-                newline = ''
-                if 'MYPROJECT' in line:
-                    newline = line.replace('MYPROJECT', self._get_project_name(model).upper())
-                elif 'myproject' in line:
-                    newline = line.replace('myproject', self._get_project_name(model))
-                elif 'PROJECT_FILE_NAME' in line:
-                    newline = line.replace('PROJECT_FILE_NAME', self._get_wrapper_file_name(model, self._is_axi_master()))
-                elif '// hls-fpga-machine-learning insert bram' in line:
-                    newline = line
-                    for bram in model_brams:
-                        newline += f'#include "firmware/weights/{bram.name}.h"\n'
-                elif '// hls-fpga-machine-learning insert header' in line:
-                    dtype = line.split('#', 1)[1].strip()
-                    input_ios = [
-                        f'{dtype} {self._get_io_port_name(inp, True, idx)}[{inp.size_cpp()}]'
-                        for idx, inp in enumerate(model_inputs)
-                    ]
-                    output_ios = [
-                        f'{dtype} {self._get_io_port_name(out, False, idx)}[{out.size_cpp()}]'
-                        for idx, out in enumerate(model_outputs)
-                    ]
-                    newline = indent + ', '.join(input_ios) + ',\n'
-                    newline += indent + ', '.join(output_ios) + '\n'
-                elif '// hls-fpga-machine-learning insert wrapper' in line:
-                    dtype = line.split('#', 1)[1].strip()
-                    newline = self._gen_bridge_body(model, dtype, indent)
-                elif '// hls-fpga-machine-learning insert trace_outputs' in line:
-                    newline = ''
-                    for layer in model.get_layers():
-                        func = layer.get_attr('function_cpp', None)
-                        if func and model.config.trace_output and layer.get_attr('trace', False):
-                            for var in layer.get_variables():
-                                newline += (
-                                    indent
-                                    + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
-                                    + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
-                                )
-                elif '// hls-fpga-machine-learning insert namespace' in line:
-                    newline = ''
-                    namespace = model.config.get_writer_config().get('Namespace', None)
-                    if namespace is not None:
-                        newline += indent + f'using namespace {namespace};\n'
-                else:
-                    newline = line
-                fout.write(newline)
+        def header(dtype):
+            input_ios = [
+                f'{dtype} {self._get_io_port_name(inp, True, idx)}[{inp.size_cpp()}]' for idx, inp in enumerate(model_inputs)
+            ]
+            output_ios = [
+                f'{dtype} {self._get_io_port_name(out, False, idx)}[{out.size_cpp()}]'
+                for idx, out in enumerate(model_outputs)
+            ]
+            return '    ' + ', '.join(input_ios) + ',\n' + '    ' + ', '.join(output_ios) + '\n'
+
+        def trace_outputs(indent):
+            lines = ''
+            for layer in model.get_layers():
+                func = layer.get_attr('function_cpp', None)
+                if func and model.config.trace_output and layer.get_attr('trace', False):
+                    for var in layer.get_variables():
+                        lines += (
+                            indent
+                            + 'nnet::trace_outputs->insert(std::pair<std::string, void *>('
+                            + f'"{layer.name}", (void *) malloc({var.size_cpp()} * element_size)));\n'
+                        )
+            return lines
+
+        self._fill_template(
+            'myproject_bridge.cpp',
+            f'{model.config.get_output_dir()}/{self._get_project_name(model)}_bridge.cpp',
+            replacements={
+                'MYPROJECT': self._get_project_name(model).upper(),
+                'myproject': self._get_project_name(model),
+                'PROJECT_FILE_NAME': self._get_wrapper_file_name(model, self._is_axi_master()),
+            },
+            blocks={
+                '// hls-fpga-machine-learning insert bram': lambda indent: ''.join(
+                    f'#include "firmware/weights/{bram.name}.h"\n' for bram in model_brams
+                ),
+                '// hls-fpga-machine-learning insert header #float': lambda indent: header('float'),
+                '// hls-fpga-machine-learning insert header #double': lambda indent: header('double'),
+                '// hls-fpga-machine-learning insert wrapper #float': lambda indent: self._gen_bridge_body(
+                    model, 'float', indent
+                ),
+                '// hls-fpga-machine-learning insert wrapper #double': lambda indent: self._gen_bridge_body(
+                    model, 'double', indent
+                ),
+                '// hls-fpga-machine-learning insert trace_outputs': trace_outputs,
+                '// hls-fpga-machine-learning insert namespace': lambda indent: self._get_using_namespace(model, indent),
+            },
+        )
 
     # ===== Wrapper generation =====
     def write_wrapper(self, model):
@@ -436,391 +423,269 @@ fi
 
     def _write_wrapper_axis(self, model):
         inp_gmem_t, out_gmem_t, inputs, outputs = self.vitis_unified_config.get_corrected_types()
-        if len(inputs) != 1 or len(outputs) != 1:
-            raise ValueError(
-                'AXIS wrapper requires exactly 1 input and 1 output port. '
-                f'Found {len(inputs)} inputs and {len(outputs)} outputs.'
+        inp, out = inputs[0], outputs[0]
+        name = self._get_project_name(model)
+        wrapper = self._get_wrapper_file_name(model, False)
+        firmware_dir = f'{model.config.get_output_dir()}/firmware'
+
+        def interface(indent):
+            return (
+                f'{indent}#pragma HLS INTERFACE axis port=axi_input_stream\n'
+                f'{indent}#pragma HLS INTERFACE axis port=axi_output_stream\n'
+                f'{indent}#pragma HLS INTERFACE s_axilite port=return bundle=control\n'
+                f'{indent}#pragma HLS INTERFACE s_axilite port=batch_size bundle=control\n'
             )
 
-        inp, out = inputs[0], outputs[0]
-        indent = '    '
-        filedir = os.path.dirname(os.path.abspath(__file__))
+        def stream_decl(indent):
+            in_depth = self.vitis_unified_config.get_in_stream_buf_size()
+            out_depth = self.vitis_unified_config.get_out_stream_buf_size()
+            return (
+                f'{indent}static hls::stream<{inp.type.name}> model_input_stream("model_input");\n'
+                f'{indent}static hls::stream<{out.type.name}> model_output_stream("model_output");\n\n'
+                f'{indent}#pragma HLS STREAM variable=model_input_stream depth={in_depth}\n'
+                f'{indent}#pragma HLS STREAM variable=model_output_stream depth={out_depth}\n'
+            )
 
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axi_stream.cpp')) as fin,
-            open(f'{model.config.get_output_dir()}/firmware/{self._get_project_name(model)}_axi_stream.cpp', 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if 'MY_PROJECT_TOP_FUNC' in line:
-                    newline = line.replace('MY_PROJECT_TOP_FUNC', self._get_top_wrap_func_name(model, False))
-                elif 'MY_PROJECT(' in line:
-                    newline = line.replace('MY_PROJECT', self._get_project_name(model))
-                elif '// hls-fpga-machine-learning insert include' in line:
-                    newline = f'#include "{self._get_project_name(model)}_axi_stream.h"\n'
-                elif '// hls-fpga-machine-learning insert interface' in line:
-                    newline = (
-                        indent
-                        + '#pragma HLS INTERFACE axis port=axi_input_stream\n'
-                        + indent
-                        + '#pragma HLS INTERFACE axis port=axi_output_stream\n'
-                        + indent
-                        + '#pragma HLS INTERFACE s_axilite port=return bundle=control\n'
-                        + indent
-                        + '#pragma HLS INTERFACE s_axilite port=batch_size bundle=control\n'
-                    )
-                elif '// hls-fpga-machine-learning insert stream decl' in line:
-                    in_depth = self.vitis_unified_config.get_in_stream_buf_size()
-                    out_depth = self.vitis_unified_config.get_out_stream_buf_size()
-                    newline = ''
-                    newline += indent + f'static hls::stream<{inp.type.name}> model_input_stream("model_input");\n'
-                    newline += indent + f'static hls::stream<{out.type.name}> model_output_stream("model_output");\n\n'
-                    newline += indent + f'#pragma HLS STREAM variable=model_input_stream depth={in_depth}\n'
-                    newline += indent + f'#pragma HLS STREAM variable=model_output_stream depth={out_depth}\n'
-                elif '// hls-fpga-machine-learning insert stream parameter' in line:
-                    newline = line.replace(
-                        '// hls-fpga-machine-learning insert stream parameter',
-                        f'hls::stream<{inp.type.name}> &model_input_stream, '
-                        f'hls::stream<{out.type.name}> &model_output_stream',
-                    )
+        self._fill_template(
+            'myproject_axi_stream.cpp',
+            f'{firmware_dir}/{wrapper}.cpp',
+            replacements={
+                'MY_PROJECT_TOP_FUNC': self._get_top_wrap_func_name(model, False),
+                'MY_PROJECT': name,
+                '// hls-fpga-machine-learning insert stream parameter': (
+                    f'hls::stream<{inp.type.name}> &model_input_stream, hls::stream<{out.type.name}> &model_output_stream'
+                ),
+                'INPUT_LAYER_TYPE': inp.type.name,
+                'OUTPUT_LAYER_TYPE': out.type.name,
+                'OUTPUT_GMEM_TYPE': out_gmem_t,
+            },
+            blocks={
+                '// hls-fpga-machine-learning insert include': lambda indent: f'#include "{wrapper}.h"\n',
+                '// hls-fpga-machine-learning insert interface': interface,
+                '// hls-fpga-machine-learning insert stream decl': stream_decl,
+            },
+        )
 
-                elif 'INPUT_LAYER_TYPE' in line:
-                    newline = line.replace('INPUT_LAYER_TYPE', inp.type.name)
-                elif 'OUTPUT_LAYER_TYPE' in line:
-                    newline = line.replace('OUTPUT_LAYER_TYPE', out.type.name)
-                elif 'OUTPUT_GMEM_TYPE' in line:
-                    newline = line.replace('OUTPUT_GMEM_TYPE', out_gmem_t)
-                else:
-                    newline = line
-                fout.write(newline)
+        def definitions(indent):
+            return (
+                f'static const unsigned N_IN = {inp.size()};\n'
+                f'static const unsigned N_OUT = {out.size()};\n'
+                f'typedef hls::axis_data<{inp_gmem_t}, AXIS_ENABLE_LAST | AXIS_ENABLE_KEEP> {self._get_dma_type_name()};\n'
+            )
 
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axi_stream.h')) as fin,
-            open(f'{model.config.get_output_dir()}/firmware/{self._get_project_name(model)}_axi_stream.h', 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if 'MYPROJECT' in line:
-                    newline = line.replace('MYPROJECT', self._get_project_name(model).upper())
-                elif '// hls-fpga-machine-learning insert include' in line:
-                    newline = f'#include "{self._get_project_name(model)}.h"\n#include "ap_axi_sdata.h"\n'
-                    newline += self._get_using_namespace(model)
-                elif 'MY_PROJECT_TOP_FUNC' in line:
-                    newline = line.replace('MY_PROJECT_TOP_FUNC', self._get_top_wrap_func_name(model, False))
-                elif '// hls-fpga-machine-learning insert definitions' in line:
-                    newline = ''
-                    newline += f'static const unsigned N_IN = {inp.size()};\n'
-                    newline += f'static const unsigned N_OUT = {out.size()};\n'
-                    newline += f'typedef hls::axis<{inp_gmem_t}, 0, 0, 0> {self._get_dma_type_name()};\n'
-                else:
-                    newline = line
-                fout.write(newline)
+        self._fill_template(
+            'myproject_axi_stream.h',
+            f'{firmware_dir}/{wrapper}.h',
+            replacements={'MYPROJECT': name.upper(), 'MY_PROJECT_TOP_FUNC': self._get_top_wrap_func_name(model, False)},
+            blocks={
+                '// hls-fpga-machine-learning insert include': lambda indent: (
+                    f'#include "{name}.h"\n#include "ap_axi_sdata.h"\n' + self._get_using_namespace(model)
+                ),
+                '// hls-fpga-machine-learning insert definitions': definitions,
+            },
+        )
 
     def _write_wrapper_axim(self, model):
         inp_gmem_t, out_gmem_t, inputs, outputs = self.vitis_unified_config.get_corrected_types()
-        indent = '    '
-        filedir = os.path.dirname(os.path.abspath(__file__))
+        name = self._get_project_name(model)
+        wrapper = self._get_wrapper_file_name(model, True)
+        firmware_dir = f'{model.config.get_output_dir()}/firmware'
+        in_ports = [self._get_io_port_name(inp, True, idx) for idx, inp in enumerate(inputs)]
+        out_ports = [self._get_io_port_name(out, False, idx) for idx, out in enumerate(outputs)]
+        in_streams = [self._get_local_stream_name(inp, True, idx) for idx, inp in enumerate(inputs)]
+        out_streams = [self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs)]
 
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axi_master.cpp')) as fin,
-            open(f'{model.config.get_output_dir()}/firmware/{self._get_wrapper_file_name(model, True)}.cpp', 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if 'MY_PROJECT_DM_INC' in line:
-                    line = line.replace('MY_PROJECT_DM_INC', self._get_wrapper_file_name(model, True))
-                elif 'MY_PROJECT_TOP_FUNC' in line:
-                    line = line.replace('MY_PROJECT_TOP_FUNC', self._get_top_wrap_func_name(model, True))
-                elif 'STREAM_BUF_IN_SZ' in line:
-                    line = line.replace('VAL', str(self.vitis_unified_config.get_in_stream_buf_size()))
-                elif 'STREAM_BUF_OUT_SZ' in line:
-                    line = line.replace('VAL', str(self.vitis_unified_config.get_out_stream_buf_size()))
-                elif '// vitis-unified-wrapper-io' in line:
-                    line = self._gen_io_signature(indent, inp_gmem_t, out_gmem_t, inputs, outputs) + '\n'
-                elif '// vitis-unified-wrapper-interface' in line:
-                    line = ''
-                    for input_idx, inp in enumerate(inputs):
-                        line += (
-                            f'{indent}#pragma HLS INTERFACE m_axi port={self._get_io_port_name(inp, True, input_idx)} '
-                            f'bundle=gmem_in{input_idx} depth={inp.size()}\n'
-                        )
-                    for output_idx, out in enumerate(outputs):
-                        line += (
-                            f'{indent}#pragma HLS INTERFACE m_axi port={self._get_io_port_name(out, False, output_idx)} '
-                            f'bundle=gmem_out{output_idx} depth={out.size()}\n'
-                        )
-                    line += (
-                        f'{indent}#pragma HLS INTERFACE s_axilite port=batch_size bundle=control\n'
-                        f'{indent}#pragma HLS INTERFACE s_axilite port=return bundle=control\n'
-                    )
-                elif '// vitis-unified-wrapper-stream-dec' in line:
-                    line = ''
-                    for input_idx, inp in enumerate(inputs):
-                        line += (
-                            f'{indent}static hls::stream<{inp.type.name}> '
-                            f'{self._get_local_stream_name(inp, True, input_idx)};\n'
-                        )
-                    for output_idx, out in enumerate(outputs):
-                        line += (
-                            f'{indent}static hls::stream<{out.type.name}> '
-                            f'{self._get_local_stream_name(out, False, output_idx)};\n'
-                        )
-                elif '// vitis-unified-wrapper-stream-config' in line:
-                    line = ''
-                    for input_idx, inp in enumerate(inputs):
-                        line += (
-                            f'{indent}#pragma HLS STREAM variable={self._get_local_stream_name(inp, True, input_idx)} '
-                            f'depth=STREAM_BUF_IN_SZ\n'
-                        )
-                    for output_idx, out in enumerate(outputs):
-                        line += (
-                            f'{indent}#pragma HLS STREAM variable={self._get_local_stream_name(out, False, output_idx)} '
-                            f'depth=STREAM_BUF_OUT_SZ\n'
-                        )
-                elif '// vitis-unified-wrapper-load' in line:
-                    line = ''
-                    for input_idx, inp in enumerate(inputs):
-                        line += (
-                            f'{indent}load_input({self._get_io_port_name(inp, True, input_idx)}, '
-                            f'{self._get_local_stream_name(inp, True, input_idx)}, batch_size, {inp.size()});\n'
-                        )
-                elif '// vitis-unified-wrapper-compute-signature' in line:
-                    sig_parts = []
-                    for idx, inp in enumerate(inputs):
-                        sig_parts.append(f'hls::stream<{inp.type.name}>& {self._get_local_stream_name(inp, True, idx)}')
-                    for idx, out in enumerate(outputs):
-                        sig_parts.append(f'hls::stream<{out.type.name}>& {self._get_local_stream_name(out, False, idx)}')
-                    sig_parts.append('int batch_size')
-                    line = line.replace('// vitis-unified-wrapper-compute-signature', ', '.join(sig_parts))
-                elif '// vitis-unified-wrapper-compute-body' in line:
-                    pool_list = [self._get_local_stream_name(inp, True, idx) for idx, inp in enumerate(inputs)]
-                    pool_list.extend([self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs)])
-                    joined_io = ', '.join(pool_list)
-                    # Template already provides for-loop body indent; only add the call
-                    line = line.replace(
-                        '// vitis-unified-wrapper-compute-body', f'{self._get_project_name(model)}({joined_io});'
-                    )
-                elif '// vitis-unified-wrapper-compute-call-args' in line:
-                    pool_list = [self._get_local_stream_name(inp, True, idx) for idx, inp in enumerate(inputs)]
-                    pool_list.extend([self._get_local_stream_name(out, False, idx) for idx, out in enumerate(outputs)])
-                    pool_list.append('batch_size')
-                    joined_args = ', '.join(pool_list)
-                    line = line.replace('// vitis-unified-wrapper-compute-call-args', joined_args)
-                elif '// vitis-unified-wrapper-store' in line:
-                    line = ''
-                    for output_idx, out in enumerate(outputs):
-                        line += (
-                            f'{indent}store_result({self._get_io_port_name(out, False, output_idx)}, '
-                            f'{self._get_local_stream_name(out, False, output_idx)}, batch_size, {out.size()});\n'
-                        )
-                fout.write(line)
+        def io_signature(indent):
+            return self._gen_io_signature(indent, inp_gmem_t, out_gmem_t, inputs, outputs) + '\n'
 
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/myproject_axi_master.h')) as fin,
-            open(f'{model.config.get_output_dir()}/firmware/{self._get_wrapper_file_name(model, True)}.h', 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if 'FILENAME' in line:
-                    line = line.replace('FILENAME', self._get_wrapper_file_name(model, True).upper())
-                elif 'MY_PROJECT_INC.h' in line:
-                    line = line.replace('MY_PROJECT_INC', self._get_project_name(model))
-                    line += self._get_using_namespace(model)
-                elif 'MY_PROJECT_TOP_FUNC' in line:
-                    line = line.replace('MY_PROJECT_TOP_FUNC', self._get_top_wrap_func_name(model, True))
-                elif '// vitis-unified-wrapper-io' in line:
-                    line += self._gen_io_signature(indent, inp_gmem_t, out_gmem_t, inputs, outputs) + '\n'
-                fout.write(line)
+        def interface(indent):
+            lines = f'{indent}// depth is for simulation only: the test bench sends one sample per kernel start\n'
+            for idx, (port, inp) in enumerate(zip(in_ports, inputs)):
+                lines += f'{indent}#pragma HLS INTERFACE m_axi port={port} bundle=gmem_in{idx} depth={inp.size()}\n'
+            for idx, (port, out) in enumerate(zip(out_ports, outputs)):
+                lines += f'{indent}#pragma HLS INTERFACE m_axi port={port} bundle=gmem_out{idx} depth={out.size()}\n'
+            lines += f'{indent}#pragma HLS INTERFACE s_axilite port=batch_size bundle=control\n'
+            lines += f'{indent}#pragma HLS INTERFACE s_axilite port=return bundle=control\n'
+            return lines
+
+        def stream_decl(indent):
+            lines = ''.join(f'{indent}static hls::stream<{inp.type.name}> {s};\n' for s, inp in zip(in_streams, inputs))
+            lines += ''.join(f'{indent}static hls::stream<{out.type.name}> {s};\n' for s, out in zip(out_streams, outputs))
+            return lines
+
+        def stream_config(indent):
+            lines = ''.join(f'{indent}#pragma HLS STREAM variable={s} depth=STREAM_BUF_IN_SZ\n' for s in in_streams)
+            lines += ''.join(f'{indent}#pragma HLS STREAM variable={s} depth=STREAM_BUF_OUT_SZ\n' for s in out_streams)
+            return lines
+
+        def load(indent):
+            return ''.join(
+                f'{indent}load_input({port}, {s}, batch_size, {inp.size()});\n'
+                for port, s, inp in zip(in_ports, in_streams, inputs)
+            )
+
+        def store(indent):
+            return ''.join(
+                f'{indent}store_result({port}, {s}, batch_size, {out.size()});\n'
+                for port, s, out in zip(out_ports, out_streams, outputs)
+            )
+
+        signature = [f'hls::stream<{inp.type.name}>& {s}' for s, inp in zip(in_streams, inputs)]
+        signature += [f'hls::stream<{out.type.name}>& {s}' for s, out in zip(out_streams, outputs)]
+        signature.append('int batch_size')
+
+        self._fill_template(
+            'myproject_axi_master.cpp',
+            f'{firmware_dir}/{wrapper}.cpp',
+            replacements={
+                'MY_PROJECT_DM_INC': wrapper,
+                'MY_PROJECT_TOP_FUNC': self._get_top_wrap_func_name(model, True),
+                'HLS4ML_STREAM_BUF_IN_SZ': str(self.vitis_unified_config.get_in_stream_buf_size()),
+                'HLS4ML_STREAM_BUF_OUT_SZ': str(self.vitis_unified_config.get_out_stream_buf_size()),
+                '// vitis-unified-wrapper-compute-signature': ', '.join(signature),
+                '// vitis-unified-wrapper-compute-body': f'{name}({", ".join(in_streams + out_streams)});',
+                '// vitis-unified-wrapper-compute-call-args': ', '.join(in_streams + out_streams + ['batch_size']),
+            },
+            blocks={
+                '// vitis-unified-wrapper-io': io_signature,
+                '// vitis-unified-wrapper-interface': interface,
+                '// vitis-unified-wrapper-stream-dec': stream_decl,
+                '// vitis-unified-wrapper-stream-config': stream_config,
+                '// vitis-unified-wrapper-load': load,
+                '// vitis-unified-wrapper-store': store,
+            },
+        )
+
+        self._fill_template(
+            'myproject_axi_master.h',
+            f'{firmware_dir}/{wrapper}.h',
+            replacements={'FILENAME': wrapper.upper(), 'MY_PROJECT_TOP_FUNC': self._get_top_wrap_func_name(model, True)},
+            blocks={
+                '// hls-fpga-machine-learning insert include': lambda indent: (
+                    f'#include "{name}.h"\n' + self._get_using_namespace(model)
+                ),
+                '// vitis-unified-wrapper-io': io_signature,
+            },
+        )
 
     # ===== Driver generation =====
     def write_driver(self, model):
-        # write the ip driver
-        if self._is_axi_master():
-            self._write_driver_axi_master(model)
-        else:
-            self._write_driver_axi_stream(model)
+        is_axi_master = self._is_axi_master()
+        inputs = model.get_input_variables()
+        outputs = model.get_output_variables()
 
-    def _write_driver_axi_stream(self, model):
-        driver_template_path = self.vitis_unified_config.get_driver_template_path()
-        driver_file = self.vitis_unified_config.get_driver_file()
-        with (
-            open(driver_template_path) as fin,
-            open(f'{model.config.get_output_dir()}/export/{driver_file}', 'w') as fout,
-        ):
-            for line in fin.readlines():
-                if '<TOP_WRAPPER_NAME>' in line:
-                    line = line.replace('<TOP_WRAPPER_NAME>', self._get_wrap_ip_name(model, False))
-                if '<TOP_NAME>' in line:
-                    line = line.replace('<TOP_NAME>', self._get_top_wrap_func_name(model, False))
-                if '<IP_VERSION>' in line:
-                    line = line.replace('<IP_VERSION>', '.'.join(self._get_ip_version(model).split('.')[:2]))
-                fout.write(line)
+        def port_names(variables, is_input):
+            return lambda indent: ''.join(
+                f"{indent}'{self._get_io_port_name(var, is_input, idx)}',\n" for idx, var in enumerate(variables)
+            )
 
-    def _write_driver_axi_master(self, model):
-        driver_template_path = self.vitis_unified_config.get_driver_template_path()
-        driver_file = self.vitis_unified_config.get_driver_file()
-        with (
-            open(driver_template_path) as fin,
-            open(f'{model.config.get_output_dir()}/export/{driver_file}', 'w') as fout,
-        ):
-            inputs = model.get_input_variables()
-            outputs = model.get_output_variables()
-            indent = ' ' * 12
-
-            for line in fin.readlines():
-                if '# hls-driver-input-names' in line:
-                    names = [f"{indent}'{self._get_io_port_name(inp, True, idx)}'" for idx, inp in enumerate(inputs)]
-                    line += ',\n'.join(names) + '\n'
-                if '# hls-driver-output-names' in line:
-                    names = [f"{indent}'{self._get_io_port_name(out, False, idx)}'" for idx, out in enumerate(outputs)]
-                    line += ',\n'.join(names) + '\n'
-                if '<TOP_WRAPPER_NAME>' in line:
-                    line = line.replace('<TOP_WRAPPER_NAME>', self._get_wrap_ip_name(model, True))
-                if '<TOP_NAME>' in line:
-                    line = line.replace('<TOP_NAME>', self._get_top_wrap_func_name(model, True))
-                if '<IP_VERSION>' in line:
-                    line = line.replace('<IP_VERSION>', '.'.join(self._get_ip_version(model).split('.')[:2]))
-                fout.write(line)
+        self._fill_template(
+            self.vitis_unified_config.get_driver_template_path(),
+            f'{model.config.get_output_dir()}/export/{self.vitis_unified_config.get_driver_file()}',
+            replacements={
+                '<TOP_WRAPPER_NAME>': self._get_wrap_ip_name(model, is_axi_master),
+                '<TOP_NAME>': self._get_top_wrap_func_name(model, is_axi_master),
+                '<IP_VERSION>': self._get_ip_vlnv_version(model),
+            },
+            blocks={
+                '# hls-driver-input-names': port_names(inputs, True),
+                '# hls-driver-output-names': port_names(outputs, False),
+            },
+        )
 
     # ===== Test generation =====
     def write_test_bench(self, model):
         self.write_tb_data(model)
-        filedir = os.path.dirname(os.path.abspath(__file__))
-        with (
-            open(os.path.join(filedir, '../templates/vitis_unified/myproject_test.cpp')) as fin,
-            open(f'{model.config.get_output_dir()}/{self._get_sim_file_name(model)}.cpp', 'w') as fout,
-        ):
-            _, _, _, _ = self.vitis_unified_config.get_corrected_types()
-            model_inputs = model.get_input_variables()
-            model_outputs = model.get_output_variables()
-            model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+        model_inputs = model.get_input_variables()
+        model_outputs = model.get_output_variables()
+        model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+        is_axi_master = self._is_axi_master()
+        dma = self._get_dma_type_name()
+        top = self._get_top_wrap_func_name(model, is_axi_master)
+        tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
+        in_ports = [self._get_io_port_name(inp, True, idx) for idx, inp in enumerate(model_inputs)]
+        out_ports = [self._get_io_port_name(out, False, idx) for idx, out in enumerate(model_outputs)]
 
-            fout.write('//// generated by Vitis Unified Backend\n')
+        def data(indent):
+            if is_axi_master:
+                lines, offset = '', 0
+                for port, inp in zip(in_ports, model_inputs):
+                    lines += f'{indent}float* {port} = &in[{offset}];\n'
+                    offset += inp.size()
+                lines += ''.join(f'{indent}float {port}[{out.size()}];\n' for port, out in zip(out_ports, model_outputs))
+                return lines
+            return (
+                f'{indent}hls::stream<{dma}> inputs;\n'
+                f'{indent}nnet::convert_data_axis<{dma}, float, N_IN>(in, inputs);\n'
+                f'{indent}hls::stream<{dma}> outputs;\n'
+            )
 
-            for line in fin.readlines():
-                indent = ' ' * (len(line) - len(line.lstrip(' ')))
+        def zero(indent):
+            if is_axi_master:
+                pairs = list(zip(in_ports, model_inputs)) + list(zip(out_ports, model_outputs))
+                return ''.join(f'{indent}float {port}[{var.size()}] = {{}};\n' for port, var in pairs)
+            return (
+                f'{indent}hls::stream<{dma}> inputs;\n'
+                f'{indent}nnet::fill_zero_axi<{dma}, N_IN>(inputs, false);\n'
+                f'{indent}hls::stream<{dma}> outputs;\n'
+            )
 
-                if 'myproject' in line:
-                    newline = line.replace('myproject', self._get_project_name(model))
-                elif '// hls-fpga-machine-learning insert include' in line:
-                    newline = line + f'#include "firmware/{self._get_wrapper_file_name(model, self._is_axi_master())}.h"\n'
-                elif '// hls-fpga-machine-learning insert bram' in line:
-                    newline = line
-                    for bram in model_brams:
-                        newline += f'#include "firmware/weights/{bram.name}.h"\n'
-                elif '// hls-fpga-machine-learning insert data' in line:
-                    newline = line
-                    if self._is_axi_master():
-                        offset = 0
-                        for input_idx, inp in enumerate(model_inputs):
-                            newline += indent + 'float* {input_port_name} = &in[{start_idx}];\n'.format(
-                                input_port_name=self._get_io_port_name(inp, True, input_idx), start_idx=str(offset)
-                            )
-                            offset += inp.size()
-                        for output_idx, out in enumerate(model_outputs):
-                            newline += indent + f'float {self._get_io_port_name(out, False, output_idx)}[{out.size()}];\n'
-                    else:
-                        dma = self._get_dma_type_name()
-                        newline += 3 * indent + f'hls::stream<{dma}> inputs;\n'
-                        newline += 3 * indent + f'nnet::convert_data_axis<{dma}, float, N_IN>(in, inputs);\n'
-                        newline += 3 * indent + 'std::cout << "input size inputs: " << inputs.size() << std::endl;\n'
-                        newline += 3 * indent + f'hls::stream<{dma}> outputs;\n\n'
-                elif '// hls-fpga-machine-learning insert top-level-function' in line:
-                    newline = line
-                    input_ios = []
-                    output_ios = []
-                    bram_ios = [b.name for b in model_brams]
-                    constant_ios = []
+        def top_level(indent):
+            args = in_ports + out_ports if is_axi_master else ['inputs', 'outputs']
+            args = args + [bram.name for bram in model_brams] + ['1']
+            return f'{indent}{top}({", ".join(args)});\n'
 
-                    if self._is_axi_master():
-                        input_ios.extend(self._get_io_port_name(inp, True, idx) for idx, inp in enumerate(model_inputs))
-                        output_ios.extend(self._get_io_port_name(out, False, idx) for idx, out in enumerate(model_outputs))
-                        constant_ios.append('1')
-                    else:
-                        input_ios.append('inputs')
-                        output_ios.append('outputs')
-                        constant_ios.append('1')
+        def predictions(indent):
+            return ''.join(
+                f'{indent}for(int i = 0; i < {out.size()}; i++) {{\n'
+                f'{indent}  std::cout << pr[i] << " ";\n'
+                f'{indent}}}\n'
+                f'{indent}std::cout << std::endl;\n'
+                for out in model_outputs
+            )
 
-                    all_vars = ' ,'.join(filter(None, [*input_ios, *output_ios, *bram_ios, *constant_ios]))
-                    top_level = indent + f'{self._get_top_wrap_func_name(model, self._is_axi_master())}({all_vars});\n'
-                    newline += top_level
-                elif '// hls-fpga-machine-learning insert predictions' in line:
-                    newline = line
-                    for out in model_outputs:
-                        newline += indent + f'for(int i = 0; i < {out.size()}; i++) {{\n'
-                        newline += indent + '  std::cout << pr[i] << " ";\n'
-                        newline += indent + '}\n'
-                        newline += indent + 'std::cout << std::endl;\n'
-                elif '// hls-fpga-machine-learning insert zero' in line:
-                    newline = line
-                    if self._is_axi_master():
-                        for input_idx, inp in enumerate(model_inputs):
-                            newline += (
-                                indent + f'float {self._get_io_port_name(inp, True, input_idx)}[{inp.size()}] = {{}};\n'
-                            )
-                        for output_idx, out in enumerate(model_outputs):
-                            newline += (
-                                indent + f'float {self._get_io_port_name(out, False, output_idx)}[{out.size()}] = {{}};\n'
-                            )
-                    else:
-                        newline += 3 * indent + f'hls::stream<{self._get_dma_type_name()}> inputs;\n'
-                        newline += 3 * indent + f'nnet::fill_zero_axi<{self._get_dma_type_name()}, N_IN>(inputs, false);\n'
-                        newline += 3 * indent + 'std::cout << "input size inputs: " << inputs.size() << std::endl;\n'
-                        newline += 3 * indent + f'hls::stream<{self._get_dma_type_name()}> outputs;\n\n'
-                elif '// hls-fpga-machine-learning insert tb-output' in line:
-                    newline = line
-                    tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
-                    if tb_stream != 'stdout':
-                        if self._is_axi_master():
-                            for output_idx, out in enumerate(model_outputs):
-                                newline += indent + (
-                                    'nnet::print_result<{actual_type}, {copy_size}>({port_name}, {dest}, {keep_output});\n'
-                                ).format(
-                                    actual_type='float',
-                                    copy_size=out.size(),
-                                    port_name=self._get_io_port_name(out, False, output_idx),
-                                    dest='fout',
-                                    keep_output='false',
-                                )
-                        else:
-                            newline += (
-                                indent
-                                + f'nnet::print_result_axis<{self._get_dma_type_name()}, N_OUT>(outputs, fout, false);\n'
-                            )
-                elif ('// hls-fpga-machine-learning insert output' in line) or (
-                    '// hls-fpga-machine-learning insert quantized' in line
-                ):
-                    newline = line
-                    tb_stream = model.config.get_writer_config().get('TBOutputStream', 'both')
-                    keep_output = str(tb_stream != 'stdout').lower()
-                    if tb_stream != 'file':
-                        if self._is_axi_master():
-                            for output_idx, out in enumerate(model_outputs):
-                                newline += indent + (
-                                    'nnet::print_result<{actual_type}, {copy_size}>({port_name}, {dest}, {keep_output});\n'
-                                ).format(
-                                    actual_type='float',
-                                    copy_size=out.size(),
-                                    port_name=self._get_io_port_name(out, False, output_idx),
-                                    dest='std::cout',
-                                    keep_output=keep_output,
-                                )
-                        else:
-                            newline += indent + (
-                                f'nnet::print_result_axis<{self._get_dma_type_name()}, N_OUT>('
-                                f'outputs, std::cout, {keep_output});\n'
-                            )
-                elif '// hls-fpga-machine-learning insert namespace' in line:
-                    newline = ''
-                    namespace = model.config.get_writer_config().get('Namespace', None)
-                    if namespace is not None:
-                        newline += indent + f'using namespace {namespace};\n'
-                else:
-                    newline = line
+        def print_results(indent, dest, keep_output):
+            if is_axi_master:
+                return ''.join(
+                    f'{indent}nnet::print_result<float, {out.size()}>({port}, {dest}, {keep_output});\n'
+                    for port, out in zip(out_ports, model_outputs)
+                )
+            return f'{indent}nnet::print_result_axis<{dma}, N_OUT>(outputs, {dest}, {keep_output});\n'
 
-                fout.write(newline)
+        def tb_output(indent):
+            return print_results(indent, 'fout', 'false') if tb_stream != 'stdout' else ''
+
+        def output(indent):
+            keep_output = str(tb_stream != 'stdout').lower()
+            return print_results(indent, 'std::cout', keep_output) if tb_stream != 'file' else ''
+
+        self._fill_template(
+            'myproject_test.cpp',
+            f'{model.config.get_output_dir()}/{self._get_sim_file_name(model)}.cpp',
+            blocks={
+                '// hls-fpga-machine-learning insert include': lambda indent: (
+                    f'#include "firmware/{self._get_wrapper_file_name(model, is_axi_master)}.h"\n'
+                ),
+                '// hls-fpga-machine-learning insert bram': lambda indent: ''.join(
+                    f'#include "firmware/weights/{bram.name}.h"\n' for bram in model_brams
+                ),
+                '// hls-fpga-machine-learning insert namespace': lambda indent: self._get_using_namespace(model, indent),
+                '// hls-fpga-machine-learning insert data': data,
+                '// hls-fpga-machine-learning insert zero': zero,
+                '// hls-fpga-machine-learning insert top-level-function': top_level,
+                '// hls-fpga-machine-learning insert predictions': predictions,
+                '// hls-fpga-machine-learning insert quantized': output,
+                '// hls-fpga-machine-learning insert output': output,
+                '// hls-fpga-machine-learning insert tb-output': tb_output,
+            },
+        )
 
     # ===== Main entrypoint =====
     def write_hls(self, model, is_multigraph=False):
-        self.sanity_check(model, is_multigraph)
-
+        if is_multigraph:
+            raise Exception('Vitis Unified does not support multigraphs.')
         self._set_unified_config(model)
+        self.sanity_check(model)
         super().write_hls(model)
         self.write_nnet_utils_unified_overrides(model)
         self.write_wrapper(model)

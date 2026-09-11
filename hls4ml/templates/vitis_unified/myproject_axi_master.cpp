@@ -3,13 +3,13 @@
 #include <iostream>
 #include <stdint.h>
 
-#define STREAM_BUF_IN_SZ VAL
-#define STREAM_BUF_OUT_SZ VAL
+#define STREAM_BUF_IN_SZ HLS4ML_STREAM_BUF_IN_SZ
+#define STREAM_BUF_OUT_SZ HLS4ML_STREAM_BUF_OUT_SZ
 
 template <typename ATOMIC_TYPE, typename INPUT_LAYER_ARR>
 void load_input(ATOMIC_TYPE *in, hls::stream<INPUT_LAYER_ARR> &inStream, int batch_size, const int TENSOR_SIZE) {
-mem_rd:
     int baseQuery = 0;
+mem_rd:
     for (int q = 0; q < batch_size; q++) {
         for (int i = 0; i < TENSOR_SIZE / INPUT_LAYER_ARR::size; i++) {
             INPUT_LAYER_ARR tmp;
@@ -24,8 +24,8 @@ mem_rd:
 
 template <typename ATOMIC_TYPE, typename OUT_LAYER_ARR>
 void store_result(ATOMIC_TYPE *out, hls::stream<OUT_LAYER_ARR> &out_stream, int batch_size, const int TENSOR_SIZE) {
-mem_wr:
     int baseQuery = 0;
+mem_wr:
     for (int q = 0; q < batch_size; q++) {
         for (int i = 0; i < TENSOR_SIZE / OUT_LAYER_ARR::size; i++) {
             OUT_LAYER_ARR tmp = out_stream.read();

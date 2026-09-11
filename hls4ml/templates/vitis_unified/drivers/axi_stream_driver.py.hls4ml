@@ -42,6 +42,8 @@ class NeuralNetworkOverlay(Overlay):
         - X : the input vector. Should be numpy ndarray. The first dimension is the batch.
               Its dtype must match `input_dtype` given to the constructor, which in turn must match the
               interface of the accelerator: 'np.float32' for a 'float' interface and 'np.float64' for 'double'.
+              The kernel consumes exactly batch * N_IN beats and produces batch * N_OUT beats, one element
+              per beat, with TLAST on the last output beat only. TLAST and TKEEP on the input are not checked.
         - profile : boolean. Set it to `True` to print the performance of the algorithm in term of `inference/s`.
         - return: an output array based on `np.ndarray` with a shape equal to `y_shape` and a `dtype` equal to
                   `output_dtype`. With `profile=True` it returns a tuple (output, execution time in seconds,

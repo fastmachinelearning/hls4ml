@@ -758,7 +758,7 @@ def test_project_name_too_long(test_case_id, simple_unet, io_type, strategy, gra
         output_dir=output_dir,
         **_vitis_unified_convert_kwargs(io_type, axi_mode, project_name='name_exceeds_limits'),  # 19 chars → decl = 65 chars
     )
-    with pytest.raises(ValueError, match='Project name must not exceed 18 characters'):
+    with pytest.raises(ValueError, match='at most 18 characters'):
         vitis_unified_model.compile()
 
 

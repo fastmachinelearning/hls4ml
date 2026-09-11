@@ -28,7 +28,8 @@ store_result_loop:
                 dma_data_packet axi_packet;
                 axi_packet.keep = -1;
                 axi_packet.data = (OUTPUT_GMEM_TYPE)(output_chunk[elem_idx]);
-                axi_packet.last = (q == (batch_size - 1)) && (((chunk_idx + 1) * (elem_idx + 1)) == N_OUT);
+                axi_packet.last = (q == batch_size - 1) && (chunk_idx == N_OUT / OUTPUT_LAYER_TYPE::size - 1) &&
+                                  (elem_idx == OUTPUT_LAYER_TYPE::size - 1);
                 axi_output_stream.write(axi_packet);
             }
         }

@@ -14,6 +14,8 @@ template <class pack_T, class src_T, size_t SIZE> void convert_data_axis(src_T *
     for (size_t i = 0; i < SIZE; i++) {
         pack_T pack;
         pack.data = src[i];
+        pack.keep = -1;
+        pack.last = (i == SIZE - 1) ? 1 : 0;
         dst.write(pack);
     }
 }
@@ -22,6 +24,7 @@ template <class pack_T, class src_T, size_t SIZE> void convert_data_axis(std::ve
     for (size_t i = 0; i < SIZE; i++) {
         pack_T pack;
         pack.data = src[i];
+        pack.keep = -1;
         pack.last = (i == SIZE - 1) ? 1 : 0;
         dst.write(pack);
     }
@@ -51,6 +54,7 @@ template <class data_T, size_t SIZE> void fill_zero_axi(hls::stream<data_T> &dat
     for (int i = 0; i < SIZE; i++) {
         data_T data_pack;
         data_pack.data = 0;
+        data_pack.keep = -1;
         data_pack.last = reqLast && (i == (SIZE - 1)) ? 1 : 0;
         data.write(data_pack);
     }

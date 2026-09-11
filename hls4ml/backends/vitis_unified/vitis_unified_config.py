@@ -104,17 +104,14 @@ class VitisUnifiedConfig:
     def get_out_stream_buf_size(self):
         return self.out_stream_buf_size
 
-    def get_XPFMPath(self):
-        return self._platform_path
-
     def get_platform_path(self):
-        """Path to platform (.xpfm or .xsa). Alias for get_XPFMPath for backward compatibility."""
+        """Path to platform (.xpfm or .xsa)."""
         return self._platform_path
 
     def get_platform_generator_tcl(self):
         """Path to TCL script that generates platform, or None if using pre-built platform."""
-        return getattr(self, '_platform_generator_tcl', None)
+        return self._platform_generator_tcl
 
     def get_platform_output_path(self):
         """Path where platform generator writes output, or None if not using generator."""
-        return getattr(self, '_platform_output_path', None)
+        return self._platform_output_path
