@@ -22,6 +22,9 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
+# ===== 1. fixtures and helpers =====
+
+
 def require_synthesis(synthesis_config):
     if not synthesis_config['run_synthesis']:
         pytest.skip('Set RUN_SYNTHESIS=true to run synthesis tests')
@@ -63,6 +66,24 @@ def multi_io_net():
     return model
 
 
+@pytest.fixture(scope='module')
+def vitis_reference(simple_unet):
+    """Plain Vitis backend build of simple_unet, compiled once and shared as the numeric reference."""
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    config['Model']['Strategy'] = 'latency'
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(test_root_path / 'hls4mlprj_test_vitis_unified_vitis_reference'),
+        backend='Vitis',
+        io_type='io_stream',
+        part='xczu9eg-ffvb1156-2-e',
+        clock_period=10,
+    )
+    hls_model.compile()
+    return hls_model
+
+
 part_map = {'zcu102': 'xczu9eg-ffvb1156-2-e', 'kv260': 'xck26-sfvc784-2LV-c'}
 
 
@@ -100,129 +121,6 @@ def _driver_port_counts(driver_path):
     return counts
 
 
-@pytest.mark.parametrize('io_type', ['io_stream'])
-@pytest.mark.parametrize('strategy', ['latency'])
-@pytest.mark.parametrize('granularity', ['name'])
-@pytest.mark.parametrize('batch_size', [10])
-@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_backend_predict(test_case_id, simple_unet, io_type, strategy, granularity, batch_size, axi_mode):
-    model = simple_unet
-    X_input = np.random.rand(batch_size, 4, 4, 1).astype(np.float32)
-
-    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
-    config['Model']['Strategy'] = strategy
-    output_dir_unified = str(test_root_path / test_case_id)
-    output_dir_vitis = str(test_root_path / (test_case_id + '_vitis_ref'))
-
-    vitis_unified_model = hls4ml.converters.convert_from_keras_model(
-        model,
-        hls_config=config,
-        output_dir=output_dir_unified,
-        **_vitis_unified_convert_kwargs(io_type, axi_mode),
-    )
-    vitis_unified_model.compile()
-    vitis_model = hls4ml.converters.convert_from_keras_model(
-        model,
-        hls_config=config,
-        output_dir=output_dir_vitis,
-        backend='Vitis',
-        io_type=io_type,
-        part='xczu9eg-ffvb1156-2-e',
-        clock_period=10,
-    )
-    vitis_model.compile()
-
-    hls_unified_prediction = vitis_unified_model.predict(X_input)
-    hls_vitis_prediction = vitis_model.predict(X_input)
-
-    np.testing.assert_array_equal(hls_unified_prediction, hls_vitis_prediction)
-
-
-@pytest.fixture(scope='module')
-def vitis_reference(simple_unet):
-    """Plain Vitis backend build of simple_unet, compiled once and shared as the numeric reference."""
-    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
-    config['Model']['Strategy'] = 'latency'
-    hls_model = hls4ml.converters.convert_from_keras_model(
-        simple_unet,
-        hls_config=config,
-        output_dir=str(test_root_path / 'hls4mlprj_test_vitis_unified_vitis_reference'),
-        backend='Vitis',
-        io_type='io_stream',
-        part='xczu9eg-ffvb1156-2-e',
-        clock_period=10,
-    )
-    hls_model.compile()
-    return hls_model
-
-
-@pytest.mark.parametrize(
-    'axi_mode, interface_type',
-    [
-        ('axi_master', 'float'),
-        ('axi_master', 'double'),
-        ('axi_stream', 'float'),
-        ('axi_stream', 'double'),
-    ],
-)
-@pytest.mark.parametrize('np_dtype', [np.float32, np.float64])
-def test_predict_any_numpy_dtype(test_case_id, simple_unet, vitis_reference, axi_mode, interface_type, np_dtype):
-    # Draw the values as float32 first so the same numbers are exactly representable in both dtypes.
-    X_input = np.random.rand(10, 4, 4, 1).astype(np.float32).astype(np_dtype)
-
-    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
-    config['Model']['Strategy'] = 'latency'
-    hls_model = hls4ml.converters.convert_from_keras_model(
-        simple_unet,
-        hls_config=config,
-        output_dir=str(test_root_path / test_case_id),
-        **_vitis_unified_convert_kwargs('io_stream', axi_mode, input_type=interface_type, output_type=interface_type),
-    )
-    hls_model.compile()
-
-    prediction = hls_model.predict(X_input)
-    reference = vitis_reference.predict(X_input)
-
-    assert np.any(prediction != 0), 'predict() returned all zeros, so the bridge entry point for this dtype is empty'
-    np.testing.assert_array_equal(prediction, reference)
-
-
-@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_bram_weights_rejected_at_conversion(test_case_id, simple_unet, axi_mode):
-    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
-    config['Model']['Strategy'] = 'Resource'
-    config['Model']['BramFactor'] = 10
-    with pytest.raises(Exception, match='BramFactor weights'):
-        hls4ml.converters.convert_from_keras_model(
-            simple_unet,
-            hls_config=config,
-            output_dir=str(test_root_path / test_case_id),
-            **_vitis_unified_convert_kwargs('io_stream', axi_mode),
-        )
-
-
-@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_writer_options_forwarded(test_case_id, simple_unet, axi_mode):
-    output_dir = test_root_path / test_case_id
-    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
-    hls_model = hls4ml.converters.convert_from_keras_model(
-        simple_unet,
-        hls_config=config,
-        output_dir=str(output_dir),
-        **_vitis_unified_convert_kwargs('io_stream', axi_mode, namespace='nsone', write_tar=True),
-    )
-    hls_model.compile()
-
-    header = (output_dir / 'firmware' / 'max_length_project.h').read_text()
-    assert 'namespace nsone' in header
-    with tarfile.open(output_dir.with_name(output_dir.name + '.tar.gz')) as archive:
-        names = archive.getnames()
-    assert any(name.endswith(f'export/{axi_mode}_driver.py') for name in names)
-
-    X_input = np.random.rand(2, 4, 4, 1).astype(np.float32)
-    assert np.any(hls_model.predict(X_input) != 0)
-
-
 FAKE_CSYNTH_XML = """<profile>
 <UserAssignments>
 <TargetClockPeriod>10.00</TargetClockPeriod>
@@ -257,6 +155,7 @@ FAKE_CSYNTH_XML = """<profile>
 </profile>
 """
 
+
 FAKE_COSIM_RPT = """+--------+--------+-----+-----+-----+-----+-----+-----+
 |  RTL   | Status | min | avg | max | min | avg | max |
 +--------+--------+-----+-----+-----+-----+-----+-----+
@@ -266,33 +165,95 @@ FAKE_COSIM_RPT = """+--------+--------+-----+-----+-----+-----+-----+-----+
 """
 
 
+# ===== 2. conversion: config and graph checks, nothing written =====
+
+
+@pytest.mark.parametrize(
+    'model_name, bad_kwargs, match',
+    [
+        ('simple_unet', {'board': 'pynq-z2'}, '(?i)board'),
+        ('simple_unet', {'input_type': 'float', 'output_type': 'double'}, '(?i)type'),
+        ('multi_io_net', {'axi_mode': 'axi_stream'}, '(?i)axi_stream'),
+    ],
+    ids=['unknown_board', 'mismatched_types', 'multi_input_axi_stream'],
+)
+def test_invalid_config_rejected_at_conversion(request, test_case_id, model_name, bad_kwargs, match):
+    model = request.getfixturevalue(model_name)
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    kwargs = {
+        'backend': 'VitisUnified',
+        'io_type': 'io_stream',
+        'board': 'zcu102',
+        'clock_period': 10,
+        'axi_mode': 'axi_master',
+        **bad_kwargs,
+    }
+    with pytest.raises(Exception, match=match) as excinfo:
+        hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, output_dir=str(test_root_path / test_case_id), **kwargs
+        )
+    assert not isinstance(excinfo.value, AssertionError)
+
+
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_build_returns_report_and_reset(test_case_id, simple_unet, axi_mode):
+def test_bram_weights_rejected_at_conversion(test_case_id, simple_unet, axi_mode):
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    config['Model']['Strategy'] = 'Resource'
+    config['Model']['BramFactor'] = 10
+    with pytest.raises(Exception, match='BramFactor weights'):
+        hls4ml.converters.convert_from_keras_model(
+            simple_unet,
+            hls_config=config,
+            output_dir=str(test_root_path / test_case_id),
+            **_vitis_unified_convert_kwargs('io_stream', axi_mode),
+        )
+
+
+def test_fifo_depth_passes(test_case_id, simple_unet):
+    from hls4ml.model.flow import get_flow
+    from hls4ml.model.optimizer import get_optimizer
+
+    for backend in ['vitis', 'vitisunified']:
+        flow = get_flow(f'{backend}:fifo_depth_optimization')
+        profiling = get_flow(f'{backend}:fifo_depth_profiling')
+        assert flow.requires == [f'{backend}:fifo_depth_profiling']
+        assert profiling.optimizers[0] == f'{backend}:fifo_depth_optimization'
+        assert profiling.optimizers[-2:] == [
+            f'{backend}:fifo_depth_optimization_profile',
+            f'{backend}:fifo_depth_optimization_post',
+        ]
+        for name in profiling.optimizers + flow.optimizers:
+            get_optimizer(name)
+
     output_dir = test_root_path / test_case_id
     config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
     hls_model = hls4ml.converters.convert_from_keras_model(
         simple_unet,
         hls_config=config,
         output_dir=str(output_dir),
-        **_vitis_unified_convert_kwargs('io_stream', axi_mode),
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_stream'),
     )
-    hls_model.write()
+    fifos = {var.name: var for var in hls_model.output_vars.values()}
 
-    hls_prj = output_dir / 'vitis_workspace' / 'max_length_project' / 'vitis_unified_project' / 'hls'
-    (hls_prj / 'syn' / 'report').mkdir(parents=True, exist_ok=True)
-    (hls_prj / 'sim' / 'report').mkdir(parents=True, exist_ok=True)
-    (hls_prj / 'syn' / 'report' / f'max_length_project_{axi_mode}_csynth.xml').write_text(FAKE_CSYNTH_XML)
-    (hls_prj / 'sim' / 'report' / f'max_length_project_{axi_mode}_cosim.rpt').write_text(FAKE_COSIM_RPT)
+    get_optimizer('vitisunified:fifo_depth_optimization').transform(hls_model)
+    depths = json.loads((output_dir / 'fifo_depths.json').read_text())
+    assert depths and all(set(entry) == {'initial'} for entry in depths.values())
+    assert all(fifos[name].pragma[1] == 100_000 for name in depths)
 
-    with pytest.warns(UserWarning, match='vsynth'):
-        report = hls_model.build(vsynth=True)
-    assert report['CSynthesisReport']['LUT'] == '19834'
-    assert report['CSynthesisReport']['AvailableDSP'] == '2520'
-    assert report['CosimReport']['Status'] == 'Pass'
-    assert report['CosimReport']['LatencyMax'] == '278'
+    db = Path(hls_model.config.backend.writer.get_vitis_hls_exec_dir(hls_model)) / 'hls' / '.autopilot' / 'db'
+    (db / 'channel_depth_info').mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(db / 'channel_depth_info' / 'channel.zip', 'w') as archive, open(db / 'channel_info.csv', 'w') as f:
+        for idx, name in enumerate(depths):
+            archive.writestr(f'chan_status_{idx}.csv', 'a\nb\nc\n7\n')
+            f.write(f'{idx},{name}_i_U,x,chan_status_{idx}.csv\n')
 
-    hls_model.build(reset=True)
-    assert not hls_prj.parent.exists()
+    get_optimizer('vitisunified:fifo_depth_optimization_post').transform(hls_model)
+    depths = json.loads((output_dir / 'fifo_depths.json').read_text())
+    assert all(entry['optimized'] == 7 for entry in depths.values())
+    assert all(fifos[name].pragma[1] == 7 for name in depths)
+
+
+# ===== 3. write: generated files, no compiler needed =====
 
 
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
@@ -431,90 +392,12 @@ def test_custom_platform(test_case_id, simple_unet):
     assert 'part=xc7z020clg400-1' in cfg
 
 
-def test_fifo_depth_passes(test_case_id, simple_unet):
-    from hls4ml.model.flow import get_flow
-    from hls4ml.model.optimizer import get_optimizer
-
-    for backend in ['vitis', 'vitisunified']:
-        flow = get_flow(f'{backend}:fifo_depth_optimization')
-        profiling = get_flow(f'{backend}:fifo_depth_profiling')
-        assert flow.requires == [f'{backend}:fifo_depth_profiling']
-        assert profiling.optimizers[0] == f'{backend}:fifo_depth_optimization'
-        assert profiling.optimizers[-2:] == [
-            f'{backend}:fifo_depth_optimization_profile',
-            f'{backend}:fifo_depth_optimization_post',
-        ]
-        for name in profiling.optimizers + flow.optimizers:
-            get_optimizer(name)
-
-    output_dir = test_root_path / test_case_id
-    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
-    hls_model = hls4ml.converters.convert_from_keras_model(
-        simple_unet,
-        hls_config=config,
-        output_dir=str(output_dir),
-        **_vitis_unified_convert_kwargs('io_stream', 'axi_stream'),
-    )
-    fifos = {var.name: var for var in hls_model.output_vars.values()}
-
-    get_optimizer('vitisunified:fifo_depth_optimization').transform(hls_model)
-    depths = json.loads((output_dir / 'fifo_depths.json').read_text())
-    assert depths and all(set(entry) == {'initial'} for entry in depths.values())
-    assert all(fifos[name].pragma[1] == 100_000 for name in depths)
-
-    db = Path(hls_model.config.backend.writer.get_vitis_hls_exec_dir(hls_model)) / 'hls' / '.autopilot' / 'db'
-    (db / 'channel_depth_info').mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(db / 'channel_depth_info' / 'channel.zip', 'w') as archive, open(db / 'channel_info.csv', 'w') as f:
-        for idx, name in enumerate(depths):
-            archive.writestr(f'chan_status_{idx}.csv', 'a\nb\nc\n7\n')
-            f.write(f'{idx},{name}_i_U,x,chan_status_{idx}.csv\n')
-
-    get_optimizer('vitisunified:fifo_depth_optimization_post').transform(hls_model)
-    depths = json.loads((output_dir / 'fifo_depths.json').read_text())
-    assert all(entry['optimized'] == 7 for entry in depths.values())
-    assert all(fifos[name].pragma[1] == 7 for name in depths)
-
-
-@pytest.mark.parametrize(
-    'model_name, bad_kwargs, match',
-    [
-        ('simple_unet', {'board': 'pynq-z2'}, '(?i)board'),
-        ('simple_unet', {'input_type': 'float', 'output_type': 'double'}, '(?i)type'),
-        ('multi_io_net', {'axi_mode': 'axi_stream'}, '(?i)axi_stream'),
-    ],
-    ids=['unknown_board', 'mismatched_types', 'multi_input_axi_stream'],
-)
-def test_invalid_config_rejected_at_conversion(request, test_case_id, model_name, bad_kwargs, match):
-    model = request.getfixturevalue(model_name)
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
-    kwargs = {
-        'backend': 'VitisUnified',
-        'io_type': 'io_stream',
-        'board': 'zcu102',
-        'clock_period': 10,
-        'axi_mode': 'axi_master',
-        **bad_kwargs,
-    }
-    with pytest.raises(Exception, match=match) as excinfo:
-        hls4ml.converters.convert_from_keras_model(
-            model, hls_config=config, output_dir=str(test_root_path / test_case_id), **kwargs
-        )
-    assert not isinstance(excinfo.value, AssertionError)
-
-
 @pytest.mark.parametrize('io_type', ['io_stream'])
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('granularity', ['name'])
-@pytest.mark.parametrize('batch_size', [10])
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_cosimulation(
-    test_case_id, simple_unet, tmp_path, io_type, strategy, granularity, batch_size, axi_mode, synthesis_config
-):
-    require_synthesis(synthesis_config)
+def test_project_name_too_long(test_case_id, simple_unet, io_type, strategy, granularity, axi_mode):
     model = simple_unet
-    X_input = np.random.rand(batch_size, 4, 4, 1).astype(np.float32)
-    np.save(tmp_path / 'input.npy', X_input)
-
     config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
     config['Model']['Strategy'] = strategy
     output_dir = str(test_root_path / test_case_id)
@@ -523,27 +406,136 @@ def test_cosimulation(
         model,
         hls_config=config,
         output_dir=output_dir,
+        **_vitis_unified_convert_kwargs(io_type, axi_mode, project_name='name_exceeds_limits'),  # 19 chars → decl = 65 chars
+    )
+    with pytest.raises(ValueError, match='at most 18 characters'):
+        vitis_unified_model.compile()
+
+
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_build_returns_report_and_reset(test_case_id, simple_unet, axi_mode):
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode),
+    )
+    hls_model.write()
+
+    hls_prj = output_dir / 'vitis_workspace' / 'max_length_project' / 'vitis_unified_project' / 'hls'
+    (hls_prj / 'syn' / 'report').mkdir(parents=True, exist_ok=True)
+    (hls_prj / 'sim' / 'report').mkdir(parents=True, exist_ok=True)
+    (hls_prj / 'syn' / 'report' / f'max_length_project_{axi_mode}_csynth.xml').write_text(FAKE_CSYNTH_XML)
+    (hls_prj / 'sim' / 'report' / f'max_length_project_{axi_mode}_cosim.rpt').write_text(FAKE_COSIM_RPT)
+
+    with pytest.warns(UserWarning, match='vsynth'):
+        report = hls_model.build(vsynth=True)
+    assert report['CSynthesisReport']['LUT'] == '19834'
+    assert report['CSynthesisReport']['AvailableDSP'] == '2520'
+    assert report['CosimReport']['Status'] == 'Pass'
+    assert report['CosimReport']['LatencyMax'] == '278'
+
+    hls_model.build(reset=True)
+    assert not hls_prj.parent.exists()
+
+
+# ===== 4. compile and predict: g++ only =====
+
+
+@pytest.mark.parametrize('io_type', ['io_stream'])
+@pytest.mark.parametrize('strategy', ['latency'])
+@pytest.mark.parametrize('granularity', ['name'])
+@pytest.mark.parametrize('batch_size', [10])
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_backend_predict(test_case_id, simple_unet, io_type, strategy, granularity, batch_size, axi_mode):
+    model = simple_unet
+    X_input = np.random.rand(batch_size, 4, 4, 1).astype(np.float32)
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    config['Model']['Strategy'] = strategy
+    output_dir_unified = str(test_root_path / test_case_id)
+    output_dir_vitis = str(test_root_path / (test_case_id + '_vitis_ref'))
+
+    vitis_unified_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir_unified,
         **_vitis_unified_convert_kwargs(io_type, axi_mode),
     )
     vitis_unified_model.compile()
-    y_pred = vitis_unified_model.predict(X_input)
-    np.save(tmp_path / 'output.npy', y_pred)
-
-    input_data_tb = str(tmp_path / 'input.npy')
-    output_data_tb = str(tmp_path / 'output.npy')
-
-    vitis_unified_model_cosim = hls4ml.converters.convert_from_keras_model(
+    vitis_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,
-        output_dir=output_dir,
-        **_vitis_unified_convert_kwargs(io_type, axi_mode, input_data_tb=input_data_tb, output_data_tb=output_data_tb),
+        output_dir=output_dir_vitis,
+        backend='Vitis',
+        io_type=io_type,
+        part='xczu9eg-ffvb1156-2-e',
+        clock_period=10,
     )
-    vitis_unified_model_cosim.compile()
-    vitis_unified_model_cosim.build(synth=True, cosim=True, log_to_stdout=True)
+    vitis_model.compile()
 
-    bridge_result = np.loadtxt(os.path.join(output_dir, 'tb_data', 'tb_output_predictions.dat'))
-    cosim_result = np.loadtxt(os.path.join(output_dir, 'tb_data', 'rtl_cosim_results.log'))
-    assert np.allclose(bridge_result, cosim_result, rtol=0.0, atol=1e-4)
+    hls_unified_prediction = vitis_unified_model.predict(X_input)
+    hls_vitis_prediction = vitis_model.predict(X_input)
+
+    np.testing.assert_array_equal(hls_unified_prediction, hls_vitis_prediction)
+
+
+@pytest.mark.parametrize(
+    'axi_mode, interface_type',
+    [
+        ('axi_master', 'float'),
+        ('axi_master', 'double'),
+        ('axi_stream', 'float'),
+        ('axi_stream', 'double'),
+    ],
+)
+@pytest.mark.parametrize('np_dtype', [np.float32, np.float64])
+def test_predict_any_numpy_dtype(test_case_id, simple_unet, vitis_reference, axi_mode, interface_type, np_dtype):
+    # Draw the values as float32 first so the same numbers are exactly representable in both dtypes.
+    X_input = np.random.rand(10, 4, 4, 1).astype(np.float32).astype(np_dtype)
+
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    config['Model']['Strategy'] = 'latency'
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(test_root_path / test_case_id),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode, input_type=interface_type, output_type=interface_type),
+    )
+    hls_model.compile()
+
+    prediction = hls_model.predict(X_input)
+    reference = vitis_reference.predict(X_input)
+
+    assert np.any(prediction != 0), 'predict() returned all zeros, so the bridge entry point for this dtype is empty'
+    np.testing.assert_array_equal(prediction, reference)
+
+
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_writer_options_forwarded(test_case_id, simple_unet, axi_mode):
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode, namespace='nsone', write_tar=True),
+    )
+    hls_model.compile()
+
+    header = (output_dir / 'firmware' / 'max_length_project.h').read_text()
+    assert 'namespace nsone' in header
+    with tarfile.open(output_dir.with_name(output_dir.name + '.tar.gz')) as archive:
+        names = archive.getnames()
+    assert any(name.endswith(f'export/{axi_mode}_driver.py') for name in names)
+
+    X_input = np.random.rand(2, 4, 4, 1).astype(np.float32)
+    assert np.any(hls_model.predict(X_input) != 0)
+
+
+# ===== 5. Vitis HLS: csim, csynth, cosim (RUN_SYNTHESIS=true) =====
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])
@@ -595,6 +587,50 @@ def test_csim_simulation(
 @pytest.mark.parametrize('granularity', ['name'])
 @pytest.mark.parametrize('batch_size', [10])
 @pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
+def test_cosimulation(
+    test_case_id, simple_unet, tmp_path, io_type, strategy, granularity, batch_size, axi_mode, synthesis_config
+):
+    require_synthesis(synthesis_config)
+    model = simple_unet
+    X_input = np.random.rand(batch_size, 4, 4, 1).astype(np.float32)
+    np.save(tmp_path / 'input.npy', X_input)
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
+    config['Model']['Strategy'] = strategy
+    output_dir = str(test_root_path / test_case_id)
+
+    vitis_unified_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        **_vitis_unified_convert_kwargs(io_type, axi_mode),
+    )
+    vitis_unified_model.compile()
+    y_pred = vitis_unified_model.predict(X_input)
+    np.save(tmp_path / 'output.npy', y_pred)
+
+    input_data_tb = str(tmp_path / 'input.npy')
+    output_data_tb = str(tmp_path / 'output.npy')
+
+    vitis_unified_model_cosim = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=output_dir,
+        **_vitis_unified_convert_kwargs(io_type, axi_mode, input_data_tb=input_data_tb, output_data_tb=output_data_tb),
+    )
+    vitis_unified_model_cosim.compile()
+    vitis_unified_model_cosim.build(synth=True, cosim=True, log_to_stdout=True)
+
+    bridge_result = np.loadtxt(os.path.join(output_dir, 'tb_data', 'tb_output_predictions.dat'))
+    cosim_result = np.loadtxt(os.path.join(output_dir, 'tb_data', 'rtl_cosim_results.log'))
+    assert np.allclose(bridge_result, cosim_result, rtol=0.0, atol=1e-4)
+
+
+@pytest.mark.parametrize('io_type', ['io_stream'])
+@pytest.mark.parametrize('strategy', ['latency'])
+@pytest.mark.parametrize('granularity', ['name'])
+@pytest.mark.parametrize('batch_size', [10])
+@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
 def test_fifo_depth(
     test_case_id, simple_unet, tmp_path, io_type, strategy, granularity, batch_size, axi_mode, synthesis_config
 ):
@@ -631,6 +667,9 @@ def test_fifo_depth(
 
     fifodepth_result_path = os.path.join(output_dir, 'fifo_depths.json')
     assert os.path.exists(fifodepth_result_path)
+
+
+# ===== 6. bitstream: platform link and export (RUN_SYNTHESIS=true and a Vitis platform) =====
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])
@@ -740,26 +779,3 @@ def test_gen_unified_multi_io(test_case_id, multi_io_net, io_type, strategy, gra
     assert os.path.isdir(final_reports_dir), f'final_reports directory does not exist: {final_reports_dir}'
     rpt_files = [f for f in os.listdir(final_reports_dir) if f.endswith('.rpt')]
     assert len(rpt_files) > 0, f'No .rpt files found in final_reports directory: {final_reports_dir}'
-
-
-@pytest.mark.parametrize('io_type', ['io_stream'])
-@pytest.mark.parametrize('strategy', ['latency'])
-@pytest.mark.parametrize('granularity', ['name'])
-@pytest.mark.parametrize('axi_mode', ['axi_stream', 'axi_master'])
-def test_project_name_too_long(test_case_id, simple_unet, io_type, strategy, granularity, axi_mode):
-    model = simple_unet
-    config = hls4ml.utils.config_from_keras_model(model, granularity=granularity)
-    config['Model']['Strategy'] = strategy
-    output_dir = str(test_root_path / test_case_id)
-
-    vitis_unified_model = hls4ml.converters.convert_from_keras_model(
-        model,
-        hls_config=config,
-        output_dir=output_dir,
-        **_vitis_unified_convert_kwargs(io_type, axi_mode, project_name='name_exceeds_limits'),  # 19 chars → decl = 65 chars
-    )
-    with pytest.raises(ValueError, match='at most 18 characters'):
-        vitis_unified_model.compile()
-
-
-# test_gen_unified('axi_stream_debug_4', simple_unet(), 'io_stream', 'latency', 'name', 10, 'axi_stream', 'kv260')
