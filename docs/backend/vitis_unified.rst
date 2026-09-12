@@ -122,12 +122,13 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
        | It must be the same as ``input_type``.
    * - ``in_stream_buf_size``
      - ``128``
-     - | Depth of the FIFO between the wrapper input (AXI master read or AXI-Stream) and the HLS model.
-       | Used in both AXI modes. The unit is one entry of the model stream type (one chunk of the input array), not one element.
+     - | Depth of the FIFO between the wrapper input (AXI master read or AXI-Stream) and the HLS model. Used in both AXI modes.
+       | The unit is one entry of the model input stream. One entry holds the last dimension of the input shape: the channels of one pixel for an image, the whole vector for a flat input.
+       | One sample takes ``N_IN / channels`` entries. For a ``4x4x1`` input an entry is one element and the default holds 8 samples; for a ``32x32x3`` input an entry is 3 elements and the default holds 128 of the 1024 entries of one sample.
    * - ``out_stream_buf_size``
      - ``128``
-     - | Depth of the FIFO between the HLS model and the wrapper output (AXI master write or AXI-Stream).
-       | Used in both AXI modes. The unit is one entry of the model stream type (one chunk of the output array), not one element.
+     - | Depth of the FIFO between the HLS model and the wrapper output (AXI master write or AXI-Stream). Used in both AXI modes.
+       | The unit is one entry of the model output stream. One entry holds the last dimension of the output shape, and one sample takes ``N_OUT / channels`` entries, the same rule as for the input.
 
 Example:
 
