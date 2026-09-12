@@ -56,6 +56,7 @@ In both modes the CPU controls the kernel through AXI-Lite and receives an inter
     The stream interface follows this contract:
 
     * Each beat carries one element. The data field uses the ``input_type`` format, 32 bits for ``float`` and 64 bits for ``double``.
+      The platforms built by the shipped Tcl scripts have a 32-bit DMA, so ``double`` is rejected with them and needs your own platform.
     * For each kernel start the kernel reads exactly ``batch_size × N_IN`` input beats and writes exactly ``batch_size × N_OUT`` output beats. ``N_IN`` and ``N_OUT`` are the flattened input and output sizes of the model.
     * ``TLAST`` is set only on the last output beat of the batch. ``TLAST`` on the input is ignored, so a transfer with fewer beats than expected makes the kernel wait.
     * ``TKEEP`` is driven all-ones on every output beat. ``TKEEP`` on the input is not checked, every beat is taken as a full element.
@@ -223,6 +224,7 @@ The following are not supported in this version:
 * Fixed-point interface types. ``input_type`` and ``output_type`` must be ``float`` or ``double``, and they must be the same.
 * Weights that become external BRAM ports through ``BramFactor``. The conversion stops with an error.
 * Models with several inputs or outputs in ``axi_stream`` mode. Use ``axi_master`` for them.
+* ``double`` in ``axi_stream`` mode with the shipped platforms. Their DMA is 32 bits wide, so pass your own platform with a 64-bit DMA.
 * Multigraph models.
 * A C or C++ host driver. Only the Python (PYNQ) driver is generated.
 * Boards other than SoC boards with a PYNQ driver.

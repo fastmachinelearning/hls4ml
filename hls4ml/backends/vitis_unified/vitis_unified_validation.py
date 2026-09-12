@@ -54,3 +54,9 @@ def validate_config(board, axi_mode, driver, input_type, output_type, supported_
             raise Exception(f'{name} must be float or double')
     if input_type != output_type:
         raise Exception('input_type and output_type must be the same')
+    if platform is None and axi_mode == 'axi_stream' and input_type == 'double':
+        if platform_generator_tcl(supported_boards[board], axi_mode):
+            raise Exception(
+                f'The AXI DMA of the shipped {board} axi_stream platform is 32 bits wide, so input_type double is not '
+                'supported with it. Use float, or pass your own platform with a 64-bit DMA to use double.'
+            )

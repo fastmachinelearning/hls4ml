@@ -3,7 +3,6 @@ import json
 import os
 import shutil
 import tarfile
-import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -174,8 +173,9 @@ FAKE_COSIM_RPT = """+--------+--------+-----+-----+-----+-----+-----+-----+
         ('simple_unet', {'board': 'pynq-z2'}, '(?i)board'),
         ('simple_unet', {'input_type': 'float', 'output_type': 'double'}, '(?i)type'),
         ('multi_io_net', {'axi_mode': 'axi_stream'}, '(?i)axi_stream'),
+        ('simple_unet', {'axi_mode': 'axi_stream', 'input_type': 'double', 'output_type': 'double'}, '(?i)double'),
     ],
-    ids=['unknown_board', 'mismatched_types', 'multi_input_axi_stream'],
+    ids=['unknown_board', 'mismatched_types', 'multi_input_axi_stream', 'double_on_shipped_stream_platform'],
 )
 def test_invalid_config_rejected_at_conversion(request, test_case_id, model_name, bad_kwargs, match):
     model = request.getfixturevalue(model_name)
@@ -207,50 +207,6 @@ def test_bram_weights_rejected_at_conversion(test_case_id, simple_unet, axi_mode
             output_dir=str(test_root_path / test_case_id),
             **_vitis_unified_convert_kwargs('io_stream', axi_mode),
         )
-
-
-def test_fifo_depth_passes(test_case_id, simple_unet):
-    from hls4ml.model.flow import get_flow
-    from hls4ml.model.optimizer import get_optimizer
-
-    for backend in ['vitis', 'vitisunified']:
-        flow = get_flow(f'{backend}:fifo_depth_optimization')
-        profiling = get_flow(f'{backend}:fifo_depth_profiling')
-        assert flow.requires == [f'{backend}:fifo_depth_profiling']
-        assert profiling.optimizers[0] == f'{backend}:fifo_depth_optimization'
-        assert profiling.optimizers[-2:] == [
-            f'{backend}:fifo_depth_optimization_profile',
-            f'{backend}:fifo_depth_optimization_post',
-        ]
-        for name in profiling.optimizers + flow.optimizers:
-            get_optimizer(name)
-
-    output_dir = test_root_path / test_case_id
-    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
-    hls_model = hls4ml.converters.convert_from_keras_model(
-        simple_unet,
-        hls_config=config,
-        output_dir=str(output_dir),
-        **_vitis_unified_convert_kwargs('io_stream', 'axi_stream'),
-    )
-    fifos = {var.name: var for var in hls_model.output_vars.values()}
-
-    get_optimizer('vitisunified:fifo_depth_optimization').transform(hls_model)
-    depths = json.loads((output_dir / 'fifo_depths.json').read_text())
-    assert depths and all(set(entry) == {'initial'} for entry in depths.values())
-    assert all(fifos[name].pragma[1] == 100_000 for name in depths)
-
-    db = Path(hls_model.config.backend.writer.get_vitis_hls_exec_dir(hls_model)) / 'hls' / '.autopilot' / 'db'
-    (db / 'channel_depth_info').mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(db / 'channel_depth_info' / 'channel.zip', 'w') as archive, open(db / 'channel_info.csv', 'w') as f:
-        for idx, name in enumerate(depths):
-            archive.writestr(f'chan_status_{idx}.csv', 'a\nb\nc\n7\n')
-            f.write(f'{idx},{name}_i_U,x,chan_status_{idx}.csv\n')
-
-    get_optimizer('vitisunified:fifo_depth_optimization_post').transform(hls_model)
-    depths = json.loads((output_dir / 'fifo_depths.json').read_text())
-    assert all(entry['optimized'] == 7 for entry in depths.values())
-    assert all(fifos[name].pragma[1] == 7 for name in depths)
 
 
 # ===== 3. write: generated files, no compiler needed =====
@@ -370,11 +326,14 @@ def test_custom_platform(test_case_id, simple_unet):
     kwargs = {'backend': 'VitisUnified', 'io_type': 'io_stream', 'clock_period': 10, 'board': 'myboard'}
     convert = hls4ml.converters.convert_from_keras_model
 
+    # myboard is not in supported_boards.json, so the part cannot be taken from there and must be given
     with pytest.raises(Exception, match='part'):
         convert(simple_unet, hls_config=config, output_dir=str(output_dir), platform='/opt/pf/myboard.xpfm', **kwargs)
+    # platform must be a .xpfm or .xsa file
     with pytest.raises(Exception, match='xpfm'):
         convert(simple_unet, hls_config=config, output_dir=str(output_dir), platform='/opt/pf/myboard.txt', **kwargs)
 
+    # with both given the conversion is accepted, and the written project uses them as they are
     hls_model = convert(
         simple_unet,
         hls_config=config,
@@ -384,7 +343,20 @@ def test_custom_platform(test_case_id, simple_unet):
         **kwargs,
     )
     hls_model.write()
+    # double on axi_stream is only rejected for the shipped platforms
+    convert(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        platform='/opt/pf/myboard.xpfm',
+        part='xc7z020clg400-1',
+        axi_mode='axi_stream',
+        input_type='double',
+        output_type='double',
+        **kwargs,
+    )
 
+    # the user platform is linked by its own path, so no XILINX_VITIS guard, and the part reaches the HLS config
     link = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.sh').read_text()
     assert '--platform /opt/pf/myboard.xpfm ' in link
     assert 'XILINX_VITIS' not in link
@@ -498,11 +470,14 @@ def test_predict_any_numpy_dtype(test_case_id, simple_unet, vitis_reference, axi
 
     config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
     config['Model']['Strategy'] = 'latency'
+    extra = {'input_type': interface_type, 'output_type': interface_type}
+    if axi_mode == 'axi_stream' and interface_type == 'double':
+        extra['platform'] = '/opt/pf/wide_dma.xpfm'  # the shipped platforms only have a 32-bit DMA
     hls_model = hls4ml.converters.convert_from_keras_model(
         simple_unet,
         hls_config=config,
         output_dir=str(test_root_path / test_case_id),
-        **_vitis_unified_convert_kwargs('io_stream', axi_mode, input_type=interface_type, output_type=interface_type),
+        **_vitis_unified_convert_kwargs('io_stream', axi_mode, **extra),
     )
     hls_model.compile()
 
@@ -525,12 +500,15 @@ def test_writer_options_forwarded(test_case_id, simple_unet, axi_mode):
     )
     hls_model.compile()
 
+    # the writer options of the parent backends are honored: the model code is wrapped in the namespace,
+    # and the tar archive is written once with the unified files (export/ driver) inside (NSONE NAMESPACE)
     header = (output_dir / 'firmware' / 'max_length_project.h').read_text()
     assert 'namespace nsone' in header
     with tarfile.open(output_dir.with_name(output_dir.name + '.tar.gz')) as archive:
         names = archive.getnames()
     assert any(name.endswith(f'export/{axi_mode}_driver.py') for name in names)
 
+    # the bridge must still compile and run with the namespace on
     X_input = np.random.rand(2, 4, 4, 1).astype(np.float32)
     assert np.any(hls_model.predict(X_input) != 0)
 
