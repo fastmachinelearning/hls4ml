@@ -59,7 +59,7 @@ In both modes the CPU controls the kernel through AXI-Lite and receives an inter
       The platforms built by the shipped Tcl scripts have a 32-bit DMA, so ``double`` is rejected with them and needs your own platform.
     * For each kernel start the kernel reads exactly ``batch_size × N_IN`` input beats and writes exactly ``batch_size × N_OUT`` output beats. ``N_IN`` and ``N_OUT`` are the flattened input and output sizes of the model.
     * ``TLAST`` is set only on the last output beat of the batch. ``TLAST`` on the input is ignored, so a transfer with fewer beats than expected makes the kernel wait.
-    * ``TKEEP`` is driven all-ones on every output beat. ``TKEEP`` on the input is not checked, every beat is taken as a full element.
+    * ``TKEEP`` is driven all-ones on every output beat. It is required by the AXI DMA, which never completes a transfer without it. ``TKEEP`` on the input is not checked, every beat is taken as a full element.
 
 Configuration options
 =====================

@@ -470,6 +470,7 @@ fi
             return (
                 f'static const unsigned N_IN = {inp.size()};\n'
                 f'static const unsigned N_OUT = {out.size()};\n'
+                f'// TKEEP is required: the AXI DMA never completes a transfer without it\n'
                 f'typedef hls::axis_data<{inp_gmem_t}, AXIS_ENABLE_LAST | AXIS_ENABLE_KEEP> {self._get_dma_type_name()};\n'
             )
 
