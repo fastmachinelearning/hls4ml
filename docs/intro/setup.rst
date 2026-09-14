@@ -70,9 +70,7 @@ To run FPGA synthesis, installation of following tools is required:
 
 * Vitis HLS 2023.1 or newer is required for synthesis for Xilinx FPGAs using the ``Vitis`` backend.
 
-* Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the ``Quartus`` backend.
-
-* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions of ``OneAPI`` removed FPGA support and **will to work** with ``hls4ml``.
+* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions of ``oneAPI`` removed FPGA support and **will not work** with ``hls4ml``.
 
 Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.
 
@@ -200,9 +198,6 @@ Optional Dependencies
 
    # For QKeras-v3 frontend
    pip install hls4ml[qkeras-v3]
-
-   # For Quartus report parsing
-   pip install hls4ml[quartus-report]
 
    # For symbolic regression
    pip install hls4ml[sr]

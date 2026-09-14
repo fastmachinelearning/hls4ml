@@ -20,7 +20,7 @@ def keras_model():
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('namespace', [None, 'test_namespace'])
 def test_namespace(test_case_id, keras_model, namespace, io_type, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
@@ -42,7 +42,7 @@ def test_emulator(test_case_id, keras_model, io_type, backend):
     hls_model.compile()  # It's enough that the model compiles
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('write_tar', [True, False])
 def test_write_tar(test_case_id, keras_model, write_tar, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
@@ -60,7 +60,7 @@ def test_write_tar(test_case_id, keras_model, write_tar, backend):
     assert tar_written == write_tar
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('write_weights_txt', [True, False])
 def test_write_weights_txt(test_case_id, keras_model, write_weights_txt, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')

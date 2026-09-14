@@ -30,17 +30,15 @@ def fusion_data():
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult'])
 def test_batchnorm(test_case_id, data, backend, io_type):
     model = nn.Sequential(
         nn.BatchNorm1d(in_shape),
     ).to()
     model.eval()
 
-    default_precision = 'ac_fixed<32, 1, true>' if backend == 'Quartus' else 'ac_fixed<32, 1>'
-
     config = hls4ml.utils.config_from_pytorch_model(
-        model, (in_shape,), default_precision=default_precision, granularity='name', backend=backend
+        model, (in_shape,), default_precision='ac_fixed<32, 1>', granularity='name', backend=backend
     )
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_pytorch_model(
@@ -79,7 +77,7 @@ class BatchNorm_w_Fusion(nn.Module):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult'])
 def test_batchnorm_fusion(test_case_id, fusion_data, backend, io_type):
     n_in = 2
     momentum = 0.99

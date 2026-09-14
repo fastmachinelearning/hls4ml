@@ -42,9 +42,7 @@ def main():
     config_parser.add_argument('-d', '--dir', help='Project output directory', default='my-hls-test')
     config_parser.add_argument('-f', '--fpga', help='FPGA part', default='xcvu13p-flga2577-2-e')
     config_parser.add_argument('-bo', '--board', help='Board used.', default='pynq-z2')
-    config_parser.add_argument(
-        '-ba', '--backend', help='Backend to use (Vivado, VivadoAccelerator, Quartus)', default='Vivado'
-    )
+    config_parser.add_argument('-ba', '--backend', help='Backend to use (Vivado, VivadoAccelerator)', default='Vivado')
     config_parser.add_argument('-c', '--clock', help='Clock frequency (ns)', type=int, default=5)
     config_parser.add_argument(
         '-g', '--granularity', help='Granularity of configuration. One of "model", "type" or "name"', default='model'
@@ -166,7 +164,6 @@ def _build(args, extra_args):
 
     backend_map = {}
     backend_map['vivado'] = _build_vivado
-    backend_map['quartus'] = _build_quartus
 
     backend = yamlConfig.get('Backend')
 
@@ -234,50 +231,6 @@ def _build_vivado(args, extra_args):
     )
 
 
-def _build_quartus(args, extra_args):
-    quartus_parser = argparse.ArgumentParser(prog=f'hls4ml build -p {args.project}', add_help=False)
-    quartus_parser.add_argument(
-        '-s', '--synthesis', help='Compile project and run C/RTL synthesis', action='store_true', default=False
-    )
-    quartus_parser.add_argument(
-        '-q', '--quartus-synthesis', help='Run Quartus synthesis (implies -s)', action='store_true', default=False
-    )
-    quartus_parser.add_argument(
-        '-a', '--all', help='Run C simulation, C/RTL synthesis, Quartus synthesis', action='store_true'
-    )
-
-    if args.list_options:
-        quartus_parser.print_help()
-        sys.exit(0)
-
-    quartus_args = quartus_parser.parse_args(extra_args)
-
-    synth = int(quartus_args.synthesis)
-    qsynth = int(quartus_args.quartus_synthesis)
-    if quartus_args.all:
-        synth = qsynth = 1
-
-    yamlConfig = hls4ml.converters.parse_yaml_config(args.project + '/' + config_filename)
-    project_name = yamlConfig['ProjectName']
-
-    curr_dir = os.getcwd()
-
-    os.chdir(yamlConfig['OutputDir'])
-    if synth:
-        os.system(f'make {project_name}-fpga')
-        os.system(f'./{project_name}-fpga')
-
-    if qsynth:
-        found = os.system('command -v quartus_sh > /dev/null')
-        if found != 0:
-            print('Quartus installation not found. Make sure "quartus_sh" is on PATH.')
-            sys.exit(1)
-        os.chdir(project_name + '-fpga.prj/quartus')
-        os.system('quartus_sh --flow compile quartus_compile')
-
-    os.chdir(curr_dir)
-
-
 def _report(args, extra_args):
     if args.project is None:
         print('Project directory (-p or --project) must be provided.')
@@ -291,7 +244,6 @@ def _report(args, extra_args):
 
     backend_map = {}
     backend_map['vivado'] = _report_vivado
-    backend_map['quartus'] = _report_quartus
 
     backend = yamlConfig.get('Backend')
 
@@ -310,19 +262,6 @@ def _report_vivado(args, extra_args):
     else:
         vivado_args = vivado_parser.parse_args(extra_args)
         hls4ml.report.read_vivado_report(args.project, vivado_args.full)
-
-
-def _report_quartus(args, extra_args):
-    quartus_parser = argparse.ArgumentParser(prog=f'hls4ml report -p {args.project}', add_help=False)
-    quartus_parser.add_argument(
-        '-b', '--open-browser', help='Open a web browser with the report', action='store_true', default=False
-    )
-
-    if args.list_options:
-        quartus_parser.print_help()
-    else:
-        quartus_args = quartus_parser.parse_args(extra_args)
-        hls4ml.report.read_quartus_report(args.project, quartus_args.open_browser)
 
 
 if __name__ == '__main__':

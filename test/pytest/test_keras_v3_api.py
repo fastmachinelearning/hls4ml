@@ -29,7 +29,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -93,7 +93,7 @@ def test_dense(test_case_id, backend, io_type):
         Activation(activation='sigmoid', name='sigmoid'),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(test_case_id, activation_function, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -129,7 +129,7 @@ padds_options = ['same', 'valid']
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('activation', ['elu', 'relu'])
 def test_conv1d(test_case_id, padds, backend, io_type, activation):
@@ -216,7 +216,7 @@ padds_options = ['same', 'valid']
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(test_case_id, chans, padds, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -383,7 +383,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 @pytest.mark.parametrize('pooling', pooling_layers)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI', 'Catapult', 'XLS'])
 def test_pooling(test_case_id, pooling, padds, chans, backend):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 
@@ -504,7 +504,7 @@ def test_pooling(test_case_id, pooling, padds, chans, backend):
     #         assert hls_pool.attributes['pad_right'] == 0
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_reused_layer(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':

@@ -51,7 +51,6 @@ optional-dependencies.qkeras = [
   "tensorflow-model-optimization<=0.7.5",
 ]
 optional-dependencies.qkeras-v3 = [ "qkeras-v3" ]
-optional-dependencies.quartus-report = [ "calmjs-parse", "tabulate" ]
 optional-dependencies.snn = [ "snntorch", "torch" ]
 optional-dependencies.sparsepixels = [ "sparsepixels>=0.3" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]

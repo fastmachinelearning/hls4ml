@@ -18,8 +18,8 @@ perform the transformation from ``transform`` function. The boolean return value
 model graph that may require running the optimizers again. In that case, optimizers in a flow are run again.
 
 Optimizers can be general, independent of the backend, in which case they are located in :py:mod:`hls4ml.model.optimizer.passes`, or they may be backend-specific,
-in which case they are located in a folder dependent on the backend, e.g., :py:mod:`hls4ml.backends.vivado.passes` or
-:py:mod:`hls4ml.backends.quartus.passes`. A common set of optimizers that are used by FPGA backends are located in :py:mod:`hls4ml.backends.fpga.passes`.
+in which case they are located in a folder dependent on the backend, e.g., :py:mod:`hls4ml.backends.vivado.passes`.
+A common set of optimizers that are used by FPGA backends are located in :py:mod:`hls4ml.backends.fpga.passes`.
 
 Certain optimizers are used frequently enough that it makes sense to define special classes, which inherit from :py:class:`~hls4ml.model.optimizer.optimizer.OptimizerPass`
 

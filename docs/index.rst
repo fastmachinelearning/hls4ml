@@ -37,7 +37,6 @@
     backend/accelerator
     backend/oneapi
     backend/catapult
-    backend/quartus
     backend/sr
     backend/xls
 

@@ -17,7 +17,6 @@ test_root_path = Path(__file__).parent
         ('Vivado', 'Resource'),
         ('Vitis', 'Latency'),
         ('Vitis', 'Resource'),
-        ('Quartus', 'Resource'),
         ('oneAPI', 'Resource'),
         ('Catapult', 'Latency'),
         ('Catapult', 'Resource'),
