@@ -1097,8 +1097,6 @@ class QuartusWriter(Writer):
                     except Exception:
                         # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
                         pass
-                    if fp_signed is False:
-                        raise Exception('Softmax types need to be signed')
 
         sep = ''
         N = ceil_log2(table_size)
@@ -1143,8 +1141,6 @@ class QuartusWriter(Writer):
                     except Exception:
                         # FixedPrecisionType wasn't correctly stored in layer attributes, use default values
                         pass
-                    if fp_signed is False:
-                        raise Exception('Softmax types need to be signed')
 
         sep = ''
         N = ceil_log2(table_size)
