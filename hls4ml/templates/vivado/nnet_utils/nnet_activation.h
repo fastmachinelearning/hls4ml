@@ -172,27 +172,11 @@ void init_invert_table(typename CONFIG_T::inv_table_t table_out[CONFIG_T::inv_ta
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void softmax_latency(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice]) {
-    #pragma HLS pipeline
-    // Initialize the lookup tables
-#ifdef __HLS_SYN__
-    bool initialized = false;
-    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
-    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
-#else
-    static bool initialized = false;
-    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
-    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
-
-#endif
-    if (!initialized) {
-        // Note we are exponentiating the inputs, which have type data_T
-        init_exp_table<data_T, CONFIG_T>(exp_table);
-        // Note we are inverting the exponentials, which have type exp_table_t
-        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
-        initialized = true;
-    }
-
+void softmax_latency_impl(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice],
+                          typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                          typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
+    // Inlined so that the caller's pipeline pragma covers this body
+    #pragma HLS inline
     // Calculate all the e^x's
     typename CONFIG_T::accum_t exp_res[CONFIG_T::n_slice];
     #pragma HLS array_partition variable=exp_res complete
@@ -217,27 +201,11 @@ void softmax_latency(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void softmax_stable(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice]) {
-    #pragma HLS pipeline
-    // Initialize the lookup tables
-#ifdef __HLS_SYN__
-    bool initialized = false;
-    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
-    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
-#else
-    static bool initialized = false;
-    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
-    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
-
-#endif
-    if (!initialized) {
-        // Note we are exponentiating the inputs, which have type data_T
-        init_exp_table<typename CONFIG_T::inp_norm_t, CONFIG_T>(exp_table, true);
-        // Note we are inverting the exponentials, which have type exp_table_t
-        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
-        initialized = true;
-    }
-
+void softmax_stable_impl(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice],
+                         typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                         typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
+    // Inlined so that the caller's pipeline pragma covers this body
+    #pragma HLS inline
     // Find the max and compute all delta(x_i, x_max)
     Op_max<data_T> op_max;
     data_T x_max = reduce<data_T, CONFIG_T::n_slice, Op_max<data_T>>(data, op_max);
@@ -269,6 +237,81 @@ void softmax_stable(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice]
         #pragma HLS unroll
         res[i] = exp_res[i] * inv_exp_sum;
     }
+}
+
+// Entry points building the tables at runtime. Used by every softmax whose frontend does
+// not supply pre-computed tables (plain Keras, QKeras, ...).
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_latency(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice]) {
+    #pragma HLS pipeline
+    // Initialize the lookup tables
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
+#else
+    static bool initialized = false;
+    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
+
+#endif
+    if (!initialized) {
+        // Note we are exponentiating the inputs, which have type data_T
+        init_exp_table<data_T, CONFIG_T>(exp_table);
+        // Note we are inverting the exponentials, which have type exp_table_t
+        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
+        initialized = true;
+    }
+
+    softmax_latency_impl<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_stable(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice]) {
+    #pragma HLS pipeline
+    // Initialize the lookup tables
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
+#else
+    static bool initialized = false;
+    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
+
+#endif
+    if (!initialized) {
+        // Note we are exponentiating the inputs, which have type data_T
+        init_exp_table<typename CONFIG_T::inp_norm_t, CONFIG_T>(exp_table, true);
+        // Note we are inverting the exponentials, which have type exp_table_t
+        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
+        initialized = true;
+    }
+
+    softmax_stable_impl<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+}
+
+// Entry points taking pre-computed tables. Used when the frontend knows the exact table
+// contents (e.g. HGQ2's trained QSoftmax), so that CONFIG_T::exp_scale and the generic
+// exp()/1-over-x reconstruction are bypassed entirely.
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_latency(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice],
+                     typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                     typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
+    #pragma HLS pipeline
+    #pragma HLS function_instantiate variable=exp_table
+    #pragma HLS function_instantiate variable=invert_table
+    softmax_latency_impl<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_stable(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice],
+                    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
+    #pragma HLS pipeline
+    #pragma HLS function_instantiate variable=exp_table
+    #pragma HLS function_instantiate variable=invert_table
+    softmax_stable_impl<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
 }
 
 template <typename CONFIG_T, int N_TABLE> void init_exp_table_legacy(typename CONFIG_T::table_t table_out[N_TABLE]) {
@@ -411,6 +454,56 @@ void softmax_multidim(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
                 buffer_in[j] = data[i * CONFIG_T::n_slice * CONFIG_T::n_inner + j * CONFIG_T::n_inner + k];
             }
             softmax<data_T, res_T, CONFIG_T>(buffer_in, buffer_out);
+            for (signed j = 0; j < CONFIG_T::n_slice; j++) {
+                #pragma HLS UNROLL
+                res[i * CONFIG_T::n_slice * CONFIG_T::n_inner + j * CONFIG_T::n_inner + k] = buffer_out[j];
+            }
+        }
+    }
+}
+
+// Dispatchers for pre-computed tables. Separate names rather than overloads of softmax /
+// softmax_multidim, so that the allocation pragma below still names a single function.
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_lut(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice],
+                 typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                 typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
+    #pragma HLS inline
+    switch (CONFIG_T::implementation) {
+    case softmax_implementation::latency:
+        softmax_latency<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+        break;
+    case softmax_implementation::stable:
+        softmax_stable<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+        break;
+    case softmax_implementation::legacy:
+        // legacy addresses CONFIG_T::table_t tables of its own; supplied tables are unused
+        softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
+        break;
+    case softmax_implementation::argmax:
+        // argmax needs no table at all
+        softmax_argmax<data_T, res_T, CONFIG_T>(data, res);
+        break;
+    }
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_multidim_lut(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in],
+                          typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                          typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
+    #pragma HLS inline
+    #pragma HLS allocation instances = softmax_lut<CONFIG_T> limit = CONFIG_T::parallelization_factor function
+    data_T buffer_in[CONFIG_T::n_slice];
+    res_T buffer_out[CONFIG_T::n_slice];
+    for (signed i = 0; i < CONFIG_T::n_outer; i++) {
+        #pragma HLS UNROLL
+        for (signed k = 0; k < CONFIG_T::n_inner; k++) {
+            #pragma HLS UNROLL
+            for (signed j = 0; j < CONFIG_T::n_slice; j++) {
+                #pragma HLS UNROLL
+                buffer_in[j] = data[i * CONFIG_T::n_slice * CONFIG_T::n_inner + j * CONFIG_T::n_inner + k];
+            }
+            softmax_lut<data_T, res_T, CONFIG_T>(buffer_in, buffer_out, exp_table, invert_table);
             for (signed j = 0; j < CONFIG_T::n_slice; j++) {
                 #pragma HLS UNROLL
                 res[i * CONFIG_T::n_slice * CONFIG_T::n_inner + j * CONFIG_T::n_inner + k] = buffer_out[j];

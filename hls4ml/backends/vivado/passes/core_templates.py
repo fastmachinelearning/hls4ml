@@ -250,6 +250,9 @@ activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({
 param_activ_function_template = (
     'nnet::{activation}<{input_t}, {param_t.name}, {output_t}, {config}>({input}, {param}, {output});'
 )
+softmax_lut_function_template = (
+    'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output}, {exp_table}, {inv_table});'
+)
 
 activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activation_stream.h']
 
@@ -348,6 +351,14 @@ class SoftmaxFunctionTemplate(FunctionCallTemplate):
         use_multidim = use_multidim and node.model.config.get_config_value('IOType') == 'io_parallel'
         params['activation'] = 'softmax' if not use_multidim else 'softmax_multidim'
         params['config'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
+
+        # HGQ2 softmax carries its trained tables as weights; every other softmax lets the
+        # HLS code build them at runtime.
+        if 'exp_table' in node.weights and 'inv_table' in node.weights:
+            params['activation'] += '_lut'
+            params['exp_table'] = node.get_weights('exp_table').name
+            params['inv_table'] = node.get_weights('inv_table').name
+            return softmax_lut_function_template.format(**params)
 
         return self.template.format(**params)
 

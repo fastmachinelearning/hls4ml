@@ -38,6 +38,7 @@ LONGLIST = {'test_hgq_layers', 'test_hgq_players', 'test_qkeras', 'test_pytorch_
 KERAS3_LIST = {
     'test_keras_v3_api',
     'test_hgq2_mha',
+    'test_hgq2_softmax',
     'test_einsum_dense',
     'test_qeinsum',
     'test_multiout_onnx',

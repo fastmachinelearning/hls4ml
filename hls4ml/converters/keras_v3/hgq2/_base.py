@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from math import prod
 from typing import TYPE_CHECKING, Any
+from warnings import warn
 
 import numpy as np
 
@@ -38,6 +39,17 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
         k = np.ravel(k).astype(np.int16)
         B = np.ravel(B).astype(np.int16)
         I = np.ravel(I).astype(np.int16)  # noqa: E741
+
+    # A channel can be trained down to a negative total width. Clamp to 0, not 1: B == 0 is the
+    # constant-zero encoding generate_mask_fn understands, while B == 1 would bring the channel
+    # back as a live 1-bit one. I is legitimately negative and already zeroed for these above.
+    if np.any(B < 0):
+        warn(
+            f'Quantizer {q.name} has {int(np.sum(B < 0))} channel(s) with total bitwidth < 0; '
+            'treating them as constant zero.',
+            stacklevel=2,
+        )
+    B = np.maximum(B, 0)
 
     overflow_mode: str = internal_q.overflow_mode
     round_mode: str = internal_q.round_mode

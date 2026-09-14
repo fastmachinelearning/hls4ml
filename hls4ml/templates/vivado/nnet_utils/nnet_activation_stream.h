@@ -105,26 +105,9 @@ SigmoidActLoop:
 // *************************************************
 
 template <class data_T, class res_T, typename CONFIG_T>
-void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    // Initialize the lookup tables
-#ifdef __HLS_SYN__
-    bool initialized = false;
-    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
-    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
-#else
-    static bool initialized = false;
-    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
-    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
-
-#endif
-    if (!initialized) {
-        // Note we are exponentiating the inputs, which have type data_T
-        init_exp_table<typename data_T::value_type, CONFIG_T>(exp_table);
-        // Note we are inverting the exponentials, which have type exp_table_t
-        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
-        initialized = true;
-    }
-
+void softmax_latency_impl(hls::stream<data_T> &data, hls::stream<res_T> &res,
+                          typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                          typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
     constexpr unsigned ii = data_T::size / multiplier_limit;
 
@@ -166,26 +149,9 @@ SoftmaxExpLoop:
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
-void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res) {
-    // Initialize the lookup tables
-#ifdef __HLS_SYN__
-    bool initialized = false;
-    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
-    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
-#else
-    static bool initialized = false;
-    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
-    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
-
-#endif
-    if (!initialized) {
-        // Note we are exponentiating the inputs, which have type data_T
-        init_exp_table<typename CONFIG_T::inp_norm_t, CONFIG_T>(exp_table, true);
-        // Note we are inverting the exponentials, which have type exp_table_t
-        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
-        initialized = true;
-    }
-
+void softmax_stable_impl(hls::stream<data_T> &data, hls::stream<res_T> &res,
+                         typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                         typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(data_T::size, CONFIG_T::reuse_factor);
     constexpr unsigned ii = data_T::size / multiplier_limit;
 
@@ -242,6 +208,75 @@ SoftmaxArrayLoop:
         }
         res.write(out_pack);
     }
+}
+
+// Entry points building the tables at runtime. Used by every softmax whose frontend does
+// not supply pre-computed tables (plain Keras, QKeras, ...).
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+    // Initialize the lookup tables
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
+#else
+    static bool initialized = false;
+    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
+
+#endif
+    if (!initialized) {
+        // Note we are exponentiating the inputs, which have type data_T
+        init_exp_table<typename data_T::value_type, CONFIG_T>(exp_table);
+        // Note we are inverting the exponentials, which have type exp_table_t
+        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
+        initialized = true;
+    }
+
+    softmax_latency_impl<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res) {
+    // Initialize the lookup tables
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
+#else
+    static bool initialized = false;
+    static typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size];
+    static typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size];
+
+#endif
+    if (!initialized) {
+        // Note we are exponentiating the inputs, which have type data_T
+        init_exp_table<typename CONFIG_T::inp_norm_t, CONFIG_T>(exp_table, true);
+        // Note we are inverting the exponentials, which have type exp_table_t
+        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
+        initialized = true;
+    }
+
+    softmax_stable_impl<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+}
+
+// Entry points taking pre-computed tables (e.g. HGQ2's trained QSoftmax).
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res,
+                     typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                     typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
+    #pragma HLS function_instantiate variable=exp_table
+    #pragma HLS function_instantiate variable=invert_table
+    softmax_latency_impl<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_stable(hls::stream<data_T> &data, hls::stream<res_T> &res,
+                    typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                    typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
+    #pragma HLS function_instantiate variable=exp_table
+    #pragma HLS function_instantiate variable=invert_table
+    softmax_stable_impl<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
@@ -362,6 +397,30 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax(hls::stream
         softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
         break;
     case softmax_implementation::argmax:
+        softmax_argmax<data_T, res_T, CONFIG_T>(data, res);
+        break;
+    }
+}
+
+template <class data_T, class res_T, typename CONFIG_T>
+void softmax_lut(hls::stream<data_T> &data, hls::stream<res_T> &res,
+                 typename CONFIG_T::exp_table_t exp_table[CONFIG_T::exp_table_size],
+                 typename CONFIG_T::inv_table_t invert_table[CONFIG_T::inv_table_size]) {
+    assert(CONFIG_T::axis == -1);
+
+    switch (CONFIG_T::implementation) {
+    case softmax_implementation::latency:
+        softmax_latency<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+        break;
+    case softmax_implementation::stable:
+        softmax_stable<data_T, res_T, CONFIG_T>(data, res, exp_table, invert_table);
+        break;
+    case softmax_implementation::legacy:
+        // legacy addresses CONFIG_T::table_t tables of its own; supplied tables are unused
+        softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
+        break;
+    case softmax_implementation::argmax:
+        // argmax needs no table at all
         softmax_argmax<data_T, res_T, CONFIG_T>(data, res);
         break;
     }

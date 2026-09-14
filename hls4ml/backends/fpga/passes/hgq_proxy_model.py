@@ -34,7 +34,8 @@ def generate_mask_fn(
     masks = []
     to_fixed = to_acfixed if backend.lower() in ['oneapi', 'quartus'] else to_apfixed
     for idx, (k, b, i) in enumerate(zip(Ks, Bs, Is)):
-        if b == 0:
+        if b <= 0:
+            # b <= 0 means nothing is representable: the channel is a constant zero
             fn = f'out[{idx}] = 0;'
         else:
             fn = f'out[{idx}] = {to_fixed(k, b, i, RND, SAT)}(inp[{idx}]);'
