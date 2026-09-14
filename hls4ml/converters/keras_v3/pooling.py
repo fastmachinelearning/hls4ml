@@ -70,4 +70,6 @@ class PoolingHandler(KerasV3LayerHandler):
             # inconsistent pooling1d config key name...
             config['n_in'] = config['in_width']
             config['n_out'] = config['out_width']
+        if not isinstance(layer, BasePooling):
+            config['keepdims'] = layer.keepdims
         return config

@@ -98,6 +98,12 @@ class ConvHandler(KerasV3LayerHandler):
         assert len(in_tensors) == 1, f'Layer {layer.name} has more than one input'
         assert len(out_tensors) == 1, f'Layer {layer.name} has more than one output'
 
+        dilation_rate = tuple(getattr(layer, 'dilation_rate', (1,)))
+        if len(set(dilation_rate)) > 1:
+            # The conv config structs carry a single dilation value
+            raise NotImplementedError(f'Layer {layer.name}: asymmetric dilation_rate {dilation_rate} is not supported.')
+        dilation = dilation_rate[0]
+
         in_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
         out_shape: tuple[int, ...] = out_tensors[0].shape[1:]  # type: ignore
         assert all(isinstance(x, int) for x in in_shape), f'Layer {layer.name} has non-fixed size input: {in_shape}'
@@ -112,21 +118,30 @@ class ConvHandler(KerasV3LayerHandler):
         ker_px_shape: tuple[int, ...] = layer.kernel_size
         data_format = layer.data_format
 
+        # Padding is derived from the dilated (effective) kernel extent; filt_* keep the
+        # actual kernel size, which is what the weight tensors are indexed by
+        eff_ker_px_shape = tuple((k - 1) * dilation + 1 for k in ker_px_shape)
+
         config = gen_conv_config(
             in_shape=in_shape,
             out_shape=out_shape,
-            ker_px_shape=ker_px_shape,
+            ker_px_shape=eff_ker_px_shape,
             strides=layer.strides,
             data_format=data_format,
             padding=layer.padding,
             name=layer.name,
         )
+        if len(ker_px_shape) == 1:
+            config['filt_width'] = ker_px_shape[0]
+        else:
+            config['filt_height'], config['filt_width'] = ker_px_shape
 
         config.update(
             {
                 'bias_data': bias,
                 'data_format': data_format,
                 'weight_data': kernel,
+                'dilation': dilation,
             }
         )
 

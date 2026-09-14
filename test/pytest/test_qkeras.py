@@ -8,7 +8,7 @@ from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
-from qkeras.qconvolutional import QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
+from qkeras.qconvolutional import QConv2D, QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
 from qkeras.qlayers import QActivation, QDense
 from qkeras.quantizers import (
     binary,
@@ -646,7 +646,7 @@ def test_qgru(test_case_id, backend):
             state_quantizer='quantized_bits(8, 0, alpha=1)',
             activation='tanh',
             recurrent_activation='sigmoid',
-            reset_after='False',
+            reset_after=True,
         )
     )
     model.compile()
@@ -754,3 +754,129 @@ def test_qseparableconv2d(test_case_id, backend, io_type):
     y_hls4ml = hls_model.predict(dataq)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=0, atol=0)
+
+
+def test_qconv_dilation_parse(test_case_id):
+    """QConv delegates to the base conv parser, so dilation is ingested there (into the
+    'dilation' attribute, with the output shape following the dilated kernel extent)."""
+    model = Sequential()
+    model.add(
+        QConv2D(
+            4,
+            kernel_size=(3, 3),
+            dilation_rate=(2, 2),
+            input_shape=(8, 8, 1),
+            kernel_quantizer='quantized_bits(8, 0, alpha=1)',
+            bias_quantizer='quantized_bits(8, 0, alpha=1)',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+    output_dir = str(test_root_path / test_case_id)
+    # io_stream: the io_parallel im2col codegen does not handle the dilated output shape
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, io_type='io_stream'
+    )
+    conv_layer = [layer for layer in hls_model.get_layers() if 'Conv' in layer.class_name][0]
+    assert conv_layer.get_attr('dilation') == 2
+    assert list(hls_model.get_output_variables()[0].shape) == list(model.output_shape[1:])
+
+
+@pytest.mark.parametrize('backend', ['Vivado'])
+@pytest.mark.parametrize('io_type', ['io_stream'])
+def test_qconv_grouped_depthwise(test_case_id, backend, io_type):
+    """A depthwise-shaped grouped QConv (groups == in_channels == filters) is routed to
+    DepthwiseConv, carrying its kernel quantizer along as the depthwise quantizer."""
+    X = np.random.rand(10, 8, 8, 4)
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(
+        QConv2D(
+            4,
+            kernel_size=(3, 3),
+            groups=4,
+            input_shape=(8, 8, 4),
+            kernel_quantizer='quantized_bits(8, 0, alpha=1)',
+            bias_quantizer='quantized_bits(8, 0, alpha=1)',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    assert 'DepthwiseConv2D' in [layer.class_name for layer in hls_model.get_layers()]
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=0, atol=1e-3)
+
+
+@pytest.mark.parametrize('backend', ['Vivado'])
+def test_qlstm_no_bias(test_case_id, backend):
+    """use_bias=False previously crashed the parser instead of substituting zeros."""
+    X = np.linspace(-0.5, 0.5, 5)
+    X = np.stack([X, X], axis=1).reshape(1, 5, 2)
+
+    model = Sequential()
+    model.add(
+        QLSTM(
+            4,
+            input_shape=(5, 2),
+            use_bias=False,
+            kernel_quantizer='quantized_bits(16, 0, alpha=1)',
+            recurrent_quantizer='quantized_bits(16, 0, alpha=1)',
+            state_quantizer='quantized_bits(16, 0, alpha=1)',
+            activation='tanh',
+            recurrent_activation='sigmoid',
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<16,1>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+
+
+def test_qgru_reset_after_false_parse(test_case_id):
+    """reset_after=False is parsed faithfully (apply_reset_gate='before', flat bias, zero
+    recurrent bias); the kernels implement only the 'after' formulation and the backends
+    are responsible for rejecting 'before'."""
+    model = Sequential()
+    model.add(
+        QGRU(
+            4,
+            input_shape=(5, 2),
+            kernel_quantizer='quantized_bits(8, 0, alpha=1)',
+            recurrent_quantizer='quantized_bits(8, 0, alpha=1)',
+            bias_quantizer='quantized_bits(8, 0, alpha=1)',
+            state_quantizer='quantized_bits(8, 0, alpha=1)',
+            activation='tanh',
+            recurrent_activation='sigmoid',
+            reset_after=False,
+        )
+    )
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
+    gru_layer = [layer for layer in hls_model.get_layers() if layer.class_name == 'GRU'][0]
+    assert gru_layer.get_attr('apply_reset_gate') == 'before'
+    assert gru_layer.get_weights('bias').data.shape == (12,)
+    assert not gru_layer.get_weights('recurrent_bias').data.any()

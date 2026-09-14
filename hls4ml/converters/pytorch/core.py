@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.pytorch_to_hls import get_call_arg, pytorch_handler
 from hls4ml.utils.einsum_utils import _validate_einsum_expr
 
 
@@ -57,7 +57,7 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     return layer, output_shape
 
 
-activation_layers = ['Softmax', 'ReLU', 'LeakyReLU', 'Threshold', 'ELU', 'PReLU', 'Sigmoid', 'Tanh']
+activation_layers = ['Softmax', 'ReLU', 'ReLU6', 'Hardtanh', 'LeakyReLU', 'Threshold', 'ELU', 'PReLU', 'Sigmoid', 'Tanh']
 
 
 @pytorch_handler(*activation_layers)
@@ -79,38 +79,61 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
         if layer['class_name'] == 'PReLU':
             layer['param_data'] = class_object.weight.data.numpy()
         if layer['class_name'] == 'Threshold':
+            if class_object.value != 0:
+                raise NotImplementedError(
+                    f'Layer {layer_name}: Threshold with a replacement value other than 0 is not supported.'
+                )
             layer['activ_param'] = class_object.threshold
             layer['class_name'] = 'ThresholdedReLU'
             layer['activation'] = 'ThresholdedReLU'
             if layer['activ_param'] < 0:
                 raise Exception('negative threshold values not supported')
+        if layer['class_name'] in ['ReLU6', 'Hardtanh']:
+            min_val = class_object.min_val
+            max_val = class_object.max_val
         if hasattr(class_object, 'dim'):
             layer['axis'] = class_object.dim
-            if layer['class_name'] == 'Softmax' and layer['axis'] is None:
-                layer['axis'] = -1
-            if 'IOType' in config:
-                if layer['class_name'] == 'Softmax' and config['IOType'] == 'io_stream' and layer['axis'] != -1:
-                    raise Exception('dim needs to be -1 for io_stream')
     else:
         if layer['class_name'] in ['ReLU', 'Sigmoid', 'Tanh']:
             layer['class_name'] = 'Activation'
         if layer['class_name'] == 'LeakyReLU':
-            layer['activ_param'] = node.kwargs['negative_slope']
+            layer['activ_param'] = get_call_arg(node, 1, 'negative_slope', 0.01)
         if layer['class_name'] == 'ELU':
-            layer['activ_param'] = node.kwargs['alpha']
+            layer['activ_param'] = get_call_arg(node, 1, 'alpha', 1.0)
         if layer['class_name'] == 'Threshold':
-            layer['activ_param'] = node.args[1]
+            if get_call_arg(node, 2, 'value', 0) != 0:
+                raise NotImplementedError(
+                    f'Layer {layer_name}: Threshold with a replacement value other than 0 is not supported.'
+                )
+            layer['activ_param'] = get_call_arg(node, 1, 'threshold')
             if layer['activ_param'] < 0:
                 raise Exception('negative threshold values not supported')
             layer['class_name'] = 'ThresholdedReLU'
             layer['activation'] = 'ThresholdedReLU'
-        if 'dim' in node.kwargs:
-            layer['axis'] = node.kwargs['dim']
-            if layer['class_name'] == 'Softmax' and layer['axis'] is None:
-                layer['axis'] = -1
-            if 'IOType' in config:
-                if layer['class_name'] == 'Softmax' and config['IOType'] == 'io_stream' and layer['axis'] != -1:
-                    raise Exception('dim needs to be -1 for io_stream')
+        if layer['class_name'] == 'ReLU6':
+            min_val, max_val = 0.0, 6.0
+        if layer['class_name'] == 'Hardtanh':
+            min_val = get_call_arg(node, 1, 'min_val', -1.0)
+            max_val = get_call_arg(node, 2, 'max_val', 1.0)
+        if layer['class_name'] == 'Softmax':
+            layer['axis'] = get_call_arg(node, 1, 'dim', None)
+
+    if layer['class_name'] in ['ReLU6', 'Hardtanh']:
+        # ReLU6 is Hardtanh(0, 6); Hardtanh clipped at 0 from below is a clipped ReLU
+        if min_val != 0:
+            raise NotImplementedError(f'Layer {layer_name}: Hardtanh is only supported with min_val == 0 (a clipped ReLU).')
+        layer['class_name'] = 'ClippedReLU'
+        layer['activation'] = 'clippedrelu'
+        layer['activ_param'] = max_val
+
+    if layer['class_name'] == 'Softmax':
+        if layer.get('axis') is None:
+            layer['axis'] = -1
+        if layer['axis'] == len(input_shapes[0]) - 1:
+            layer['axis'] = -1  # the last dimension, in its canonical form
+        if 'IOType' in config:
+            if config['IOType'] == 'io_stream' and layer['axis'] != -1:
+                raise Exception('dim needs to be -1 for io_stream')
 
     output_shape = input_shapes[0]
     return layer, output_shape
@@ -132,6 +155,11 @@ def parse_batchnorm_layer(operation, layer_name, input_names, input_shapes, node
 
     # batchnorm para
     if node.op == 'call_module':
+        if not class_object.track_running_stats:
+            raise NotImplementedError(
+                f'Layer {layer_name}: BatchNorm with track_running_stats=False is not supported '
+                '(it normalizes with per-batch statistics at inference time).'
+            )
         layer['epsilon'] = class_object.eps
         layer['use_gamma'] = layer['use_beta'] = class_object.affine
 
@@ -186,8 +214,15 @@ def parse_layernorm_layer(operation, layer_name, input_names, input_shapes, node
 
     layer['axis'] = 2
 
-    layer['gamma_data'] = class_object.weight.data.numpy()
-    layer['beta_data'] = class_object.bias.data.numpy()
+    # with elementwise_affine=False (or bias=False) the weights do not exist; substitute identity values
+    if class_object.weight is not None:
+        layer['gamma_data'] = class_object.weight.data.numpy()
+    else:
+        layer['gamma_data'] = np.ones(class_object.normalized_shape)
+    if class_object.bias is not None:
+        layer['beta_data'] = class_object.bias.data.numpy()
+    else:
+        layer['beta_data'] = np.zeros(class_object.normalized_shape)
 
     if class_object.eps <= 0:
         raise Exception('epsilon must be positive')

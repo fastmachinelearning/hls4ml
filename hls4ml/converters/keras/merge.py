@@ -23,6 +23,8 @@ def parse_merge_layer(keras_layer, input_names, input_shapes, data_reader):
         rank = len(input_shapes[0][1:])
         if rank > 1:
             raise Exception('ERROR: Dot of tensors with rank > 1 is not yet supported.')
+        if keras_layer['config'].get('normalize', False):
+            raise NotImplementedError(f'Layer {layer["name"]}: Dot with normalize=True is not supported.')
         layer['op'] = layer['class_name'].lower() + f'{rank}d'
     else:
         layer['class_name'] = 'Merge'

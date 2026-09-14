@@ -102,12 +102,21 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['filt_width'] = class_object.kernel_size[1]
     layer['stride_height'] = class_object.stride[0]
     layer['stride_width'] = class_object.stride[1]
+    if class_object.dilation[0] != class_object.dilation[1]:
+        raise NotImplementedError(
+            f'Layer {layer_name}: Conv2d with different dilation factors per dimension is not supported.'
+        )
     layer['dilation'] = class_object.dilation[0]
-    layer['pad_top'] = layer['pad_bottom'] = class_object.padding[0]
-    layer['pad_left'] = layer['pad_right'] = class_object.padding[1]
 
     # Ouput info
-    (layer['out_height'], layer['out_width'], _, _, _, _) = compute_padding_2d_pytorch(
+    (
+        layer['out_height'],
+        layer['out_width'],
+        layer['pad_top'],
+        layer['pad_bottom'],
+        layer['pad_left'],
+        layer['pad_right'],
+    ) = compute_padding_2d_pytorch(
         class_object.padding,
         layer['in_height'],
         layer['in_width'],

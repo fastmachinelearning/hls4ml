@@ -146,14 +146,16 @@ def compute_padding_2d(pad_type, in_height, in_width, stride_height, stride_widt
 def compute_padding_1d_pytorch(pad_type, in_size, stride, filt_size, dilation):
     """Computes the amount of padding required on each side of the 1D input tensor following pytorch conventions.
 
-    In case of ``same`` padding, this routine tries to pad evenly left and right, but if the amount of columns to be added
-    is odd, it will add the extra column to the right.
+    In case of ``same`` padding, the total padding is ``dilation * (filt_size - 1)``, split evenly between left and
+    right; if the total is odd, the extra column goes to the right, matching PyTorch. PyTorch only allows ``same``
+    padding for stride 1.
 
     Args:
-        pad_type (str or int): Padding type. If string, one of ``same``, ``valid`` or ``causal`` (case insensitive).
+        pad_type (str or int): Padding type. If string, one of ``same`` or ``valid`` (case insensitive).
         in_size (int): Input size.
         stride (int): Stride length.
         filt_size (int): Length of the kernel window.
+        dilation (int): Dilation factor of the kernel.
 
     Raises:
         Exception: Raised if the padding type is unknown.
@@ -163,15 +165,13 @@ def compute_padding_1d_pytorch(pad_type, in_size, stride, filt_size, dilation):
     """
     if isinstance(pad_type, str):
         if pad_type.lower() == 'same':
-            n_out = int(
-                math.floor((float(in_size) + 2 - float(dilation) * (float(filt_size) - 1) - 1) / float(stride) + 1)
-            )  # from https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
-            if in_size % stride == 0:
-                pad_along_size = max(filt_size - stride, 0)
-            else:
-                pad_along_size = max(filt_size - (in_size % stride), 0)
-            pad_right = pad_along_size // 2
-            pad_left = pad_along_size - pad_right
+            if stride != 1:
+                # PyTorch itself raises for padding='same' with stride != 1
+                raise Exception("padding='same' is not supported for strided convolutions")
+            n_out = in_size
+            pad_along_size = dilation * (filt_size - 1)
+            pad_left = pad_along_size // 2
+            pad_right = pad_along_size - pad_left
         elif pad_type.lower() == 'valid':
             n_out = int(
                 math.floor((float(in_size) - float(dilation) * (float(filt_size) - 1) - 1) / float(stride) + 1)
@@ -204,17 +204,20 @@ def compute_padding_2d_pytorch(
 ):
     """Computes the amount of padding required on each side of the 2D input tensor following pytorch conventions.
 
-    In case of ``same`` padding, this routine tries to pad evenly left and right (top and bottom), but if the amount of
-    columns to be added is odd, it will add the extra column to the right/bottom.
+    In case of ``same`` padding, the total padding along each dimension is ``dilation * (filt_size - 1)``, split evenly
+    between the two sides; if the total is odd, the extra pixel goes to the bottom/right, matching PyTorch. PyTorch only
+    allows ``same`` padding for stride 1.
 
     Args:
-        pad_type (str or int): Padding type. If string, one of ``same`` or ``valid`` (case insensitive).
+        pad_type (str or tuple): Padding type. If string, one of ``same`` or ``valid`` (case insensitive).
         in_height (int): The height of the input tensor.
         in_width (int): The width of the input tensor.
         stride_height (int): Stride height.
         stride_width (int): Stride width.
         filt_height (int): Height of the kernel window.
         filt_width (int): Width of the kernel window.
+        dilation_height (int): Dilation factor of the kernel along the height.
+        dilation_width (int): Dilation factor of the kernel along the width.
 
     Raises:
         Exception: Raised if the padding type is unknown.
@@ -224,27 +227,19 @@ def compute_padding_2d_pytorch(
     """
     if isinstance(pad_type, str):
         if pad_type.lower() == 'same':
+            if stride_height != 1 or stride_width != 1:
+                # PyTorch itself raises for padding='same' with stride != 1
+                raise Exception("padding='same' is not supported for strided convolutions")
             # Height
-            out_height = int(
-                math.floor(float(in_height + 2 - dilation_height * (filt_height - 1) - 1) / float(stride_height) + 1)
-            )
-            if in_height % stride_height == 0:
-                pad_along_height = max(filt_height - stride_height, 0)
-            else:
-                pad_along_height = max(filt_height - (in_height % stride_height), 0)
-            pad_bottom = pad_along_height // 2
-            pad_top = pad_along_height - pad_bottom
-            pad_top = 1
+            out_height = in_height
+            pad_along_height = dilation_height * (filt_height - 1)
+            pad_top = pad_along_height // 2
+            pad_bottom = pad_along_height - pad_top
             # Width
-            out_width = int(
-                math.floor(float(in_width + 2 - dilation_width * (filt_width - 1) - 1) / float(stride_width) + 1)
-            )
-            if in_width % stride_width == 0:
-                pad_along_width = max(filt_width - stride_width, 0)
-            else:
-                pad_along_width = max(filt_width - (in_width % stride_width), 0)
-            pad_right = pad_along_width // 2
-            pad_left = pad_along_width - pad_right
+            out_width = in_width
+            pad_along_width = dilation_width * (filt_width - 1)
+            pad_left = pad_along_width // 2
+            pad_right = pad_along_width - pad_left
         elif pad_type.lower() == 'valid':
             out_height = int(
                 math.floor(float(in_height - dilation_height * (filt_height - 1) - 1) / float(stride_height) + 1)

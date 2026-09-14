@@ -92,6 +92,14 @@ def print_attrs(attrs, file):
             file.write('  * Available in: ' + ', '.join(attr.available_in) + '\n\n')
 
 
+def strip_trailing_blank_lines(file_name='attributes.rst'):
+    """Ends the file with exactly one newline, as the pre-commit hooks require."""
+    with open(file_name) as file:
+        content = file.read()
+    with open(file_name, mode='w') as file:
+        file.write(content.rstrip('\n') + '\n')
+
+
 def write_all_attributes(all_layers_attrs):
     with open('attributes.rst', mode='w') as file:
         file.write('================\n')
@@ -127,6 +135,8 @@ def write_all_attributes(all_layers_attrs):
                 file.write('---------------------------\n')
                 print_attrs(attr_list.unique_backend_attrs, file)
 
+    strip_trailing_blank_lines()
+
 
 def write_only_configurable(all_layers_attrs):
     with open('attributes.rst', mode='w') as file:
@@ -141,6 +151,8 @@ def write_only_configurable(all_layers_attrs):
             config_attrs = attr_list.only_configurable
             if len(config_attrs) > 0:
                 print_attrs(config_attrs, file)
+
+    strip_trailing_blank_lines()
 
 
 if __name__ == '__main__':

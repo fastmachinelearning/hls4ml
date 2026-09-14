@@ -77,3 +77,22 @@ def test_layernorm_accuracy(test_case_id, model, data, backend):
     y_keras = model.predict(data).flatten()
     y_hls = hls_model.predict(data).flatten()
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=5e-2, verbose=True)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_layernorm_no_center_scale(test_case_id, data, backend):
+    """center=False / scale=False previously fed None weight data into the graph."""
+    model = Sequential()
+    model.add(LayerNormalization(input_shape=in_shape, center=False, scale=False))
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32,16>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model.compile()
+
+    y_keras = model.predict(data)
+    y_hls = hls_model.predict(data).reshape(y_keras.shape)
+    np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=5e-2, verbose=True)
