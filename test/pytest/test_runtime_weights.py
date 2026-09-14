@@ -688,9 +688,28 @@ def test_unsupported_backend_claims_nothing(tmp_path):
         assert port['expected_interface_kind'] is None
         assert port['layout'] is None
         assert 'no adapter for' in port['note']
+        assert "backend='Vivado'" in port['note']
 
     with pytest.raises(ValueError, match='backend'):
         package(str(tmp_path / 'vivado'), n_banks=2)
+
+
+def test_refusal_explains_every_unbankable_port(tmp_path):
+    """The refusal must carry the manifest's reasons, not just the port names.
+
+    Without this the user has only a list of names and must open the JSON.
+    """
+    from hls4ml.contrib.runtime_weights.package import _unsupported_message
+
+    ports = [
+        {'name': 'w2', 'note': 'reuse_factor=1 reshapes all 64 scalars into a single word'},
+        {'name': 'w5'},
+    ]
+    message = _unsupported_message(ports)
+
+    assert "['w2', 'w5']" in message
+    assert 'reuse_factor=1 reshapes all 64 scalars into a single word' in message
+    assert 'w5: no reason recorded' in message
 
 
 def test_packer_refuses_unclaimed_ordering(manifest):

@@ -43,6 +43,19 @@ def _next_pow2(n):
     return 1 << (n - 1).bit_length() if n > 1 else 1
 
 
+def _unsupported_message(ports):
+    """Name the unbankable parameters and repeat the manifest's reason for each.
+
+    The manifest records why every unclaimed port was refused; without this the
+    caller sees only the names and has to open the JSON to learn anything.
+    """
+    reasons = '\n'.join(f'  {p["name"]}: {p.get("note") or "no reason recorded"}' for p in ports)
+    return (
+        f'no verified adapter for external parameter(s) {[p["name"] for p in ports]}; banking only some of a '
+        "model's parameters would leave the rest as unconnected top-level ports.\n" + reasons
+    )
+
+
 def fingerprint_ip(project_dir, project_name):
     """SHA-256 over the exported compute artifacts: the RTL and the data files that
     initialize its generated ROMs.
@@ -310,12 +323,9 @@ def package(project, n_banks=2, output_dir=None):
         raise interface.InterfaceMismatch(
             f'control protocol is {hardware["control"]!r}; the idle-time wrapper requires {REQUIRED_CONTROL_PROTOCOL!r}'
         )
-    unsupported = [p['name'] for p in manifest['ports'] if p['expected_interface_kind'] is None]
+    unsupported = [p for p in manifest['ports'] if p['expected_interface_kind'] is None]
     if unsupported:
-        raise InterfaceUnsupported(
-            f'no verified adapter for external parameter(s) {unsupported}; banking only some of a '
-            "model's parameters would leave the rest as unconnected top-level ports"
-        )
+        raise InterfaceUnsupported(_unsupported_message(unsupported))
     if not verified:
         raise ValueError('manifest describes no external parameters; nothing to bank')
 

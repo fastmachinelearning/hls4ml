@@ -323,7 +323,8 @@ def build_manifest(model):
         describe = _ADAPTERS.get(key)
         if describe is None:
             entry['note'] = (
-                f'no adapter for {key}; no interface kind, geometry or ordering is claimed -- '
+                f'no adapter for backend={key[0]!r} io_type={key[1]!r} strategy={key[2]!r} '
+                f'layer={key[3]!r} role={key[4]!r}; no interface kind, geometry or ordering is claimed -- '
                 'classify from the export report. Note that a fully partitioned parameter '
                 '(Strategy=Latency, or any ARRAY_PARTITION complete) has no address to bank: '
                 'it lowers to one port per element, so it is out of scope by construction '
