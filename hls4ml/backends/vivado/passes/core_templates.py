@@ -7,6 +7,7 @@ from hls4ml.model.layers import (
     BatchNormalization,
     Dense,
     HardActivation,
+    InstanceNormalization,
     LayerNormalization,
     ParametrizedActivation,
     PReLU,
@@ -188,6 +189,53 @@ class LayerNormalizationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(LayerNormalization, include_header=layernorm_include_list)
         self.template = layernorm_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['scale'] = node.get_weights('scale').name
+        params['bias'] = node.get_weights('bias').name
+
+        return self.template.format(**params)
+
+
+# InstanceNormalization templates
+
+# Note: unlike BatchNormalization, the statistics are computed from the input at inference time,
+# so the accumulation is done in float and the epsilon is a compile-time constant of the config.
+instancenorm_config_template = """struct config{index} : nnet::instancenorm_config {{
+    static const unsigned n_in = {n_in};
+    static const unsigned n_filt = {n_filt};
+    static const unsigned n_spatial = {n_spatial};
+    static constexpr float epsilon = {epsilon};
+    typedef {bias_t.name} bias_t;
+    typedef {scale_t.name} scale_t;
+    static const unsigned io_type = nnet::{iotype};
+    static const unsigned reuse_factor = {reuse};
+}};\n"""
+
+instancenorm_function_template = (
+    'nnet::instancenormalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
+)
+
+instancenorm_include_list = ['nnet_utils/nnet_instancenorm.h']
+
+
+class InstanceNormalizationConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__(InstanceNormalization)
+        self.template = instancenorm_config_template
+
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['n_in'] = node.get_input_variable().size_cpp()
+
+        return self.template.format(**params)
+
+
+class InstanceNormalizationFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(InstanceNormalization, include_header=instancenorm_include_list)
+        self.template = instancenorm_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
