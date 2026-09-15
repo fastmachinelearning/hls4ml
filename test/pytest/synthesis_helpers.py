@@ -95,9 +95,9 @@ def compare_vitis_backend(data, baseline):
     compare_dicts(data['CSynthesisReport'], baseline['CSynthesisReport'], tolerances)
 
 
-def compare_oneapi_backend(data, baseline):
+def compare_altera_backend(data, baseline):
     """
-    Compare reports from the oneAPI backend.
+    Compare reports from the Altera backend.
 
     Args:
         data (dict): The current synthesis report.
@@ -123,14 +123,14 @@ def compare_oneapi_backend(data, baseline):
 COMPARE_FUNCS = {
     'Vivado': compare_vitis_backend,
     'Vitis': compare_vitis_backend,
-    'oneAPI': compare_oneapi_backend,
+    'Altera': compare_altera_backend,
 }
 
 
 EXPECTED_REPORT_KEYS = {
     'Vivado': {'CSynthesisReport'},
     'Vitis': {'CSynthesisReport'},
-    'oneAPI': {'report'},
+    'Altera': {'report'},
 }
 
 

@@ -49,7 +49,7 @@ def keras_model_1d(request, backend):
     return model, model_type, pads, strides
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'Altera', 'XLS'])
 @pytest.mark.parametrize(
     'keras_model_1d',
     [
@@ -92,7 +92,7 @@ def test_pool1d(test_case_id, backend, keras_model_1d, data_1d, io_type):
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Altera'])
 @pytest.mark.parametrize(
     'keras_model_1d',
     [
@@ -149,7 +149,7 @@ def keras_model_2d(request, backend):
     return model, model_type, pads, strides
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Catapult', 'Altera', 'XLS'])
 @pytest.mark.parametrize(
     'keras_model_2d',
     [
@@ -192,7 +192,7 @@ def test_pool2d(test_case_id, backend, keras_model_2d, data_2d, io_type):
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Vitis', 'Vivado', 'Altera'])
 @pytest.mark.parametrize(
     'keras_model_2d',
     [
