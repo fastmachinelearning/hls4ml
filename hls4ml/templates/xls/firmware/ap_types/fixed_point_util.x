@@ -4,33 +4,14 @@
 
 import std;
 import fixed_point;
-import round;
+import ap_types.ap_round as round;
 
 type FixedPoint = fixed_point::FixedPoint;
 type Sign = round::Sign;
 
-// All modes from hls4ml.model.types.RoundingMode
-// NB: do not confuse with round.RoundingMode!
-// TODO: not all modes are currently supported, see convert_rounding_mode()
-type RoundingModeIntegerType = u3;
-pub enum RoundingMode: RoundingModeIntegerType {
-    // Trunacte toward -inf
-    TRN         = 1,
-    // Truncate towards 0
-    TRN_ZERO    = 2,
-    // Round towards +inf
-    RND         = 3,
-    // Round towards 0
-    RND_ZERO    = 4,
-    // Round towards +-inf
-    RND_INF     = 5,
-    // Round towards -inf
-    RND_MIN_INF = 6,
-    // Round towards nearest even
-    RND_CONV    = 7
-}
+pub type RoundingMode = round::RoundingMode;
 
-// Same oveflow modes as in ac_fixed type and in hls4ml
+// Same overflow modes as in ac_fixed type and in hls4ml
 type OverflowModeIntegerType = u2;
 pub enum OverflowMode: OverflowModeIntegerType {
     // Drop bits to the left of MSB
@@ -579,28 +560,6 @@ fn truncate_msbs<NB_OUT: u32, OVERFLOW: OverflowMode, NB_IN: u32>
     overflow_truncated<OVERFLOW>(truncated as sN[NB_OUT], sign, had_overflow)
 }
 
-fn convert_rounding_mode<rm: RoundingMode>() -> round::RoundingMode {
-    match rm {
-        RoundingMode::TRN         => round::RoundingMode::RTN,
-        RoundingMode::TRN_ZERO    => round::RoundingMode::RTZ,
-        // RoundingMode::RND         => TODO,
-        // RoundingMode::RND_ZERO    => TODO,
-        RoundingMode::RND_INF     => round::RoundingMode::RNA,
-        // RoundingMode::RND_MIN_INF => TODO,
-        RoundingMode::RND_CONV    => round::RoundingMode::RNE,
-        _ => {
-            assert_fmt!(false, "unsupported_RoundingMode_{}", (rm as RoundingModeIntegerType));
-            round::RoundingMode::RTN
-        }
-    }
-}
-
-// round::round_trunc_s, but with our RoundingMode
-fn round_trunc_s<NUM_BITS_ROUNDED: u32, ROUNDING: RoundingMode, N: u32, R: u32 = {N - NUM_BITS_ROUNDED}>
-    (unrounded: sN[N]) -> (u1, sN[R]) {
-    round::round_trunc_s<NUM_BITS_ROUNDED>(convert_rounding_mode<ROUNDING>(), unrounded)
-}
-
 // Drop (NB_IN - NB_OUT) LSBs using RoundingMode,
 // and handle possible overflow (e.g. rounding MAX up) according to OverflowMode.
 fn truncate_lsbs<NB_OUT: u32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode, NB_IN: u32>
@@ -612,7 +571,7 @@ fn truncate_lsbs<NB_OUT: u32, ROUNDING: RoundingMode, OVERFLOW: OverflowMode, NB
     assert!(NB_IN > NB_OUT, "truncate_lsbs_nothing_to_truncate");
     let NUM_BITS_ROUNDED = std::usub_or_zero(NB_IN, NB_OUT);
 
-    let (had_overflow, truncated) = round_trunc_s<NUM_BITS_ROUNDED, ROUNDING>(x);
+    let (had_overflow, truncated) = round::round_trunc_s<NUM_BITS_ROUNDED>(ROUNDING, x);
     let sign = std::msb(x) as Sign;
     overflow_truncated<OVERFLOW>(truncated as sN[NB_OUT], sign, had_overflow)
 }

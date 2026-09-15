@@ -12,9 +12,6 @@ from hgq.utils import trace_minmax
 
 from hls4ml.converters import convert_from_keras_model
 
-# Current hgq2 release rejects the parallelization_factor kwarg that hls4ml passes; skip until supported.
-pytest.skip('Skip until hgq2 supports parallelization_factor in QEinsumDense', allow_module_level=True)
-
 test_path = Path(__file__).parent
 
 
