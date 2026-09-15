@@ -124,27 +124,48 @@ def parse_csynth(project_dir, project_name):
     return out
 
 
-def parse_addr_shift(project_dir, project_name, port):
-    """Recover N from `<port>_Addr_A_local = <port>_Addr_A_orig << 32'dN` in the RTL.
+# Ways HLS spells a constant left shift of an address. The scale of the shift is
+# the fact; the spelling is not, so all of them are read the same way.
+_ADDR_SHIFT_FORMS = (
+    re.compile(r"<<\s*(?:\d+'[dh])?(\d+)$"),  # x << 32'd4, x << 4
+    re.compile(r",\s*(\d+)'[bdh]0+\s*\}$"),  # {x, 4'd0}
+)
 
-    This is how many bytes one memory word occupies; hls4ml BRAM ports are
-    byte-addressed.
+
+def parse_addr_shift(project_dir, project_name, port):
+    """Return (shift, evidence): how far HLS shifts this port's word index left.
+
+    hls4ml BRAM ports are byte-addressed. A one-byte word needs no shift and HLS
+    emits none, so an unshifted driver means shift 0 rather than a parse failure;
+    verify() checks the answer against the expected stride either way. (None, ...)
+    means nothing drives the port. Evidence is the RTL read, so a refusal can
+    quote it.
     """
     verilog_dir = os.path.join(_solution_dir(project_dir, project_name), 'syn', 'verilog')
     if not os.path.isdir(verilog_dir):
-        return None
-    # The shifted source has different names in different pipeline styles
-    # (<port>_Addr_A_orig with dataflow, a gep temporary with pipeline), so match
-    # any right-hand side. Being too specific here reports a parse failure instead
-    # of whatever the real incompatibility is.
-    pattern = re.compile(rf"assign\s+{re.escape(port)}_Addr_A_local\s*=\s*.+?<<\s*\d+'d(\d+)\s*;")
+        return None, f'no synthesized RTL at {verilog_dir}'
+
+    # Match any driver of the port. What sits between _Addr_A and the shift varies
+    # with pipeline style -- _local, _orig, a gep temporary, or nothing at all --
+    # so keying on one spelling reports a parse failure instead of the real state.
+    driver = re.compile(rf'assign\s+{re.escape(port)}_Addr_A(?:_\w+)?\s*=\s*([^;]+);')
+
+    assigns = []
     for name in sorted(os.listdir(verilog_dir)):
         if not name.endswith('.v'):
             continue
-        match = pattern.search(open(os.path.join(verilog_dir, name)).read())
-        if match:
-            return int(match.group(1))
-    return None
+        with open(os.path.join(verilog_dir, name)) as fh:
+            for match in driver.finditer(fh.read()):
+                rhs = ' '.join(match.group(1).split())
+                assigns.append(f'{name}: {port}_Addr_A... = {rhs}')
+                for form in _ADDR_SHIFT_FORMS:
+                    shift = form.search(rhs)
+                    if shift:
+                        return int(shift.group(1)), assigns[-1]
+
+    if not assigns:
+        return None, f'nothing in {verilog_dir} drives {port}_Addr_A'
+    return 0, 'no shift in ' + '; '.join(assigns)
 
 
 def verify(manifest, project_dir, project_name):
@@ -182,13 +203,14 @@ def verify(manifest, project_dir, project_name):
             # Ceiling division, because a fixed-point word need not be byte-aligned.
             word_bytes = -(-data_width // 8)
             addr_stride = 1 << (word_bytes - 1).bit_length()
-            shift = parse_addr_shift(project_dir, project_name, name)
+            shift, evidence = parse_addr_shift(project_dir, project_name, name)
             if shift is None:
-                problems.append(f'{name}: could not determine the byte-address shift from the generated RTL')
+                problems.append(f'{name}: could not determine the byte-address shift from the generated RTL ({evidence})')
                 continue
             if (1 << shift) != addr_stride:
                 problems.append(
-                    f'{name}: RTL shifts address by {shift} but a {word_bytes}-byte word strides by {addr_stride}'
+                    f'{name}: RTL shifts address by {shift} but a {word_bytes}-byte word '
+                    f'({data_width} bits) strides by {addr_stride} -- {evidence}'
                 )
                 continue
 

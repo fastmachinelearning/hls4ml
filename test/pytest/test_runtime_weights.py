@@ -694,6 +694,47 @@ def test_unsupported_backend_claims_nothing(tmp_path):
         package(str(tmp_path / 'vivado'), n_banks=2)
 
 
+def _verilog(tmp_path, **files):
+    path = tmp_path / f'{PROJECT}_prj' / 'solution1' / 'syn' / 'verilog'
+    path.mkdir(parents=True)
+    for name, body in files.items():
+        (path / f'{name}.v').write_text(body)
+    return str(tmp_path)
+
+
+@pytest.mark.parametrize(
+    'rtl,expected',
+    [
+        # The shift's spelling and the signal it lands on both vary by build; the
+        # top may also pass an unshifted address through from the submodule that
+        # shifts it, so the first assignment seen is not the answer.
+        ("assign w2_Addr_A = w2_Addr_A_local;\nassign w2_Addr_A_local = w2_Addr_A_orig << 32'd4;", 4),
+        ("assign w2_Addr_A = w2_Addr_A_orig << 32'd4;", 4),
+        ('assign w2_Addr_A = zext_ln46_fu_330_p1 << 4;', 4),
+        ("assign w2_Addr_A = {zext_ln46_fu_330_p1[27:0], 4'd0};", 4),
+        # A one-byte word needs no shift, and HLS emits none.
+        ('assign w2_Addr_A = w2_Addr_A_orig;', 0),
+    ],
+)
+def test_addr_shift_is_read_from_any_assignment_form(tmp_path, rtl, expected):
+    from hls4ml.contrib.runtime_weights.interface import parse_addr_shift
+
+    # 'myproject.v' sorts before 'myproject_dense.v', so the top is read first.
+    project = _verilog(tmp_path, myproject='assign w2_Addr_A = dense_U0_w2_Addr_A;', myproject_dense=rtl)
+
+    assert parse_addr_shift(project, PROJECT, 'w2')[0] == expected
+
+
+def test_addr_shift_is_unknown_only_when_nothing_drives_the_port(tmp_path):
+    from hls4ml.contrib.runtime_weights.interface import parse_addr_shift
+
+    project = _verilog(tmp_path, top='assign w5_Addr_A = w5_Addr_A_local;')
+    shift, evidence = parse_addr_shift(project, PROJECT, 'w2')
+
+    assert shift is None
+    assert 'w2_Addr_A' in evidence
+
+
 def test_refusal_explains_every_unbankable_port(tmp_path):
     """The refusal must carry the manifest's reasons, not just the port names.
 
