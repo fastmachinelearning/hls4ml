@@ -234,13 +234,13 @@ class AlteraWriter(Writer):
                 elif '// hls-fpga-machine-learning insert inputs' in line:
                     newline = line
                     for inp in model_inputs:
-                        newline += inp.declare_cpp()
+                        newline += inp.declare_cpp(pipe_min_size=inp.pragma[1] if inp.pragma[0] == 'stream' else 16)
 
                 # and declareations for the outputs
                 elif '// hls-fpga-machine-learning insert outputs' in line:
                     newline = line
                     for out in model_outputs:
-                        newline += out.declare_cpp()
+                        newline += out.declare_cpp(pipe_min_size=out.pragma[1] if out.pragma[0] == 'stream' else 16)
 
                 # Simply copy line, if no inserts are required
                 else:
@@ -457,14 +457,15 @@ class AlteraWriter(Writer):
                 elif '// hls-fpga-machine-learning insert wrapper' in line:
                     dtype = line.split('#', 1)[1].strip()
                     newline = ''
-                    for i in model_inputs:
-                        newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
 
                     newline += (
                         indent
                         + f'q.single_task<{convert_to_pascal_case(project_name)}Class{dtype.capitalize()}_{stamp}>'
                         + f'({convert_to_pascal_case(project_name)}{{}});\n'
                     )
+
+                    for i in model_inputs:
+                        newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
 
                     for o in model_outputs:
                         newline += (
