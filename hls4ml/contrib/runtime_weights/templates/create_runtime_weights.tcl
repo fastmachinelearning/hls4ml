@@ -7,9 +7,15 @@
 # implement the packaged result. This is not support for the Vivado HLS backend.
 #
 # Usage:  vivado -mode batch -source create_runtime_weights.tcl
+#
+# This is a synthesis sanity check, not a project generator: it runs in memory,
+# writes reports next to this script and exits without creating an .xpr or a
+# block design. For system integration, instantiate $top_name from your own HDL;
+# for Vivado IP Integrator, use $bd_module as a Module Reference.
 
 set project_name  @PROJECT_NAME@
 set top_name      @TOP_NAME@
+set bd_module     @BD_MODULE@
 set part          @PART@
 set n_banks       @N_BANKS@
 set clock_period  @CLOCK_PERIOD@
@@ -25,7 +31,7 @@ if {![file isdirectory $hls_rtl]} {
     exit 1
 }
 foreach f [list bank_addr_mapper.sv bank_select_latch.sv parameter_bank.sv \
-                scalar_bank_mux.sv ${top_name}.sv] {
+                scalar_bank_mux.sv ${top_name}.sv ${bd_module}.v] {
     if {![file exists "$wrap_rtl/$f"]} {
         puts "ERROR: missing generated source $wrap_rtl/$f"
         exit 1
@@ -43,11 +49,14 @@ add_files -norecurse [glob "$hls_rtl/*.v"]
 # NOT add_files'd: they are data read at elaboration, not sources, and Vivado
 # removes a data file that is added as one.
 cd $here
-# wrapper
+# wrapper, and the Verilog shim IP Integrator needs (it refuses a SystemVerilog
+# top as a Module Reference). Synthesizing through the shim checks that it still
+# matches the wrapper's ports.
 add_files -norecurse [glob "$wrap_rtl/*.sv"]
 set_property file_type SystemVerilog [get_files "$wrap_rtl/*.sv"]
+add_files -norecurse "$wrap_rtl/${bd_module}.v"
 
-set_property top $top_name [current_fileset]
+set_property top $bd_module [current_fileset]
 update_compile_order -fileset sources_1
 
 # The clock constraint goes in an XDC read before synthesis: the ports do not
@@ -59,11 +68,11 @@ puts $fh "create_clock -period $clock_period -name ap_clk \[get_ports ap_clk\]"
 close $fh
 read_xdc $xdc
 
-synth_design -top $top_name -part $part
+synth_design -top $bd_module -part $part
 opt_design
 
 report_utilization -hierarchical -file "$here/utilization.rpt"
 report_timing_summary            -file "$here/timing.rpt"
 report_drc                       -file "$here/drc.rpt"
 
-puts "runtime-weights wrapper synthesized: top=$top_name banks=$n_banks part=$part"
+puts "runtime-weights wrapper synthesized: top=$top_name bd_module=$bd_module banks=$n_banks part=$part"

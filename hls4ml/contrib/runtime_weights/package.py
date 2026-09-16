@@ -106,6 +106,99 @@ def _decl(port, prefix=''):
     return f'    {direction} {width}{prefix}{port["name"]}'
 
 
+def _loader_geometry(banked):
+    """Shared loader widths and each parameter's slot: BRAM by word, scalar bundle
+    by element, one write per request."""
+    params = []
+    for i, p in enumerate(banked):
+        if p['expected_interface_kind'] == 'bram':
+            depth, width = p['expected_depth'], p['actual_data_width']
+        else:
+            depth, width = p['n_scalars'], p['actual_width']
+        params.append(
+            {
+                'name': p['name'],
+                'param_id': i,
+                'ld_depth': depth,  # valid ld_addr: 0 .. ld_depth-1
+                'ld_data_width': width,  # valid ld_data: the low ld_data_width bits
+                'addr_width': max((depth - 1).bit_length(), 1),  # the port's own narrow address
+            }
+        )
+    return {
+        'n_params': len(params),
+        'param_id_width': max((len(params) - 1).bit_length(), 1),
+        'addr_width': max(q['addr_width'] for q in params),
+        'data_width': max(q['ld_data_width'] for q in params),
+        'params': params,
+    }
+
+
+def _top_ports(banked, rtl_ports, bank_id_width):
+    """Port declarations shared by the SystemVerilog top and its Verilog shim."""
+    passthrough = _classify_ports(rtl_ports, banked)
+
+    lines = [
+        '    input  wire ap_clk',
+        '    input  wire ap_rst',
+        '',
+        '    // transaction boundary',
+        '    input  wire ext_ap_start',
+        f'    input  wire [{bank_id_width - 1}:0] ext_bank_id',
+        '    output wire ext_ap_ready',
+        '    output wire ext_ap_done',
+        '    output wire ext_bank_id_bad',
+        '',
+    ]
+    if passthrough:
+        lines.append('    // network data ports, passed through to the IP')
+        lines.extend(_decl(p) for p in passthrough)
+        lines.append('')
+    g = _loader_geometry(banked)
+    lines += [
+        '    // loader: one write per request, routed by ld_param_id (accepted only while idle)',
+        '    input  wire ld_req',
+        f'    input  wire [{g["param_id_width"] - 1}:0] ld_param_id',
+        f'    input  wire [{bank_id_width - 1}:0] ld_bank',
+        f'    input  wire [{g["addr_width"] - 1}:0] ld_addr',
+        f'    input  wire [{g["data_width"] - 1}:0] ld_data',
+        '    output wire ld_accept',
+        '    output wire ld_reject',
+    ]
+    lines += [
+        '',
+        '    // observability',
+        f'    output wire [{bank_id_width - 1}:0] cur_bank_id',
+        '    output wire busy',
+        '    output wire quiescent',
+    ]
+    return lines
+
+
+def _port_name(decl):
+    return decl.split()[-1]
+
+
+def _is_port_decl(line):
+    return bool(line.strip()) and not line.strip().startswith('//')
+
+
+def _write_port_list(f, lines):
+    remaining = sum(1 for ln in lines if _is_port_decl(ln))
+    for ln in lines:
+        if not _is_port_decl(ln):
+            f.write(ln + '\n' if ln.strip() else '\n')
+        else:
+            remaining -= 1
+            f.write(ln + ('\n' if remaining == 0 else ',\n'))
+    f.write(');\n\n')
+
+
+def _write_init_params(f, bram):
+    init_params = [f'    parameter {p["name"].upper()}_INIT_HEX = ""' for p in bram]
+    f.write(',\n'.join(init_params) if init_params else '    parameter UNUSED = 0')
+    f.write('\n) (\n')
+
+
 def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, control):
     """Generate the integration top.
 
@@ -125,65 +218,8 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
     f.write('`timescale 1 ns / 1 ps\n')
     f.write('`default_nettype none\n\n')
     f.write(f'module {project_name}_runtime_weights #(\n')
-    init_params = [f'    parameter {p["name"].upper()}_INIT_HEX = ""' for p in bram]
-    f.write(',\n'.join(init_params) if init_params else '    parameter UNUSED = 0')
-    f.write('\n) (\n')
-
-    lines = [
-        '    input  wire ap_clk',
-        '    input  wire ap_rst',
-        '',
-        '    // transaction boundary',
-        '    input  wire ext_ap_start',
-        f'    input  wire [{bank_id_width - 1}:0] ext_bank_id',
-        '    output wire ext_ap_ready',
-        '    output wire ext_ap_done',
-        '    output wire ext_bank_id_bad',
-        '',
-    ]
-    if passthrough:
-        lines.append('    // network data ports, passed through to the IP')
-        lines.extend(_decl(p) for p in passthrough)
-        lines.append('')
-    lines.append('    // loader (accepted only while idle)')
-    for p in bram:
-        n = p['name']
-        word_bits = max((p['expected_depth'] - 1).bit_length(), 1)
-        lines += [
-            f'    input  wire ld_{n}_req',
-            f'    input  wire [{bank_id_width - 1}:0] ld_{n}_bank',
-            f'    input  wire [{word_bits - 1}:0] ld_{n}_word',
-            f'    input  wire [{p["actual_data_width"] - 1}:0] ld_{n}_wdata',
-            f'    output wire ld_{n}_accept',
-            f'    output wire ld_{n}_reject',
-        ]
-    for p in scalar:
-        n = p['name']
-        idx_bits = max((p['n_scalars'] - 1).bit_length(), 1)
-        lines += [
-            f'    input  wire ld_{n}_we',
-            f'    input  wire [{bank_id_width - 1}:0] ld_{n}_bank',
-            f'    input  wire [{idx_bits - 1}:0] ld_{n}_idx',
-            f'    input  wire [{p["actual_width"] - 1}:0] ld_{n}_data',
-            f'    output wire ld_{n}_accept',
-            f'    output wire ld_{n}_reject',
-        ]
-    lines += [
-        '',
-        '    // observability',
-        f'    output wire [{bank_id_width - 1}:0] cur_bank_id',
-        '    output wire busy',
-        '    output wire quiescent',
-    ]
-
-    body = [ln for ln in lines if ln.strip()]
-    for ln in lines:
-        if not ln.strip():
-            f.write('\n')
-        else:
-            last = ln is body[-1]
-            f.write(ln + ('\n' if last else ',\n'))
-    f.write(');\n\n')
+    _write_init_params(f, bram)
+    _write_port_list(f, _top_ports(banked, rtl_ports, bank_id_width))
 
     f.write(f'  localparam int N_BANKS       = {n_banks};\n')
     f.write(f'  localparam int BANK_ID_WIDTH = {bank_id_width};\n\n')
@@ -196,6 +232,22 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
     f.write('      .hls_ap_idle(hls_ap_idle), .hls_ap_done(hls_ap_done),\n')
     f.write('      .cur_bank_id(cur_bank_id), .busy(busy), .quiescent(quiescent));\n\n')
     f.write('  assign ext_ap_done = hls_ap_done;\n\n')
+
+    # Route each request to one parameter. The id and the full-width address are
+    # checked here, before the address is narrowed to the port's own width, so an
+    # out-of-range value is rejected rather than aliased onto a valid location.
+    g = _loader_geometry(banked)
+    slot = {q['name']: q for q in g['params']}
+    n, pw, aw = g['n_params'], g['param_id_width'], g['addr_width']
+    f.write(f'  wire [{n - 1}:0] ld_hit, ld_acc;\n')
+    for q in g['params']:
+        # one bit wider than ld_addr so a depth of exactly 2**addr_width still fits
+        f.write(
+            f"  assign ld_hit[{q['param_id']}] = ld_req & (ld_param_id == {pw}'d{q['param_id']})"
+            f" & (ld_addr < {aw + 1}'d{q['ld_depth']});\n"
+        )
+    f.write('  assign ld_accept = |ld_acc;\n')
+    f.write('  assign ld_reject = ld_req & ~ld_accept;\n\n')
 
     for p in bram:
         n, dw = p['name'], p['actual_data_width']
@@ -216,9 +268,10 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         f.write(f'      .hls_Addr_A({sig["addr_a"]}), .hls_EN_A({sig["en_a"]}),\n')
         f.write(f'      .hls_Dout_A({sig["dout_a"]}), .hls_Rst_A({sig["rst_a"]}),\n')
         f.write(f'      .hls_Addr_B({sig["addr_b"]}), .hls_EN_B({sig["en_b"]}), .hls_Dout_B({sig["dout_b"]}),\n')
-        f.write(f'      .ld_req(ld_{n}_req), .ld_bank(ld_{n}_bank), .ld_word(ld_{n}_word),\n')
-        f.write(f'      .ld_wdata(ld_{n}_wdata),\n')
-        f.write(f'      .ld_accept(ld_{n}_accept), .ld_reject(ld_{n}_reject),\n')
+        q = slot[n]
+        f.write(f'      .ld_req(ld_hit[{q["param_id"]}]), .ld_bank(ld_bank), .ld_word(ld_addr[{q["addr_width"] - 1}:0]),\n')
+        f.write(f'      .ld_wdata(ld_data[{dw - 1}:0]),\n')
+        f.write(f'      .ld_accept(ld_acc[{q["param_id"]}]), .ld_reject(),\n')
         f.write('      .addr_padding_violation());\n\n')
 
     for p in scalar:
@@ -227,9 +280,10 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
         f.write(f'  scalar_bank_mux #(.SCALAR_WIDTH({w}), .N_SCALARS({count}),\n')
         f.write(f'      .N_BANKS(N_BANKS), .BANK_ID_WIDTH(BANK_ID_WIDTH)) u_{n} (\n')
         f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
-        f.write(f'      .ld_we(ld_{n}_we), .ld_bank(ld_{n}_bank), .ld_idx(ld_{n}_idx),\n')
-        f.write(f'      .ld_data(ld_{n}_data), .ld_accept(ld_{n}_accept),\n')
-        f.write(f'      .ld_reject(ld_{n}_reject), .q_flat({n}_flat));\n\n')
+        q = slot[n]
+        f.write(f'      .ld_we(ld_hit[{q["param_id"]}]), .ld_bank(ld_bank), .ld_idx(ld_addr[{q["addr_width"] - 1}:0]),\n')
+        f.write(f'      .ld_data(ld_data[{w - 1}:0]), .ld_accept(ld_acc[{q["param_id"]}]),\n')
+        f.write(f'      .ld_reject(), .q_flat({n}_flat));\n\n')
 
     conns = [
         '.ap_clk(ap_clk)',
@@ -263,11 +317,39 @@ def _emit_top(f, project_name, banked, rtl_ports, n_banks, bank_id_width, contro
     f.write('  );\n\nendmodule\n\n`default_nettype wire\n')
 
 
-def _describe_banked_port(port):
+def _emit_bd_shim(f, top_name, banked, rtl_ports, bank_id_width):
+    """Verilog-2001 module forwarding every port and parameter of the top 1:1:
+    IP Integrator (Vivado 2025.2) refuses a SystemVerilog Module Reference."""
+    bram = [p for p in banked if p['expected_interface_kind'] == 'bram']
+    lines = _top_ports(banked, rtl_ports, bank_id_width)
+    params = [f'{p["name"].upper()}_INIT_HEX' for p in bram] or ['UNUSED']
+
+    f.write('// GENERATED by hls4ml.contrib.runtime_weights -- do not edit.\n')
+    f.write(f'// Verilog shim over {top_name} for Vivado IP Integrator, which does not\n')
+    f.write('// accept a SystemVerilog top as a Module Reference. Use this module in a block\n')
+    f.write(f'// design; instantiate {top_name} directly from RTL.\n\n')
+    f.write('`timescale 1 ns / 1 ps\n')
+    f.write('`default_nettype none\n\n')
+    f.write(f'module {top_name}_bd #(\n')
+    _write_init_params(f, bram)
+    _write_port_list(f, lines)
+
+    f.write(f'  {top_name} #(\n')
+    f.write(',\n'.join(f'      .{p}({p})' for p in params))
+    f.write('\n  ) u_runtime_weights (\n')
+    names = [_port_name(ln) for ln in lines if _is_port_decl(ln)]
+    f.write(',\n'.join(f'      .{n}({n})' for n in names))
+    f.write('\n  );\n\nendmodule\n\n`default_nettype wire\n')
+
+
+def _describe_banked_port(port, slot):
     """Geometry keys are omitted for a scalar bundle, which has no memory."""
     entry = {
         'name': port['name'],
         'kind': port['expected_interface_kind'],
+        'param_id': slot['param_id'],
+        'ld_depth': slot['ld_depth'],
+        'ld_data_width': slot['ld_data_width'],
         'data_width': port.get('actual_data_width') or port.get('actual_width'),
         'n_scalars': port['n_scalars'],
     }
@@ -374,12 +456,16 @@ def package(project, n_banks=2, output_dir=None):
     top_name = f'{project_name}_runtime_weights'
     with open(os.path.join(rtl_dir, f'{top_name}.sv'), 'w') as fh:
         _emit_top(fh, project_name, verified, rtl_ports, n_banks, bank_id_width, hardware['control'])
+    bd_module = f'{top_name}_bd'
+    with open(os.path.join(rtl_dir, f'{bd_module}.v'), 'w') as fh:
+        _emit_bd_shim(fh, top_name, verified, rtl_ports, bank_id_width)
 
     with open(os.path.join(TEMPLATE_DIR, 'create_runtime_weights.tcl')) as fh:
         tcl = fh.read()
     tcl = (
         tcl.replace('@PROJECT_NAME@', project_name)
         .replace('@TOP_NAME@', top_name)
+        .replace('@BD_MODULE@', bd_module)
         .replace('@HLS_RTL_DIR@', os.path.abspath(hls_rtl_dir))
         .replace('@PART@', str(manifest['part']))
         .replace('@N_BANKS@', str(n_banks))
@@ -388,15 +474,18 @@ def package(project, n_banks=2, output_dir=None):
     with open(os.path.join(output_dir, 'create_runtime_weights.tcl'), 'w') as fh:
         fh.write(tcl)
 
+    geometry = _loader_geometry(verified)
     summary = {
         'project_name': project_name,
         'top': top_name,
+        'bd_module': bd_module,
         'n_banks': n_banks,
         'bank_id_width': bank_id_width,
         'control_protocol': hardware['control'],
         'bank_selection': 'idle-time (bank committed before ap_start, held to ap_done)',
         'passthrough_ports': [p['name'] for p in _classify_ports(rtl_ports, verified)],
-        'banked_ports': [_describe_banked_port(p) for p in verified],
+        'loader': {k: geometry[k] for k in ('n_params', 'param_id_width', 'addr_width', 'data_width')},
+        'banked_ports': [_describe_banked_port(p, q) for p, q in zip(verified, geometry['params'])],
         'rom_data_files': rom_data,
         'exported_ip_sha256': fingerprint_ip(project_dir, project_name),
     }

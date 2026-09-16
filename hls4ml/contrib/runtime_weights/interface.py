@@ -150,7 +150,7 @@ def parse_addr_shift(project_dir, project_name, port):
     # so keying on one spelling reports a parse failure instead of the real state.
     driver = re.compile(rf'assign\s+{re.escape(port)}_Addr_A(?:_\w+)?\s*=\s*([^;]+);')
 
-    assigns = []
+    assigns, shifts = [], {}  # shift -> evidence
     for name in sorted(os.listdir(verilog_dir)):
         if not name.endswith('.v'):
             continue
@@ -161,10 +161,15 @@ def parse_addr_shift(project_dir, project_name, port):
                 for form in _ADDR_SHIFT_FORMS:
                     shift = form.search(rhs)
                     if shift:
-                        return int(shift.group(1)), assigns[-1]
+                        shifts.setdefault(int(shift.group(1)), assigns[-1])
 
     if not assigns:
         return None, f'nothing in {verilog_dir} drives {port}_Addr_A'
+    if len(shifts) > 1:
+        # every driver must agree; file order is not a tie-breaker
+        return None, 'conflicting shifts: ' + '; '.join(shifts.values())
+    if shifts:
+        return next(iter(shifts.items()))
     return 0, 'no shift in ' + '; '.join(assigns)
 
 

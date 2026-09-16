@@ -48,6 +48,13 @@ without re-running HLS or modifying the synthesized compute IP.
 A typical use case is one network architecture trained for several operating
 conditions, configurations, or deployment modes.
 
+The parameter sets are normally all known before the FPGA build. The flow is:
+set ``BramFactor`` and ``build(synth=True)`` once; ``package()`` the wrapper with
+``n_banks`` resident banks; ``pack_banks()`` the parameter sets; preload BRAM
+parameters from ``.hex`` files; integrate the wrapper; after reset, load the
+scalar parameters through the loader; select a bank with ``ext_bank_id`` per
+inference.
+
 End-to-end example
 ------------------
 
@@ -116,6 +123,37 @@ corresponding to bank 0.
 Dense layers over rank-1, rank-2 and rank-3 inputs are supported. Parameter shapes
 are checked exactly rather than silently reshaped.
 
+Loading the banks
+-----------------
+
+``pack_banks()`` returns the packed banks keyed by port name. BRAM-backed
+parameters (Dense weights) are preloaded into the bitstream: write each one with
+``write_mem()`` and bind the file to the wrapper's ``<PORT>_INIT_HEX`` parameter
+when instantiating it::
+
+    from hls4ml.contrib.runtime_weights import write_mem
+
+    for name, img in images.items():
+        if img['kind'] == 'bram':
+            write_mem(f'{name}.hex', img['image'], img['data_width'])
+
+Scalar bundles (Dense biases) have no preload path. They power up as zero and
+must be written after reset, while ``quiescent`` is high, through the wrapper's
+single loader interface::
+
+    ld_req, ld_param_id, ld_bank, ld_addr, ld_data  ->  ld_accept | ld_reject
+
+One request writes one element of one bank; ``img['codes'][bank]`` are the
+values, and ``runtime_weights.json`` gives each parameter's ``param_id`` and
+address range. Out-of-range or busy requests are rejected and write nothing.
+Getting the values from a host into these signals is the surrounding design's
+job.
+
+The same loader can also fill or later replace BRAM banks instead of
+``INIT_HEX``, without regenerating the HLS IP or the bitstream, as long as the
+new parameters pack into the already-built geometry. This is the advanced path;
+see ``hls4ml/contrib/runtime_weights/README.md``.
+
 Selecting a bank at runtime
 ---------------------------
 
@@ -149,25 +187,28 @@ A controller may choose the bank from any external condition or configuration::
 No fixed number of clock cycles needs to be known. A new request is issued when
 ``ext_ap_ready`` indicates that the wrapper can accept it.
 
-Updating bank contents
-----------------------
-
-Already initialized banks can be selected from inference to inference without
-rewriting their contents.
-
-Bank contents may also be updated while the design is quiescent. Loader writes
-during an active inference are rejected. Use ``quiescent`` when deciding whether
-memory contents may be modified.
-
-BRAM-backed parameters may also be preloaded when the wrapper is built. Other
-external parameters are initialized through the generated loader interface.
-
 Output handling
 ---------------
 
 The wrapper preserves the synthesized IP's output-valid signals. Each output should
 therefore be sampled using its corresponding ``ap_vld`` signal rather than assuming
 that every output becomes valid on ``ap_done``.
+
+Integrating the wrapper
+-----------------------
+
+``package()`` writes ``runtime_weights/rtl/`` next to the HLS project. Add it and
+the HLS RTL (``<project>_prj/solution1/syn/verilog/*.v``) to your sources and
+instantiate ``<project>_runtime_weights`` as one block in your existing design.
+The surrounding design supplies data, transaction control
+(``ext_ap_start``/``ext_ap_ready``/``ext_ap_done``), bank selection
+(``ext_bank_id``) and any runtime parameter writes (``ld_*``).
+``create_runtime_weights.tcl`` synthesizes the packaged design stand-alone as a
+check; it does not create a Vivado project.
+
+For Vivado IP Integrator compatibility, ``package()`` also generates a Verilog
+shim ``<project>_runtime_weights_bd.v`` with identical ports. Port-level details
+are in ``hls4ml/contrib/runtime_weights/README.md``.
 
 API summary
 -----------
@@ -179,6 +220,9 @@ API summary
 ``pack_banks(hls_model, banks)``
     Validate complete model parameter sets and pack the parameters that were
     externalized by ``BramFactor``.
+
+``write_mem(path, words, width_bits)``
+    Write a packed BRAM ``image`` as a ``$readmemh`` file for ``<PORT>_INIT_HEX``.
 
 The lower-level packing functions and the generated loader/RTL interfaces are
 intended for integration and advanced use. Their details are documented in
@@ -197,9 +241,12 @@ This version supports:
 * idle-time bank updates and one inference in flight at a time.
 
 For Dense weights, reuse factor 1 is unsupported, and packed words wider than
-4096 bits are outside the verified v1 scope. The bank count is fixed by `package()`; changing it requires regenerating the
-wrapper, not re-running HLS. AXI integration, board drivers and automatic `BramFactor` selection are not
-provided. Unsupported layouts are rejected rather than inferred.
+4096 bits are outside the verified v1 scope. Scalar bundles (biases) are
+loader-only; there is no ``INIT_HEX`` path for them in v1. The bank count is
+fixed by ``package()``; changing it requires regenerating the wrapper, not
+re-running HLS. AXI integration, a Vivado project or block design, board drivers
+and automatic ``BramFactor`` selection are not provided. Unsupported layouts are
+rejected rather than inferred.
 
 Implementation details are documented in
 `hls4ml/contrib/runtime_weights/README.md`.
