@@ -31,8 +31,7 @@ enum FusedActivation {
     FUSED_THRESHOLDED_RELU,
     FUSED_HARD_SIGMOID,
     FUSED_HARD_TANH,
-    FUSED_BINARY_TANH,
-    FUSED_TERNARY_TANH
+    FUSED_BINARY_TANH
 };
 
 struct dense_fused_config {
@@ -41,26 +40,22 @@ struct dense_fused_config {
     typedef float accum_t;
     typedef ap_fixed<18, 8> table_t;
 
-    // hls4ml gives these three different types, and rounding one to another changes the result
     typedef ap_fixed<16, 6> param_t;
     typedef ap_ufixed<16, 0> slope_t;
     typedef ap_ufixed<2, 0> shift_t;
-
-    // What the layer produced before the fold. The activation is computed on this type and its result
-    // is of the layer output type, where the activation layer used to do its own rounding.
     typedef ap_fixed<16, 6> preact_t;
 
     static const unsigned n_in = 10;
     static const unsigned n_out = 10;
 
     static const unsigned reuse_factor = 1;
-    // Multipliers used at the same time, worked out from the reuse factor by the fusion pass
     static const unsigned multiplier_limit = 1;
 
     static const unsigned activation = FUSED_LINEAR;
     static const unsigned table_size = 1024;
 
-    // The one number of leaky_relu, thresholded_relu and elu, and the two of the hard activations
+    static const unsigned pad_cycles = 0;
+
     static const param_t activation_param;
     static const slope_t slope;
     static const shift_t shift;
@@ -158,14 +153,6 @@ inline res_T fused_activate(in_T value, const typename CONFIG_T::table_t table[C
     } else if (CONFIG_T::activation == FUSED_BINARY_TANH) {
         ap_int<2> sign = value >= 0 ? 1 : -1;
         return binary_cast<ap_int<2>, res_T>(sign);
-
-    } else if (CONFIG_T::activation == FUSED_TERNARY_TANH) {
-        auto doubled = 2 * value;
-        if (doubled > 1)
-            return (res_T)1;
-        if (doubled > -1)
-            return (res_T)0;
-        return (res_T)-1;
     }
 
     return (res_T)value; // FUSED_LINEAR
@@ -174,26 +161,35 @@ inline res_T fused_activate(in_T value, const typename CONFIG_T::table_t table[C
 // Array in, array out: the leading layer of a chain of odd length.
 template <class data_T, class res_T, typename CONFIG_T>
 void dense_fused(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
-                 typename CONFIG_T::weight_t weights[CONFIG_T::n_in * CONFIG_T::n_out],
+                 typename CONFIG_T::weight_t weights[CONFIG_T::n_out * CONFIG_T::n_in],
                  typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     const unsigned PAR = CONFIG_T::multiplier_limit;
-
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
-    #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=PAR
     #pragma HLS ARRAY_RESHAPE variable=weights cyclic factor=PAR dim=1
 
     typename CONFIG_T::table_t table[CONFIG_T::table_size];
     fused_init_table<CONFIG_T>(table);
 
-FusedInit:
-    for (unsigned j = 0; j < CONFIG_T::n_out; j++) {
-        #pragma HLS UNROLL factor=PAR
-        acc[j] = (typename CONFIG_T::accum_t)biases[j];
+    typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
+    #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=PAR
+
+    // All outputs together, one input at a time, as the axpy form does. The tool does not merge the
+    // loops of the one-output-at-a-time shape here, so every output would fill and empty the pipeline.
+FusedFirst:
+    for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
+        #pragma HLS PIPELINE II=1
+        for (unsigned p = 0; p < PAR; p++) {
+            #pragma HLS UNROLL
+            unsigned j = jb + p;
+            if (j < CONFIG_T::n_out) {
+                acc[j] = (typename CONFIG_T::accum_t)biases[j] +
+                         CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
+                             data[0], weights[j * CONFIG_T::n_in]);
+            }
+        }
     }
 
 FusedAccum:
-    for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        data_T cache = data[i];
+    for (unsigned i = 1; i < CONFIG_T::n_in; i++) {
     FusedLanes:
         for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
             #pragma HLS PIPELINE II=1
@@ -202,7 +198,7 @@ FusedAccum:
                 unsigned j = jb + p;
                 if (j < CONFIG_T::n_out) {
                     acc[j] += CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
-                        cache, weights[i * CONFIG_T::n_out + j]);
+                        data[i], weights[j * CONFIG_T::n_in + i]);
                 }
             }
         }
@@ -214,10 +210,12 @@ FusedResult:
         typename CONFIG_T::preact_t value = cast<data_T, typename CONFIG_T::preact_t, CONFIG_T>(acc[j]);
         res[j] = fused_activate<typename CONFIG_T::preact_t, res_T, CONFIG_T>(value, table);
     }
+
+    FUSED_PAD(CONFIG_T::pad_cycles)
 }
 
-// Array in, stream out. Each output is written as soon as it is finished, which is what the layer
-// reading it overlaps with. Weights w[j * n_in + i].
+// Array in, stream out: each output is written as soon as it is finished, which is what the layer
+// reading it overlaps with.
 template <class data_T, class res_T, typename CONFIG_T>
 void dense_fused_dot(data_T data[CONFIG_T::n_in], hls::stream<res_T> &res,
                      typename CONFIG_T::weight_t weights[CONFIG_T::n_out * CONFIG_T::n_in],
@@ -234,20 +232,18 @@ FusedDotOut:
         typename CONFIG_T::accum_t part[PAR];
         #pragma HLS ARRAY_PARTITION variable=part complete
 
-    FusedDotClear:
-        for (unsigned p = 0; p < PAR; p++) {
-            #pragma HLS UNROLL
-            part[p] = (typename CONFIG_T::accum_t)0;
-        }
-
     FusedDotAccum:
         for (unsigned i = 0; i < CONFIG_T::n_in; i += PAR) {
             #pragma HLS PIPELINE II=1
             for (unsigned p = 0; p < PAR; p++) {
                 #pragma HLS UNROLL
                 if (i + p < CONFIG_T::n_in) {
-                    part[p] += CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
-                        data[i + p], weights[j * CONFIG_T::n_in + i + p]);
+                    typename CONFIG_T::accum_t term =
+                        CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
+                            data[i + p], weights[j * CONFIG_T::n_in + i + p]);
+                    part[p] = (i == 0) ? term : (typename CONFIG_T::accum_t)(part[p] + term);
+                } else if (i == 0) {
+                    part[p] = (typename CONFIG_T::accum_t)0;
                 }
             }
         }
@@ -261,6 +257,8 @@ FusedDotOut:
         typename CONFIG_T::preact_t value = cast<data_T, typename CONFIG_T::preact_t, CONFIG_T>(acc);
         res.write(fused_activate<typename CONFIG_T::preact_t, res_T, CONFIG_T>(value, table));
     }
+
+    FUSED_PAD(CONFIG_T::pad_cycles)
 }
 
 // Stream in, array out. Each value is used as soon as it arrives. Weights w[i * n_out + j].
@@ -277,14 +275,24 @@ void dense_fused_axpy(hls::stream<data_T> &data, res_T res[CONFIG_T::n_out],
     typename CONFIG_T::table_t table[CONFIG_T::table_size];
     fused_init_table<CONFIG_T>(table);
 
-FusedAxpyInit:
-    for (unsigned j = 0; j < CONFIG_T::n_out; j++) {
-        #pragma HLS UNROLL factor=PAR
-        acc[j] = (typename CONFIG_T::accum_t)biases[j];
+    // The first input is handled separately so the bias starts each sum. Choosing bias or accumulator
+    // inside the loop below costs no cycles but lengthens its longest path, and timing then fails.
+    data_T first = data.read();
+FusedAxpyFirst:
+    for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
+        #pragma HLS PIPELINE II=1
+        for (unsigned p = 0; p < PAR; p++) {
+            #pragma HLS UNROLL
+            unsigned j = jb + p;
+            if (j < CONFIG_T::n_out) {
+                acc[j] = (typename CONFIG_T::accum_t)biases[j] +
+                         CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(first, weights[j]);
+            }
+        }
     }
 
 FusedAxpyAccum:
-    for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
+    for (unsigned i = 1; i < CONFIG_T::n_in; i++) {
         data_T cache = data.read();
     FusedAxpyLanes:
         for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
@@ -300,12 +308,16 @@ FusedAxpyAccum:
         }
     }
 
+// Applying the activation on the last input instead would save n_out / PAR cycles, but it lengthens
+// the longest path through that loop and timing then fails.
 FusedAxpyResult:
     for (unsigned j = 0; j < CONFIG_T::n_out; j++) {
         #pragma HLS UNROLL factor=PAR
         typename CONFIG_T::preact_t value = cast<data_T, typename CONFIG_T::preact_t, CONFIG_T>(acc[j]);
         res[j] = fused_activate<typename CONFIG_T::preact_t, res_T, CONFIG_T>(value, table);
     }
+
+    FUSED_PAD(CONFIG_T::pad_cycles)
 }
 
 } // namespace nnet

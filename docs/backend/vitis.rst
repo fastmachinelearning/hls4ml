@@ -25,8 +25,8 @@ otherwise run one after another. It reduces the latency of the model by overlapp
 
 It is not intended for ``ReuseFactor = 1``. Fully unrolled constant-matrix multiplication is already served by the ``Latency`` strategy and, more efficiently,
 by ``Strategy: distributed_arithmetic`` (see :doc:`Distributed Arithmetic <../advanced/da>`) together with the quantisation-aware flows built around it. A
-``dot`` layer uses at most ``n_in`` multipliers and an ``axpy`` layer at most ``n_out``, so the strategy cannot reach the parallelism those paths provide, and
-requesting it is reported during conversion.
+layer that reads a complete input array uses at most ``n_in`` multipliers and an ``axpy`` layer at most ``n_out``, so the strategy cannot reach the parallelism
+those paths provide, and requesting it is reported during conversion.
 
 It also does not extend to models too large for ``io_parallel``, which require ``io_stream`` and are outside its scope for the reason given under
 `Requirements`_.
@@ -47,8 +47,8 @@ The reuse factor keeps its usual meaning and is the only setting: it is converte
 concurrently, as ``n_in * n_out / ReuseFactor``. The two layers of a streaming pair are assigned the lower of their two counts, as a pair is limited by its
 slower half.
 
-A ``dot`` layer uses at most ``n_in`` multipliers and an ``axpy`` layer at most ``n_out``, so reuse factors below that point all produce the same design. A
-reuse factor that cannot be honoured is reported during conversion, together with the one that is built.
+A layer that reads a complete input array uses at most ``n_in`` multipliers and an ``axpy`` layer at most ``n_out``, so reuse factors below that point all
+produce the same design. A reuse factor that cannot be honoured is reported during conversion, together with the one that is built.
 
 Requirements
 ------------
@@ -66,7 +66,7 @@ The strategy applies to a model when all of the following hold.
 Two layer types are removed before the chain is identified and therefore do not interrupt a sequence of ``Dense`` layers:
 
 * **Elementwise activations**, which are computed in the output stage of the ``Dense`` layer that produces the value, after which the activation layer is
-  removed. The following are supported: ``relu``, ``sigmoid``, ``tanh``, ``selu``, ``softplus``, ``softsign``, ``binary_tanh``, ``ternary_tanh``, ``leaky_relu``,
+  removed. The following are supported: ``relu``, ``sigmoid``, ``tanh``, ``selu``, ``softplus``, ``softsign``, ``binary_tanh``, ``leaky_relu``,
   ``thresholded_relu``, ``elu``, ``hard_sigmoid`` and ``hard_tanh``. A ``linear`` activation is removed by ``hls4ml`` at an earlier stage and never reaches the
   strategy.
 * ``BatchNormalization`` **immediately following a** ``Dense`` **layer**, which ``hls4ml`` merges into the weights and bias of that layer before any backend
@@ -80,6 +80,7 @@ requirements above.
 
 * ``Softmax``, which requires every output of a layer before it can produce any and therefore cannot be computed value by value.
 * ``PReLU``, which is elementwise but holds one parameter per output, stored as weights of the activation layer.
+* ``ternary_tanh``, which is a layer type of its own holding a threshold, rather than a plain activation.
 * ``BatchNormalization`` that has not been merged. This occurs when it does not immediately follow a ``Dense`` layer, when the output type of the ``Dense``
   layer is specified, or when the weights of both layers are quantized. The most common case is a scaling layer placed after the activation rather than before
   it.
@@ -99,3 +100,52 @@ The strategy is selected per layer and takes effect wherever two or more ``Dense
    for layer in ['fc1', 'fc2', 'fc3']:
        config['LayerName'][layer]['Strategy'] = 'Fused'
        config['LayerName'][layer]['ReuseFactor'] = 4
+
+The reuse factor and the interval
+---------------------------------
+
+With the other strategies a layer takes as many cycles as its reuse factor, so a reuse factor of 128 gives an initiation interval of 128. This is not the
+case with the fused strategy. A fused layer needs a few cycles more than its reuse factor: to fill its pipeline, and to pass data to the other layers of
+its region. How many more depends on the layer and on the version of Vitis HLS.
+
+If a design has to accept a new input at a fixed rate, set ``ReuseFactorAsInterval``. The reuse factor is then read as the largest interval the layer may
+have, in cycles, rather than as a number its multiplier count is derived from:
+
+.. code-block:: python
+
+   for layer in ['fc1', 'fc2', 'fc3']:
+       config['LayerName'][layer]['Strategy'] = 'Fused'
+       config['LayerName'][layer]['ReuseFactor'] = 128          # the interval, in cycles
+       config['LayerName'][layer]['ReuseFactorAsInterval'] = True
+
+The strategy uses the fewest multipliers that keep the layer within that limit, and adds the cycles left over as wait states. The interval is then equal to
+the requested one or a few cycles smaller, and never larger. Wait states cost latency, so a layer configured this way is a little slower than the same
+layer would otherwise be.
+
+Set the interval at the same level as the rest of the configuration. A value given for a layer by name takes precedence over one given for a layer type,
+which takes precedence over one given for the model, and ``granularity='name'`` writes a reuse factor for every layer.
+
+Every layer of a fused region must use the reuse factor the same way and request the same interval. If the requested interval is smaller than a layer can
+achieve with all of its multipliers in use, the conversion stops and the message gives the smallest interval that layer can achieve. For each layer the
+conversion prints the number of multipliers and wait cycles used, and the range the interval will be in.
+
+What a layer costs
+^^^^^^^^^^^^^^^^^^
+
+A region is as slow as its slowest layer. A layer with ``m`` multipliers needs
+
+.. code-block::
+
+   interval  =  passes * ceil(lanes / m)  +  c
+
+The kernel iterates over ``lanes`` values, which is ``n_in`` for the dot form and ``n_out`` for the other two, and makes ``passes`` passes over them:
+``n_out`` for the dot form, and for the other two one pass per input plus one that applies the activation. ``c`` is the time to fill the pipeline and to
+pass data between the layers of the region. The strategy uses an upper estimate of ``c``, which is why the interval can be a few cycles smaller than
+requested but is never larger.
+
+The wait states use ``ap_wait_n``. A ``LATENCY`` directive cannot be used instead: Vitis HLS ignores it on these kernels, because it compiles their loops
+into separate functions whose duration it cannot determine in advance, and it reports this as ``HLS 200-893`` in ``solution1.log`` only. The wait states
+are present during synthesis only, so results from C simulation do not change.
+
+The estimate of ``c`` suits Vitis HLS 2023.2 and 2024.1. Vitis HLS 2025.1 needs more cycles, and less predictably, so check the interval with that version
+before depending on it.

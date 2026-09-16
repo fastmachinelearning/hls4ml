@@ -10,7 +10,7 @@ from hls4ml.model.types import NamedType
 # kernel needs. softmax is absent by nature: it needs every output of the layer before producing any.
 
 # Computed from the value alone
-INLINE_ACTIVATIONS = ('linear', 'relu', 'binary_tanh', 'ternary_tanh')
+INLINE_ACTIVATIONS = ('linear', 'relu', 'binary_tanh')
 
 # Computed from the value alone, by reading a table; the kernel also needs the size of the table
 TABLE_ACTIVATIONS = ('sigmoid', 'tanh', 'softplus', 'softsign', 'selu')
@@ -22,6 +22,33 @@ SCALAR_PARAM_ACTIVATIONS = ('leaky_relu', 'thresholded_relu', 'elu')
 HARD_ACTIVATIONS = ('hard_sigmoid', 'hard_tanh')
 
 FUSED = 'fused'
+
+
+def reads_interval(node):
+    """Whether the reuse factor gives a requested interval rather than its usual meaning.
+
+    Not read with get_layer_config_value: that stops at the first section that exists, so a flag set
+    for the model would not be seen once a layer has a section of its own.
+    """
+    sections = node.model.config.config['HLSConfig']
+    value = False
+    for section in (
+        sections.get('LayerName', {}).get(node.name),
+        sections.get('LayerType', {}).get(node.class_name),
+        sections.get('Model'),
+    ):
+        if section is not None and 'ReuseFactorAsInterval' in section:
+            value = section['ReuseFactorAsInterval']
+            break
+    text = str(value).strip().lower()
+    if text in ('true', '1'):
+        return True
+    if text in ('false', '0', 'none', ''):
+        return False
+    raise Exception(
+        f'Layer "{node.name}": ReuseFactorAsInterval is set to {value!r}, which is neither true nor '
+        'false. Use true or false (or leave it unset).'
+    )
 
 
 def _is_fused(node):
@@ -122,20 +149,30 @@ class FoldActivationIntoFused(OptimizerPass):
 
 
 class PlanDenseFusion(ModelOptimizerPass):
-    """Group Dense layers into regions and give each layer the form it is computed in.
+    """Group consecutive Dense layers into regions and select the kernel each one uses.
 
-    A Dense layer needs every input to make an output, so it can pass data one value at a time on one
-    side only: ``dot`` reads an array and writes value by value, ``axpy`` reads value by value and
-    writes an array. Layers alternate dot, axpy, ... so that every pair overlaps in time; an odd chain
-    gets a leading ``plain`` layer so that it still starts and ends on an array, as the model requires.
+    The selected kernel is stored on the layer as the attribute ``fused_form``, and this pass sets
+    three attributes in total:
+
+    * ``fused_form``        - which of the three kernels computes the layer: dot, axpy or plain
+    * ``fused_multipliers`` - how many multipliers the kernel uses at the same time
+    * ``fused_stream_out``  - whether the output is written one value at a time, as a stream
+
+    There are three kernels because a Dense layer needs all of its inputs before it can produce any
+    output, so it can pass data one value at a time on one side only. ``dot`` reads an array and
+    writes one value at a time; ``axpy`` reads one value at a time and writes an array; ``plain``
+    reads and writes arrays. The layers of a region are given dot, axpy, dot, axpy and so on, so that
+    each dot and the axpy after it can run at the same time, one consuming what the other produces.
+    A region with an odd number of layers starts with a plain layer, so that the region as a whole
+    still begins and ends with an array, which is what the rest of the model expects.
     """
 
     def __init__(self):
         pass
 
     def transform(self, model):
-        # io_stream carries a whole row per read, which the fused kernels cannot use. Reported
-        # separately; here it only stops the pass.
+        # One read of an io_stream connection carries a whole row, which these kernels cannot use.
+        # The validation pass reports it; here it only stops the pass.
         if model.config.get_config_value('IOType') != 'io_parallel':
             return False
 
@@ -155,7 +192,7 @@ class PlanDenseFusion(ModelOptimizerPass):
         self._set_parallel_multipliers(fused_layers)
         self._mark_streamed_outputs(fused_layers)
 
-        # The layers of a region run at the same time, so the top function is a DATAFLOW region
+        # Layers of a region run at the same time, which needs DATAFLOW rather than a pipeline
         if any(layer.get_attr('fused_form') in ('dot', 'axpy') for layer in fused_layers):
             model.config.pipeline_style = 'dataflow'
 
@@ -189,43 +226,80 @@ class PlanDenseFusion(ModelOptimizerPass):
             runs.append(current)
         return [run for run in runs if len(run) > 1]
 
-    def _lanes_dimension(self, layer):
-        """The number of values the layer works through: n_in for dot, which adds up the inputs, n_out
-        for the other forms, which produce the outputs."""
+    def _most_usable_multipliers(self, layer):
+        """Multipliers beyond the dimension the kernel iterates over would be unused."""
         if layer.get_attr('fused_form') == 'dot':
             return int(layer.get_attr('n_in'))
         return int(layer.get_attr('n_out'))
 
-    def _set_parallel_multipliers(self, layers):
-        """Turn the reuse factor of each layer into a count of multipliers used at the same time.
+    def _reads_interval(self, layer):
+        return reads_interval(layer)
 
-        The two are the same quantity written the other way round, so a given reuse factor asks for the
-        same hardware here as with the existing strategies. A dot and axpy pair is given the lower of
-        the two counts, since it runs only as fast as its slower half.
+    def _work_cycles(self, layer, multipliers):
+        """Cycles of computation for one run of the layer, excluding the wait states."""
+        n_in, n_out = int(layer.get_attr('n_in')), int(layer.get_attr('n_out'))
+        trips = -(-self._most_usable_multipliers(layer) // multipliers)
+        if layer.get_attr('fused_form') == 'dot':
+            return n_out * trips
+        # Every input, plus the pass that applies the activation
+        return (n_in + 1) * trips
+
+    def _headroom_cycles(self, layer, multipliers):
+        """Cycles to fill the pipeline and pass data between layers. An upper estimate, since the
+        exact value depends on the layer and the tool version, so the interval is never too large."""
+        return 10 + -(-self._most_usable_multipliers(layer) // multipliers)
+
+    def _set_from_interval(self, layer):
+        """With ReuseFactorAsInterval the reuse factor is the largest interval the layer may have.
+
+        Use the fewest multipliers that stay within it and spend what remains as wait states. If no
+        number of multipliers is enough, record the smallest interval the layer can have instead, for
+        the validation pass to report.
         """
+        target = max(1, int(layer.get_attr('reuse_factor', 1) or 1))
+        cap = self._most_usable_multipliers(layer)
+        for multipliers in range(1, cap + 1):
+            predicted = self._work_cycles(layer, multipliers) + self._headroom_cycles(layer, multipliers)
+            if predicted <= target:
+                layer.set_attr('fused_multipliers', multipliers)
+                layer.set_attr('fused_pad_cycles', target - predicted)
+                # How much smaller the interval may be, since the headroom is an upper estimate
+                layer.set_attr('fused_interval_slack', self._headroom_cycles(layer, multipliers) - 8)
+                return
+        floor = self._work_cycles(layer, cap) + self._headroom_cycles(layer, cap)
+        layer.set_attr('fused_multipliers', cap)
+        layer.set_attr('fused_pad_cycles', 0)
+        layer.set_attr('fused_interval_floor', floor)
+
+    def _set_parallel_multipliers(self, layers):
+        """Derive the multiplier count from the reuse factor, as the other strategies do, so the same
+        reuse factor asks for the same hardware here as it does there."""
         for layer in layers:
+            if self._reads_interval(layer):
+                self._set_from_interval(layer)
+                continue
             n_in = int(layer.get_attr('n_in'))
             n_out = int(layer.get_attr('n_out'))
             reuse = max(1, int(layer.get_attr('reuse_factor', 1) or 1))
             wanted = max(1, (n_in * n_out) // reuse)
             # More multipliers than values to work through would leave some unused
-            layer.set_attr('fused_multipliers', min(wanted, self._lanes_dimension(layer)))
+            layer.set_attr('fused_multipliers', min(wanted, self._most_usable_multipliers(layer)))
 
+        # A pair runs only as fast as its slower half, so the faster half cannot use its extra
+        # multipliers. Skip interval-configured layers: they already have the fewest that fit.
         for layer in layers:
-            if layer.get_attr('fused_form') != 'dot':
+            if layer.get_attr('fused_form') != 'dot' or self._reads_interval(layer):
                 continue
             consumers = layer.get_output_nodes()
-            if consumers and consumers[0].get_attr('fused_form') == 'axpy':
+            if consumers and consumers[0].get_attr('fused_form') == 'axpy' and not self._reads_interval(consumers[0]):
                 pair = (layer, consumers[0])
                 shared = min(int(n.get_attr('fused_multipliers')) for n in pair)
                 for n in pair:
                     n.set_attr('fused_multipliers', shared)
 
     def _mark_streamed_outputs(self, layers):
-        """Mark the outputs written one value at a time, which TransformTypes turns into streams.
-
-        Only a dot layer read by an axpy layer writes that way.
-        """
+        """Mark the outputs a later pass, TransformTypes, turns into streams: only a dot layer read
+        by an axpy layer writes one value at a time."""
         for layer in layers:
             consumers = layer.get_output_nodes()
             streams = (
@@ -240,15 +314,13 @@ class LayoutFusedDotWeights(OptimizerPass):
     """Transpose the weights of a dot layer into the order that kernel reads them.
 
     hls4ml stores a Dense weight for input i and output j at i * n_out + j, which is what axpy reads.
-    dot produces one output at a time and needs the inputs of one output together, at j * n_in + i.
+    Every other form produces one output at a time and needs the inputs of one output together, at
+    j * n_in + i. That includes a layer the planner gave no form, which is a layer the strategy was
+    asked for that is not part of a chain: it is computed by the same kernel as a leading layer.
     """
 
     def match(self, node):
-        return (
-            isinstance(node, Dense)
-            and node.get_attr('fused_form') == 'dot'
-            and not node.get_attr('fused_weights_transposed')
-        )
+        return _is_fused(node) and node.get_attr('fused_form') != 'axpy' and not node.get_attr('fused_weights_transposed')
 
     def transform(self, model, node):
         weight = node.weights['weight']

@@ -135,8 +135,17 @@ class ValidateFusedConfiguration(OptimizerPass):
         self._check_io_type(model, node)
         if self._check_layer_type(node):
             return False
-        self._check_reuse_factor(node)
+        if self._reads_interval(node):
+            self._check_interval(node)
+        else:
+            self._check_reuse_factor(node)
         return False
+
+    @staticmethod
+    def _reads_interval(node):
+        from hls4ml.backends.vitis.passes.fuse_dense import reads_interval
+
+        return reads_interval(node)
 
     def _check_io_type(self, model, node):
         io_type = model.config.get_config_value('IOType')
@@ -158,6 +167,53 @@ class ValidateFusedConfiguration(OptimizerPass):
             f'"{node.get_attr("strategy")}".'
         )
         return True
+
+    def _check_interval(self, node):
+        """Check a layer whose reuse factor gives a requested interval, and report what was built."""
+
+        target = max(1, int(node.get_attr('reuse_factor', 1) or 1))
+
+        floor = node.get_attr('fused_interval_floor')
+        if floor is not None:
+            raise Exception(
+                f'Layer "{node.name}" ({node.class_name}) cannot achieve an interval of {target}. With '
+                f'all of its multipliers in use it still needs {floor} cycles. Request {floor} or more, '
+                'or leave ReuseFactorAsInterval unset so the reuse factor keeps its usual meaning.'
+            )
+
+        producer = node.get_input_node()
+        if producer is not None and producer.get_attr('fused_form') is not None and not self._reads_interval(producer):
+            raise Exception(
+                f'Layers "{producer.name}" and "{node.name}" are fused into one region, but only the '
+                'second uses its reuse factor as an interval. A region has a single interval, so its '
+                'layers must use the reuse factor the same way.'
+            )
+
+        consumers = node.get_output_nodes()
+        neighbour = consumers[0] if consumers else None
+        if neighbour is not None and neighbour.get_attr('fused_form') is not None:
+            if not self._reads_interval(neighbour):
+                raise Exception(
+                    f'Layers "{node.name}" and "{neighbour.name}" are fused into one region, but only '
+                    'the first uses its reuse factor as an interval. A region has a single interval, so '
+                    'its layers must use the reuse factor the same way.'
+                )
+            neighbour_target = max(1, int(neighbour.get_attr('reuse_factor', 1) or 1))
+            if neighbour_target != target:
+                raise Exception(
+                    f'Layers "{node.name}" and "{neighbour.name}" are fused into one region but request '
+                    f'intervals of {target} and {neighbour_target}. A region has a single interval, so '
+                    'its layers must request the same one.'
+                )
+
+        built = node.get_attr('fused_multipliers')
+        pad = node.get_attr('fused_pad_cycles') or 0
+        slack = node.get_attr('fused_interval_slack') or 0
+        result = f'between {target - slack} and {target}' if slack else f'{target}'
+        print(
+            f'Layer "{node.name}": reuse factor {target} used as a requested interval. Built with '
+            f'{built} multipliers and {pad} wait cycles. The interval will be {result} cycles.'
+        )
 
     def _check_reuse_factor(self, node):
         """Report a reuse factor the form of the layer cannot reach.

@@ -19,7 +19,6 @@ FUSED_ACTIVATIONS = {
     'hard_sigmoid': 'FUSED_HARD_SIGMOID',
     'hard_tanh': 'FUSED_HARD_TANH',
     'binary_tanh': 'FUSED_BINARY_TANH',
-    'ternary_tanh': 'FUSED_TERNARY_TANH',
 }
 
 dense_fused_config_template = """struct config{index} : nnet::dense_fused_config {{
@@ -27,6 +26,7 @@ dense_fused_config_template = """struct config{index} : nnet::dense_fused_config
     static const unsigned n_out = {n_out};
     static const unsigned reuse_factor = {reuse};
     static const unsigned multiplier_limit = {multiplier_limit};
+    static const unsigned pad_cycles = {pad_cycles};
     static const unsigned activation = nnet::{activation};
     static const unsigned table_size = {table_size};
     typedef {table_t} table_t;
@@ -73,6 +73,7 @@ class DenseFusedConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['multiplier_limit'] = node.get_attr('fused_multipliers', 1)
+        params['pad_cycles'] = node.get_attr('fused_pad_cycles', 0) or 0
         params['activation'] = FUSED_ACTIVATIONS.get(node.get_attr('fused_activation'), 'FUSED_LINEAR')
         params['table_size'] = node.get_attr('fused_table_size') or 1024
         table_t = node.get_attr('fused_table_t')

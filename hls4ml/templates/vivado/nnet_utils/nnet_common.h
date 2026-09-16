@@ -12,6 +12,19 @@
 #define STRINGIFY(x) #x
 #define EXPAND_STRING(x) STRINGIFY(x)
 
+// Wait states that increase a layer's interval to a requested one. A LATENCY directive cannot: the
+// tool ignores it on kernels whose loops it compiles into separate functions, reporting HLS 200-893
+// in solution1.log only.
+#ifdef __SYNTHESIS__
+#include "etc/autopilot_ssdm_op.h"
+#define FUSED_PAD(cycles)                                                                                                   \
+    if (cycles > 0) {                                                                                                       \
+        ap_wait_n(cycles);                                                                                                  \
+    }
+#else
+#define FUSED_PAD(cycles)
+#endif
+
 #ifndef __VITIS_HLS__
 #define DATA_PACK_TXT HLS DATA_PACK variable =
 #define DATA_PACK_PRAGMA(variable) DATA_PACK_TXT variable
