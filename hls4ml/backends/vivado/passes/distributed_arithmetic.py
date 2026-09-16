@@ -115,8 +115,9 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.codegen.hls import hls_logic_and_bridge_gen
-        from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
+        from alkaid.cmvm import solver_options_t
+        from alkaid.codegen.hls import hls_logic_and_bridge_gen
+        from alkaid.trace import FVArray, trace
 
         kernel: np.ndarray = node.attributes['weight'].data
         kernel = kernel.reshape(-1, kernel.shape[-1])
@@ -125,23 +126,22 @@ class DistributedArithmeticCodegen(OptimizerPass):
 
         k, i, f = get_kernel_inp_kif(node)
         hard_dc = int(os.environ.get('DA_HARD_DC', 2))
-        options = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
-        inp = FixedVariableArray.from_kif(k, i, f, HWConfig(1, -1, -1), solver_options=options)
+        options: solver_options_t = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
+        inp = FVArray.from_kif(k, i, f, solver_options=options)
         out = inp @ kernel
         if node.attributes['bias'] is not None:
             bias = node.attributes['bias'].data.ravel()
             assert len(bias) == n_out
             out += bias
-        sol = comb_trace(inp, out)
-        node.attributes['da_kernel_cost'] = sol.cost
-
         backend = model.config.get_config_value('Backend').lower()
         assert backend in ('vitis', 'vivado')
+        comb = trace(inp, out)
+        node.attributes['da_kernel_cost'] = comb.cost
         flavor = 'vitis'
 
         pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
 
-        fn_str, _ = hls_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
+        fn_str, _ = hls_logic_and_bridge_gen(comb, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
         io_type = node.model.config.get_config_value('IOType')
         if io_type != 'io_parallel':
@@ -361,8 +361,9 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
 
     @requires('da')
     def transform(self, model: 'ModelGraph', node: Layer):
-        from da4ml.codegen.hls import hls_logic_and_bridge_gen
-        from da4ml.trace import FixedVariableArray, HWConfig, comb_trace
+        from alkaid.cmvm import solver_options_t
+        from alkaid.codegen.hls import hls_logic_and_bridge_gen
+        from alkaid.trace import FVArray, trace
 
         kernel: np.ndarray = node.attributes['weight'].data
         I, C, L_ker = kernel.shape
@@ -382,15 +383,15 @@ class DistributedArithmeticEinsumCodegen(OptimizerPass):
             _k, _i, _f = (v[i] for v in inp_kifs)
             fn_name = f'einsum_{node.index}_da_{i}_of_{I}'
             hard_dc = int(os.environ.get('DA_HARD_DC', 2))
-            options = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
-            inp = FixedVariableArray.from_kif(_k, _i, _f, HWConfig(1, -1, -1), solver_options=options)
+            options: solver_options_t = {'hard_dc': hard_dc, 'search_all_decompose_dc': True}
+            inp = FVArray.from_kif(_k, _i, _f, solver_options=options)
             out = inp @ kernel[i]
-            sol = comb_trace(inp, out)
+            comb = trace(inp, out)
 
-            node.attributes['da_kernel_cost'] += sol.cost
+            node.attributes['da_kernel_cost'] += comb.cost
 
             pragmas = ['#pragma HLS INLINE'] if flavor == 'vitis' else None
-            fn_str, _ = hls_logic_and_bridge_gen(sol, fn_name, flavor, pragmas=pragmas, print_latency=True)
+            fn_str, _ = hls_logic_and_bridge_gen(comb, fn_name, flavor, pragmas=pragmas, print_latency=True)
 
             fn_strs.append(fn_str)
             fn_call = f'{fn_name}(&inp_tpose[({i} * {L_data} + l0) * {C}], &out_tpose[({i} * {L_data} + l0) * {L_ker}]);'
@@ -415,8 +416,9 @@ class DACombinationalTemplate(OptimizerPass):
         return isinstance(node, DACombinational)
 
     def transform(self, model: 'ModelGraph', node: DACombinational):
-        from da4ml.codegen.hls import hls_logic_and_bridge_gen
-        from da4ml.trace import FixedVariableArrayInput, comb_trace
+        from alkaid.codegen.hls import hls_logic_and_bridge_gen
+        from alkaid.codegen.hls.hls_codegen import get_io_types
+        from alkaid.trace import FVArrayInput, trace
 
         io_type = model.config.get_config_value('IOType')
         if io_type != 'io_parallel':
@@ -428,14 +430,15 @@ class DACombinationalTemplate(OptimizerPass):
             B, I, s = inp_p.width, inp_p.integer, inp_p.signed
             i, f = I - s, B - I
             comb = node.attributes['da_comb_logic']
-            inp = FixedVariableArrayInput(comb.shape[0]).quantize(s, i, f)
+            inp = FVArrayInput(comb.shape[0]).quantize(s, i, f)
             out = comb(inp)
-            comb = comb_trace(inp, out)
+            comb = trace(inp, out)
             node.attributes['da_comb_logic'] = comb
 
         comb = node.attributes['da_comb_logic']
-
         backend = model.config.get_config_value('Backend').lower()
+        node.attributes['da_comb_logic'] = comb
+
         if backend in ('vitis', 'vivado'):
             flavor = 'vitis'
         elif backend == 'oneapi':
@@ -444,16 +447,44 @@ class DACombinationalTemplate(OptimizerPass):
             raise ValueError(f'Unsupported backend {backend} for DACombinational layer.')
 
         fn_name = f'da_comblogic_{node.index}'
-        comb_logic, _ = hls_logic_and_bridge_gen(
-            comb, fn_name, flavor=flavor, pragmas=['#pragma HLS INLINE'], print_latency=True
-        )
+
+        out_t: str = node.get_output_variable().type.name
+        inp_name: str = ', '.join(node.inputs)
+        out_name: str = node.get_output_variable().name
         namespace = model.config.get_writer_config().get('Namespace', None) or 'nnet'
 
-        inp_t: str = node.get_input_variable().type.name
-        out_t: str = node.get_output_variable().type.name
-        inp_name: str = node.get_input_variable().name
-        out_name: str = node.get_output_variable().name
+        inp_names = node.inputs
+        inp_types = [model.graph[name].get_output_variable().type.name for name in inp_names]
+        inp_ts = ', '.join(inp_types)
 
-        fn_cpp = f'{namespace}::{fn_name}<{inp_t}, {out_t}>({inp_name}, {out_name});'
+        fn_name_internal = f'{fn_name}_internal' if len(inp_names) > 1 else fn_name
+        _name = fn_name_internal if len(inp_names) > 1 else fn_name
+        comb_logic, _ = hls_logic_and_bridge_gen(
+            comb, _name, flavor=flavor, pragmas=['#pragma HLS INLINE'], print_latency=True
+        )
+
+        # When there's multiple inputs, make a wrapper doing the concatenation and rename the original fn.
+        if len(inp_names) > 1:
+            inp_sizes = [prod(model.graph[name].get_output_variable().shape) for name in inp_names]
+            template_args = ', '.join(f'typename inp{i}_t' for i in range(len(inp_names))) + ', typename out_t'
+            fn_args = ', '.join(f'inp{i}_t inp{i}[{s}]' for i, s in enumerate(inp_sizes)) + f', out_t out[{comb.shape[1]}]'
+            _inp_t_str = get_io_types(comb, 'vitis')[0]
+            forloop = """for (size_t i = {n}; i < {m}; i++) {{
+        inp_buf[i] = inp{i}[i-{n}];}}
+        #pragma HLS UNROLL"""
+            N = [0] + np.cumsum(inp_sizes).tolist()
+            forloops = '\n    '.join(forloop.format(i=i, n=N[i], m=N[i + 1]) for i in range(len(inp_names)))
+            wrapper_fn = f"""template <{template_args}>
+void {fn_name}({fn_args}) {{
+    {_inp_t_str} inp_buf[{comb.shape[0]}];
+    #pragma HLS INLINE
+
+    {forloops}
+
+    {fn_name_internal}<{_inp_t_str}, out_t>(inp_buf, out);
+    }}"""
+            comb_logic = comb_logic + '\n\n' + wrapper_fn
+
+        fn_cpp = f'{namespace}::{fn_name}<{inp_ts}, {out_t}>({inp_name}, {out_name});'
         node.attributes['da_codegen'] = Source(comb_logic)
         node.attributes['function_cpp'] = fn_cpp
