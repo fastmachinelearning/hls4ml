@@ -34,7 +34,7 @@ When accepted, your pull request will be merged to the repository.
 
 Usage of AI tools in development for hls4ml is generally allowed. However, we require all contributors to adhere to the following guidelines:
 
-- Contributed code must still be your own original work. It is your responsibility to make sure that the generated code is compatible with the [hls4ml license](LICENSE), [these Contributor Guidelines](CONTRIBUTING.md), and that it doesn't violate the license of either the AI tool or any third-party license obligations.
+- Contributed code must still be your own original work. It is your responsibility to make sure that the generated code is compatible with the [hls4ml license](https://github.com/fastmachinelearning/hls4ml/blob/main/LICENSE), these contributor guidelines, and that it doesn't violate the license of either the AI tool or any third-party license obligations.
 - The AI tool name and version must be disclosed in the pull request description. The pull request template has a section for this.
 - Ensure you have reviewed and fully understand the generated code and be prepared to explain the reasoning behind it during review.
 - AI coding agents tend to be very verbose. Please review generated code and especially comments and trim unnecessary clutter.
@@ -46,7 +46,7 @@ such trailers distort contributor statistics. Some assistants add `Co-authored-b
 remove them before opening the pull request. Disclosure belongs in the pull request description, where a
 reviewer will read it.
 
-If you use an AI agent to work on hls4ml, point it at [`AGENTS.md`](AGENTS.md) in the repository root. It
+If you use an AI agent to work on hls4ml, point it at [`AGENTS.md`](https://github.com/fastmachinelearning/hls4ml/blob/main/AGENTS.md) in the repository root. It
 states the same expectations in a form agents read, and it will save you review comments.
 
 Submissions that appear unreviewed or copied directly from an AI tool without proper understanding may be requested to be revised or declined.

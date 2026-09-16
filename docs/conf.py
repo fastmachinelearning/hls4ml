@@ -71,6 +71,7 @@ extensions = [
     'sphinx_contributors',
     'sphinx_github_changelog',
     'sphinx_tabs.tabs',
+    'myst_parser',
 ]
 
 # Note: to build locally, you will need to set the SPHINX_GITHUB_CHANGELOG_TOKEN

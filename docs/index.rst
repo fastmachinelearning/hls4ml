@@ -6,6 +6,7 @@
     intro/status
     intro/setup
     intro/faq
+    intro/contributing
     intro/release_notes
     intro/reference
 

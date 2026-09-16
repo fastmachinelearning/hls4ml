@@ -31,7 +31,7 @@ We strongly recommend interested users unfamiliar with FPGAs or model compressio
 
 **How do I contribute to hls4ml development?**
 
-We're always welcoming new contributions. If you have an interesting feature in mind feel free to start a new discussion thread with your proposal. We also have regular meetings online to discuss the status of developments where you can be invited to present your work. To receive announcements, `request to be added to our CERN e-group <https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=hls-fml>`_. Furthermore, check the `CONTRIBUTING <https://github.com/fastmachinelearning/hls4ml/blob/main/CONTRIBUTING.md>`_ document for a set of technical requirements for making contributions to the hls4ml project.
+We're always welcoming new contributions. If you have an interesting feature in mind feel free to start a new discussion thread with your proposal. We also have regular meetings online to discuss the status of developments where you can be invited to present your work. To receive announcements, `request to be added to our CERN e-group <https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=hls-fml>`_. Furthermore, see :doc:`contributing` for the technical requirements for making contributions to the hls4ml project.
 
 
 Common HLS synthesis issues
