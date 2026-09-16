@@ -54,7 +54,7 @@ for Keras models:
         model,
         granularity='name',
         default_precision='fixed<16,6>',
-        backend='oneAPI')
+        backend='Altera')
 
 or for PyTorch models:
 

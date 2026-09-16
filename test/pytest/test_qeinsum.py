@@ -19,7 +19,7 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize(
     'operation',
     [
@@ -41,7 +41,7 @@ def test_einsum_dense(test_case_id, backend, io_type, strategy, operation):
     data = np.random.randn(1000, *inp0_shape).astype(np.float32), np.random.randn(1000, *inp1_shape).astype(np.float32)
     output_dir = str(test_root_path / test_case_id)
     hls_config = {
-        'Model': {'Precision': 'ap_fixed<1,0>' if backend != 'oneAPI' else 'ac_fixed<2,0>', 'ReuseFactor': 1},
+        'Model': {'Precision': 'ap_fixed<1,0>' if backend != 'Altera' else 'ac_fixed<2,0>', 'ReuseFactor': 1},
         'Strategy': strategy,
     }
 
