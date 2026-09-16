@@ -271,104 +271,128 @@ SoftsignActLoop:
 // *************************************************
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_stable_stream() {
-#include "activation_tables/exp_table.tb"
-#include "activation_tables/invert_table.tb"
 
-    constexpr unsigned multiplier_limit =
-        DIV_ROUNDUP(std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{} / multiplier_limit;
+    using input_arr_t = typename ExtractPipeType<data_pipe>::value_type;
+    using res_arr_T = typename ExtractPipeType<res_pipe>::value_type;
+    constexpr unsigned input_arr_size = std::tuple_size<input_arr_t>{};
+    // constexpr unsigned multiplier_limit = DIV_ROUNDUP(input_arr_size, CONFIG_T::reuse_factor);
+    using input_t = typename input_arr_t::value_type;
 
-    [[intel::fpga_register]] typename ExtractPipeType<data_pipe>::value_type::value_type
-        data_array[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
+    // constexpr unsigned pipeline = input_arr_size / multiplier_limit;
+
+    [[intel::fpga_register]] input_t data_array[input_arr_size];
+    // In causal version input_arr_size is ALWAYS equal to ctx_len
+    assert(CONFIG_T::ctx_len == input_arr_size);
+
+    [[intel::fpga_register]] bool mask[input_arr_size];
+    [[intel::fpga_register]] bool next_unmask[input_arr_size];
+    [[intel::fpga_register]] bool head_track[CONFIG_T::n_head];
+
+    // Init tracker arrays
+    #pragma unroll
+    for (unsigned i = 0; i < input_arr_size; i++) {
+        mask[i] = (CONFIG_T::ctx_len != 0) ? (i == 0) : true;  // 1,0,0,0,....
+        next_unmask[i] = (CONFIG_T::ctx_len != 0) && (i == 1); // 0,1,0,0,....
+    }
+
+    #pragma unroll
+    for (unsigned i = 0; i < CONFIG_T::n_head; i++)
+        head_track[i] = (i == 0);
 
 SoftmaxArrayLoop:
-    [[intel::initiation_interval(pipeline)]] for (unsigned i = 0;
-                                                  i < CONFIG_T::n_in /
-                                                          std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
-                                                  i++) {
+    for (unsigned i = 0; i < CONFIG_T::n_in / input_arr_size; i++) {
+
+        typename ExtractPipeType<res_pipe>::value_type out_pack;
+
         auto in_pack = data_pipe::read();
 
     SoftmaxArrayPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}; j++) {
+        for (unsigned j = 0; j < input_arr_size; j++) {
             data_array[j] = in_pack[j];
         }
 
         // Find the max and compute all delta(x_i, x_max)
-        Op_max<typename ExtractPipeType<data_pipe>::value_type::value_type> op_max;
-        [[intel::fpga_register]] typename ExtractPipeType<data_pipe>::value_type::value_type x_max =
-            reduce<typename ExtractPipeType<data_pipe>::value_type::value_type,
-                   std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{},
-                   Op_max<typename ExtractPipeType<data_pipe>::value_type::value_type>>(data_array, op_max);
+        Op_max<input_t> op_max;
+        [[intel::fpga_register]] input_t x_max = reduce<input_t, input_arr_size, Op_max<input_t>>(data_array, op_max);
 
-        // For the diffs, use the same type as the input but force rounding and saturation
-        [[intel::fpga_register]] ac_fixed<ExtractPipeType<data_pipe>::value_type::value_type::width,
-                                          ExtractPipeType<data_pipe>::value_type::value_type::i_width, true, AC_RND, AC_SAT>
-            d_xi_xmax[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
+        [[intel::fpga_register]] typename CONFIG_T::inp_norm_t d_xi_xmax[input_arr_size];
+
         #pragma unroll
-        for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}; j++) {
-            d_xi_xmax[j] = data_array[j] - x_max;
+        for (unsigned j = 0; j < input_arr_size; j++) {
+            d_xi_xmax[j] = x_max - data_array[j];
         }
 
         // Calculate all the e^x's
-        [[intel::fpga_register]]
-        typename CONFIG_T::exp_table_t exp_res[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
+        [[intel::fpga_register]] typename CONFIG_T::accum_t exp_res[input_arr_size];
+
         #pragma unroll
-        for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}; j++) {
+        for (unsigned j = 0; j < input_arr_size; j++) {
             exp_res[j] =
-                exp_table[softmax_stable_idx_from_real_val<typename ExtractPipeType<data_pipe>::value_type::value_type,
-                                                           CONFIG_T>(d_xi_xmax[j])];
+                mask[j]
+                    ? CONFIG_T::exp_table[softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(
+                          d_xi_xmax[j])]
+                    : 0;
         }
 
         // Explicitly sum the results with an adder tree.
-        // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
-        Op_add<typename CONFIG_T::exp_table_t> op_add;
-        [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_sum =
-            reduce<typename CONFIG_T::exp_table_t, std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{},
-                   Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+        Op_add<typename CONFIG_T::accum_t> op_add;
+        [[intel::fpga_register]] typename CONFIG_T::inv_inp_t exp_sum =
+            reduce<typename CONFIG_T::accum_t, input_arr_size, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
         [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-            invert_table[softmax_stable_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
-        typename ExtractPipeType<res_pipe>::value_type out_pack;
+            CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(
+                exp_sum)];
 
     SoftmaxInvPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; j++) {
-
-            // TODO - Find Quartus-equivalent pragma
-            // #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
-
+        for (unsigned j = 0; j < std::tuple_size<res_arr_T>{}; j++) {
             out_pack[j] = exp_res[j] * inv_exp_sum;
         }
-
         res_pipe::write(out_pack);
+
+        if constexpr (CONFIG_T::ctx_len != 0) {
+            bool head_modulo = head_track[CONFIG_T::n_head - 1];
+            if (head_modulo) {
+                #pragma unroll
+                for (unsigned i = 0; i < input_arr_size; i++)
+                    mask[i] = mask[i] | next_unmask[i];
+                #pragma unroll
+                for (unsigned i = input_arr_size - 1; i > 0; i--)
+                    next_unmask[i] = next_unmask[i - 1];
+                next_unmask[0] = false; // This is a redundant 0 check
+            }
+
+            #pragma unroll
+            for (unsigned i = CONFIG_T::n_head - 1; i > 0; i--)
+                head_track[i] = head_track[i - 1];
+            head_track[0] = head_modulo;
+        }
     }
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_latency_stream() {
-#include "activation_tables/exp_table_latency.tb"
-#include "activation_tables/invert_table_latency.tb"
 
-    constexpr unsigned multiplier_limit =
-        DIV_ROUNDUP(std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}, CONFIG_T::reuse_factor);
-    constexpr unsigned pipeline = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{} / multiplier_limit;
+    using input_arr_t = typename ExtractPipeType<data_pipe>::value_type;
+    using res_arr_T = typename ExtractPipeType<res_pipe>::value_type;
+    constexpr unsigned input_arr_size = std::tuple_size<input_arr_t>{};
+    constexpr unsigned multiplier_limit = DIV_ROUNDUP(input_arr_size, CONFIG_T::reuse_factor);
+    constexpr unsigned pipeline = input_arr_size / multiplier_limit;
 
     // Calculate all the e^x's
-    [[intel::fpga_register]]
-    typename CONFIG_T::exp_table_t exp_res[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
+    [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[input_arr_size];
 
 SoftmaxExpLoop:
-    [[intel::initiation_interval(pipeline)]] for (unsigned i = 0;
-                                                  i < CONFIG_T::n_in /
-                                                          std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
-                                                  i++) {
+    [[intel::initiation_interval(pipeline)]] for (unsigned i = 0; i < CONFIG_T::n_in / input_arr_size; i++) {
         auto in_pack = data_pipe::read();
+        typename ExtractPipeType<res_pipe>::value_type out_pack;
 
     SoftmaxExpPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}; j++) {
-            exp_res[j] = exp_table_latency[softmax_latency_idx_from_real_val<
-                typename ExtractPipeType<data_pipe>::value_type::value_type, CONFIG_T>(in_pack[j])];
+        for (unsigned j = 0; j < std::tuple_size<input_arr_t>{}; j++) {
+            exp_res[j] =
+                CONFIG_T::exp_table[softmax_idx_from_real_val<typename input_arr_t::value_type, CONFIG_T::exp_table_size>(
+                    in_pack[j])];
         }
 
         // Explicitly sum the results with an adder tree.
@@ -379,51 +403,47 @@ SoftmaxExpLoop:
 
         // Multiply previously calculated exponetials with the reciprocal of the sum
         [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-            invert_table_latency[softmax_latency_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T>(exp_sum)];
+            CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T::inv_table_size>(
+                exp_sum)];
 
-        typename ExtractPipeType<res_pipe>::value_type out_pack;
     SoftmaxInvPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; j++) {
+        for (unsigned j = 0; j < std::tuple_size<res_arr_T>{}; j++) {
             // #pragma HLS ALLOCATION instances=mul limit=multiplier_limit operation
             out_pack[j] = exp_res[j] * inv_exp_sum;
         }
-
         res_pipe::write(out_pack);
     }
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_legacy_stream() {
-#include "activation_tables/exp_table_legacy.tb"
-#include "activation_tables/invert_table_legacy.tb"
+
+    using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
+    using res_arr_T = typename ExtractPipeType<res_pipe>::value_type;
 
     // Index into the lookup table based on data for exponentials
-    [[intel::fpga_register]]
-    typename CONFIG_T::table_t exp_res[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
+    [[intel::fpga_register]] typename CONFIG_T::table_t exp_res[std::tuple_size<data_arr_T>{}];
     [[intel::fpga_register]] typename CONFIG_T::table_t exp_diff_res;
-    [[intel::fpga_register]] typename ExtractPipeType<data_pipe>::value_type::value_type
-        data_cache[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
+    [[intel::fpga_register]] typename data_arr_T::value_type data_cache[std::tuple_size<data_arr_T>{}];
 
 SoftmaxInitLoop:
-    [[intel::initiation_interval(1)]] for (unsigned s = 0;
-                                           s < CONFIG_T::n_in /
-                                                   std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
-                                           s++) {
+    [[intel::initiation_interval(1)]] for (unsigned s = 0; s < CONFIG_T::n_in / std::tuple_size<data_arr_T>{}; s++) {
         auto in_pack = data_pipe::read();
+        typename ExtractPipeType<res_pipe>::value_type out_pack;
 
     SoftmaxInitPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}; j++) {
+        for (unsigned j = 0; j < std::tuple_size<data_arr_T>{}; j++) {
             data_cache[j] = in_pack[j];
             exp_res[j] = 0;
         }
 
     SoftmaxExpLoop:
         #pragma unroll
-        for (int i = 0; i < std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}; i++) {
+        for (int i = 0; i < std::tuple_size<data_arr_T>{}; i++) {
         SoftmaxExpInner:
             #pragma unroll
-            for (int j = 0; j < std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}; j++) {
+            for (int j = 0; j < std::tuple_size<data_arr_T>{}; j++) {
                 if (i == j) {
                     exp_diff_res = 1;
                 } else {
@@ -433,73 +453,117 @@ SoftmaxInitLoop:
                         index = 0;
                     if (index > CONFIG_T::table_size - 1)
                         index = CONFIG_T::table_size - 1;
-                    exp_diff_res = exp_table_legacy[index];
+                    exp_diff_res = CONFIG_T::exp_table[index];
                 }
                 exp_res[i] += exp_diff_res;
             }
         }
 
-        typename ExtractPipeType<res_pipe>::value_type out_pack;
     SoftmaxInvPackLoop:
         #pragma unroll
-        for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; j++) {
+        for (unsigned j = 0; j < std::tuple_size<res_arr_T>{}; j++) {
             int exp_res_index = (exp_res[j] * CONFIG_T::table_size / 64).to_int();
             if (exp_res_index < 0)
                 exp_res_index = 0;
             if (exp_res_index > CONFIG_T::table_size - 1)
                 exp_res_index = CONFIG_T::table_size - 1;
-            out_pack[j] =
-                static_cast<typename ExtractPipeType<res_pipe>::value_type::value_type>(invert_table_legacy[exp_res_index]);
-        }
 
+            out_pack[j] = static_cast<typename res_arr_T::value_type>(CONFIG_T::invert_table[exp_res_index]);
+        }
         res_pipe::write(out_pack);
     }
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_argmax_stream() {
-    [[intel::initiation_interval(
-        1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; i++) {
+
+    using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
+    using res_arr_T = typename ExtractPipeType<res_pipe>::value_type;
+
+    [[intel::initiation_interval(1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<res_arr_T>{}; i++) {
+
         auto in_data = data_pipe::read();
         typename ExtractPipeType<res_pipe>::value_type out_data;
 
         #pragma unroll
-        for (int i = 0; i < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; i++) {
-            out_data[i] = static_cast<typename ExtractPipeType<res_pipe>::value_type::value_type>(0);
+        for (int i = 0; i < std::tuple_size<res_arr_T>{}; i++) {
+            out_data[i] = static_cast<typename res_arr_T::value_type>(0);
         }
 
-        [[intel::fpga_register]] typename ExtractPipeType<data_pipe>::value_type::value_type maximum = in_data[0];
+        [[intel::fpga_register]] typename data_arr_T::value_type maximum = in_data[0];
         [[intel::fpga_register]] int idx = 0;
 
-        [[intel::initiation_interval(1)]] for (int i = 1;
-                                               i < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; i++) {
+        [[intel::initiation_interval(1)]] for (int i = 1; i < std::tuple_size<res_arr_T>{}; i++) {
+
             if (in_data[i] > maximum) {
                 maximum = in_data[i];
                 idx = i;
             }
         }
-
-        out_data[idx] = static_cast<typename ExtractPipeType<res_pipe>::value_type::value_type>(1);
+        out_data[idx] = static_cast<typename res_arr_T::value_type>(1);
         res_pipe::write(out_data);
     }
 }
 
 template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_stream() {
-    switch (CONFIG_T::implementation) {
-    case softmax_implementation::latency:
+    if constexpr (CONFIG_T::implementation == softmax_implementation::latency) {
         softmax_latency_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
-    case softmax_implementation::stable:
-        softmax_stable_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
-    case softmax_implementation::legacy:
-        softmax_legacy_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
-    case softmax_implementation::argmax:
+    } else if constexpr (CONFIG_T::implementation == softmax_implementation::argmax) {
         softmax_argmax_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
-    default:
+    } else if constexpr (CONFIG_T::implementation == softmax_implementation::legacy) {
+        softmax_argmax_stream<data_pipe, res_pipe, CONFIG_T>();
+    } else { // Default to stable
         softmax_stable_stream<data_pipe, res_pipe, CONFIG_T>();
-        break;
+    }
+}
+
+// *************************************************
+//       Multidimensional Softmax
+// *************************************************
+template <class data_pipe, class res_pipe, typename CONFIG_T> inline void softmax_multidim_stream() {
+
+    using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
+    using data_T = typename data_arr_T::value_type;
+    using res_arr_T = typename ExtractPipeType<res_pipe>::value_type;
+    using res_T = typename res_arr_T::value_type;
+
+    using in_slice_arr_T = nnet::array<data_T, CONFIG_T::n_slice>;
+    using out_slice_arr_T = nnet::array<res_T, CONFIG_T::n_slice>;
+
+    using slice_config = softmax_multidim_slice_config<CONFIG_T>;
+
+    [[intel::fpga_register]] data_arr_T buffer_in;
+    [[intel::fpga_register]] res_arr_T buffer_out;
+    [[intel::fpga_register]] in_slice_arr_T smax_slice_in;
+    [[intel::fpga_register]] out_slice_arr_T smax_slice_out;
+
+    static constexpr unsigned TENSOR_SIZE = CONFIG_T::n_slice * CONFIG_T::n_inner * CONFIG_T::n_outer;
+    for (unsigned t = 0; t < CONFIG_T::n_in / TENSOR_SIZE; t++) {
+
+        buffer_in = data_pipe::read();
+
+        #pragma unroll
+        for (unsigned i = 0; i < CONFIG_T::n_outer; i++) {
+            unsigned outer_offset = i * CONFIG_T::n_slice * CONFIG_T::n_inner;
+            #pragma unroll
+            for (unsigned k = 0; k < CONFIG_T::n_inner; k++) {
+
+                // TODO: Access might be inefficient consider data rearrangement
+                #pragma unroll
+                for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
+                    unsigned idx = outer_offset + j * CONFIG_T::n_inner + k;
+                    smax_slice_in[j] = buffer_in[idx];
+                }
+
+                nnet::softmax<in_slice_arr_T, out_slice_arr_T, slice_config>(smax_slice_in, smax_slice_out);
+
+                #pragma unroll
+                for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
+                    unsigned idx = outer_offset + j * CONFIG_T::n_inner + k;
+                    buffer_out[idx] = smax_slice_out[j];
+                }
+            }
+        }
+        res_pipe::write(buffer_out);
     }
 }
 

@@ -1,3 +1,6 @@
+import warnings
+from math import prod
+
 from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
@@ -15,6 +18,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
 
     static constexpr unsigned rf_pad = {rfpad};
     static constexpr unsigned bf_pad = {bfpad};
+    static constexpr bool argmax = {argmax};
 
     static constexpr unsigned reuse_factor = {reuse};
     static constexpr unsigned compressed_block_factor = DIV_ROUNDUP(n_nonzeros, reuse_factor);
@@ -49,9 +53,10 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params = self._default_config_params(node)
         params['nzeros'] = node.get_weights('weight').nzeros
         params['nonzeros'] = node.get_weights('weight').nonzeros
-        params['product_type'] = get_backend('Altera').product_type(
+        params['product_type'] = get_backend('altera').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+        params['argmax'] = 'false'
 
         return self.template.format(**params)
 
@@ -76,7 +81,6 @@ class DenseTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-
         return self.template.format(**params)
 
 
@@ -121,7 +125,7 @@ class BatchNormalizationConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['n_in'] = node.get_input_variable().size_cpp()
-        params['product_type'] = get_backend('Altera').product_type(
+        params['product_type'] = get_backend('altera').product_type(
             node.get_input_variable().type.precision, node.get_weights('scale').type.precision
         )
 
@@ -194,12 +198,52 @@ hard_activ_config_template = """struct {type}_config{index} : nnet::activ_config
 
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static constexpr unsigned n_in = {n_in};
+
+    // For multi-dim softmax
+    static constexpr unsigned n_slice = {n_slice};
+    static constexpr unsigned n_outer = {n_outer};
+    static constexpr unsigned n_inner = {n_inner};
+
+    // For legacy softmax
+    typedef {table_t.name} table_t;
     static constexpr unsigned table_size = {table_size};
+
+    // For masked softmax
+    static constexpr unsigned ctx_len = {context_len};
+    static constexpr unsigned n_head = {n_head};
+
+    static constexpr unsigned exp_table_size = {exp_table_size};
+    static constexpr unsigned inv_table_size = {inv_table_size};
     static constexpr unsigned io_type = nnet::{iotype};
     static constexpr unsigned reuse_factor = {reuse};
+
     static constexpr nnet::softmax_implementation implementation = nnet::softmax_implementation::{implementation};
+    typedef {smax_accum_t} accum_t;
     typedef {exp_table_t.name} exp_table_t;
-    typedef {inv_table_t.name} inv_table_t;
+    typedef {inv_table_t.name} inv_table_t;"""
+
+# softmax_config_table_template = """
+#
+#    static constexpr const exp_table_t *exp_table = &{exp_table_name}[0];
+#    static constexpr const inv_table_t *invert_table = &{inv_table_name}[0];
+# }};\n"""
+
+softmax_config_table_template = """
+
+    using {exp_table_name}_arr_t = nnet::array<exp_table_t, exp_table_size>;
+    using {inv_table_name}_arr_t = nnet::array<inv_table_t, inv_table_size>;
+    static constexpr const {exp_table_name}_arr_t exp_table = {exp_table_name};
+    static constexpr const {inv_table_name}_arr_t invert_table = {inv_table_name};
+}};\n"""
+
+softmax_config_table_template_stable = """
+    typedef {inv_inp_t.name} inv_inp_t;
+    typedef {inp_norm_t.name} inp_norm_t;
+
+    using {exp_table_name}_arr_t = nnet::array<exp_table_t, exp_table_size>;
+    using {inv_table_name}_arr_t = nnet::array<inv_table_t, inv_table_size>;
+    static constexpr const {exp_table_name}_arr_t exp_table = {exp_table_name};
+    static constexpr const {inv_table_name}_arr_t invert_table = {inv_table_name};
 }};\n"""
 
 activ_function_template = 'nnet::{activation}<{input_t}, {output_t}, {config}>({input}, {output});'
@@ -219,7 +263,69 @@ class ActivationConfigTemplate(LayerConfigTemplate):
 
     def format(self, node):
         params = self._default_config_params(node)
-        params['type'] = node.get_attr('activation')
+        params['type'] = node.get_attr('activation').lower()
+
+        if (params['type'] == 'softmax') or (params['type'] == 'softmax_multidim'):
+            # If no table size is specified, assume default size of 1024
+            params.setdefault('exp_table_size', params['table_size'])
+            params.setdefault('inv_table_size', params['table_size'])
+            if node.get_attr('_bit_exact', False):
+                for _name, _t in (('exp_table_size', 'inp_norm_t'), ('inv_table_size', 'inv_inp_t')):
+                    if params[_name] > params['table_size']:
+                        _addr = int(params['table_size']).bit_length() - 1
+                        warnings.warn(
+                            f'Softmax layer {node.name}: {_name}={params[_name]} capped to '
+                            f'TableSize={params["table_size"]}, so the LUT is addressed by the top '
+                            f'{_addr} bits of {_t} only and HLS will NOT be bit-exact with Keras. '
+                            f'Raise TableSize, or narrow the HGQ quantizer behind {_t} so that '
+                            f'2**(i0+f0) <= TableSize, for an exact match.',
+                            stacklevel=1,
+                        )
+            params['exp_table_size'] = min(params['exp_table_size'], params['table_size'])
+            params['inv_table_size'] = min(params['inv_table_size'], params['table_size'])
+
+            # This is for non-quantised layers where table size is not a layer attribute
+            if node.get_attr('exp_table_size', -1) == -1:
+                node.set_attr('exp_table_size', params['exp_table_size'])
+
+            if node.get_attr('inv_table_size', -1) == -1:
+                node.set_attr('inv_table_size', params['inv_table_size'])
+
+            params.setdefault('exp_scale', 1.0)
+            params.setdefault('parallelization_factor', -1)
+
+            # For streamed n_in represents the entire sequence not a single tensor, for example
+            # (10,32,32) is 10 units of 32x32 tensor stream so figure the slice based on pipe size
+            # and read n_in/tensor_size where tensor_size = pipe_size in streamed mode
+            if node.model.config.get_config_value('IOType') == 'io_stream':
+                # Overwrite inner and outer assuming that axis[1] is the number of tensors streamed in multidim
+                ax = node.attributes['axis']
+                ax = ax if ax >= 0 else len(node.get_input_variable().shape) + ax
+                params['n_outer'] = prod(node.get_input_variable().shape[2:ax])
+                params['n_inner'] = prod(node.get_input_variable().shape[ax + 1 :])
+
+                n_slice = node.get_input_variable().type.n_elem // params['n_inner'] // params['n_outer']
+                assert n_slice >= 1, (
+                    f'Tensor fed to {node.name} has shape {node.get_input_variable().shape}, '
+                    f'but pipe has size {node.get_input_variable().type.n_elem} resulting in n_slice < 1'
+                )
+            else:
+                n_slice = params['n_in'] // params['n_inner'] // params['n_outer']
+
+            params['n_slice'] = n_slice
+            params['exp_table_name'] = node.name + '_exp_table'
+            params['inv_table_name'] = node.name + '_inv_table'
+            params['smax_accum_t'] = params['accum_t'].name
+
+            if params['implementation'] == 'stable':
+                self.template = softmax_config_template + softmax_config_table_template_stable
+
+            # This is for special MHA case wher we use causal masking for softmax to avoid precision
+            # related inaccuracy arising since minimum value is limited by precision and we cannot
+            # represent -INF, leading to massive drift during initial samples since most of the arrays
+            # arrive as minval<data_T>() which is >> -INF
+            params.setdefault('context_len', 0)
+            params.setdefault('n_head', 1)
 
         return self.template.format(**params)
 
@@ -251,7 +357,7 @@ class HardActivationConfigTemplate(LayerConfigTemplate):
 class SoftmaxConfigTemplate(ActivationConfigTemplate):
     def __init__(self):
         super(ActivationConfigTemplate, self).__init__(Softmax)  # Skip ActivationConfigTemplate's __init__
-        self.template = softmax_config_template
+        self.template = softmax_config_template + softmax_config_table_template
 
 
 class ActivationFunctionTemplate(FunctionCallTemplate):

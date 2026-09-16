@@ -18,7 +18,7 @@ class QMultiHeadAttentionHandler(QLayerHandler):
 
     def handle(
         self,
-        layer: 'hgq.layers.attn.mha.QMultiHeadAttention',
+        layer: 'hgq.layers.QMultiHeadAttention',
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
@@ -37,6 +37,14 @@ class QMultiHeadAttentionHandler(QLayerHandler):
             f'Critical error handling layer {layer.name}'
         )
         node = layer._inbound_nodes[node_index]
+        """import pdb;pdb.set_trace()
+        causal_params = {}
+        if np.prod(tensor_q.shape[1:-1]) > 1:
+            context_len = np.prod(tensor_q.shape[1:-1])
+            embedding_size = tensor_q.shape[-1]
+            n_inplace = layer.num_heads
+            data_T = layer.get_input_variable(layer.input[0])
+            causal_params['bram_size'] = context_len * embedding_size"""
 
         args = node.arguments.args
         kwargs = node.arguments.kwargs
@@ -107,7 +115,7 @@ class QMultiHeadAttentionHandler(QLayerHandler):
         config_to_Q = einsum_dense_handler(to_Q, [tensor_q], [tensor_Q])
         config_to_K = einsum_dense_handler(to_K, [tensor_k], [tensor_K])
         config_to_V = einsum_dense_handler(to_V, [tensor_v], [tensor_V])
-        config_einsum_KQ = einsum_handler(einsum_QK, [tensor_K, tensor_Q], [tensor_pre_score])
+        config_einsum_KQ = einsum_handler(einsum_QK, [tensor_Q, tensor_K], [tensor_pre_score])
         config_softmax = softmax_handler(softmax, [tensor_pre_score], [tensor_score])
         config_einsum_sV = einsum_handler(einsum_sV, [tensor_score, tensor_V], [tensor_pre_O])
         config_to_O = einsum_dense_handler(to_O, [tensor_pre_O], [tensor_O])
@@ -121,8 +129,19 @@ class QMultiHeadAttentionHandler(QLayerHandler):
             *config_einsum_sV,
             *config_to_O,
         )
+
         for conf in configs:
-            conf['name'] = f'{layer.name}_{conf["name"]}'
+            if f'{layer.name}_QK' in conf['name']:
+                conf['contract_dim'] = 'embedding'
+            elif f'{layer.name}_aV' in conf['name']:
+                conf['contract_dim'] = 'context'
+            conf['context_len'] = np.prod(tensor_q.shape[1:-1])
+            conf['name'] = f'{layer.name}_{conf["name"]}'  # if layer.name not in conf["name"] else conf["name"]
+            conf['n_head'] = n_head
+
+            if 'output' in conf['name']:
+                conf['opt_dense'] = True
+
         return configs
 
 
@@ -131,7 +150,7 @@ class QLinformerAttentionHandler(QMultiHeadAttentionHandler):
 
     def handle(
         self,
-        layer: 'hgq.layers.attn.linformer.QLinformerAttention',
+        layer: 'hgq.layers.linformer_attention.QLinformerAttention',
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
