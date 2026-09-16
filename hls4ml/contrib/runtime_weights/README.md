@@ -1,7 +1,8 @@
-# Runtime-selected weight banks — implementation notes
+# Runtime-selected weight banks — advanced use and implementation notes
 
-User-facing guide: `docs/advanced/bramfactor.rst`. This file covers how the feature
-works and what it takes to extend it.
+User-facing guide: `docs/advanced/bramfactor.rst`. This file is for integrators
+and contributors: the generated files, the loader contract, runtime replacement
+of BRAM contents, how the feature works and what it takes to extend it.
 
 Post-export packaging only: the generated project is read, never modified, and the
 summary records a SHA-256 fingerprint of the exported compute artifacts; comparing
@@ -110,6 +111,118 @@ no `INIT_HEX` path in v1: loader-only.
 merely `!busy` — under `ap_ctrl_hs` idle follows done by a cycle — and a transaction
 whose `ap_ready` and `ap_done` coincide (a pointwise convolution does) must not
 latch `busy`, or nothing would ever clear it.
+
+## Generated files
+
+`package()` writes `runtime_weights/` next to the HLS project:
+
+| file | purpose |
+|---|---|
+| `rtl/<project>_runtime_weights.sv` | the wrapper: compute IP + bank storage + control; this is the module to integrate |
+| `rtl/*.sv` | the modules it instantiates |
+| `rtl/<project>_runtime_weights_bd.v` | optional Verilog shim for IP Integrator (below) |
+| `create_runtime_weights.tcl` | in-memory synthesis check; writes `utilization.rpt`/`timing.rpt`/`drc.rpt`, creates no project |
+| `runtime_weights.json` | port summary: pass-through ports, each banked port's kind/width/depth, bank count |
+
+## Integrating from HDL
+
+Instantiate the wrapper from the user's top, binding each BRAM image to its
+`INIT_HEX` parameter:
+
+```verilog
+myproject_runtime_weights #(
+    .W2_INIT_HEX("/abs/path/to/w2.hex")
+) u_nn (
+    .ap_clk(clk), .ap_rst(rst),
+    // transaction: replaces the IP's ap_start / ap_ready / ap_done
+    .ext_ap_start(start), .ext_bank_id(bank), .ext_ap_ready(ready), .ext_ap_done(done),
+    .ext_bank_id_bad(),
+    // network data ports and their ap_vld, exactly as with the plain hls4ml IP
+    ...
+    // loader, shared by every parameter
+    .ld_req(ld_req), .ld_param_id(ld_id), .ld_bank(ld_bank), .ld_addr(ld_addr), .ld_data(ld_data),
+    .ld_accept(ld_ack), .ld_reject(ld_nak),
+    // status
+    .cur_bank_id(), .busy(), .quiescent(idle)
+);
+```
+
+A VHDL top instantiates it as a component; Vivado resolves the mixed-language
+boundary. `INIT_HEX` is read by `$readmemh` at elaboration, so an absolute path
+avoids depending on the tool's working directory; an unbound parameter leaves the
+memory uninitialized.
+
+## Loader
+
+One interface serves every parameter; its widths are set by the widest one:
+
+| port | width | meaning |
+|---|---|---|
+| `ld_req` | 1 | request; sampled on the clock edge, answered the same cycle |
+| `ld_param_id` | `loader.param_id_width` | `banked_ports[i].param_id` |
+| `ld_bank` | `bank_id_width` | bank to write |
+| `ld_addr` | `loader.addr_width` | word (BRAM) or element (scalar bundle), `0 .. ld_depth-1` |
+| `ld_data` | `loader.data_width` | value in the low `banked_ports[i].ld_data_width` bits; upper bits ignored |
+| `ld_accept` / `ld_reject` | 1 | exactly one is high while `ld_req` is |
+
+All of these numbers are in `runtime_weights.json`, which is authoritative for
+the wrapper it was generated with: `param_id` is assigned by `package()` and must
+be read from there, not assumed stable across regenerated designs. `ld_data` is as
+wide as the widest packed word (up to 4096 bits in the verified scope); assembling
+such words on the host side is the surrounding framework's concern. The wrapper compares
+`ld_param_id` and the full-width `ld_addr` against the selected parameter *before*
+narrowing the address to the port's own width, so an out-of-range value is
+rejected rather than aliased onto a valid location; the bank modules check
+`ld_bank` the same way. A request during an inference is rejected too. Rejected
+requests write nothing.
+
+From `pack_banks()` output, the write for `(param_id, bank, addr)` is
+`image[bank * bank_stride_words + addr]` for a BRAM parameter (`addr < ld_depth`)
+and `codes[bank][addr]` for a scalar bundle.
+
+### Runtime replacement of BRAM contents
+
+`INIT_HEX` is the default for BRAM parameters because the sets are normally known
+at build time. The loader can do the same job, or replace a bank later, without
+touching the HLS IP or the bitstream:
+
+```python
+images = pack_banks(hls_model, new_sets)      # same model, new parameter values
+for name, img in images.items():
+    pid = param_id[name]                      # runtime_weights.json
+    for bank in range(n_banks):
+        if img['kind'] == 'bram':
+            base = bank * img['bank_stride_words']
+            words = img['image'][base:base + ld_depth[name]]
+        else:
+            words = img['codes'][bank]
+        for addr, data in enumerate(words):
+            write(pid, bank, addr, data)      # one ld_req, while quiescent
+```
+
+Only the contents change: `pack_banks()` still checks the new sets against the
+built model, so geometry, precision and layout stay what the IP was synthesized
+for. Moving the words from a host to `ld_*` (AXI, PCIe, registers) belongs to the
+surrounding framework and is out of scope here.
+
+Scalar bundles power up as zero in every bank, including bank 0, so their values
+must be loaded before the first inference. BRAM parameters may instead be preloaded
+through `INIT_HEX`.
+
+## IP Integrator shim (optional)
+
+Vivado 2025.2 synthesizes the SystemVerilog top without complaint but refuses it
+as the top of a Module Reference in IP Integrator (`filemgmt 56-195`); that
+behaviour was verified manually on 2025.2 only. `package.py` therefore also emits
+`<top>_bd.v`, a plain Verilog-2001 module forwarding every port and `*_INIT_HEX`
+parameter 1:1 with no logic of its own. It is generated unconditionally: it has no
+functional content and a flag would cost more than the file. Use it with
+**Add Module** or `create_bd_cell -type module -reference <top>_bd`; the
+`*_INIT_HEX` parameters appear in the customization dialog. Both files are printed
+from the same `_top_ports()` list so they cannot drift; the generated Tcl
+synthesizes through the shim, the XSim testbench instantiates it, and
+`test_vivado_ip_integrator_accepts_the_shim` adds it to a block design with
+whatever Vivado the test environment provides.
 
 ## Synthesis artifacts
 

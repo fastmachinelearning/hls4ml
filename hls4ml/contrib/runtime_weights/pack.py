@@ -149,7 +149,9 @@ def build_bank_image(port, banks, bank_stride_words=None):
 
     per_bank = [pack_tensor(port, tensor) for tensor in banks]
     depth = port['expected_depth']
-    stride = bank_stride_words or (1 << (depth - 1).bit_length())  # next power of two
+    if bank_stride_words is None:
+        bank_stride_words = 1 << (depth - 1).bit_length()  # next power of two
+    stride = bank_stride_words
     if stride < depth:
         raise PackingUnsupported(f'{port["name"]}: bank stride {stride} is smaller than depth {depth}')
 

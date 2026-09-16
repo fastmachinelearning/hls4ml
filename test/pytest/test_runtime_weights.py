@@ -1,15 +1,18 @@
 """Runtime-selected weight banks: packing, wrapper generation, and RTL behaviour.
 
-Most tests are plain Python. Six need FPGA tooling and are gated on
+Most tests are plain Python. Eight need FPGA tooling and are gated on
 RUN_SYNTHESIS (conftest.py's synthesis_config), which generate_ci_yaml.py sets
 to "true" for the GitLab pipeline (pinned there to Vivado 2020.1 / Vitis 2024.1):
 
-  test_banks_rtl_simulation[2,4]          Vitis HLS + xsim (one shared synthesis)
-  test_pointwise_two_banks_rtl_simulation Vitis HLS + xsim, one per input rank
-  test_latch_rejects_out_of_range_bank    xsim only
-  test_vivado_synthesizes_the_wrapper     Vitis HLS + Vivado
+  test_banks_rtl_simulation[2,4]             Vitis HLS + xsim (one shared synthesis)
+  test_pointwise_two_banks_rtl_simulation    Vitis HLS + xsim, one per input rank
+  test_latch_rejects_out_of_range_bank       xsim only
+  test_vivado_synthesizes_the_wrapper        Vitis HLS + Vivado
+  test_vivado_ip_integrator_accepts_the_shim Vitis HLS + Vivado
 
-They were verified against Vitis 2025.1/2025.2; older versions are untested. xsim
+They were verified against Vitis 2025.1/2025.2; older versions are untested. The
+IP Integrator Module Reference behaviour the shim exists for was checked on Vivado
+2025.2; the test runs against whatever Vivado is on PATH. xsim
 on PATH is this file's own requirement, not a repo convention, so they skip
 without it. Run them locally when changing the RTL templates or package.py's
 top-generation logic: the Python tests cannot see a top that fails to elaborate,
@@ -17,6 +20,7 @@ or a bank selected a cycle late.
 """
 
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -250,6 +254,10 @@ def test_bank_image_is_depth_stacked_and_padded(manifest):
         for pad in range(port['expected_depth'], stride):
             assert image[bank_index * stride + pad] == 0
 
+    # a supplied stride is validated, not silently replaced by the default
+    with pytest.raises(pack.PackingUnsupported, match='stride 0'):
+        pack.build_bank_image(port, [t['trunk'][0] for t in _bank_tensors(2)], bank_stride_words=0)
+
 
 def test_bias_scalar_bank(manifest):
     port = _port(manifest, 'head_a', 'bias')
@@ -395,7 +403,7 @@ def _run_bank_simulation(synthesized_project, tmp_path, n_banks):
     # The IP is synthesized once with bank 0 baked in; the wrapper must override
     # whatever is baked in, so the shared project is reused as-is.
     before = fingerprint_ip(str(project_path), project)
-    package(str(project_path), n_banks=n_banks)
+    summary = package(str(project_path), n_banks=n_banks)
 
     # take the verified ports, whose actual_* come from the synthesized interface,
     # rather than assuming actual == expected
@@ -430,8 +438,7 @@ def _run_bank_simulation(synthesized_project, tmp_path, n_banks):
         PROJECT,
         [sim.code_of(v) for v in x],
         outputs,
-        bram,
-        scalar,
+        summary,
         payloads,
         expected,
     )
@@ -525,7 +532,7 @@ def test_pointwise_two_banks_rtl_simulation(tmp_path, synthesis_config, rank):
     hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
     outputs = [(v.name, v.size()) for v in hls_model.get_output_variables()]
 
-    package(str(tmp_path), n_banks=2)
+    summary = package(str(tmp_path), n_banks=2)
     man = json.loads((tmp_path / 'firmware' / 'weights' / MANIFEST_FILENAME).read_text())
     verified, _ = interface.verify(man, str(tmp_path), PROJECT)
     w_port = next(p for p in verified if p['role'] == 'weight')
@@ -555,8 +562,7 @@ def test_pointwise_two_banks_rtl_simulation(tmp_path, synthesis_config, rank):
         PROJECT,
         [sim.code_of(v) for row in x for v in row],
         outputs,
-        [w_port],
-        [b_port],
+        summary,
         payloads,
         expected,
     )
@@ -611,6 +617,10 @@ def test_vivado_synthesizes_the_wrapper(synthesized_project):
 
     ok, log = sim.run_vivado_batch('create_runtime_weights.tcl', rw, 'runtime-weights wrapper synthesized')
     assert ok, f'vivado synthesis did not complete:\n{log[-4000:]}'
+    # the sanity synthesis goes through the IP Integrator shim, so a shim that
+    # disagrees with the wrapper's ports fails here
+    assert (rw / 'rtl' / f'{summary["bd_module"]}.v').exists()
+    assert f'bd_module={summary["bd_module"]}' in log
 
     # Vivado deletes a data file that is added as a source; it must still be here
     for name in summary['rom_data_files']:
@@ -622,6 +632,45 @@ def test_vivado_synthesizes_the_wrapper(synthesized_project):
     # the clock must have reached synthesis, not just been written to a file
     timing = (rw / 'timing.rpt').read_text()
     assert 'ap_clk' in timing, 'clock constraint did not reach synthesis'
+
+
+def test_vivado_ip_integrator_accepts_the_shim(synthesized_project, tmp_path):
+    """The Verilog shim is accepted as a Module Reference, with every port and
+    its INIT_HEX parameter exposed."""
+    import runtime_weights_sim as sim
+
+    from hls4ml.contrib.runtime_weights import package
+
+    if not sim.have_vivado():
+        pytest.skip('requires vivado')
+
+    project_path, project, _ = synthesized_project
+    summary = package(str(project_path), n_banks=2)
+    rw = Path(project_path) / 'runtime_weights'
+    hls_rtl = Path(project_path) / f'{project}_prj' / 'solution1' / 'syn' / 'verilog'
+    shim = rw / 'rtl' / f'{summary["bd_module"]}.v'
+    _, ports = _module_header(shim.read_text(), summary['bd_module'])
+    manifest = json.loads((project_path / 'firmware' / 'weights' / MANIFEST_FILENAME).read_text())
+    bram = next(p for p in summary['banked_ports'] if p['kind'] == 'bram')
+    init_param = f'{bram["name"].upper()}_INIT_HEX'
+
+    (tmp_path / 'ipi.tcl').write_text(
+        f'create_project ipi {tmp_path / "prj"} -part {manifest["part"]} -force\n'
+        f'add_files -norecurse [glob {hls_rtl}/*.v]\n'
+        f'add_files -norecurse [glob {rw}/rtl/*.sv]\n'
+        f'set_property file_type SystemVerilog [get_files {rw}/rtl/*.sv]\n'
+        f'add_files -norecurse {shim}\n'
+        'update_compile_order -fileset sources_1\n'
+        'create_bd_design system\n'
+        f'set c [create_bd_cell -type module -reference {summary["bd_module"]} rw_0]\n'
+        'puts "PINS=[llength [get_bd_pins $c/*]]"\n'
+        f'puts "INIT=[get_property CONFIG.{init_param} $c]"\n'
+        'puts "IPI_SHIM_OK"\n'
+    )
+    ok, log = sim.run_vivado_batch('ipi.tcl', tmp_path, 'IPI_SHIM_OK')
+    assert ok, f'IP Integrator did not accept the shim:\n{log[-4000:]}'
+    assert f'PINS={len(ports)}' in log, 'not every shim port became a block-design pin'
+    assert 'INIT=' in log, f'{init_param} is not a parameter of the module reference'
 
 
 # --- fail-closed behaviour ---------------------------------------------------
@@ -723,6 +772,20 @@ def test_addr_shift_is_read_from_any_assignment_form(tmp_path, rtl, expected):
     project = _verilog(tmp_path, myproject='assign w2_Addr_A = dense_U0_w2_Addr_A;', myproject_dense=rtl)
 
     assert parse_addr_shift(project, PROJECT, 'w2')[0] == expected
+
+
+def test_addr_shift_rejects_disagreeing_drivers(tmp_path):
+    from hls4ml.contrib.runtime_weights.interface import parse_addr_shift
+
+    project = _verilog(
+        tmp_path,
+        myproject='assign w2_Addr_A = x << 4;',
+        myproject_dense="assign w2_Addr_A_local = {y, 3'd0};",
+    )
+    shift, evidence = parse_addr_shift(project, PROJECT, 'w2')
+
+    assert shift is None
+    assert 'conflicting' in evidence and '<< 4' in evidence and "3'd0" in evidence
 
 
 def test_addr_shift_is_unknown_only_when_nothing_drives_the_port(tmp_path):
@@ -855,6 +918,104 @@ def test_read_only_proof_rejects_a_live_write_enable(tmp_path):
         (syn / 'p.v').write_text(tied.replace(f'assign {live} =', f'assign {live} = drive; //'))
         read_only, evidence = interface.bram_is_read_only(str(tmp_path), 'p', signals)
         assert not read_only, f'{live} driven but still called read-only: {evidence}'
+
+
+def _module_header(text, name):
+    """(parameters, [(dir, width, port)]) of a module, parsed from its header."""
+    m = re.search(rf'module\s+{name}\s*#\((.*?)\)\s*\((.*?)\);', text, re.S)
+    assert m, f'no header for {name}'
+    params = re.findall(r'parameter\s+(\w+)\s*=\s*("[^"]*"|\S+)', m.group(1))
+    ports = re.findall(r'(input|output)\s+wire\s+(\[\d+:\d+\]\s+)?(\w+)', m.group(2))
+    return params, [(d, (w or '').strip(), n) for d, w, n in ports]
+
+
+def test_bd_shim_mirrors_the_top():
+    """The Verilog shim declares exactly the top's ports and parameters and forwards
+    each by name. Fabricated ports: this checks the generator, not the HLS flow."""
+    import importlib
+    import io
+
+    pkg = importlib.import_module('hls4ml.contrib.runtime_weights.package')
+
+    sig = {
+        r: f'w2_{r}'
+        for r in (
+            'addr_a',
+            'en_a',
+            'dout_a',
+            'rst_a',
+            'addr_b',
+            'en_b',
+            'dout_b',
+            'din_a',
+            'wen_a',
+            'clk_a',
+            'din_b',
+            'wen_b',
+            'clk_b',
+            'rst_b',
+        )
+    }
+    bram = {
+        'name': 'w2',
+        'expected_interface_kind': 'bram',
+        'expected_depth': 3,
+        'actual_data_width': 96,
+        'actual_port_width': 128,
+        'actual_addr_width': 32,
+        'actual_addr_stride': 16,
+        'actual_signals': sig,
+    }
+    scalar = {
+        'name': 'b2',
+        'expected_interface_kind': 'scalar_bundle',
+        'n_scalars': 5,
+        'actual_width': 16,
+        'actual_ports': [f'b2_{i}' for i in range(5)],
+    }
+    rtl_ports = [{'name': n, 'dir': 'input', 'width': 1} for n in pkg.CONTROL_PORTS]
+    rtl_ports += [
+        {'name': 'x', 'dir': 'input', 'width': 64},
+        {'name': 'x_ap_vld', 'dir': 'input', 'width': 1},
+        {'name': 'y_0', 'dir': 'output', 'width': 16},
+        {'name': 'y_0_ap_vld', 'dir': 'output', 'width': 1},
+    ]
+    rtl_ports += [{'name': n, 'dir': 'input', 'width': 1} for n in sig.values()]
+    rtl_ports += [{'name': n, 'dir': 'input', 'width': 16} for n in scalar['actual_ports']]
+
+    top, shim = io.StringIO(), io.StringIO()
+    pkg._emit_top(top, 'p', [bram, scalar], rtl_ports, 3, 2, 'ap_ctrl_hs')
+    pkg._emit_bd_shim(shim, 'p_runtime_weights', [bram, scalar], rtl_ports, 2)
+
+    top_params, top_ports = _module_header(top.getvalue(), 'p_runtime_weights')
+    shim_params, shim_ports = _module_header(shim.getvalue(), 'p_runtime_weights_bd')
+    assert top_params == shim_params == [('W2_INIT_HEX', '""')]
+    assert top_ports == shim_ports
+    names = [n for _, _, n in top_ports]
+    for expected in ('x', 'y_0_ap_vld', 'ld_param_id', 'ld_addr', 'ld_data', 'quiescent'):
+        assert expected in names
+    assert len(names) == len(set(names))
+
+    # generic loader: widest parameter sets the shared widths, each parameter is
+    # range-checked at full width before its address is narrowed
+    ports_by_name = {n: w for _, w, n in top_ports}
+    assert ports_by_name['ld_data'] == '[95:0]' and ports_by_name['ld_addr'] == '[2:0]'
+    top_body = top.getvalue()
+    assert "assign ld_hit[0] = ld_req & (ld_param_id == 1'd0) & (ld_addr < 4'd3);" in top_body
+    assert "assign ld_hit[1] = ld_req & (ld_param_id == 1'd1) & (ld_addr < 4'd5);" in top_body
+    assert '.ld_word(ld_addr[1:0])' in top_body and '.ld_idx(ld_addr[2:0])' in top_body
+    assert '.ld_wdata(ld_data[95:0])' in top_body and '.ld_data(ld_data[15:0])' in top_body
+
+    # the shim is Verilog-2001: no SystemVerilog-only syntax
+    body = shim.getvalue()
+    assert 'localparam int' not in body and 'logic' not in body
+    # and every port and parameter is forwarded by name
+    inst = re.search(r'p_runtime_weights\s*#\((.*?)\)\s*u_runtime_weights\s*\((.*?)\);', body, re.S)
+    assert inst
+    assert re.findall(r'\.(\w+)\(\1\)', inst.group(1)) == ['W2_INIT_HEX']
+    assert re.findall(r'\.(\w+)\(\1\)', inst.group(2)) == names
+    # a comment line must not pick up the list separator
+    assert not re.search(r'//[^\n]*,\s*$', body, re.M)
 
 
 def test_rtl_port_parsing_is_exhaustive(tmp_path):

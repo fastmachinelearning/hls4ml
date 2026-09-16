@@ -73,19 +73,26 @@ def run_vivado_batch(tcl_name, cwd, marker, timeout=1800):
     return marker in result.stdout, log
 
 
-def write_testbench(path, project_name, input_codes, outputs, bram_ports, scalar_ports, banks, expected):
+def write_testbench(path, project_name, input_codes, outputs, summary, banks, expected):
     """Emit a self-checking testbench for any number of banks and parameters.
 
+    ``summary`` is what package() returned: the loader geometry and each
+    parameter's id come from there, not from the test's own port order.
     ``banks`` is a list, one entry per bank, of {port_name: words or scalar codes};
     ``expected`` is a list, one per bank, of {output_name: [codes]}. The same input
     vector is applied to every bank, so an output difference can only come from
     bank selection.
     """
-    top = f'{project_name}_runtime_weights'
+    # instantiate through the Verilog shim IP Integrator users get, so the
+    # simulation also proves the shim forwards every port of the .sv top
+    top = f'{project_name}_runtime_weights_bd'
     n_banks = len(banks)
     bank_bits = max((n_banks - 1).bit_length(), 1)
     n_in = len(input_codes)
-    first_bram = bram_ports[0]['name']
+    g = summary['loader']
+    params = summary['banked_ports']
+    first = params[0]
+    pid_w, addr_w, data_w = g['param_id_width'], g['addr_width'], g['data_width']
 
     lines = [
         '`timescale 1 ns / 1 ps',
@@ -108,26 +115,14 @@ def write_testbench(path, project_name, input_codes, outputs, bram_ports, scalar
             # rather than sampling at ap_done, which holds only for a single layer
             lines.append(f'  reg [{WIDTH - 1}:0] cap_{name}_{o};')
             lines.append(f'  reg seen_{name}_{o};')
-    for p in bram_ports:
-        n = p['name']
-        word_bits = max((p['expected_depth'] - 1).bit_length(), 1)
-        lines += [
-            f'  reg ld_{n}_req = 0;',
-            f'  reg [{bank_bits - 1}:0] ld_{n}_bank = 0;',
-            f'  reg [{word_bits - 1}:0] ld_{n}_word = 0;',
-            f'  reg [{p["actual_data_width"] - 1}:0] ld_{n}_wdata = 0;',
-            f'  wire ld_{n}_accept, ld_{n}_reject;',
-        ]
-    for p in scalar_ports:
-        n = p['name']
-        idx_bits = max((p['n_scalars'] - 1).bit_length(), 1)
-        lines += [
-            f'  reg ld_{n}_we = 0;',
-            f'  reg [{bank_bits - 1}:0] ld_{n}_bank = 0;',
-            f'  reg [{idx_bits - 1}:0] ld_{n}_idx = 0;',
-            f'  reg [{p["actual_width"] - 1}:0] ld_{n}_data = 0;',
-            f'  wire ld_{n}_accept, ld_{n}_reject;',
-        ]
+    lines += [
+        '  reg ld_req = 0;',
+        f'  reg [{pid_w - 1}:0] ld_param_id = 0;',
+        f'  reg [{bank_bits - 1}:0] ld_bank = 0;',
+        f'  reg [{addr_w - 1}:0] ld_addr = 0;',
+        f'  reg [{data_w - 1}:0] ld_data = 0;',
+        '  wire ld_accept, ld_reject;',
+    ]
     lines += [
         f'  wire [{bank_bits - 1}:0] cur_bank_id;',
         '  wire busy, quiescent;',
@@ -143,20 +138,10 @@ def write_testbench(path, project_name, input_codes, outputs, bram_ports, scalar
     for name, count in outputs:
         for o in range(count):
             lines.append(f'    .{name}_{o}({name}_{o}), .{name}_{o}_ap_vld({name}_{o}_ap_vld),')
-    for p in bram_ports:
-        n = p['name']
-        lines += [
-            f'    .ld_{n}_req(ld_{n}_req), .ld_{n}_bank(ld_{n}_bank),',
-            f'    .ld_{n}_word(ld_{n}_word), .ld_{n}_wdata(ld_{n}_wdata),',
-            f'    .ld_{n}_accept(ld_{n}_accept), .ld_{n}_reject(ld_{n}_reject),',
-        ]
-    for p in scalar_ports:
-        n = p['name']
-        lines += [
-            f'    .ld_{n}_we(ld_{n}_we), .ld_{n}_bank(ld_{n}_bank),',
-            f'    .ld_{n}_idx(ld_{n}_idx), .ld_{n}_data(ld_{n}_data),',
-            f'    .ld_{n}_accept(ld_{n}_accept), .ld_{n}_reject(ld_{n}_reject),',
-        ]
+    lines += [
+        '    .ld_req(ld_req), .ld_param_id(ld_param_id), .ld_bank(ld_bank),',
+        '    .ld_addr(ld_addr), .ld_data(ld_data), .ld_accept(ld_accept), .ld_reject(ld_reject),',
+    ]
     lines += [
         '    .cur_bank_id(cur_bank_id), .busy(busy), .quiescent(quiescent));',
         '',
@@ -168,6 +153,22 @@ def write_testbench(path, project_name, input_codes, outputs, bram_ports, scalar
                 f"cap_{name}_{o} <= {name}_{o}; seen_{name}_{o} <= 1'b1; end"
             )
     lines += [
+        '',
+        '  // one loader write; want tells whether it must be accepted',
+        '  task ld_write(input integer pid, input integer bank, input integer addr,',
+        f'                input [{data_w - 1}:0] data, input want);',
+        '    begin',
+        '      @(negedge ap_clk);',
+        f'      ld_param_id = pid[{pid_w - 1}:0]; ld_bank = bank[{bank_bits - 1}:0]; ld_addr = addr[{addr_w - 1}:0];',
+        '      ld_data = data; ld_req = 1;',
+        '      @(negedge ap_clk);',
+        '      if (ld_accept !== want || ld_reject !== !want) begin',
+        '        $display("FAIL: param %0d bank %0d addr %0d: accept=%b expected %b", pid, bank, addr, ld_accept, want);',
+        '        errors = errors + 1;',
+        '      end',
+        '      ld_req = 0;',
+        '    end',
+        '  endtask',
         '',
         '  task run_bank(input integer bank);',
         '    begin',
@@ -191,29 +192,10 @@ def write_testbench(path, project_name, input_codes, outputs, bram_ports, scalar
         '    // load every parameter of every bank while idle',
     ]
     for b, payload in enumerate(banks):
-        for p in bram_ports:
-            n, dw = p['name'], p['actual_data_width']
-            for wi, word in enumerate(payload[n]):
-                lines += [
-                    '    @(negedge ap_clk);',
-                    f'    ld_{n}_bank = {b}; ld_{n}_word = {wi};',
-                    f"    ld_{n}_wdata = {dw}'h{word:0{dw // 4}x}; ld_{n}_req = 1;",
-                    '    @(negedge ap_clk);',
-                    f"    if (ld_{n}_accept !== 1'b1) begin",
-                    f'      $display("FAIL: {n} load rejected (bank %0d word %0d)", {b}, {wi}); errors = errors + 1;',
-                    '    end',
-                    f'    ld_{n}_req = 0;',
-                ]
-        for p in scalar_ports:
-            n, w = p['name'], p['actual_width']
-            for bi, code in enumerate(payload[n]):
-                lines += [
-                    '    @(negedge ap_clk);',
-                    f'    ld_{n}_bank = {b}; ld_{n}_idx = {bi};',
-                    f"    ld_{n}_data = {w}'h{code:0{w // 4}x}; ld_{n}_we = 1;",
-                    '    @(negedge ap_clk);',
-                    f'    ld_{n}_we = 0;',
-                ]
+        for q in params:
+            w = q['ld_data_width']
+            for a, value in enumerate(payload[q['name']]):
+                lines.append(f"    ld_write({q['param_id']}, {b}, {a}, {data_w}'h{value:0{(w + 3) // 4}x}, 1'b1);")
     # Every loader write costs two cycles, one per word and per scalar of every
     # bank, so the bound scales with the payload rather than being a constant that
     # quietly becomes too small for a larger model.
@@ -248,25 +230,26 @@ def write_testbench(path, project_name, input_codes, outputs, bram_ports, scalar
         '    if (busy !== 1\'b0) begin $display("FAIL: busy stuck high"); errors = errors + 1; end',
         '',
         '    // an in-range write while idle must still be accepted',
-        '    @(negedge ap_clk);',
-        f'    ld_{first_bram}_bank = {n_banks - 1}; ld_{first_bram}_word = 0; ld_{first_bram}_req = 1;',
-        '    @(negedge ap_clk);',
-        f"    if (ld_{first_bram}_accept !== 1'b1) begin",
-        '      $display("FAIL: in-range bank write refused"); errors = errors + 1;',
-        '    end',
-        f'    ld_{first_bram}_req = 0;',
+        f"    ld_write({first['param_id']}, {n_banks - 1}, 0, 0, 1'b1);",
+        '',
+        '    // out-of-range values are rejected, not narrowed onto a valid location',
+    ]
+    # a parameter whose depth leaves an encodable address above it
+    short = next((q for q in params if q['ld_depth'] < (1 << addr_w)), None)
+    if short:
+        lines.append(f"    ld_write({short['param_id']}, {n_banks - 1}, {short['ld_depth']}, 0, 1'b0);")
+    if g['n_params'] < (1 << pid_w):
+        lines.append(f"    ld_write({g['n_params']}, 0, 0, 0, 1'b0);")
+    if n_banks < (1 << bank_bits):
+        lines.append(f"    ld_write({first['param_id']}, {n_banks}, 0, 0, 1'b0);")
+    lines += [
         '',
         '    // a write while an inference is active must be refused',
         '    @(negedge ap_clk);',
         '    ext_bank_id = 0; ext_ap_start = 1; input_1_ap_vld = 1;',
         "    wait (ext_ap_ready === 1'b1);",
         '    @(negedge ap_clk); ext_ap_start = 0;',
-        f'    ld_{first_bram}_bank = 0; ld_{first_bram}_word = 0; ld_{first_bram}_req = 1;',
-        '    @(negedge ap_clk);',
-        f"    if (ld_{first_bram}_accept !== 1'b0 || ld_{first_bram}_reject !== 1'b1) begin",
-        '      $display("FAIL: write accepted while inference active"); errors = errors + 1;',
-        '    end',
-        f'    ld_{first_bram}_req = 0;',
+        f"    ld_write({first['param_id']}, 0, 0, 0, 1'b0);",
         "    wait (ext_ap_done === 1'b1);",
         '    @(negedge ap_clk); input_1_ap_vld = 0;',
         '',
