@@ -57,9 +57,6 @@ def test_softmax(
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
 
-    if backend == 'XLS' and table_bits == 'auto':
-        pytest.skip('XLS backend does not support setting the table_bits to auto')
-
     if backend == 'XLS' and implementation == 'legacy':
         pytest.skip('XLS backend does not support the legacy implementation')
 
@@ -79,8 +76,8 @@ def test_softmax(
     cfg['LayerName']['softmax']['Precision']['exp_table'] = table_type
     cfg['LayerName']['softmax']['Precision']['inv_inp'] = table_type
     if custom_accum:
-        if backend not in ['Vivado', 'Vitis']:
-            pytest.skip('Custom accumulators are only supported for Vivado and Vitis backends')
+        if backend not in ['Vivado', 'Vitis', 'XLS']:
+            pytest.skip('Custom accumulators are only supported for Vivado, Vitis and XLS backends')
         # W, I = map(int, input_bits.split(','))  # noqa: E741
         # cfg['LayerName']['softmax']['Precision']['inv_inp'] = f'ufixed<{W + 2},{I + 2}>'
     inp_layer_name = next(iter(cfg['LayerName'].keys()))
