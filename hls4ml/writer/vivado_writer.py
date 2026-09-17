@@ -1133,10 +1133,7 @@ class VivadoWriter(Writer):
                 archive.add(model.config.get_output_dir(), recursive=True, arcname='')
 
     def write_external_parameter_manifest(self, model):
-        """Describe external parameter ports in a machine-readable manifest.
-
-        No-op unless ``BramFactor`` exposed at least one parameter outside the compute IP.
-        """
+        """Write the external-parameter manifest; no-op if no parameter is external."""
         write_external_parameter_manifest(model)
 
     def write_hls(self, model, is_multigraph=False):

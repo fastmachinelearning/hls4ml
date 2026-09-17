@@ -1,4 +1,4 @@
-"""Helpers to elaborate and simulate a generated runtime-weights wrapper.
+"""Helpers to elaborate and simulate a generated parameter-banks wrapper.
 
 The interesting failures in this feature are structural (a top that does not
 elaborate) or temporal (a bank selected one cycle late). Neither shows up in a
@@ -85,7 +85,7 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
     """
     # instantiate through the Verilog shim IP Integrator users get, so the
     # simulation also proves the shim forwards every port of the .sv top
-    top = f'{project_name}_runtime_weights_bd'
+    top = f'{project_name}_parameter_banks_bd'
     n_banks = len(banks)
     bank_bits = max((n_banks - 1).bit_length(), 1)
     n_in = len(input_codes)
@@ -253,14 +253,14 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
         "    wait (ext_ap_done === 1'b1);",
         '    @(negedge ap_clk); input_1_ap_vld = 0;',
         '',
-        '    if (errors == 0) $display("RUNTIME_WEIGHTS_PASS");',
-        '    else $display("RUNTIME_WEIGHTS_FAIL errors=%0d", errors);',
+        '    if (errors == 0) $display("PARAMETER_BANKS_PASS");',
+        '    else $display("PARAMETER_BANKS_FAIL errors=%0d", errors);',
         '    $finish;',
         '  end',
         '',
         '  initial begin',
         f'    #{timeout};',
-        '    $display("RUNTIME_WEIGHTS_FAIL timeout");',
+        '    $display("PARAMETER_BANKS_FAIL timeout");',
         '    $finish;',
         '  end',
         'endmodule',
@@ -293,7 +293,7 @@ def run_xsim(work_dir, rtl_dirs, tb_file, top='tb'):
         commands.append(['xvlog', '-sv', *sv, tb_file])
     if v:
         commands.append(['xvlog', *v])
-    commands += [['xelab', top, '-s', 'rw_sim'], ['xsim', 'rw_sim', '-runall']]
+    commands += [['xelab', top, '-s', 'pb_sim'], ['xsim', 'pb_sim', '-runall']]
 
     log = ''
     for cmd in commands:
@@ -301,7 +301,7 @@ def run_xsim(work_dir, rtl_dirs, tb_file, top='tb'):
         log += f'$ {" ".join(cmd)}\n{result.stdout}\n{result.stderr}\n'
         if result.returncode != 0 or re.search(r'^ERROR', result.stdout, re.M):
             return False, log
-    return 'RUNTIME_WEIGHTS_PASS' in log, log
+    return 'PARAMETER_BANKS_PASS' in log, log
 
 
 LATCH_TB = r"""
@@ -446,13 +446,13 @@ module tb;
       $display("FAIL: busy latched by a same-cycle ready/done transaction"); errors = errors + 1;
     end
 
-    if (errors == 0) $display("RUNTIME_WEIGHTS_PASS");
-    else $display("RUNTIME_WEIGHTS_FAIL errors=%0d", errors);
+    if (errors == 0) $display("PARAMETER_BANKS_PASS");
+    else $display("PARAMETER_BANKS_FAIL errors=%0d", errors);
     $finish;
   end
 
   initial begin
-    #50000; $display("RUNTIME_WEIGHTS_FAIL timeout"); $finish;
+    #50000; $display("PARAMETER_BANKS_FAIL timeout"); $finish;
   end
 endmodule
 """

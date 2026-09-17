@@ -86,7 +86,7 @@ module bank_select_latch #(
     end
   end
 
-`ifdef RUNTIME_WEIGHTS_ASSERT
+`ifdef PARAMETER_BANKS_ASSERT
   a_no_overlap        : assert property (@(posedge ap_clk) disable iff (ap_rst)
                           accept |-> !busy);
   a_bank_in_range     : assert property (@(posedge ap_clk) disable iff (ap_rst)

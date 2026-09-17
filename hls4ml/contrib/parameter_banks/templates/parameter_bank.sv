@@ -19,8 +19,8 @@ module parameter_bank #(
     parameter int DATA_WIDTH        = 256,
     // Width of the RTL port the IP actually drives. Vitis rounds a parameter port
     // up to a power-of-two byte count, so a 96-bit packed word arrives on a 128-bit
-    // port. The extra bits carry nothing; they are zero-filled on the read path and
-    // zero-filled on the read path, explicitly rather than by implicit extension.
+    // port. The extra bits carry nothing; they are zero-filled on the read path
+    // explicitly rather than by implicit extension.
     parameter int PORT_WIDTH        = 256,
     parameter int HLS_ADDR_WIDTH    = 32,
     parameter int WORD_BYTES        = 32,
@@ -166,7 +166,7 @@ module parameter_bank #(
     else              assign hls_Dout_B = dout_b_q;
   endgenerate
 
-`ifdef RUNTIME_WEIGHTS_ASSERT
+`ifdef PARAMETER_BANKS_ASSERT
   a_no_padding_access   : assert property (@(posedge ap_clk) disable iff (ap_rst)
                             !(hls_EN_A & pad_a));
   a_no_padding_access_b : assert property (@(posedge ap_clk) disable iff (ap_rst)
