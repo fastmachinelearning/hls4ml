@@ -14,6 +14,7 @@ from hls4ml.report.quartus_report import (
 )
 from hls4ml.report.vivado_report import (
     aggregate_graph_reports,  # noqa: F401
+    parse_interface_summary,  # noqa: F401
     parse_vivado_report,  # noqa: F401
     print_vivado_report,  # noqa: F401
     read_vivado_report,  # noqa: F401

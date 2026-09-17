@@ -75,6 +75,123 @@ def _find_solutions(sln_dir):
     return solutions
 
 
+class RtlPort:
+    """One RTL port of the synthesized top, as listed in ``<top>_csynth.xml``.
+
+    ``bits`` is the physical width of the port. For a BRAM interface that is the
+    power-of-two-byte width HLS rounds up to; the logical data width is only in
+    the textual report (see ``InterfaceSummary.bram``).
+    """
+
+    def __init__(self, name, object_name, protocol, direction, bits, attribute=None):
+        self.name = name
+        self.object = object_name
+        self.protocol = protocol
+        self.dir = direction
+        self.bits = bits
+        self.attribute = attribute
+
+    def __repr__(self):
+        return f'RtlPort({self.name}, {self.object}, {self.protocol}, {self.dir}, {self.bits})'
+
+
+class BramGeometry:
+    """One BRAM interface of the top as the textual report describes it: the logical
+    data width (not the rounded-up RTL port) and the address width."""
+
+    def __init__(self, data_width, addr_width):
+        self.data_width = data_width
+        self.addr_width = addr_width
+
+    def __eq__(self, other):
+        return isinstance(other, BramGeometry) and (self.data_width, self.addr_width) == (other.data_width, other.addr_width)
+
+    def __repr__(self):
+        return f'BramGeometry(data_width={self.data_width}, addr_width={self.addr_width})'
+
+
+class InterfaceSummary:
+    """The HW interface of a synthesized top: every RTL port, the block-level
+    control protocol, and the geometry of each BRAM interface."""
+
+    def __init__(self, ports, control, bram, solution=None):
+        self.ports = list(ports)
+        self.control = control
+        self.bram = dict(bram)  # 'w2_PORTA' -> BramGeometry
+        self.solution = solution
+
+    def port(self, name):
+        return next((p for p in self.ports if p.name == name), None)
+
+    def ports_of(self, object_name):
+        return [p for p in self.ports if p.object == object_name]
+
+
+def _parse_interface_xml(xml_file):
+    root = ET.parse(xml_file).getroot()
+    summary = root.find('./InterfaceSummary')
+    if summary is None:
+        raise ValueError(f'{xml_file} has no InterfaceSummary')
+    ports, controls = [], set()
+    for entry in summary.findall('./RtlPorts'):
+        field = {child.tag: (child.text or '').strip() for child in entry}
+        port = RtlPort(
+            field['name'], field['Object'], field['IOProtocol'], field['Dir'], int(field['Bits']), field.get('Attribute')
+        )
+        ports.append(port)
+        if field.get('Type') == 'return value':
+            controls.add(port.protocol)
+    if len(controls) > 1:
+        raise ValueError(f'{xml_file}: block-level control ports disagree on the protocol: {sorted(controls)}')
+    return ports, controls.pop() if controls else None
+
+
+def _parse_bram_table(rpt_file):
+    """The ``* BRAM`` table of the textual report: interface -> BramGeometry.
+
+    The logical data width is the one interface fact the XML does not carry (its
+    ``Bits`` is the physical, rounded-up port width), so this table is read from text.
+    """
+    geometry = {}
+    with open(rpt_file) as f:
+        text = f.read()
+    section = re.search(r'^\* BRAM\n(.*?)\n\n', text, re.S | re.M)
+    if section is None:
+        return geometry
+    for line in section.group(1).splitlines():
+        cells = [c.strip() for c in line.strip().strip('|').split('|')]
+        if len(cells) == 3 and cells[1].isdigit() and cells[2].isdigit():
+            geometry[cells[0]] = BramGeometry(int(cells[1]), int(cells[2]))
+    return geometry
+
+
+def parse_interface_summary(hls_dir, solution=None):
+    """Read the synthesized top's HW interface from the C synthesis reports.
+
+    Returns an ``InterfaceSummary``. ``solution`` names the solution to read
+    (default: the project's first); pass it when other artifacts, such as the
+    exported RTL, are taken from a specific one. Raises ``FileNotFoundError`` if
+    the project or that solution has not been synthesized.
+    """
+    prj_dir, top_func_name = _parse_project_script(hls_dir)
+    sln_dir = os.path.join(hls_dir, prj_dir)
+    solutions = _find_solutions(sln_dir)
+    if not solutions:
+        raise FileNotFoundError(f'no solution in {sln_dir}; run build(synth=True) first')
+    if solution is None:
+        solution = solutions[0]
+    elif solution not in solutions:
+        raise FileNotFoundError(f'no solution {solution!r} in {sln_dir}; found {solutions}')
+    report_dir = os.path.join(sln_dir, solution, 'syn', 'report')
+    xml_file = os.path.join(report_dir, f'{top_func_name}_csynth.xml')
+    rpt_file = os.path.join(report_dir, 'csynth.rpt')  # the solution report carries the HW interface tables
+    if not os.path.isfile(xml_file):
+        raise FileNotFoundError(f'no C synthesis report at {xml_file}; run build(synth=True) first')
+    ports, control = _parse_interface_xml(xml_file)
+    bram = _parse_bram_table(rpt_file) if os.path.isfile(rpt_file) else {}
+    return InterfaceSummary(ports, control, bram, solution)
+
+
 def _find_reports(sln_dir, top_func_name, full_report=False):
     csim_file = sln_dir + f'/csim/report/{top_func_name}_csim.log'
     if os.path.isfile(csim_file):

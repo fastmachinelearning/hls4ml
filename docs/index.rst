@@ -55,6 +55,7 @@
     advanced/snn
     advanced/model_optimization
     advanced/bramfactor
+    advanced/runtime_parameter_banks
     advanced/plugins
 
 .. toctree::
