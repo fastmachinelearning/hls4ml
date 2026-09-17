@@ -1,8 +1,6 @@
 
 
-# Calculate actual uncertainty values
-set uncertainty_setup [expr {$clock_period * $uncertainty_setup_r}]
-set uncertainty_hold [expr {$clock_period * $uncertainty_hold_r}]
+# Calculate actual delay values
 set delay_max [expr {$clock_period * $delay_max_r}]
 set delay_min [expr {$clock_period * $delay_min_r}]
 
