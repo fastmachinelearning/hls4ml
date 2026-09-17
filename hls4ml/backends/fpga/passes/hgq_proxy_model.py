@@ -5,7 +5,7 @@ from hls4ml.backends.template import FunctionCallTemplate
 from hls4ml.model.layers import Layer
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer, UnaryLUT
-from hls4ml.model.types import Source
+from hls4ml.model.types import FixedPrecisionType, Source
 
 
 def to_apfixed(k, b, i, RND, SAT):
@@ -16,9 +16,20 @@ def to_apfixed(k, b, i, RND, SAT):
 def to_acfixed(k, b, i, RND, SAT):
     k = 'false' if k == 0 else 'true'
     if b == 1:
-        # Currently Altera ac_fixed requires at least two bits for both signed and unsigned cases
-        # Should be fixed in the future once Altera supports 1-bit unsigned ac_fixed
+        # Currently oneAPI ac_fixed requires at least two bits for both signed and unsigned cases
+        # Should be fixed in the future once oneAPI supports 1-bit unsigned ac_fixed
+        if k == 1:
+            print(
+                f'Warning: Current variable is 1-bit signed (ac_fixed<1,{i},{k}>)'
+                'Current Altera HLS backend does not support 1 bit types therefore conversion '
+                'of signed 1 bit type to 2 bits will be lossy when widened to 2 bits.'
+            )
+
+        # Widen by assigning the extra bit as the sign bit
         b = 2
+        i += 1
+        k = 1
+
     return f'ac_fixed<{b},{i},{k},AC_{RND},AC_{SAT}>'
 
 
@@ -27,12 +38,12 @@ def generate_mask_fn(
 ) -> str:
     """Generate heterogenous quantization mask function, ONLY works for IOType=io_parallel"""
     assert k.shape[0] == b.shape[0] == i.shape[0] == 1
-    assert backend.lower() in ('altera', 'quartus', 'vivado', 'vitis'), f'Backend {backend} not tested'
+    assert backend.lower() in ('oneapi', 'quartus', 'vivado', 'vitis'), f'Backend {backend} not tested'
     Ks, Bs, Is = k[0], b[0], i[0]
     Ks, Bs, Is = np.broadcast_to(Ks, shape), np.broadcast_to(Bs, shape), np.broadcast_to(Is, shape)
     Ks, Bs, Is = Ks.ravel(), Bs.ravel(), Is.ravel()
     masks = []
-    to_fixed = to_acfixed if backend.lower() in ['altera', 'quartus'] else to_apfixed
+    to_fixed = to_acfixed if backend.lower() in ['oneapi', 'quartus'] else to_apfixed
     for idx, (k, b, i) in enumerate(zip(Ks, Bs, Is)):
         if b == 0:
             fn = f'out[{idx}] = 0;'
@@ -41,12 +52,12 @@ def generate_mask_fn(
         masks.append(f'    {fn}')
     body = '\n'.join(masks)
     arguments = (
-        'input_t *inp, output_t *out' if backend.lower() not in ['altera', 'quartus'] else 'input_t &inp, output_t &out'
+        'input_t *inp, output_t *out' if backend.lower() not in ['oneapi', 'quartus'] else 'input_t &inp, output_t &out'
     )
     mask_fn = f"""
 template<typename input_t, typename output_t>
 void {name}({arguments}) {{
-    {'#pragma HLS INLINE' if backend.lower() not in ['altera', 'quartus'] else ''}
+    {'#pragma HLS INLINE' if backend.lower() not in ['oneapi', 'quartus'] else ''}
 
 {body}
 }}
@@ -59,20 +70,28 @@ class ProcessFixedPointQuantizerLayer(OptimizerPass):
         return isinstance(node, FixedPointQuantizer)
 
     def transform(self, model, node: FixedPointQuantizer):
+
+        # instead of error assertion just force homogeneous quantisation
         if model.config.config['IOType'] != 'io_parallel':
-            raise NotImplementedError('Heterogenous quantization for activations is only supported with IOType=io_parallel')
+            k, b, i = node.mask_kbi
+            k_val = int(np.max(k))
+            b_val = int(np.max(b))
+            i_val = int(np.max(i))
+            inp_var = node.get_input_variable()
+            inp_var.type.precision = FixedPrecisionType(b_val, i_val, bool(k_val))
+            model.remove_node(node)
+            return True
+        else:
+            backend = model.config.config['Backend']
+            name = node.name
 
-        backend = model.config.config['Backend']
+            assert node.mask_kbi is not None
+            k, b, i = node.mask_kbi
+            RND = node.RND
+            SAT = node.SAT
+            mask_fn: str = generate_mask_fn(name, node.get_input_variable().shape, k, b, i, RND, SAT, backend)
 
-        name = node.name
-
-        assert node.mask_kbi is not None
-        k, b, i = node.mask_kbi
-        RND = node.RND
-        SAT = node.SAT
-        mask_fn: str = generate_mask_fn(name, node.get_input_variable().shape, k, b, i, RND, SAT, backend)
-
-        node.set_attr('mask_fn_codegen', Source(mask_fn))
+            node.set_attr('mask_fn_codegen', Source(mask_fn))
 
 
 class ProcessFixedPointQuantizerCall(FunctionCallTemplate):
