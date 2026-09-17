@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction &mdash; hls4ml 1.3.0 documentation</title>
+  <title>How to Contribute &mdash; hls4ml 1.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Status and Features" href="status.html" />
-    <link rel="prev" title="Welcome to hls4ml’s documentation!" href="../index.html" /> 
+    <link rel="next" title="Release Notes" href="release_notes.html" />
+    <link rel="prev" title="Frequently asked questions" href="faq.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,15 +47,18 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#the-inspiration">The Inspiration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-solution-hls4ml">The Solution: <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="status.html">Status and Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup and Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to Contribute</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How to Contribute</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#discussion">Discussion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pull-request">Pull Request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-reviews">Code Reviews</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#use-of-ai-tools">Use of AI tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-of-conduct">Code of Conduct</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Citation, Acknowledgments, and Contributors</a></li>
 </ul>
@@ -130,9 +133,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Introduction</li>
+      <li class="breadcrumb-item active">How to Contribute</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/intro/introduction.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/intro/contributing.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -140,27 +143,83 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
-<p>The goal of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> is to provide an efficient and fast translation of machine learning models from open-source packages (like Keras and PyTorch) for training machine learning algorithms to high level synthesis (HLS) code that can then be transpiled to run on an FPGA. The resulting HLS project can be then used to produce an IP which can be plugged into more complex designs or be used to create a kernel for CPU co-processing. The user has freedom to define many of the parameters of their algorithm to best suit their needs.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> package enables fast prototyping of a machine learning algorithm implementation in FPGAs,
-greatly reducing the time to results and giving the user intuition for how to best design a machine learning algorithm for their application while balancing performance, resource utilization and latency requirements.</p>
-<section id="the-inspiration">
-<h2>The Inspiration<a class="headerlink" href="#the-inspiration" title="Link to this heading"></a></h2>
-<p>The inspiration for the creation of the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> package stems from the high energy physics community at the CERN Large Hadron Collider (LHC).
-While machine learning has already been proven to be extremely useful in analysis of data from detectors at the LHC, it is typically performed in an “offline” environment after the data is taken and agglomerated.
-However, one of the largest problems at detectors on the LHC is that collisions, or “events”, generate too much data for everything to be saved.
-As such, filters called “triggers” are used to determine whether a given event should be kept.
-Using FPGAs allows for significantly lower latency so machine learning algorithms can essentially be run “live” at the detector level for event selection. As a result, more events with potential signs of new physics can be preserved for analysis.</p>
+  <section id="how-to-contribute">
+<h1>How to Contribute<a class="headerlink" href="#how-to-contribute" title="Link to this heading"></a></h1>
+<p>We’d love to accept your patches and contributions to this project.
+There are just a few small guidelines you need to follow.</p>
+<section id="discussion">
+<h2>Discussion<a class="headerlink" href="#discussion" title="Link to this heading"></a></h2>
+<p>Share your proposal via <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/issues">GitHub Issues</a>.
+If you are looking for some issues to get started with, we have a list of <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/labels/good%20first%20issue">good first issues</a> in the issue tracker.
+We also welcome submissions to improve the documentation.</p>
 </section>
-<section id="the-solution-hls4ml">
-<h2>The Solution: <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code><a class="headerlink" href="#the-solution-hls4ml" title="Link to this heading"></a></h2>
-<img alt="Overview of hls4ml, taken from `JINST 13 P07027 (2018) &lt;https://dx.doi.org/10.1088/1748-0221/13/07/P07027&gt;`_." src="../_images/overview.jpg" />
-<p>With this in mind, let’s take a look at how <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> helps to achieve such a goal. First, it’s important to realize the architecture differences between an FPGA and a CPU or GPU.
-An FPGA can be specifically programmed to do a certain task, in this case evaluate neural networks given a set of inputs, and as such can be highly optimized for the task, with tricks like pipelining and parallel evaluation. However, this means dynamic remapping while running isn’t really a possibility.
-FPGAs also often come at a comparatively low power cost with respect to CPUs and GPUs. This allows <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> to build HLS code from compressed neural networks that results in predictions on the microsecond scale for latency.
-The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> tool saves the time investment needed to convert a neural network to a hardware design language or even HLS code, thus allowing for rapid prototyping.</p>
-<p>For more detailed information on technical details of <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>, read the “Internals” section of our documentation or our <a class="reference internal" href="reference.html"><span class="doc">References</span></a> page.</p>
+<section id="pull-request">
+<h2>Pull Request<a class="headerlink" href="#pull-request" title="Link to this heading"></a></h2>
+<p>All submissions, including submissions by project members, require review.
+We use GitHub pull requests for this purpose.
+Consult <a class="reference external" href="https://help.github.com/articles/about-pull-requests/">GitHub Help</a> for more information on using pull requests.</p>
+<ol class="arabic simple">
+<li><p>In the pull request description, clearly document all changes made and the expected behavior.</p></li>
+<li><p>If you are introducing new functionality, add at least one unit test under the <code class="docutils literal notranslate"><span class="pre">test</span></code> folder and make sure it passes before you submit the pull request.</p></li>
+<li><p>Similarly, if you are fixing a bug, add at least one unit test under the <code class="docutils literal notranslate"><span class="pre">test</span></code> folder such that the master branch fails the test and your branch passes the test.</p></li>
+<li><p>Install and run <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> on the files that you have edited.</p></li>
+<li><p>Submit the pull request to the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml">main</a> branch.</p></li>
+</ol>
+<p>Pull requests are <strong>squash-merged</strong>, so the individual commits on your branch are not preserved.
+You do not need to curate them, but the pull request title and description become the permanent record of
+the change in the project history, so please write them with that in mind.</p>
+</section>
+<section id="code-reviews">
+<h2>Code Reviews<a class="headerlink" href="#code-reviews" title="Link to this heading"></a></h2>
+<p>We will review your contribution and, if any additional fixes or modifications are necessary, may provide feedback to guide you.
+When accepted, your pull request will be merged to the repository.</p>
+</section>
+<section id="use-of-ai-tools">
+<h2>Use of AI tools<a class="headerlink" href="#use-of-ai-tools" title="Link to this heading"></a></h2>
+<p>Usage of AI tools in development for hls4ml is generally allowed. However, we require all contributors to adhere to the following guidelines:</p>
+<ul class="simple">
+<li><p>Contributed code must still be your own original work. It is your responsibility to make sure that the generated code is compatible with the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/main/LICENSE">hls4ml license</a>, these contributor guidelines, and that it doesn’t violate the license of either the AI tool or any third-party license obligations.</p></li>
+<li><p>The AI tool name and version must be disclosed in the pull request description. The pull request template has a section for this.</p></li>
+<li><p>Ensure you have reviewed and fully understand the generated code and be prepared to explain the reasoning behind it during review.</p></li>
+<li><p>AI coding agents tend to be very verbose. Please review generated code and especially comments and trim unnecessary clutter.</p></li>
+<li><p>Numbers, logs and test results quoted in a pull request or issue must come from runs you actually performed, not from tool output that was never executed.</p></li>
+<li><p>Do not spam the repository with issues and pull requests for problems that have no likelihood of appearing in real world applications. Focus instead on fixing or improving hls4ml for real users.</p></li>
+</ul>
+<p>Do not credit an AI tool as an author of a commit. Authorship carries copyright, which a tool cannot hold, and
+such trailers distort contributor statistics. Some assistants add <code class="docutils literal notranslate"><span class="pre">Co-authored-by</span></code> trailers automatically;
+remove them before opening the pull request. Disclosure belongs in the pull request description, where a
+reviewer will read it.</p>
+<p>If you use an AI agent to work on hls4ml, point it at <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/main/AGENTS.md"><code class="docutils literal notranslate"><span class="pre">AGENTS.md</span></code></a> in the repository root. It
+states the same expectations in a form agents read, and it will save you review comments.</p>
+<p>Submissions that appear unreviewed or copied directly from an AI tool without proper understanding may be requested to be revised or declined.</p>
+</section>
+<section id="code-of-conduct">
+<h2>Code of Conduct<a class="headerlink" href="#code-of-conduct" title="Link to this heading"></a></h2>
+<p>In the interest of fostering an open and welcoming environment, we as
+contributors and maintainers pledge to make participation in our project and
+our community a harassment-free experience for everyone, regardless of age, body
+size, disability, ethnicity, sex characteristics, gender identity and expression,
+level of experience, education, socio-economic status, nationality, personal
+appearance, race, religion, or sexual identity and orientation.</p>
+<section id="our-standards">
+<h3>Our Standards<a class="headerlink" href="#our-standards" title="Link to this heading"></a></h3>
+<p>Examples of behavior that contributes to creating a positive environment
+include:</p>
+<ul class="simple">
+<li><p>Using welcoming and inclusive language</p></li>
+<li><p>Being respectful of differing viewpoints and experiences</p></li>
+<li><p>Gracefully accepting constructive criticism</p></li>
+<li><p>Focusing on what is best for the community</p></li>
+<li><p>Showing empathy towards other community members</p></li>
+</ul>
+</section>
+<section id="attribution">
+<h3>Attribution<a class="headerlink" href="#attribution" title="Link to this heading"></a></h3>
+<p>This Code of Conduct is adapted from the <a class="reference external" href="https://www.contributor-covenant.org">Contributor Covenant</a>, version 1.4,
+available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.html</p>
+<p>For answers to common questions about this code of conduct, see
+https://www.contributor-covenant.org/faq</p>
+</section>
 </section>
 </section>
 
@@ -168,8 +227,8 @@ The <code class="docutils literal notranslate"><span class="pre">hls4ml</span></
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to hls4ml’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="status.html" class="btn btn-neutral float-right" title="Status and Features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="faq.html" class="btn btn-neutral float-left" title="Frequently asked questions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="release_notes.html" class="btn btn-neutral float-right" title="Release Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
