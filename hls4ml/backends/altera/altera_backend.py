@@ -93,6 +93,7 @@ class AlteraBackend(FPGABackend):
             'infer_precision_types',
             'altera:process_fixed_point_quantizer_layer',
             'altera:validate_ac_types',
+            'altera:validate_hgq_softmax_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -146,7 +147,7 @@ class AlteraBackend(FPGABackend):
     def create_initial_config(
         self, part='Agilex7', clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, **_
     ):
-        """Create initial configuration of the Altera backend.
+        """Create initial configuration of the altera backend.
 
         Args:
             part (str, optional): The FPGA part to be used. Defaults to 'Agilex7'.
@@ -193,7 +194,7 @@ class AlteraBackend(FPGABackend):
 
     def build(self, model, build_type='fpga_emu', run=False):
         """
-        Builds the project using the Intel oneAPI DPC++ compiler.
+        Builds the project using Intel DPC++ (altera) compiler.
 
         Args:
             model (ModelGraph): The model to build
@@ -207,9 +208,13 @@ class AlteraBackend(FPGABackend):
         builddir = outdir / 'build'
         builddir.mkdir(exist_ok=True)
         try:
-            subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
+            subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
-            raise RuntimeError('Could not find ahls. Please configure the Altera HLS IP Gen toolchain appropriately')
+            print('Could not find icpx, trying ahls instead.')
+            try:
+                subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
+            except subprocess.CalledProcessError:
+                raise RuntimeError('Could not find icpx or ahls. Please configure altera appropriately')
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
@@ -279,7 +284,7 @@ class AlteraBackend(FPGABackend):
             )
         if 'table_size' not in layer.attributes:
             layer.set_attr('table_size', 1024)
-        if True:  # layer.model.config.is_resource_strategy(layer): ... Altera only supports Dense resource multiplication
+        if True:  # layer.model.config.is_resource_strategy(layer): ... altera only supports Dense resource multiplication
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
@@ -315,7 +320,7 @@ class AlteraBackend(FPGABackend):
 
         layer.set_attr(
             'n_partitions', 1
-        )  # TODO Not used yet as there is no codegen implementation of CNNs for Altera backend
+        )  # TODO Not used yet as there is no codegen implementation of CNNs for altera backend
 
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
@@ -346,7 +351,7 @@ class AlteraBackend(FPGABackend):
 
         layer.set_attr(
             'n_partitions', 1
-        )  # TODO Not used yet as there is no codegen implementation of CNNs for Altera backend
+        )  # TODO Not used yet as there is no codegen implementation of CNNs for altera backend
 
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
@@ -354,7 +359,7 @@ class AlteraBackend(FPGABackend):
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
         # We don't use RF yet
-        if True:  # layer.model.config.is_resource_strategy(layer): ... Altera only supports Dense resource multiplication
+        if True:  # layer.model.config.is_resource_strategy(layer): ... altera only supports Dense resource multiplication
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')

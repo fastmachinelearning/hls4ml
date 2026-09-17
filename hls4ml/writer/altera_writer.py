@@ -1,4 +1,5 @@
 import glob
+import math
 import os
 import tarfile
 from collections import OrderedDict
@@ -703,67 +704,107 @@ class AlteraWriter(Writer):
     def __write_softmax_tables(self, model, path):
         for layer in model.get_layers():
             activations = (layer.get_attr('activation'), layer.get_attr('recurrent_activation'))
-            implementation = layer.get_attr('implementation')
             is_softmax = any(activation in ('softmax', 'softmax_multidim') for activation in activations)
 
-            if is_softmax:
-                for table_kind in ('exp', 'inv'):
-                    table_name = f'{layer.name}_{table_kind}_table'
-                    table_size = int(layer.get_attr(f'{table_kind}_table_size', layer.get_attr('table_size')))
-                    index_bits = ceil_log2(table_size)
+            if not is_softmax or 'implementation' not in layer.attributes:
+                continue
 
-                    with open(f'{path}/{table_name}.h', 'w') as h_file:
-                        h_file.write(f'#ifndef {table_name.upper()}_H_\n')
-                        h_file.write(f'#define {table_name.upper()}_H_\n\n')
-                        h_file.write(
-                            f'static constexpr nnet::array<{layer.get_attr(f"{table_kind}_table_t").name},{table_size}> '
-                            f'{table_name} = {{'
-                        )
+            implementation = layer.get_attr('implementation')
+            if implementation not in ('stable', 'latency', 'legacy'):
+                continue
 
-                        if implementation == 'stable':
-                            table_lookup_type = layer.get_attr('inp_norm_t' if table_kind == 'exp' else 'inv_inp_t')
-                        if implementation == 'latency':
-                            if table_kind == 'exp':
-                                table_lookup_type = layer.get_input_variable().type
-                            else:
-                                table_lookup_type = layer.get_attr('exp_table_t')
+            for table_kind in ('exp', 'inv'):
+                table_name = f'{layer.name}_{table_kind}_table'
 
-                        sep = ''
+                if implementation == 'stable':
+                    table_size = min(int(layer.get_attr('table_size')), int(layer.get_attr(f'{table_kind}_table_size')))
+                else:
+                    table_size = int(layer.get_attr(f'{table_kind}_table_size'))
+
+                with open(f'{path}/{table_name}.h', 'w') as h_file:
+                    h_file.write(f'#ifndef {table_name.upper()}_H_\n')
+                    h_file.write(f'#define {table_name.upper()}_H_\n\n')
+                    h_file.write(
+                        f'static constexpr nnet::array<{layer.get_attr(f"{table_kind}_table_t").name},{table_size}> '
+                        f'{table_name} = {{'
+                    )
+
+                    sep = ''
+                    N = ceil_log2(table_size)
+
+                    if implementation == 'stable':
+                        ac_type = layer.get_attr('inp_norm_t' if table_kind == 'exp' else 'inv_inp_t')
+                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                        fp_integer = ac_type.precision.integer
+
+                        # Guard mainly for development, this path is not meant to be taken as-is
+                        if N > fp_bits:
+                            raise Exception('Table size is bigger than what precision allows')
+
+                        maxval = 2**fp_integer - 1
+                        half_prec = 2.0 ** (fp_integer - N - 1) if N < fp_bits else 0.0
+
+                        if table_kind == 'exp':
+                            scale = (
+                                layer.attributes['exp_scale']
+                                if ('exp_scale' in layer.attributes and layer.attributes['exp_scale'] is not None)
+                                else 1.0
+                            )
+
                         for i in range(table_size):
-                            if implementation == 'legacy':
-                                if table_kind == 'exp':
-                                    in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
-                                    real_val = np.exp(in_val)
-                                else:
-                                    in_val = 64.0 * i / float(table_size)
-                                    real_val = 1.0 / in_val if in_val > 0.0 else 0
-                            elif implementation in ('stable', 'latency'):
-                                f = FixedPointEmulator(
-                                    table_lookup_type.precision.width,
-                                    table_lookup_type.precision.integer,
-                                    signed=table_lookup_type.precision.signed,
-                                )
-                                f.set_msb_bits(uint_to_binary(i, index_bits))
+                            # Norm type is always > 1, so force unsigned regardless of the quantiser's signedness,
+                            # but keep the width
+                            f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
+                            f.set_msb_bits(uint_to_binary(i, N))
+                            x = f.to_float()
 
-                                if implementation == 'stable':
-                                    if table_kind == 'exp':
-                                        scale = layer.attributes.get('exp_scale', 1)  # only implemented in stable?
-                                        real_val = (1.0 / f.exp_float()) * scale
-                                    else:
-                                        real_val = f.inv_float()
-                                elif implementation == 'latency':
-                                    if table_kind == 'exp':
-                                        real_val = f.exp_float()
-                                    else:
-                                        real_val = f.inv_float()
+                            if table_kind == 'exp':
+                                if half_prec and x > 0:  # x > 0 preserves (x_max - x) == 0 => exp(0) = 1
+                                    x += half_prec
+                                real_val = math.exp(-(x * scale))
                             else:
-                                real_val = 0  # dummy value, for argmax
+                                if half_prec and x != 1.0:  # preserve the special case where x = exp(0) => x = 0
+                                    x += half_prec
+                                real_val = 1.0 / x if x > 0 else maxval
+
+                            if real_val > maxval:
+                                real_val = maxval
 
                             h_file.write(sep + str(real_val))
                             sep = ', '
 
-                        h_file.write('};\n\n')
-                        h_file.write('#endif')
+                    elif implementation == 'latency':
+                        if table_kind == 'exp':
+                            ac_type = layer.get_input_variable().type
+                        else:
+                            # Note: keyed off exp_table_t, not inv_table_t/inv_inp_t
+                            ac_type = layer.get_attr('exp_table_t')
+
+                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                        fp_integer = ac_type.precision.integer
+                        fp_signed = ac_type.precision.signed
+
+                        for i in range(table_size):
+                            f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
+                            f.set_msb_bits(uint_to_binary(i, N))
+                            real_val = f.exp_float() if table_kind == 'exp' else f.inv_float()
+                            h_file.write(sep + str(real_val))
+                            sep = ', '
+
+                    else:  # legacy
+                        for i in range(table_size):
+                            if table_kind == 'exp':
+                                in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
+                                real_val = np.exp(in_val)
+                            else:
+                                in_val = 64.0 * i / float(table_size)
+                                real_val = 1.0 / in_val if in_val > 0.0 else 0
+
+                            h_file.write(sep + str(real_val))
+                            sep = ', '
+
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
     def write_activation_tables(self, model):
         """Write the lookup tables for activation functions
