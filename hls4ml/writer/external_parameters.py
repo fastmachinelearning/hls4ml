@@ -1,18 +1,17 @@
 """Describe parameters exposed outside the HLS compute IP.
 
-The manifest records logical tensor ordering and the expected external interface
-geometry. Synthesized RTL remains authoritative and is verified separately.
-Unsupported layer/interface combinations are left unclaimed.
+Adapters define the expected interface and packing layout for supported
+layer/parameter combinations. Synthesized RTL is verified separately.
 """
 
-import json
-import os
-
-SCHEMA = 'hls4ml.external_parameter_manifest/v1'
-SCHEMA_VERSION = 1
-
-MANIFEST_FILENAME = 'external_parameters.json'
-
+from hls4ml.model.external_parameters import (
+    BlockLayout,
+    CompleteLayout,
+    ExternalParameter,
+    ExternalParameterManifest,
+    FlatOrder,
+    unencodable_reason,
+)
 
 # dense_resource_rf_gt_nin is intentionally unsupported: hls4ml's reuse-factor
 # validation makes this Dense kernel variant unreachable.
@@ -21,11 +20,6 @@ VERIFIED_DENSE_KERNELS = {
     'dense_resource_rf_gt_nin_rem0',
 }
 
-
-# Quantization a packing consumer can actually encode. A layout is claimed only
-# for these for now; anything else (int types, rounding/saturation variants) not verified.
-SUPPORTED_ROUNDING = {'TRN'}
-SUPPORTED_SATURATION = {'WRAP'}
 
 # A reshaped weight array is only an addressable memory if it has more than one
 # word. reuse_factor == 1 collapses the whole array into a single word, which has
@@ -39,20 +33,6 @@ MIN_ADDRESSABLE_DEPTH = 2
 MAX_RESHAPED_PORT_BITS = 4096
 
 
-def _unsupported_precision_reason(precision):
-    """Return why this precision cannot be packed, or None if it can."""
-    if precision.get('width') is None or precision.get('integer') is None:
-        return f'precision {precision.get("type")!r} has no width/integer bits'
-    rounding = precision.get('rounding_mode')
-    saturation = precision.get('saturation_mode')
-    if rounding not in SUPPORTED_ROUNDING or saturation not in SUPPORTED_SATURATION:
-        return (
-            f'precision {precision.get("type")!r} uses rounding={rounding}/saturation={saturation}; '
-            f'only {sorted(SUPPORTED_ROUNDING)}/{sorted(SUPPORTED_SATURATION)} can be encoded'
-        )
-    return None
-
-
 def _dense_kernel_variant(n_in, reuse_factor):
     """Mirror the dispatch in nnet_dense_resource.h::dense_resource."""
     if n_in is None or reuse_factor is None:
@@ -64,7 +44,7 @@ def _dense_kernel_variant(n_in, reuse_factor):
     return 'dense_resource_rf_gt_nin'
 
 
-def _describe_dense_weight(ctx):
+def _describe_dense_weight(layer, n_scalars, reuse_factor, precision):
     """Dense kernel: reshaped by `ARRAY_RESHAPE variable=weights block factor=N`.
 
     ``block factor=N`` on an array of size S gives block_size = ceil(S / N); element
@@ -72,9 +52,8 @@ def _describe_dense_weight(ctx):
     concatenates the N blocks into one word per offset, so a word holds N lanes and
     the memory is block_size words deep.
     """
-    n_scalars, reuse_factor = ctx['n_scalars'], ctx['reuse_factor']
-    n_in = ctx['layer'].get_attr('n_in')
-    n_out = ctx['layer'].get_attr('n_out')
+    n_in = layer.get_attr('n_in')
+    n_out = layer.get_attr('n_out')
     kernel = _dense_kernel_variant(n_in, reuse_factor)
 
     block_factor = -(-n_scalars // reuse_factor) if reuse_factor else None
@@ -84,7 +63,7 @@ def _describe_dense_weight(ctx):
         'kernel_variant': kernel,
         'pragma': f'ARRAY_RESHAPE variable=weights block factor={block_factor}',
     }
-    unsupported = _unsupported_precision_reason(ctx['precision'])
+    unsupported = unencodable_reason(precision)
     if unsupported:
         described['note'] = f'{unsupported}; no layout or ordering is claimed'
         return described
@@ -98,7 +77,7 @@ def _describe_dense_weight(ctx):
             'this parameter bankable.'
         )
         return described
-    port_bits = block_factor * ctx['precision']['width']
+    port_bits = block_factor * precision.width
     if port_bits > MAX_RESHAPED_PORT_BITS:
         described['note'] = (
             f'reshaped port would be {port_bits} bits, above the {MAX_RESHAPED_PORT_BITS}-bit word this '
@@ -107,65 +86,37 @@ def _describe_dense_weight(ctx):
         return described
 
     described.update(
-        expected_interface_kind='bram',
-        expected_data_width=block_factor * ctx['precision']['width'],
-        expected_depth=block_size,
-        flat_order={
-            'tensor_axes': ['n_in', 'n_out'],
-            'axes': ['n_out', 'n_in'],
-            'shape': [n_in, n_out],
-        },
-        layout={
-            'mode': 'block',
-            'block_size': block_size,
-            'lanes': block_factor,
-        },
+        interface_kind='bram',
+        data_width=port_bits,
+        depth=block_size,
+        flat_order=FlatOrder(['n_in', 'n_out'], ['n_out', 'n_in'], [n_in, n_out]),
+        layout=BlockLayout(block_size, block_factor),
     )
     return described
 
 
-def _describe_dense_bias(ctx):
-    """Dense bias: `ARRAY_PARTITION variable=biases complete` wins over the BRAM
-    interface, so it lowers to scalar ports regardless of size.
-
-    Scoped claim: true for the templates and tool flow tested. It follows from a
-    template pragma and is not a permanent property.
-    """
-    unsupported = _unsupported_precision_reason(ctx['precision'])
+def _describe_dense_bias(layer, n_scalars, reuse_factor, precision):
+    """Describe a Dense bias lowered to scalar ports by complete partitioning."""
+    pragma = 'ARRAY_PARTITION variable=biases complete'
+    unsupported = unencodable_reason(precision)
     if unsupported:
-        return {
-            'pragma': 'ARRAY_PARTITION variable=biases complete',
-            'note': f'{unsupported}; no layout or ordering is claimed',
-        }
+        return {'pragma': pragma, 'note': f'{unsupported}; no layout or ordering is claimed'}
     return {
-        'expected_interface_kind': 'scalar_bundle',
-        'expected_data_width': ctx['precision']['width'],
-        'expected_depth': None,
-        'pragma': 'ARRAY_PARTITION variable=biases complete',
-        'flat_order': {
-            'tensor_axes': ['n_out'],
-            'axes': ['n_out'],
-            'shape': [ctx['n_scalars']],
-        },
-        'layout': {'mode': 'complete'},
+        'pragma': pragma,
+        'interface_kind': 'scalar_bundle',
+        'data_width': precision.width,
+        'flat_order': FlatOrder(['n_out'], ['n_out'], [n_scalars]),
+        'layout': CompleteLayout(),
     }
 
 
-def _describe_pointwise_weight(ctx):
-    """PointwiseConv kernel: not reshaped at the external port.
+def _describe_pointwise_weight(layer, n_scalars, reuse_factor, precision):
+    """Describe the unreshaped external interface of a pointwise kernel.
 
-    The pointwise path buffers weights internally before the dense multiply, so the
-    ``ARRAY_RESHAPE`` never reaches the interface. HLS exposes a plain memory one
-    scalar wide and ``n_chan * n_filt`` deep, independent of the reuse factor
-    (verified across reuse factors 1/2/8 -- including 1 -- and several channel and
-    filter counts).
-
-    hls4ml declares the kernel as ``(filt..., n_chan, n_filt)`` and stores it
-    filter-major. A Dense over 2-D/3-D input and a native ``Conv*D`` with a 1-wide
-    kernel give the same layer with the same declared shape, so this describes the
-    class, not one origin.
+    Pointwise weights reach the interface one scalar per word, independent of
+    reuse factor. Dense layers over higher-rank inputs and native 1-wide
+    convolutions use the same pointwise layer representation.
     """
-    layer = ctx['layer']
     n_chan = layer.get_attr('n_chan')
     n_filt = layer.get_attr('n_filt')
     filt_width = layer.get_attr('filt_width')
@@ -174,7 +125,7 @@ def _describe_pointwise_weight(ctx):
 
     described = {'kernel_variant': 'pointwise_unreshaped'}
 
-    unsupported = _unsupported_precision_reason(ctx['precision'])
+    unsupported = unencodable_reason(precision)
     if unsupported:
         described['note'] = f'{unsupported}; no layout or ordering is claimed'
         return described
@@ -189,7 +140,6 @@ def _describe_pointwise_weight(ctx):
         )
         return described
 
-    n_scalars = ctx['n_scalars']
     if n_scalars != n_chan * n_filt:
         described['note'] = f'{n_scalars} scalars is not n_chan*n_filt ({n_chan}*{n_filt}); layout unclear'
         return described
@@ -207,26 +157,25 @@ def _describe_pointwise_weight(ctx):
         axes = ['n_filt', 'filt_width', 'n_chan']
 
     described.update(
-        expected_interface_kind='bram',
-        expected_data_width=ctx['precision']['width'],  # one scalar per word
-        expected_depth=n_scalars,
-        flat_order={'tensor_axes': tensor_axes, 'axes': axes, 'shape': shape},
-        layout={'mode': 'block', 'block_size': n_scalars, 'lanes': 1},
+        interface_kind='bram',
+        data_width=precision.width,  # one scalar per word
+        depth=n_scalars,
+        flat_order=FlatOrder(tensor_axes, axes, shape),
+        layout=BlockLayout(n_scalars, 1),
     )
     return described
 
 
-def _describe_pointwise_bias(ctx):
+def _describe_pointwise_bias(layer, n_scalars, reuse_factor, precision):
     """PointwiseConv bias: one scalar port per filter, as for a Dense bias."""
-    unsupported = _unsupported_precision_reason(ctx['precision'])
+    unsupported = unencodable_reason(precision)
     if unsupported:
         return {'note': f'{unsupported}; no layout or ordering is claimed'}
     return {
-        'expected_interface_kind': 'scalar_bundle',
-        'expected_data_width': ctx['precision']['width'],
-        'expected_depth': None,
-        'flat_order': {'tensor_axes': ['n_filt'], 'axes': ['n_filt'], 'shape': [ctx['n_scalars']]},
-        'layout': {'mode': 'complete'},
+        'interface_kind': 'scalar_bundle',
+        'data_width': precision.width,
+        'flat_order': FlatOrder(['n_filt'], ['n_filt'], [n_scalars]),
+        'layout': CompleteLayout(),
     }
 
 
@@ -249,24 +198,6 @@ def described_combinations():
     return sorted(_ADAPTERS)
 
 
-def _precision_dict(precision):
-    width = getattr(precision, 'width', None)
-    integer = getattr(precision, 'integer', None)
-    signed = getattr(precision, 'signed', None)
-    out = {
-        'type': str(precision),
-        'width': width,
-        'integer': integer,
-        'fractional': (width - integer) if (width is not None and integer is not None) else None,
-        'signed': bool(signed) if signed is not None else None,
-    }
-    for attr in ('rounding_mode', 'saturation_mode', 'saturation_bits'):
-        value = getattr(precision, attr, None)
-        if value is not None:
-            out[attr] = str(value)
-    return out
-
-
 def _owning_layer(model, var):
     """Return (layer, role) for a weight variable; role is its key in layer.weights."""
     for layer in model.get_layers():
@@ -276,53 +207,24 @@ def _owning_layer(model, var):
     return None, None
 
 
-def build_manifest(model):
-    """Return the manifest dict for a ModelGraph ('ports' is empty if none apply)."""
+def describe_parameter(model, var):
+    """The ExternalParameter for one weight variable the backend exposed."""
     config = model.config
-    writer_config = config.get_writer_config() or {}
-    write_txt = bool(writer_config.get('WriteWeightsTxt', False))
     io_type = config.get_config_value('IOType')
     backend = str(config.get_config_value('Backend'))
 
-    try:
-        from hls4ml import __version__ as hls4ml_version
-    except ImportError:  # pragma: no cover
-        hls4ml_version = None
+    layer, role = _owning_layer(model, var)
+    n_scalars = int(getattr(var, 'data_length', 0) or 0)
+    reuse_factor = layer.get_attr('reuse_factor') if layer else None
+    strategy = layer.get_attr('strategy') if layer else None
+    precision = var.type.precision
+    layer_class = layer.class_name if layer else None
 
-    ports = []
-    for var in model.get_weight_variables():
-        if str(getattr(var, 'storage', '')).lower() != 'bram':
-            continue
-
-        layer, role = _owning_layer(model, var)
-        n_scalars = int(getattr(var, 'data_length', 0) or 0)
-        reuse_factor = layer.get_attr('reuse_factor') if layer else None
-        strategy = layer.get_attr('strategy') if layer else None
-        precision = _precision_dict(var.type.precision)
-
-        entry = {
-            'name': var.name,
-            'layer': layer.name if layer else None,
-            'layer_class': layer.class_name if layer else None,
-            'role': role,
-            'tensor_shape': list(getattr(var, 'shape', []) or []),
-            'n_scalars': n_scalars,
-            'precision': precision,
-            'reuse_factor': reuse_factor,
-            'strategy': str(strategy) if strategy is not None else None,
-            'kernel_variant': None,
-            'flat_order': None,
-            'layout': None,
-            'expected_interface_kind': None,
-            'expected_data_width': None,
-            'expected_depth': None,
-            'values_txt': f'firmware/weights/{var.name}.txt' if write_txt else None,
-        }
-
-        key = (backend, io_type, str(strategy).lower(), entry['layer_class'], role)
-        describe = _ADAPTERS.get(key)
-        if describe is None:
-            entry['note'] = (
+    key = (backend, io_type, str(strategy).lower(), layer_class, role)
+    describe = _ADAPTERS.get(key)
+    if describe is None:
+        described = {
+            'note': (
                 f'no adapter for backend={key[0]!r} io_type={key[1]!r} strategy={key[2]!r} '
                 f'layer={key[3]!r} role={key[4]!r}; no interface kind, geometry or ordering is claimed -- '
                 'classify from the export report. Note that a fully partitioned parameter '
@@ -330,49 +232,51 @@ def build_manifest(model):
                 'it lowers to one port per element, so it is out of scope by construction '
                 'rather than by omission.'
             )
-        else:
-            entry.update(
-                describe(
-                    {
-                        'layer': layer,
-                        'var': var,
-                        'n_scalars': n_scalars,
-                        'reuse_factor': reuse_factor,
-                        'precision': precision,
-                    }
-                )
-            )
+        }
+    else:
+        described = describe(layer, n_scalars, reuse_factor, precision)
 
-        ports.append(entry)
-
-    return {
-        'schema': SCHEMA,
-        'schema_version': SCHEMA_VERSION,
-        'hls4ml_version': hls4ml_version,
-        'project_name': config.get_project_name(),
-        'backend': backend,
-        'io_type': io_type,
-        'part': config.get_config_value('Part'),
-        'clock_period': config.get_config_value('ClockPeriod'),
-        'bram_factor': getattr(config, 'model_bf', None),
-        'disclaimer': (
-            "All 'expected_*' fields state what hls4ml requested via pragmas. Only C/RTL "
-            'synthesis or export establishes the actual interface geometry. Consumers must '
-            'cross-check before relying on them.'
-        ),
-        'ports': ports,
-    }
+    return ExternalParameter(
+        name=var.name,
+        layer=layer.name if layer else None,
+        layer_class=layer_class,
+        role=role,
+        tensor_shape=list(getattr(var, 'shape', []) or []),
+        n_scalars=n_scalars,
+        precision=precision,
+        reuse_factor=reuse_factor,
+        strategy=str(strategy) if strategy is not None else None,
+        **described,
+    )
 
 
-def write_manifest(model, path=None):
+def build_manifest(model):
+    """The manifest for a ModelGraph; its parameter list is empty if none apply."""
+    config = model.config
+    try:
+        from hls4ml import __version__ as hls4ml_version
+    except ImportError:  # pragma: no cover
+        hls4ml_version = None
+
+    parameters = [
+        describe_parameter(model, var)
+        for var in model.get_weight_variables()
+        if str(getattr(var, 'storage', '')).lower() == 'bram'
+    ]
+    return ExternalParameterManifest(
+        config.get_project_name(),
+        str(config.get_config_value('Backend')),
+        config.get_config_value('IOType'),
+        config.get_config_value('Part'),
+        config.get_config_value('ClockPeriod'),
+        parameters,
+        hls4ml_version,
+    )
+
+
+def write_manifest(model):
     """Write the manifest. Returns its path, or None when there is nothing to describe."""
     manifest = build_manifest(model)
-    if not manifest['ports']:
+    if not manifest.parameters:
         return None
-
-    if path is None:
-        path = os.path.join(model.config.get_output_dir(), 'firmware', 'weights', MANIFEST_FILENAME)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w') as fh:
-        json.dump(manifest, fh, indent=2)
-    return path
+    return manifest.save(model.config.get_output_dir())

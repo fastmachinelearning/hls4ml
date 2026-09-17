@@ -1,22 +1,7 @@
-"""Runtime-selected weight banks: packing, wrapper generation, and RTL behaviour.
+"""Tests for parameter-bank packing, wrapper generation, and RTL behaviour.
 
-Most tests are plain Python. Eight need FPGA tooling and are gated on
-RUN_SYNTHESIS (conftest.py's synthesis_config), which generate_ci_yaml.py sets
-to "true" for the GitLab pipeline (pinned there to Vivado 2020.1 / Vitis 2024.1):
-
-  test_banks_rtl_simulation[2,4]             Vitis HLS + xsim (one shared synthesis)
-  test_pointwise_two_banks_rtl_simulation    Vitis HLS + xsim, one per input rank
-  test_latch_rejects_out_of_range_bank       xsim only
-  test_vivado_synthesizes_the_wrapper        Vitis HLS + Vivado
-  test_vivado_ip_integrator_accepts_the_shim Vitis HLS + Vivado
-
-They were verified against Vitis 2025.1/2025.2; older versions are untested. The
-IP Integrator Module Reference behaviour the shim exists for was checked on Vivado
-2025.2; the test runs against whatever Vivado is on PATH. xsim
-on PATH is this file's own requirement, not a repo convention, so they skip
-without it. Run them locally when changing the RTL templates or package.py's
-top-generation logic: the Python tests cannot see a top that fails to elaborate,
-or a bank selected a cycle late.
+Synthesis-backed tests are gated by ``RUN_SYNTHESIS`` and skip when the required
+FPGA tools are unavailable.
 """
 
 import json
@@ -29,11 +14,11 @@ from tensorflow.keras.layers import Conv2D, Dense, Input
 from tensorflow.keras.models import Model
 
 import hls4ml
-from hls4ml.contrib.runtime_weights import pack
-from hls4ml.contrib.runtime_weights.pack import PackingUnsupported
-from hls4ml.writer.external_parameters import MANIFEST_FILENAME
+from hls4ml.contrib.parameter_banks import pack
+from hls4ml.contrib.parameter_banks.pack import BankImage, PackingUnsupported
+from hls4ml.model.external_parameters import ExternalParameterError, ExternalParameterManifest, quantize_fixed
 
-PROJECT = 'rw_prj'
+PROJECT = 'pb_prj'
 N_IN = 8
 PRECISION = 'ap_fixed<16,6>'
 
@@ -69,8 +54,11 @@ def _bank_tensors(n_banks):
     return banks
 
 
-def _convert_model(out_dir, tensors=None, bram_factor=0):
-    """The single model builder. Part and clock period are hls4ml defaults."""
+def _convert_model(out_dir, tensors=None, external=None):
+    """The single model builder. Part and clock period are hls4ml defaults.
+
+    ``external`` maps layer -> parameter roles to expose; default: every parameter.
+    """
     inp = Input(shape=(N_IN,), name='input_1')
     trunk = Dense(LAYERS['trunk'][1], activation='linear', name='trunk')(inp)
     outs = [Dense(LAYERS[h][1], activation='linear', name=h)(trunk) for h in HEADS]
@@ -87,10 +75,13 @@ def _convert_model(out_dir, tensors=None, bram_factor=0):
         default_reuse_factor=2,
     )
     cfg['Model']['Strategy'] = 'Resource'
-    cfg['Model']['BramFactor'] = bram_factor
+    if external is None:
+        external = {layer: ['weight', 'bias'] for layer in LAYERS}
     for layer, (_, _, reuse) in LAYERS.items():
         cfg['LayerName'][layer]['Strategy'] = 'Resource'
         cfg['LayerName'][layer]['ReuseFactor'] = reuse
+        if layer in external:
+            cfg['LayerName'][layer]['ExternalParameters'] = external[layer]
     # Name granularity defaults every precision to 'auto', which widens each
     # layer's accumulator and result (ap_fixed<36,16>, <56,26>, ...). Pin them so
     # the arithmetic stays the single type _reference and the testbench model.
@@ -111,17 +102,17 @@ def _convert_model(out_dir, tensors=None, bram_factor=0):
 def _manifest(tmp_path):
     hls_model = _convert_model(tmp_path)
     hls_model.write()
-    return json.loads((Path(tmp_path) / 'firmware' / 'weights' / MANIFEST_FILENAME).read_text())
+    return ExternalParameterManifest.load(str(tmp_path))
 
 
 def _port(manifest, layer, role):
-    return next(p for p in manifest['ports'] if p['layer'] == layer and p['role'] == role)
+    return manifest.get(layer, role)
 
 
 def _unpack(port, words, n_in, n_out):
     """Invert the packing using only the manifest."""
-    width = port['precision']['width']
-    block_size = port['layout']['block_size']
+    width = port.precision.width
+    block_size = port.layout.block_size
     out = np.zeros((n_in, n_out), dtype=np.int64)
     for i in range(n_in):
         for o in range(n_out):
@@ -133,7 +124,7 @@ def _unpack(port, words, n_in, n_out):
 
 def _reference(x, tensors):
     """Fixed-point forward pass, heads in model-output order."""
-    import runtime_weights_sim as sim
+    import parameter_banks_sim as sim
 
     trunk = sim.dense_reference(x, tensors['trunk'][0].tolist(), tensors['trunk'][1].tolist())
     return [sim.dense_reference(trunk, tensors[h][0].tolist(), tensors[h][1].tolist()) for h in HEADS]
@@ -142,29 +133,23 @@ def _reference(x, tensors):
 @pytest.fixture(scope='module')
 def written_project(tmp_path_factory):
     """Written once (no synthesis): the pure-Python tests read it."""
-    path = tmp_path_factory.mktemp('rw_manifest')
+    path = tmp_path_factory.mktemp('pb_manifest')
     hls_model = _convert_model(path)
     hls_model.write()
     return hls_model
 
 
-# trunk weight is 8*8=64, every other parameter is 48 or fewer, so this threshold
-# externalizes exactly one of them and leaves the rest fixed in the compute IP
-PARTIAL_BRAM_FACTOR = 48
-
-
 @pytest.fixture(scope='module')
 def partial_project(tmp_path_factory):
-    """Only some parameters externalized, so fixed ones exist to disagree about."""
-    hls_model = _convert_model(tmp_path_factory.mktemp('rw_partial'), bram_factor=PARTIAL_BRAM_FACTOR)
+    """Only one parameter exposed, so fixed ones exist to disagree about."""
+    hls_model = _convert_model(tmp_path_factory.mktemp('pb_partial'), external={'trunk': ['weight']})
     hls_model.write()
     return hls_model
 
 
 @pytest.fixture(scope='module')
 def manifest(written_project):
-    path = Path(written_project.config.get_output_dir()) / 'firmware' / 'weights' / MANIFEST_FILENAME
-    return json.loads(path.read_text())
+    return ExternalParameterManifest.load(written_project.config.get_output_dir())
 
 
 @pytest.fixture(scope='module')
@@ -173,7 +158,7 @@ def synthesized_project(tmp_path_factory, synthesis_config):
     if not synthesis_config['run_synthesis']:
         pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
 
-    path = tmp_path_factory.mktemp('rw_synth')
+    path = tmp_path_factory.mktemp('pb_synth')
     hls_model = _convert_model(path, tensors=_bank_tensors(1)[0])
     hls_model.write()
     hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
@@ -189,22 +174,22 @@ def test_packing_places_each_scalar_at_the_declared_word_and_lane(manifest, laye
     """Scalar f lands at (word f % block_size, lane f // block_size)."""
     n_in, n_out, _ = LAYERS[layer]
     port = _port(manifest, layer, 'weight')
-    width = port['precision']['width']
-    block_size = port['layout']['block_size']
+    width = port.precision.width
+    block_size = port.layout.block_size
 
     # round trip, and two banks must not collapse to one image
     banks = [t[layer][0] for t in _bank_tensors(2)]
-    images = [pack.pack_tensor(port, b) for b in banks]
+    images = [port.pack(b) for b in banks]
     assert images[0] != images[1], 'banks must not produce identical images'
     for bank, words in zip(banks, images):
-        assert len(words) == port['expected_depth']
-        expected = np.vectorize(lambda v: pack.quantize(v, width, port['precision']['integer']))(bank)
+        assert len(words) == port.depth
+        expected = np.vectorize(lambda v: quantize_fixed(v, width, port.precision.integer))(bank)
         np.testing.assert_array_equal(_unpack(port, words, n_in, n_out), expected)
 
     # one scalar changed -> one lane of one word
     mutated = banks[0].copy()
     mutated[3, 2] += 0.125
-    words_a, words_b = images[0], pack.pack_tensor(port, mutated)
+    words_a, words_b = images[0], port.pack(mutated)
     differing = [i for i, (a, b) in enumerate(zip(words_a, words_b)) if a != b]
     assert len(differing) == 1
 
@@ -219,10 +204,10 @@ def test_packing_places_each_scalar_at_the_declared_word_and_lane(manifest, laye
     for i in range(n_in):
         for o in range(n_out):
             unique[i, o] = (o * n_in + i + 1) / 1024.0
-    words = pack.pack_tensor(port, unique)
+    words = port.pack(unique)
     seen = {}
     for wi, word in enumerate(words):
-        for lane in range(port['layout']['lanes']):
+        for lane in range(port.layout.lanes):
             code = (word >> (width * lane)) & ((1 << width) - 1)
             assert code != 0, f'lane {lane} of word {wi} is empty'
             seen[(wi, lane)] = code - 1
@@ -233,38 +218,32 @@ def test_packing_places_each_scalar_at_the_declared_word_and_lane(manifest, laye
 
 def test_both_verified_kernel_variants_are_covered(manifest):
     """The fixture must keep exercising each variant the manifest claims."""
-    variants = {_port(manifest, layer, 'weight')['kernel_variant'] for layer in LAYERS}
+    variants = {_port(manifest, layer, 'weight').kernel_variant for layer in LAYERS}
     assert variants == {'dense_resource_rf_leq_nin', 'dense_resource_rf_gt_nin_rem0'}
 
-    geometries = {
-        (_port(manifest, la, 'weight')['expected_data_width'], _port(manifest, la, 'weight')['expected_depth'])
-        for la in LAYERS
-    }
+    geometries = {(_port(manifest, la, 'weight').data_width, _port(manifest, la, 'weight').depth) for la in LAYERS}
     assert len(geometries) == len(LAYERS), 'layers should not share a geometry'
 
 
-def test_bank_image_is_depth_stacked_and_padded(manifest):
+def test_bank_image_is_depth_stacked_and_padded(written_project, manifest):
     port = _port(manifest, 'trunk', 'weight')
+    entry = pack.pack_banks(written_project, _bank_sets(2))[port.name]
 
-    image, stride = pack.build_bank_image(port, [t['trunk'][0] for t in _bank_tensors(2)])
-    assert stride >= port['expected_depth']
+    stride, image = entry.bank_stride_words, entry.image
+    assert stride >= port.depth
     assert stride & (stride - 1) == 0, 'stride should be a power of two'
     assert len(image) == 2 * stride
     for bank_index in range(2):
-        for pad in range(port['expected_depth'], stride):
+        for pad in range(port.depth, stride):
             assert image[bank_index * stride + pad] == 0
-
-    # a supplied stride is validated, not silently replaced by the default
-    with pytest.raises(pack.PackingUnsupported, match='stride 0'):
-        pack.build_bank_image(port, [t['trunk'][0] for t in _bank_tensors(2)], bank_stride_words=0)
 
 
 def test_bias_scalar_bank(manifest):
     port = _port(manifest, 'head_a', 'bias')
 
-    codes = pack.pack_flat(port, [0.5, -0.25, 1.0, -2.0])
+    codes = port.pack_flat([0.5, -0.25, 1.0, -2.0])
     assert len(codes) == LAYERS['head_a'][1]
-    assert codes[0] == pack.quantize(0.5, 16, 6)
+    assert codes[0] == quantize_fixed(0.5, 16, 6)
     assert all(0 <= c < (1 << 16) for c in codes)
 
 
@@ -272,9 +251,9 @@ def test_dense_bias_walking_bit(manifest):
     n_out = LAYERS['trunk'][1]
     port = _port(manifest, 'trunk', 'bias')
 
-    codes = pack.pack_flat(port, [(i + 1) / 1024.0 for i in range(n_out)])
+    codes = port.pack_flat([(i + 1) / 1024.0 for i in range(n_out)])
 
-    assert port['layout']['mode'] == 'complete'
+    assert port.layout.mode == 'complete'
     assert codes == [i + 1 for i in range(n_out)], 'bias order must be b[i] = bias[i]'
 
 
@@ -284,24 +263,24 @@ def test_flatten_follows_declared_axis_order(manifest):
     port = _port(manifest, 'trunk', 'weight')
 
     tensor = np.arange(n_in * n_out).reshape(n_in, n_out)
-    flat = pack.flatten(port, tensor)
+    flat = port.flat_order.flatten(tensor)
 
-    assert port['flat_order']['tensor_axes'] == ['n_in', 'n_out']
-    assert port['flat_order']['axes'] == ['n_out', 'n_in']
+    assert port.flat_order.tensor_axes == ['n_in', 'n_out']
+    assert port.flat_order.axes == ['n_out', 'n_in']
     assert flat == tensor.T.ravel().tolist()
     assert flat[:n_in] == tensor[:, 0].tolist(), 'first n_in scalars are output 0'
 
 
-def test_write_mem_format(manifest, tmp_path):
+def test_write_mem_format(written_project, manifest, tmp_path):
     port = _port(manifest, 'trunk', 'weight')
-    words = pack.pack_tensor(port, _bank_tensors(1)[0]['trunk'][0])
+    entry = pack.pack_banks(written_project, _bank_sets(2))[port.name]
 
     out = tmp_path / 'bank.mem'
-    pack.write_mem(out, words, port['expected_data_width'])
+    assert entry.write_mem(out) == out
     lines = out.read_text().split()
-    assert len(lines) == len(words)
-    assert all(len(line) == port['expected_data_width'] // 4 for line in lines)
-    assert int(lines[0], 16) == words[0]
+    assert len(lines) == len(entry.image) == 2 * entry.bank_stride_words
+    assert all(len(line) == port.data_width // 4 for line in lines)
+    assert int(lines[0], 16) == entry.image[0] == port.pack(_bank_tensors(2)[0]['trunk'][0])[0]
 
 
 def _bank_sets(n_banks, fixed=None):
@@ -321,17 +300,20 @@ def _bank_sets(n_banks, fixed=None):
 def test_pack_banks_packs_every_external_parameter(written_project, manifest):
     packed = pack.pack_banks(written_project, _bank_sets(2))
 
-    assert set(packed) == {p['name'] for p in manifest['ports']}
-    for port in manifest['ports']:
-        entry = packed[port['name']]
-        if port['expected_interface_kind'] == 'bram':
-            assert len(entry['image']) == 2 * entry['bank_stride_words']
+    assert set(packed) == {p.name for p in manifest}
+    for port in manifest:
+        entry = packed[port.name]
+        assert isinstance(entry, BankImage)
+        if port.interface_kind == 'bram':
+            assert len(entry.image) == 2 * entry.bank_stride_words
         else:
-            assert [len(c) for c in entry['codes']] == [port['n_scalars']] * 2
+            assert [len(c) for c in entry.per_bank] == [port.n_scalars] * 2
+            with pytest.raises(PackingUnsupported, match='loader'):
+                entry.image
 
     # and it agrees with the primitive it is built on
     weight = _port(manifest, 'trunk', 'weight')
-    assert packed['w2']['image'][: weight['expected_depth']] == pack.pack_tensor(weight, _bank_tensors(2)[0]['trunk'][0])
+    assert packed['w2'].image[: weight.depth] == weight.pack(_bank_tensors(2)[0]['trunk'][0])
 
 
 def test_pack_banks_checks_scalar_bundle_shapes(written_project):
@@ -354,16 +336,16 @@ def test_pack_banks_requires_every_bank_to_supply_each_external_parameter(writte
 
 
 def test_pack_banks_rejects_banks_that_disagree_on_a_fixed_parameter(partial_project):
-    """Only BramFactor-externalized parameters can vary; the rest are in the IP."""
+    """Only exposed parameters can vary; the rest are compiled into the IP."""
     sets = _bank_sets(2)
-    for key in sets[0]:  # only the trunk kernel is above the threshold
+    for key in sets[0]:  # only the trunk kernel is exposed
         if key != ('trunk', 'weight'):
             sets[1][key] = sets[0][key]
     pack.pack_banks(partial_project, sets)  # banks differ only where they may
 
-    # head_a's kernel is below the threshold, so it is compiled in and fixed
+    # head_a's kernel is not exposed, so it is compiled in and fixed
     sets[1][('head_a', 'weight')] = sets[0][('head_a', 'weight')] + 1.0
-    with pytest.raises(PackingUnsupported, match='fixed in the compute IP'):
+    with pytest.raises(PackingUnsupported, match='compiled into the compute IP'):
         pack.pack_banks(partial_project, sets)
 
 
@@ -389,10 +371,10 @@ def test_pack_banks_rejects_keys_that_are_not_parameters(written_project):
 
 def _run_bank_simulation(synthesized_project, tmp_path, n_banks):
     """Package the shared IP for n_banks, load every bank, check every output."""
-    import runtime_weights_sim as sim
+    import parameter_banks_sim as sim
 
-    from hls4ml.contrib.runtime_weights import interface, pack_flat, pack_tensor, package
-    from hls4ml.contrib.runtime_weights.package import fingerprint_ip
+    from hls4ml.contrib.parameter_banks import interface, package
+    from hls4ml.contrib.parameter_banks.package import fingerprint_ip
 
     if not sim.have_xsim():
         pytest.skip('requires xvlog/xelab/xsim')
@@ -405,12 +387,12 @@ def _run_bank_simulation(synthesized_project, tmp_path, n_banks):
     before = fingerprint_ip(str(project_path), project)
     summary = package(str(project_path), n_banks=n_banks)
 
-    # take the verified ports, whose actual_* come from the synthesized interface,
-    # rather than assuming actual == expected
-    manifest = json.loads((project_path / 'firmware' / 'weights' / MANIFEST_FILENAME).read_text())
-    verified, _ = interface.verify(manifest, str(project_path), project)
-    bram = [p for p in verified if p['expected_interface_kind'] == 'bram']
-    scalar = [p for p in verified if p['expected_interface_kind'] == 'scalar_bundle']
+    # take the verified interfaces, whose geometry comes from synthesis, rather
+    # than assuming actual == expected
+    manifest = ExternalParameterManifest.load(str(project_path))
+    verified, _ = interface.verify(manifest, str(project_path))
+    bram = [i for i in verified if i.kind == 'bram']
+    scalar = [i for i in verified if i.kind == 'scalar_bundle']
     assert len(bram) == len(scalar) == len(LAYERS), 'every layer should reach the wrapper'
 
     # the testbench models one output type; an auto-widened result would silently
@@ -423,8 +405,8 @@ def _run_bank_simulation(synthesized_project, tmp_path, n_banks):
     x = [0.5, -1.25, 0.75, 2.0, -0.5, 1.5, -2.0, 0.25]
     payloads, expected = [], []
     for tensors in _bank_tensors(n_banks):
-        payload = {p['name']: pack_tensor(p, tensors[p['layer']][0]) for p in bram}
-        payload.update({p['name']: pack_flat(p, tensors[p['layer']][1].tolist()) for p in scalar})
+        payload = {i.name: i.parameter.pack(tensors[i.parameter.layer][0]) for i in bram}
+        payload.update({i.name: i.parameter.pack_flat(tensors[i.parameter.layer][1].tolist()) for i in scalar})
         payloads.append(payload)
         heads = _reference(x, tensors)
         expected.append({name: [sim.code_of(v) for v in head] for (name, _), head in zip(outputs, heads)})
@@ -434,7 +416,7 @@ def _run_bank_simulation(synthesized_project, tmp_path, n_banks):
             assert expected[a] != expected[b], f'banks {a} and {b} are not discriminating'
 
     tb = sim.write_testbench(
-        str(tmp_path / 'tb_runtime_weights.sv'),
+        str(tmp_path / 'tb_parameter_banks.sv'),
         PROJECT,
         [sim.code_of(v) for v in x],
         outputs,
@@ -445,7 +427,7 @@ def _run_bank_simulation(synthesized_project, tmp_path, n_banks):
     passed, log = sim.run_xsim(
         str(tmp_path / 'xsim_work'),
         [
-            str(project_path / 'runtime_weights' / 'rtl'),
+            str(project_path / 'parameter_banks' / 'rtl'),
             str(project_path / f'{project}_prj' / 'solution1' / 'syn' / 'verilog'),
         ],
         tb,
@@ -480,8 +462,8 @@ def _convert_pointwise(out_dir, weights, bias, rank):
         model, granularity='name', backend='Vitis', default_precision=PRECISION, default_reuse_factor=2
     )
     cfg['Model']['Strategy'] = 'Resource'
-    cfg['Model']['BramFactor'] = 0
     cfg['LayerName']['pw']['Strategy'] = 'Resource'
+    cfg['LayerName']['pw']['ExternalParameters'] = ['weight', 'bias']
     for entry in cfg['LayerName'].values():
         for key, value in entry.get('Precision', {}).items():
             if value == 'auto':
@@ -517,9 +499,9 @@ def test_pointwise_two_banks_rtl_simulation(tmp_path, synthesis_config, rank):
     bank selection. Matching the reference also proves the unreshaped
     scalar-per-word layout the adapter claims is the real one.
     """
-    import runtime_weights_sim as sim
+    import parameter_banks_sim as sim
 
-    from hls4ml.contrib.runtime_weights import interface, pack_flat, pack_tensor, package
+    from hls4ml.contrib.parameter_banks import interface, package
 
     if not synthesis_config['run_synthesis']:
         pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
@@ -533,22 +515,22 @@ def test_pointwise_two_banks_rtl_simulation(tmp_path, synthesis_config, rank):
     outputs = [(v.name, v.size()) for v in hls_model.get_output_variables()]
 
     summary = package(str(tmp_path), n_banks=2)
-    man = json.loads((tmp_path / 'firmware' / 'weights' / MANIFEST_FILENAME).read_text())
-    verified, _ = interface.verify(man, str(tmp_path), PROJECT)
-    w_port = next(p for p in verified if p['role'] == 'weight')
-    b_port = next(p for p in verified if p['role'] == 'bias')
+    verified, _ = interface.verify(ExternalParameterManifest.load(str(tmp_path)), str(tmp_path))
+    w_iface = next(i for i in verified if i.parameter.role == 'weight')
+    w_port = w_iface.parameter
+    b_port = next(i for i in verified if i.parameter.role == 'bias').parameter
 
     # the claim under test: one scalar per word, as deep as there are scalars
-    assert w_port['kernel_variant'] == 'pointwise_unreshaped'
-    assert w_port['actual_data_width'] == w_port['precision']['width']
-    assert w_port['expected_depth'] == PW_CHAN * PW_FILT
+    assert w_port.kernel_variant == 'pointwise_unreshaped'
+    assert w_iface.data_width == w_port.precision.width
+    assert w_iface.depth == w_port.depth == PW_CHAN * PW_FILT
 
     n_pos = PW_POSITIONS * (1 if rank == 2 else 2)
     x = [[(i + 1) / 8.0 - (p + 1) / 4.0 for i in range(PW_CHAN)] for p in range(n_pos)]
     payloads, expected = [], []
     for w, b in banks:
-        tensor = w.reshape(*w_port['flat_order']['shape'])
-        payloads.append({w_port['name']: pack_tensor(w_port, tensor), b_port['name']: pack_flat(b_port, b.tolist())})
+        tensor = w.reshape(*w_port.flat_order.shape)
+        payloads.append({w_port.name: w_port.pack(tensor), b_port.name: b_port.pack_flat(b.tolist())})
         # a pointwise conv is the same dense applied at every position
         flat = []
         for pos in range(n_pos):
@@ -569,7 +551,7 @@ def test_pointwise_two_banks_rtl_simulation(tmp_path, synthesis_config, rank):
     passed, log = sim.run_xsim(
         str(tmp_path / 'xsim_pw'),
         [
-            str(tmp_path / 'runtime_weights' / 'rtl'),
+            str(tmp_path / 'parameter_banks' / 'rtl'),
             str(tmp_path / f'{PROJECT}_prj' / 'solution1' / 'syn' / 'verilog'),
         ],
         tb,
@@ -579,14 +561,14 @@ def test_pointwise_two_banks_rtl_simulation(tmp_path, synthesis_config, rank):
 
 def test_latch_rejects_out_of_range_bank(tmp_path, synthesis_config):
     """Needs three banks: two cannot express an invalid id."""
-    import runtime_weights_sim as sim
+    import parameter_banks_sim as sim
 
     if not synthesis_config['run_synthesis']:
         pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
     if not sim.have_xsim():
         pytest.skip('requires xvlog/xelab/xsim')
 
-    rtl = Path(__file__).parent.parent.parent / 'hls4ml' / 'contrib' / 'runtime_weights' / 'templates'
+    rtl = Path(__file__).parent.parent.parent / 'hls4ml' / 'contrib' / 'parameter_banks' / 'templates'
     tb = sim.write_latch_testbench(str(tmp_path / 'tb_latch.sv'))
     passed, log = sim.run_xsim(str(tmp_path / 'xsim_latch'), [str(rtl)], tb)
     assert passed, f'latch bench failed:\n{log[-4000:]}'
@@ -598,9 +580,9 @@ def test_vivado_synthesizes_the_wrapper(synthesized_project):
     Packages IP from the hls4ml Vitis backend; Vivado is the implementation tool,
     not a supported HLS backend.
     """
-    import runtime_weights_sim as sim
+    import parameter_banks_sim as sim
 
-    from hls4ml.contrib.runtime_weights import package
+    from hls4ml.contrib.parameter_banks import package
 
     if not sim.have_vivado():
         pytest.skip('requires vivado')
@@ -608,14 +590,14 @@ def test_vivado_synthesizes_the_wrapper(synthesized_project):
     project_path, _, _ = synthesized_project
     summary = package(str(project_path), n_banks=2)
 
-    rw = Path(project_path) / 'runtime_weights'
+    rw = Path(project_path) / 'parameter_banks'
     # Generated ROM data is read by $readmemh from this directory at elaboration,
     # so it has to be packaged next to the Tcl.
     assert summary['rom_data_files'], 'this fixture should produce an out_index ROM'
     for name in summary['rom_data_files']:
         assert (rw / name).exists(), f'{name} was not packaged'
 
-    ok, log = sim.run_vivado_batch('create_runtime_weights.tcl', rw, 'runtime-weights wrapper synthesized')
+    ok, log = sim.run_vivado_batch('create_parameter_banks.tcl', rw, 'parameter-banks wrapper synthesized')
     assert ok, f'vivado synthesis did not complete:\n{log[-4000:]}'
     # the sanity synthesis goes through the IP Integrator shim, so a shim that
     # disagrees with the wrapper's ports fails here
@@ -637,32 +619,32 @@ def test_vivado_synthesizes_the_wrapper(synthesized_project):
 def test_vivado_ip_integrator_accepts_the_shim(synthesized_project, tmp_path):
     """The Verilog shim is accepted as a Module Reference, with every port and
     its INIT_HEX parameter exposed."""
-    import runtime_weights_sim as sim
+    import parameter_banks_sim as sim
 
-    from hls4ml.contrib.runtime_weights import package
+    from hls4ml.contrib.parameter_banks import package
 
     if not sim.have_vivado():
         pytest.skip('requires vivado')
 
     project_path, project, _ = synthesized_project
     summary = package(str(project_path), n_banks=2)
-    rw = Path(project_path) / 'runtime_weights'
+    rw = Path(project_path) / 'parameter_banks'
     hls_rtl = Path(project_path) / f'{project}_prj' / 'solution1' / 'syn' / 'verilog'
     shim = rw / 'rtl' / f'{summary["bd_module"]}.v'
     _, ports = _module_header(shim.read_text(), summary['bd_module'])
-    manifest = json.loads((project_path / 'firmware' / 'weights' / MANIFEST_FILENAME).read_text())
+    part = ExternalParameterManifest.load(str(project_path)).part
     bram = next(p for p in summary['banked_ports'] if p['kind'] == 'bram')
     init_param = f'{bram["name"].upper()}_INIT_HEX'
 
     (tmp_path / 'ipi.tcl').write_text(
-        f'create_project ipi {tmp_path / "prj"} -part {manifest["part"]} -force\n'
+        f'create_project ipi {tmp_path / "prj"} -part {part} -force\n'
         f'add_files -norecurse [glob {hls_rtl}/*.v]\n'
         f'add_files -norecurse [glob {rw}/rtl/*.sv]\n'
         f'set_property file_type SystemVerilog [get_files {rw}/rtl/*.sv]\n'
         f'add_files -norecurse {shim}\n'
         'update_compile_order -fileset sources_1\n'
         'create_bd_design system\n'
-        f'set c [create_bd_cell -type module -reference {summary["bd_module"]} rw_0]\n'
+        f'set c [create_bd_cell -type module -reference {summary["bd_module"]} pb_0]\n'
         'puts "PINS=[llength [get_bd_pins $c/*]]"\n'
         f'puts "INIT=[get_property CONFIG.{init_param} $c]"\n'
         'puts "IPI_SHIM_OK"\n'
@@ -681,7 +663,7 @@ def _convert_conv(model, out_dir):
         model, granularity='model', backend='Vitis', default_precision='ap_fixed<16,6>', default_reuse_factor=2
     )
     cfg['Model']['Strategy'] = 'Resource'
-    cfg['Model']['BramFactor'] = 0
+    cfg['LayerName'] = {'conv2d_1': {'ExternalParameters': ['weight', 'bias']}}
     return hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=cfg,
@@ -699,10 +681,12 @@ def test_unregistered_layer_cannot_be_packed(tmp_path):
 
     from hls4ml.writer.external_parameters import build_manifest
 
-    for port in build_manifest(hls_model)['ports']:
-        assert port['layout'] is None
-        with pytest.raises(PackingUnsupported):
-            pack.pack_flat(port, [0.0] * port['n_scalars'])
+    manifest = build_manifest(hls_model)
+    assert manifest.parameters and not manifest.described
+    for port in manifest:
+        assert port.layout is None
+        with pytest.raises(ExternalParameterError):
+            port.pack_flat([0.0] * port.n_scalars)
 
 
 def test_unsupported_backend_claims_nothing(tmp_path):
@@ -711,7 +695,7 @@ def test_unsupported_backend_claims_nothing(tmp_path):
     The adapter registry is keyed on backend, so this refuses at the manifest
     rather than reusing the Vitis layout.
     """
-    from hls4ml.contrib.runtime_weights import package
+    from hls4ml.contrib.parameter_banks import package
     from hls4ml.writer.external_parameters import build_manifest
 
     inp = Input(shape=(N_IN,), name='input_1')
@@ -720,7 +704,7 @@ def test_unsupported_backend_claims_nothing(tmp_path):
         model, granularity='model', backend='Vivado', default_precision='ap_fixed<16,6>', default_reuse_factor=2
     )
     cfg['Model']['Strategy'] = 'Resource'
-    cfg['Model']['BramFactor'] = 0
+    cfg['LayerName'] = {'dense_1': {'ExternalParameters': ['weight', 'bias']}}
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=cfg,
@@ -731,13 +715,13 @@ def test_unsupported_backend_claims_nothing(tmp_path):
     )
     hls_model.write()
 
-    ports = build_manifest(hls_model)['ports']
+    ports = build_manifest(hls_model).parameters
     assert ports
     for port in ports:
-        assert port['expected_interface_kind'] is None
-        assert port['layout'] is None
-        assert 'no adapter for' in port['note']
-        assert "backend='Vivado'" in port['note']
+        assert port.interface_kind is None
+        assert port.layout is None
+        assert 'no adapter for' in port.note
+        assert "backend='Vivado'" in port.note
 
     with pytest.raises(ValueError, match='backend'):
         package(str(tmp_path / 'vivado'), n_banks=2)
@@ -766,7 +750,7 @@ def _verilog(tmp_path, **files):
     ],
 )
 def test_addr_shift_is_read_from_any_assignment_form(tmp_path, rtl, expected):
-    from hls4ml.contrib.runtime_weights.interface import parse_addr_shift
+    from hls4ml.contrib.parameter_banks.interface import parse_addr_shift
 
     # 'myproject.v' sorts before 'myproject_dense.v', so the top is read first.
     project = _verilog(tmp_path, myproject='assign w2_Addr_A = dense_U0_w2_Addr_A;', myproject_dense=rtl)
@@ -775,7 +759,7 @@ def test_addr_shift_is_read_from_any_assignment_form(tmp_path, rtl, expected):
 
 
 def test_addr_shift_rejects_disagreeing_drivers(tmp_path):
-    from hls4ml.contrib.runtime_weights.interface import parse_addr_shift
+    from hls4ml.contrib.parameter_banks.interface import parse_addr_shift
 
     project = _verilog(
         tmp_path,
@@ -789,7 +773,7 @@ def test_addr_shift_rejects_disagreeing_drivers(tmp_path):
 
 
 def test_addr_shift_is_unknown_only_when_nothing_drives_the_port(tmp_path):
-    from hls4ml.contrib.runtime_weights.interface import parse_addr_shift
+    from hls4ml.contrib.parameter_banks.interface import parse_addr_shift
 
     project = _verilog(tmp_path, top='assign w5_Addr_A = w5_Addr_A_local;')
     shift, evidence = parse_addr_shift(project, PROJECT, 'w2')
@@ -803,25 +787,30 @@ def test_refusal_explains_every_unbankable_port(tmp_path):
 
     Without this the user has only a list of names and must open the JSON.
     """
-    from hls4ml.contrib.runtime_weights.package import _unsupported_message
+    from hls4ml.contrib.parameter_banks import InterfaceUnsupported, package
 
-    ports = [
-        {'name': 'w2', 'note': 'reuse_factor=1 reshapes all 64 scalars into a single word'},
-        {'name': 'w5'},
-    ]
-    message = _unsupported_message(ports)
+    manifest = _manifest(tmp_path)
+    w2, w5 = manifest.get('trunk', 'weight'), manifest.get('head_b', 'weight')
+    for p in (w2, w5):  # undescribed, as the writer leaves a parameter it cannot claim
+        p.interface_kind = p.flat_order = p.layout = p.data_width = p.depth = None
+    w2.note = 'reuse_factor=1 reshapes all 64 scalars into a single word'
+    w5.note = None
+    manifest.save(str(tmp_path))
 
-    assert "['w2', 'w5']" in message
+    with pytest.raises(InterfaceUnsupported) as exc:
+        package(str(tmp_path), n_banks=2)
+    message = str(exc.value)
+    assert "['w2', 'w6']" in message
     assert 'reuse_factor=1 reshapes all 64 scalars into a single word' in message
-    assert 'w5: no reason recorded' in message
+    assert 'w6: no reason recorded' in message
 
 
-def test_packer_refuses_unclaimed_ordering(manifest):
-    port = dict(_port(manifest, 'trunk', 'weight'))
-    port['layout'] = None
+def test_packer_refuses_unclaimed_ordering(tmp_path):
+    port = _port(_manifest(tmp_path), 'trunk', 'weight')
+    port.layout = None
 
-    with pytest.raises(PackingUnsupported):
-        pack.pack_tensor(port, _bank_tensors(1)[0]['trunk'][0])
+    with pytest.raises(ExternalParameterError):
+        port.pack(_bank_tensors(1)[0]['trunk'][0])
 
 
 def test_flatten_rejects_wrong_shape(manifest):
@@ -830,68 +819,83 @@ def test_flatten_rejects_wrong_shape(manifest):
     port = _port(manifest, 'trunk', 'weight')
 
     for bad in (np.zeros((n_out, n_in + 1)), np.zeros((n_in, n_out, 2)), np.zeros((n_in, n_out + 1))):
-        with pytest.raises(PackingUnsupported, match='shape'):
-            pack.flatten(port, bad)
+        with pytest.raises(ExternalParameterError, match='shape'):
+            port.flat_order.flatten(bad)
 
 
 def test_pack_flat_rejects_wrong_scalar_count(manifest):
     for port in (_port(manifest, 'trunk', 'weight'), _port(manifest, 'trunk', 'bias')):
-        n = port['n_scalars']
+        n = port.n_scalars
         for bad in ([0.0] * (n - 1), [0.0] * (n + 1)):
-            with pytest.raises(PackingUnsupported, match='scalars'):
-                pack.pack_flat(port, bad)
-
-
-def test_build_bank_image_rejects_scalar_bundle(manifest):
-    bias = _port(manifest, 'trunk', 'bias')
-    n = bias['n_scalars']
-
-    with pytest.raises(PackingUnsupported, match='bram'):
-        pack.build_bank_image(bias, [[0.0] * n, [0.0] * n])
-
-
-def test_unregistered_flattener_adapter_is_rejected(manifest):
-    port = dict(_port(manifest, 'trunk', 'weight'))
-    port['flat_order'] = dict(port['flat_order'], adapter='not_registered')
-
-    with pytest.raises(PackingUnsupported, match='no custom flatteners'):
-        pack.flatten(port, _bank_tensors(1)[0]['trunk'][0])
+            with pytest.raises(ExternalParameterError, match='scalars'):
+                port.pack_flat(bad)
 
 
 @pytest.mark.parametrize(
-    'field,value,match',
+    'field,value,exc,match',
     [
-        ('backend', 'Vivado', 'backend'),
-        ('project_name', '', 'does not name a project'),
-        ('schema', 'someone.else/v1', 'schema'),
-        ('schema_version', 99, 'version'),
+        ('backend', 'Vivado', ValueError, 'backend'),
+        ('project_name', '', ExternalParameterError, 'project_name'),
+        ('schema', 'someone.else/v1', ExternalParameterError, 'schema'),
+        ('schema_version', 99, ExternalParameterError, 'version'),
     ],
 )
-def test_package_enforces_manifest_contract(tmp_path, field, value, match):
-    from hls4ml.contrib.runtime_weights import package
+def test_package_enforces_manifest_contract(tmp_path, field, value, exc, match):
+    from hls4ml.contrib.parameter_banks import package
 
     _manifest(tmp_path)
     path = tmp_path / 'firmware' / 'weights' / 'external_parameters.json'
     good = json.loads(path.read_text())
     path.write_text(json.dumps({**good, field: value}))
 
-    with pytest.raises(ValueError, match=match):
+    with pytest.raises(exc, match=match):
         package(str(tmp_path), n_banks=2)
 
 
-def test_bram_signal_names_come_from_the_rtl():
-    """package.py consumes these names, so a renamed port must fail here."""
-    from hls4ml.contrib.runtime_weights import interface
+def test_package_rejects_non_integer_bank_count(tmp_path):
+    from hls4ml.contrib.parameter_banks import package
 
-    ports = [{'name': f'w2_{s}', 'width': 8, 'dir': 'input'} for s in interface.BRAM_SIGNAL_SUFFIXES.values()]
-    signals = interface.bram_signals(ports, 'w2')
-    assert set(signals) == set(interface.BRAM_SIGNAL_SUFFIXES)
-    assert signals['addr_a']['name'] == 'w2_Addr_A'
+    _manifest(tmp_path)
+    for bad in (1, 2.0, '3', True):
+        with pytest.raises(ValueError, match='n_banks'):
+            package(str(tmp_path), n_banks=bad)
 
-    renamed = [p for p in ports if p['name'] != 'w2_Addr_A']
-    renamed.append({'name': 'w2_address0', 'width': 8, 'dir': 'input'})
+
+def test_pack_banks_rejects_a_manifest_from_another_model(tmp_path, written_project):
+    """A ModelGraph that does not own the written project's manifest is refused
+    up front rather than failing on a missing key later."""
+    inp = Input(shape=(N_IN,), name='input_1')
+    other = Model(inp, Dense(4, activation='linear', name='other')(inp))
+    other_model = hls4ml.converters.convert_from_keras_model(
+        other, output_dir=written_project.config.get_output_dir(), project_name=PROJECT, backend='Vitis'
+    )
+    with pytest.raises(PackingUnsupported, match='not parameters of this model'):
+        pack.pack_banks(other_model, _bank_sets(2))
+
+
+def test_manifest_rejects_duplicate_parameters(tmp_path):
+    _manifest(tmp_path)
+    path = tmp_path / 'firmware' / 'weights' / 'external_parameters.json'
+    good = json.loads(path.read_text())
+    path.write_text(json.dumps({**good, 'ports': good['ports'] + good['ports'][:1]}))
+
+    with pytest.raises(ExternalParameterError, match='duplicate'):
+        ExternalParameterManifest.load(str(tmp_path))
+
+
+def test_bram_signal_names_come_from_the_rtl(tmp_path):
+    """The wrapper connects these names, so a renamed RTL port must fail here."""
+    from hls4ml.contrib.parameter_banks import interface
+    from hls4ml.report.vivado_report import BramGeometry, InterfaceSummary
+
+    port = _port(_manifest(tmp_path), 'trunk', 'weight')
+    summary = InterfaceSummary([], 'ap_ctrl_hs', {'w2_PORTA': BramGeometry(port.data_width, 8)})
+    rtl = {f'w2_{s}': {'name': f'w2_{s}', 'width': 8, 'dir': d} for s, d in interface.BRAM_SIGNALS.values()}
+    del rtl['w2_Addr_A']
+    rtl['w2_address0'] = {'name': 'w2_address0', 'width': 8, 'dir': 'output'}
+
     with pytest.raises(interface.InterfaceMismatch, match='naming has changed'):
-        interface.bram_signals(renamed, 'w2')
+        interface._verify_bram(port, summary, rtl, str(tmp_path), PROJECT)
 
 
 def test_read_only_proof_rejects_a_live_write_enable(tmp_path):
@@ -900,11 +904,11 @@ def test_read_only_proof_rejects_a_live_write_enable(tmp_path):
     Whether the IP *reads* port B is deliberately not checked -- Dense leaves it
     idle and a pointwise convolution uses it, and both are supported.
     """
-    from hls4ml.contrib.runtime_weights import interface
+    from hls4ml.contrib.parameter_banks import interface
 
     syn = tmp_path / 'p_prj' / 'solution1' / 'syn' / 'verilog'
     syn.mkdir(parents=True)
-    signals = {role: f'w2_{suffix}' for role, suffix in interface.BRAM_SIGNAL_SUFFIXES.items()}
+    signals = {role: f'w2_{suffix}' for role, (suffix, _) in interface.BRAM_SIGNALS.items()}
 
     tied = "assign w2_WEN_A = 1'b0;\nassign w2_WEN_B = 1'b0;\n"
 
@@ -929,51 +933,46 @@ def _module_header(text, name):
     return params, [(d, (w or '').strip(), n) for d, w, n in ports]
 
 
-def test_bd_shim_mirrors_the_top():
-    """The Verilog shim declares exactly the top's ports and parameters and forwards
-    each by name. Fabricated ports: this checks the generator, not the HLS flow."""
-    import importlib
-    import io
+def _fabricated_wrapper(n_banks=3, with_bram=True):
+    """A Wrapper over made-up interfaces: checks the generator, not the HLS flow."""
+    from hls4ml.contrib.parameter_banks.interface import BRAM_SIGNALS, BramInterface, ScalarBundleInterface
+    from hls4ml.contrib.parameter_banks.package import CONTROL_PORTS, Wrapper
+    from hls4ml.model.external_parameters import BlockLayout, CompleteLayout, ExternalParameter, FlatOrder
+    from hls4ml.model.types import FixedPrecisionType
 
-    pkg = importlib.import_module('hls4ml.contrib.runtime_weights.package')
+    prec = FixedPrecisionType(16, 6)
+    w2 = ExternalParameter(
+        'w2',
+        'l',
+        'Dense',
+        'weight',
+        [6, 3],
+        18,
+        prec,
+        interface_kind='bram',
+        data_width=96,
+        depth=3,
+        flat_order=FlatOrder(['n_in', 'n_out'], ['n_out', 'n_in'], [6, 3]),
+        layout=BlockLayout(3, 6),
+    )
+    b2 = ExternalParameter(
+        'b2',
+        'l',
+        'Dense',
+        'bias',
+        [5],
+        5,
+        prec,
+        interface_kind='scalar_bundle',
+        data_width=16,
+        flat_order=FlatOrder(['n_out'], ['n_out'], [5]),
+        layout=CompleteLayout(),
+    )
+    sig = {role: f'w2_{suffix}' for role, (suffix, _) in BRAM_SIGNALS.items()}
+    bram = BramInterface(w2, sig, data_width=96, addr_width=32)
+    scalar = ScalarBundleInterface(b2, [f'b2_{i}' for i in range(5)], 16)
 
-    sig = {
-        r: f'w2_{r}'
-        for r in (
-            'addr_a',
-            'en_a',
-            'dout_a',
-            'rst_a',
-            'addr_b',
-            'en_b',
-            'dout_b',
-            'din_a',
-            'wen_a',
-            'clk_a',
-            'din_b',
-            'wen_b',
-            'clk_b',
-            'rst_b',
-        )
-    }
-    bram = {
-        'name': 'w2',
-        'expected_interface_kind': 'bram',
-        'expected_depth': 3,
-        'actual_data_width': 96,
-        'actual_port_width': 128,
-        'actual_addr_width': 32,
-        'actual_addr_stride': 16,
-        'actual_signals': sig,
-    }
-    scalar = {
-        'name': 'b2',
-        'expected_interface_kind': 'scalar_bundle',
-        'n_scalars': 5,
-        'actual_width': 16,
-        'actual_ports': [f'b2_{i}' for i in range(5)],
-    }
-    rtl_ports = [{'name': n, 'dir': 'input', 'width': 1} for n in pkg.CONTROL_PORTS]
+    rtl_ports = [{'name': n, 'dir': 'input', 'width': 1} for n in CONTROL_PORTS]
     rtl_ports += [
         {'name': 'x', 'dir': 'input', 'width': 64},
         {'name': 'x_ap_vld', 'dir': 'input', 'width': 1},
@@ -981,36 +980,35 @@ def test_bd_shim_mirrors_the_top():
         {'name': 'y_0_ap_vld', 'dir': 'output', 'width': 1},
     ]
     rtl_ports += [{'name': n, 'dir': 'input', 'width': 1} for n in sig.values()]
-    rtl_ports += [{'name': n, 'dir': 'input', 'width': 16} for n in scalar['actual_ports']]
+    rtl_ports += [{'name': n, 'dir': 'input', 'width': 16} for n in scalar.ports]
+    interfaces = [bram, scalar] if with_bram else [scalar]
+    return Wrapper('p', interfaces, rtl_ports, n_banks, 'ap_ctrl_hs')
 
+
+def test_bd_shim_mirrors_the_top():
+    """The Verilog shim declares exactly the top's ports and parameters and forwards
+    each by name."""
+    import io
+
+    wrapper = _fabricated_wrapper()
     top, shim = io.StringIO(), io.StringIO()
-    pkg._emit_top(top, 'p', [bram, scalar], rtl_ports, 3, 2, 'ap_ctrl_hs')
-    pkg._emit_bd_shim(shim, 'p_runtime_weights', [bram, scalar], rtl_ports, 2)
+    wrapper.write_top(top)
+    wrapper.write_bd_shim(shim)
 
-    top_params, top_ports = _module_header(top.getvalue(), 'p_runtime_weights')
-    shim_params, shim_ports = _module_header(shim.getvalue(), 'p_runtime_weights_bd')
+    top_params, top_ports = _module_header(top.getvalue(), 'p_parameter_banks')
+    shim_params, shim_ports = _module_header(shim.getvalue(), 'p_parameter_banks_bd')
     assert top_params == shim_params == [('W2_INIT_HEX', '""')]
     assert top_ports == shim_ports
     names = [n for _, _, n in top_ports]
     for expected in ('x', 'y_0_ap_vld', 'ld_param_id', 'ld_addr', 'ld_data', 'quiescent'):
         assert expected in names
-    assert len(names) == len(set(names))
-
-    # generic loader: widest parameter sets the shared widths, each parameter is
-    # range-checked at full width before its address is narrowed
-    ports_by_name = {n: w for _, w, n in top_ports}
-    assert ports_by_name['ld_data'] == '[95:0]' and ports_by_name['ld_addr'] == '[2:0]'
-    top_body = top.getvalue()
-    assert "assign ld_hit[0] = ld_req & (ld_param_id == 1'd0) & (ld_addr < 4'd3);" in top_body
-    assert "assign ld_hit[1] = ld_req & (ld_param_id == 1'd1) & (ld_addr < 4'd5);" in top_body
-    assert '.ld_word(ld_addr[1:0])' in top_body and '.ld_idx(ld_addr[2:0])' in top_body
-    assert '.ld_wdata(ld_data[95:0])' in top_body and '.ld_data(ld_data[15:0])' in top_body
+    assert len(names) == len(set(names)) and names == wrapper.port_names()
 
     # the shim is Verilog-2001: no SystemVerilog-only syntax
     body = shim.getvalue()
     assert 'localparam int' not in body and 'logic' not in body
     # and every port and parameter is forwarded by name
-    inst = re.search(r'p_runtime_weights\s*#\((.*?)\)\s*u_runtime_weights\s*\((.*?)\);', body, re.S)
+    inst = re.search(r'p_parameter_banks\s*#\((.*?)\)\s*u_parameter_banks\s*\((.*?)\);', body, re.S)
     assert inst
     assert re.findall(r'\.(\w+)\(\1\)', inst.group(1)) == ['W2_INIT_HEX']
     assert re.findall(r'\.(\w+)\(\1\)', inst.group(2)) == names
@@ -1018,9 +1016,68 @@ def test_bd_shim_mirrors_the_top():
     assert not re.search(r'//[^\n]*,\s*$', body, re.M)
 
 
+def test_scalar_only_wrapper_has_no_parameter_block():
+    """With no memory interface there is no INIT_HEX: top and shim are plain
+    modules, and the shim instantiates the top without a parameter list."""
+    import io
+
+    wrapper = _fabricated_wrapper(with_bram=False)
+    assert wrapper.init_params == [] and [s.name for s in wrapper.loader] == ['b2']
+    top, shim = io.StringIO(), io.StringIO()
+    wrapper.write_top(top)
+    wrapper.write_bd_shim(shim)
+
+    for text, module in ((top.getvalue(), 'p_parameter_banks'), (shim.getvalue(), 'p_parameter_banks_bd')):
+        assert f'module {module} #(' not in text and 'UNUSED' not in text
+        assert re.search(rf'module {module} \(\n', text)
+    assert re.search(r'p_parameter_banks u_parameter_banks \(', shim.getvalue())
+    _, top_ports = _module_header_plain(top.getvalue(), 'p_parameter_banks')
+    _, shim_ports = _module_header_plain(shim.getvalue(), 'p_parameter_banks_bd')
+    assert top_ports == shim_ports and 'ld_data' in [n for _, _, n in top_ports]
+
+
+def _module_header_plain(text, name):
+    m = re.search(rf'module\s+{name}\s*\((.*?)\);', text, re.S)
+    assert m, f'no header for {name}'
+    ports = re.findall(r'(input|output)\s+wire\s+(\[\d+:\d+\]\s+)?(\w+)', m.group(1))
+    return [], [(d, (w or '').strip(), n) for d, w, n in ports]
+
+
+def test_generic_loader_is_range_checked_before_narrowing():
+    """The widest parameter sets the shared widths; each parameter's id and
+    full-width address are checked before the address is narrowed to its port."""
+    import io
+
+    wrapper = _fabricated_wrapper()
+    g = wrapper.loader
+    assert (g.param_id_width, g.addr_width, g.data_width) == (1, 3, 96)
+    assert [(s.name, s.param_id, s.depth, s.data_width, s.addr_width) for s in g] == [
+        ('w2', 0, 3, 96, 2),
+        ('b2', 1, 5, 16, 3),
+    ]
+
+    top = io.StringIO()
+    wrapper.write_top(top)
+    _, ports = _module_header(top.getvalue(), 'p_parameter_banks')
+    widths = {n: w for _, w, n in ports}
+    assert widths['ld_data'] == '[95:0]' and widths['ld_addr'] == '[2:0]' and widths['ld_param_id'] == '[0:0]'
+    body = top.getvalue()
+    assert "assign ld_hit[0] = ld_req & (ld_param_id == 1'd0) & (ld_addr < 4'd3);" in body
+    assert "assign ld_hit[1] = ld_req & (ld_param_id == 1'd1) & (ld_addr < 4'd5);" in body
+    assert '.ld_word(ld_addr[1:0])' in body and '.ld_idx(ld_addr[2:0])' in body
+    assert '.ld_wdata(ld_data[95:0])' in body and '.ld_data(ld_data[15:0])' in body
+
+    described = wrapper.describe([], {})
+    assert described['loader'] == {'n_params': 2, 'param_id_width': 1, 'addr_width': 3, 'data_width': 96}
+    assert [(p['name'], p['param_id'], p['ld_depth'], p['ld_data_width']) for p in described['banked_ports']] == [
+        ('w2', 0, 3, 96),
+        ('b2', 1, 5, 16),
+    ]
+
+
 def test_rtl_port_parsing_is_exhaustive(tmp_path):
     """Synthetic Verilog: this checks the parser, not the HLS flow."""
-    from hls4ml.contrib.runtime_weights import interface
+    from hls4ml.contrib.parameter_banks import interface
 
     syn = tmp_path / 'p_prj' / 'solution1' / 'syn' / 'verilog'
     syn.mkdir(parents=True)
