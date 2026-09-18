@@ -195,6 +195,7 @@ class CatapultBackend(FPGABackend):
         fifo=None,
         clock_period=5,
         io_type='io_parallel',
+        write_tar=False,
     ):
         config = {}
 
@@ -206,6 +207,9 @@ class CatapultBackend(FPGABackend):
         config['ClockPeriod'] = clock_period
         config['FIFO'] = fifo
         config['IOType'] = io_type
+        config['WriterConfig'] = {
+            'WriteTar': write_tar,
+        }
         config['HLSConfig'] = {}
 
         return config
