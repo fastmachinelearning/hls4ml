@@ -1,5 +1,3 @@
-
-
 # Calculate actual delay values
 set delay_max [expr {$clock_period * $delay_max_r}]
 set delay_min [expr {$clock_period * $delay_min_r}]
