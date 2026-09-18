@@ -216,23 +216,34 @@ class ValidateFusedConfiguration(OptimizerPass):
         )
 
     def _check_reuse_factor(self, node):
-        """Report a reuse factor the form of the layer cannot reach.
+        """Check the reuse factor in two stages: reject 1, then report a value the layer cannot reach.
 
-        A dot layer uses at most n_in multipliers and an axpy layer at most n_out, and the two layers of
-        a pair are levelled to the lower of the two. A reuse factor below that point builds the same
-        design as the point itself.
+        Reuse factor 1 asks for a fully parallel layer, which these kernels cannot build.
         """
-        built = node.get_attr('fused_multipliers')
-        if built is None:
-            return
-        n_in, n_out = int(node.get_attr('n_in')), int(node.get_attr('n_out'))
+
         asked = max(1, int(node.get_attr('reuse_factor', 1) or 1))
-        built = int(built)
-        if n_in * n_out // built <= asked:
+        built = node.get_attr('fused_multipliers')
+        # The lowest reuse factor that uses every multiplier the form can use; below it every value
+        # builds the same design. A layer the planner gave no form has neither number.
+        lowest_usable = None
+        if built is not None:
+            built = int(built)
+            lowest_usable = int(node.get_attr('n_in')) * int(node.get_attr('n_out')) // built
+
+        if asked == 1:
+            advice = f'For the most parallel fused design set ReuseFactor to {lowest_usable}. ' if lowest_usable else ''
+            raise Exception(
+                f'Layer "{node.name}" ({node.class_name}) has strategy "fused" with reuse factor 1. The '
+                'fused strategy shares multipliers over several cycles and cannot build a fully parallel '
+                f'layer. {advice}For a fully parallel layer use strategy "Latency", or '
+                '"distributed_arithmetic".'
+            )
+
+        if lowest_usable is None or lowest_usable <= asked:
             return
         print(
             f'WARNING: Layer "{node.name}" ({node.class_name}) asks for reuse factor {asked} with '
             f'strategy "fused", which cannot be built: the {node.get_attr("fused_form")} form uses at '
             f'most {built} multipliers at a time. The layer is built with {built}, which is reuse '
-            f'factor {n_in * n_out // built}.'
+            f'factor {lowest_usable}.'
         )

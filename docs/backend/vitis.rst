@@ -26,7 +26,7 @@ otherwise run one after another. It reduces the latency of the model by overlapp
 It is not intended for ``ReuseFactor = 1``. Fully unrolled constant-matrix multiplication is already served by the ``Latency`` strategy and, more efficiently,
 by ``Strategy: distributed_arithmetic`` (see :doc:`Distributed Arithmetic <../advanced/da>`) together with the quantisation-aware flows built around it. A
 layer that reads a complete input array uses at most ``n_in`` multipliers and an ``axpy`` layer at most ``n_out``, so the strategy cannot reach the parallelism
-those paths provide, and requesting it is reported during conversion.
+those paths provide. A reuse factor of 1 stops the conversion.
 
 It also does not extend to models too large for ``io_parallel``, which require ``io_stream`` and are outside its scope for the reason given under
 `Requirements`_.

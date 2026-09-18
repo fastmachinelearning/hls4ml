@@ -223,7 +223,7 @@ def test_chain_length(test_case_id, n_layers, expected):
     np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 
-@pytest.mark.parametrize('reuse_factor', [1, 2, 4, 8, 16, 32, 64])
+@pytest.mark.parametrize('reuse_factor', [2, 4, 8, 16, 32, 64])
 def test_reuse_factor(test_case_id, reuse_factor):
     """The result does not depend on the reuse factor. Below n_out every factor builds one design,
     since a layer cannot use more multipliers than the dimension it iterates over."""
@@ -458,6 +458,7 @@ CONFIGURATION_ERRORS = [
     ('interval_flag_unreadable', dict(target=60, readings={'fc0': 'yes', 'fc1': 'yes'}), 'neither true nor false'),
     ('interval_targets_differ', dict(target={'fc0': 60, 'fc1': 80}), 'must request the same one'),
     ('interval_reading_differs', dict(target=60, readings={'fc0': True, 'fc1': False}), 'use the reuse factor'),
+    ('reuse_factor_one', dict(reuse_factor=1), 'set ReuseFactor to 8'),
     ('io_stream', dict(io_type='io_stream'), 'io_parallel'),
     ('vivado_backend', dict(backend='Vivado'), 'fused'),
 ]
