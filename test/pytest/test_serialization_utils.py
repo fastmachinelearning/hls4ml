@@ -48,3 +48,38 @@ def test_serialize_array_attrs_in_sequences(tmp_path):
     np.testing.assert_array_equal(i, np.array([[4, 5, 6]], dtype=np.int16))
     np.testing.assert_array_equal(restored_attrs['nested_list'][0][0], np.array([1.5, 2.5]))
     assert restored_attrs['nested_list'][1:] == ['foo', 7]
+
+
+def test_serialize_array_attrs_dicts_in_sequence(tmp_path):
+    """Dicts inside a sequence get a per-index prefix, so their arrays do not overwrite each other."""
+    model_arch = {
+        'layer': {
+            'state': {
+                'attributes': {
+                    'name': 'layer',
+                    'quantizers': [
+                        {'scale': np.array([1, 2, 3], dtype=np.int16)},
+                        {'scale': np.array([4, 5, 6], dtype=np.int16)},
+                    ],
+                }
+            }
+        }
+    }
+
+    for layer_name, layer_dict in model_arch.items():
+        _serialize_array_attrs(layer_dict, layer_name, tmp_path)
+
+    attrs = model_arch['layer']['state']['attributes']
+    assert attrs['quantizers'] == [
+        {'scale': '@ndarray:layer_quantizers_0_scale.npy'},
+        {'scale': '@ndarray:layer_quantizers_1_scale.npy'},
+    ]
+    assert (tmp_path / 'layer_quantizers_0_scale.npy').is_file()
+    assert (tmp_path / 'layer_quantizers_1_scale.npy').is_file()
+
+    restored_arch = json.loads(json.dumps(model_arch))
+    _deserialize_array_attrs(tmp_path, restored_arch)
+
+    first, second = restored_arch['layer']['state']['attributes']['quantizers']
+    np.testing.assert_array_equal(first['scale'], np.array([1, 2, 3], dtype=np.int16))
+    np.testing.assert_array_equal(second['scale'], np.array([4, 5, 6], dtype=np.int16))

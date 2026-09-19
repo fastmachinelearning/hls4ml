@@ -209,7 +209,7 @@ def _serialize_sequence(seq, name_prefix, layer_name, dest_dir):
     serialized = []
     for idx, val in enumerate(seq):
         if isinstance(val, dict):
-            _serialize_array_attrs(val, layer_name, dest_dir)
+            _serialize_array_attrs(val, name_prefix + '_' + str(idx), dest_dir)
         if isinstance(val, np.ndarray):
             val = _serialize_ndarray(val, name_prefix + '_' + str(idx), dest_dir)
         elif isinstance(val, (list, tuple)):
@@ -219,6 +219,8 @@ def _serialize_sequence(seq, name_prefix, layer_name, dest_dir):
         if isinstance(val, np.floating):
             val = float(val)
         serialized.append(val)
+    # Tuples are kept as tuples here, but json.dump flattens them into JSON arrays, so they come back as lists
+    # after deserialization. Callers cast back to tuples where it matters, so _deserialize_sequence returns lists.
     return tuple(serialized) if isinstance(seq, tuple) else serialized
 
 
