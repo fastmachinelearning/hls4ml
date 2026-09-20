@@ -71,6 +71,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -1017,6 +1018,10 @@
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.quartus_report.read_quartus_report"><code class="docutils literal notranslate"><span class="pre">read_quartus_report()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.report.html#module-hls4ml.report.vitis_unified_report">hls4ml.report.vitis_unified_report module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.vitis_unified_report.parse_vitis_unified_report"><code class="docutils literal notranslate"><span class="pre">parse_vitis_unified_report()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.report.html#module-hls4ml.report.vivado_report">hls4ml.report.vivado_report module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.vivado_report.aggregate_graph_reports"><code class="docutils literal notranslate"><span class="pre">aggregate_graph_reports()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.vivado_report.parse_vivado_report"><code class="docutils literal notranslate"><span class="pre">parse_vivado_report()</span></code></a></li>
@@ -1262,6 +1267,28 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.writer.html#module-hls4ml.writer.vitis_unified_writer">hls4ml.writer.vitis_unified_writer module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_hls_dir"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.get_vitis_hls_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_hls_exec_dir"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.get_vitis_hls_exec_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_linker_dir"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.get_vitis_linker_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_unified_working_directory"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.get_vitis_unified_working_directory()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.sanity_check"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.sanity_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_board_script_override"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_board_script_override()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_bridge"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_bridge()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_opts"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_build_opts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_prj_override"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_build_prj_override()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_script"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_build_script()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_driver"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_driver()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_hls"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_hls()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_nnet_utils_unified_overrides"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_nnet_utils_unified_overrides()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_tar"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_tar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_test_bench"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_test_bench()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_wrapper"><code class="docutils literal notranslate"><span class="pre">VitisUnifiedWriter.write_wrapper()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.writer.html#module-hls4ml.writer.vitis_writer">hls4ml.writer.vitis_writer module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter"><code class="docutils literal notranslate"><span class="pre">VitisWriter</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_board_script_override"><code class="docutils literal notranslate"><span class="pre">VitisWriter.write_board_script_override()</span></code></a></li>
@@ -1303,6 +1330,7 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_project_dir"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_project_dir()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_project_header"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_project_header()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_tar"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_tar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_tb_data"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_tb_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_test_bench"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_test_bench()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_weights"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_weights()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_yml"><code class="docutils literal notranslate"><span class="pre">VivadoWriter.write_yml()</span></code></a></li>

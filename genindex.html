@@ -70,6 +70,7 @@
 <li class="toctree-l1"><a class="reference internal" href="backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend/accelerator.html">VivadoAccelerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend/vitis_unified.html">VitisUnified</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend/quartus.html">Quartus</a></li>
@@ -1045,11 +1046,7 @@
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.hgq_proxy_model.EnforceProxyModelEmbeddedConfig">EnforceProxyModelEmbeddedConfig (class in hls4ml.model.optimizer.passes.hgq_proxy_model)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.coyote.passes.html#hls4ml.backends.coyote.passes.fifo_depth_optimization.execute_cosim_to_profile_fifos">execute_cosim_to_profile_fifos() (in module hls4ml.backends.coyote.passes.fifo_depth_optimization)</a>
-
-      <ul>
-        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.execute_cosim_to_profile_fifos">(in module hls4ml.backends.vitis.passes.fifo_depth_optimization)</a>
 </li>
-      </ul></li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.FixedPointEmulator.exp_float">exp_float() (hls4ml.utils.fixed_point_utils.FixedPointEmulator method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_layer_group.ExpandLayerGroup">ExpandLayerGroup (class in hls4ml.model.optimizer.passes.expand_layer_group)</a>
@@ -1100,6 +1097,10 @@
         <li><a href="autodoc/hls4ml.backends.vivado_accelerator.passes.html#hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization.FifoDepthOptimization">(class in hls4ml.backends.vivado_accelerator.passes.fifo_depth_optimization)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost">FifoDepthOptimizationPost (class in hls4ml.backends.vitis.passes.fifo_depth_optimization)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationProfile">FifoDepthOptimizationProfile (class in hls4ml.backends.vitis.passes.fifo_depth_optimization)</a>
+</li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph">FilesystemModelGraph (class in hls4ml.utils.link)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.link.FilesystemModelGraph.VariableWrapper">FilesystemModelGraph.VariableWrapper (class in hls4ml.utils.link)</a>
@@ -1782,6 +1783,8 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.get_global_input_shape">get_global_input_shape() (in module hls4ml.converters.onnx_to_hls)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost.get_hls_project_path">get_hls_project_path() (hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.get_input_kifs">get_input_kifs() (in module hls4ml.model.optimizer.passes.bit_exact)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bit_exact.get_input_layers">get_input_layers() (in module hls4ml.model.optimizer.passes.bit_exact)</a>
@@ -1826,12 +1829,12 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_layer_mult_size">get_layer_mult_size() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_layer_output_variable">get_layer_output_variable() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_layer_precision">get_layer_precision() (hls4ml.model.layers.Layer method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_layers">get_layers() (hls4ml.model.graph.ModelGraph method)</a>
 
       <ul>
@@ -1934,12 +1937,20 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.fifo_depth_optimization.get_vcd_data">(in module hls4ml.backends.vivado.passes.fifo_depth_optimization)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_hls_dir">get_vitis_hls_dir() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_hls_exec_dir">get_vitis_hls_exec_dir() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_linker_dir">get_vitis_linker_dir() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.coyote.passes.html#hls4ml.backends.coyote.passes.fifo_depth_optimization.get_vitis_optimized_fifo_depths">get_vitis_optimized_fifo_depths() (in module hls4ml.backends.coyote.passes.fifo_depth_optimization)</a>
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.get_vitis_optimized_fifo_depths">(in module hls4ml.backends.vitis.passes.fifo_depth_optimization)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_unified_working_directory">get_vitis_unified_working_directory() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_weight_variables">get_weight_variables() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_weights">get_weights() (hls4ml.model.layers.Layer method)</a>
@@ -2967,8 +2978,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pooling_templates">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.quantization_templates
 
@@ -2976,6 +2985,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.quantization_templates">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.recurrent_templates
 
@@ -3803,6 +3814,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.report.vitis_unified_report
+
+      <ul>
+        <li><a href="autodoc/hls4ml.report.html#module-hls4ml.report.vitis_unified_report">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.report.vivado_report
 
       <ul>
@@ -3961,6 +3979,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.symbolic_writer">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.writer.vitis_unified_writer
+
+      <ul>
+        <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.vitis_unified_writer">module</a>
 </li>
       </ul></li>
       <li>
@@ -5278,6 +5303,8 @@
 </li>
         <li><a href="autodoc/hls4ml.report.html#module-hls4ml.report.quartus_report">hls4ml.report.quartus_report</a>
 </li>
+        <li><a href="autodoc/hls4ml.report.html#module-hls4ml.report.vitis_unified_report">hls4ml.report.vitis_unified_report</a>
+</li>
         <li><a href="autodoc/hls4ml.report.html#module-hls4ml.report.vivado_report">hls4ml.report.vivado_report</a>
 </li>
         <li><a href="autodoc/hls4ml.utils.html#module-hls4ml.utils">hls4ml.utils</a>
@@ -5323,6 +5350,8 @@
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.quartus_writer">hls4ml.writer.quartus_writer</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.symbolic_writer">hls4ml.writer.symbolic_writer</a>
+</li>
+        <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.vitis_unified_writer">hls4ml.writer.vitis_unified_writer</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#module-hls4ml.writer.vitis_writer">hls4ml.writer.vitis_writer</a>
 </li>
@@ -5708,6 +5737,8 @@
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_upsampling2d_layer">parse_upsampling2d_layer() (in module hls4ml.converters.keras.reshape)</a>
 </li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.libero_report.parse_utilization_data">parse_utilization_data() (in module hls4ml.report.libero_report)</a>
+</li>
+      <li><a href="autodoc/hls4ml.report.html#hls4ml.report.vitis_unified_report.parse_vitis_unified_report">parse_vitis_unified_report() (in module hls4ml.report.vitis_unified_report)</a>
 </li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.vivado_report.parse_vivado_report">parse_vivado_report() (in module hls4ml.report.vivado_report)</a>
 </li>
@@ -6205,6 +6236,8 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.onnx_to_hls.sanitize_layer_name">sanitize_layer_name() (in module hls4ml.converters.onnx_to_hls)</a>
 </li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.sanity_check">sanity_check() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.SaturationMode.SAT">SAT (hls4ml.model.types.SaturationMode attribute)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.SaturationMode.SAT_SYM">SAT_SYM (hls4ml.model.types.SaturationMode attribute)</a>
@@ -6343,10 +6376,10 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.fifo_depth_optimization.set_fifo_depth">(in module hls4ml.backends.vivado.passes.fifo_depth_optimization)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits">set_msb_bits() (hls4ml.utils.fixed_point_utils.FixedPointEmulator method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.fixed_point_utils.FixedPointEmulator.set_msb_bits">set_msb_bits() (hls4ml.utils.fixed_point_utils.FixedPointEmulator method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.HLSConfig.set_name_config">set_name_config() (hls4ml.model.graph.HLSConfig method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.set_optimized_fifo_depths">set_optimized_fifo_depths() (in module hls4ml.backends.vitis.passes.fifo_depth_optimization)</a>
@@ -6615,6 +6648,10 @@
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateStdCppTypes.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateStdCppTypes method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimization.transform">(hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimization method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost.transform">(hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationProfile.transform">(hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationProfile method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform">(hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh method)</a>
 </li>
@@ -6889,6 +6926,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.vitis.html#hls4ml.backends.vitis.vitis_backend.VitisBackend">VitisBackend (class in hls4ml.backends.vitis.vitis_backend)</a>
 </li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter">VitisUnifiedWriter (class in hls4ml.writer.vitis_unified_writer)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter">VitisWriter (class in hls4ml.writer.vitis_writer)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado_accelerator.html#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend">VivadoAcceleratorBackend (class in hls4ml.backends.vivado_accelerator.vivado_accelerator_backend)</a>
@@ -6951,8 +6990,12 @@
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_board_script">write_board_script() (hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_board_script_override">write_board_script_override() (hls4ml.writer.vitis_writer.VitisWriter method)</a>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_board_script_override">write_board_script_override() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_board_script_override">(hls4ml.writer.vitis_writer.VitisWriter method)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_bridge">write_bridge() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>
 
       <ul>
@@ -6962,15 +7005,25 @@
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_bridge">(hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_bridge">(hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_bridge">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_bridge_multigraph">write_bridge_multigraph() (hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_build_opts">write_build_opts() (hls4ml.writer.vitis_writer.VitisWriter method)</a>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_opts">write_build_opts() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_build_opts">(hls4ml.writer.vitis_writer.VitisWriter method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_build_prj_override">write_build_prj_override() (hls4ml.writer.vitis_writer.VitisWriter method)</a>
+      </ul></li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_prj_override">write_build_prj_override() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_build_prj_override">(hls4ml.writer.vitis_writer.VitisWriter method)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_build_script">write_build_script() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>
 
       <ul>
@@ -6983,6 +7036,8 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_build_script">(hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.symbolic_writer.SymbolicExpressionWriter.write_build_script">(hls4ml.writer.symbolic_writer.SymbolicExpressionWriter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_script">(hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_build_script">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
@@ -7005,8 +7060,12 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_defines">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
       </ul></li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_driver">write_driver() (hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_driver">write_driver() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_driver">(hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
 </li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_generated_code">write_generated_code() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>
 
       <ul>
@@ -7032,6 +7091,8 @@
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.symbolic_writer.SymbolicExpressionWriter.write_hls">(hls4ml.writer.symbolic_writer.SymbolicExpressionWriter method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_hls">(hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_hls">(hls4ml.writer.vitis_writer.VitisWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_hls">(hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
@@ -7053,10 +7114,10 @@
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_multigraph_weights">write_multigraph_weights() (hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_new_tar">write_new_tar() (hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_new_tar">write_new_tar() (hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_nnet_utils">write_nnet_utils() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>
 
       <ul>
@@ -7079,6 +7140,8 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_writer.VitisWriter.write_nnet_utils_overrides">(hls4ml.writer.vitis_writer.VitisWriter method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_nnet_utils_unified_overrides">write_nnet_utils_unified_overrides() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_output_dir">write_output_dir() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_parameters">write_parameters() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>
@@ -7142,11 +7205,15 @@
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_tar">(hls4ml.writer.quartus_writer.QuartusWriter method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_tar">(hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_tar">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_tar">(hls4ml.writer.xls_writer.XLSWriter static method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_tb_data">write_tb_data() (hls4ml.writer.vivado_writer.VivadoWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.MultiModelGraph.write_tb_inputs">write_tb_inputs() (hls4ml.model.graph.MultiModelGraph method)</a>
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_test_bench">write_test_bench() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>
@@ -7159,6 +7226,8 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_test_bench">(hls4ml.writer.oneapi_writer.OneAPIWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.quartus_writer.QuartusWriter.write_test_bench">(hls4ml.writer.quartus_writer.QuartusWriter method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_test_bench">(hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_test_bench">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
@@ -7181,6 +7250,8 @@
         <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_writer.VivadoWriter.write_weights">(hls4ml.writer.vivado_writer.VivadoWriter method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_wrapper">write_wrapper() (hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter.write_wrapper_test">write_wrapper_test() (hls4ml.writer.vivado_accelerator_writer.VivadoAcceleratorWriter method)</a>
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.write_yml">write_yml() (hls4ml.writer.catapult_writer.CatapultWriter method)</a>

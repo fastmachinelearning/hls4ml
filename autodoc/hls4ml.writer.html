@@ -72,6 +72,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -116,6 +117,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.oneapi_writer">hls4ml.writer.oneapi_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.quartus_writer">hls4ml.writer.quartus_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.symbolic_writer">hls4ml.writer.symbolic_writer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vitis_unified_writer">hls4ml.writer.vitis_unified_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vitis_writer">hls4ml.writer.vitis_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vivado_accelerator_writer">hls4ml.writer.vivado_accelerator_writer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.writer.vivado_writer">hls4ml.writer.vivado_writer module</a></li>
@@ -1058,6 +1060,123 @@ For differences, refer to the myproject_test.cpp file.</p>
 </dd></dl>
 
 </section>
+<section id="module-hls4ml.writer.vitis_unified_writer">
+<span id="hls4ml-writer-vitis-unified-writer-module"></span><h2>hls4ml.writer.vitis_unified_writer module<a class="headerlink" href="#module-hls4ml.writer.vitis_unified_writer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.writer.vitis_unified_writer.</span></span><span class="sig-name descname"><span class="pre">VitisUnifiedWriter</span></span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.writer.vitis_writer.VitisWriter" title="hls4ml.writer.vitis_writer.VitisWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">VitisWriter</span></code></a></p>
+<p>Writer for Vitis Unified backend.</p>
+<p>This class follows the same pattern as Vivado/Vitis writers:
+all generation logic is implemented as writer instance methods instead of
+split helper generator classes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_hls_dir">
+<span class="sig-name descname"><span class="pre">get_vitis_hls_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_hls_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_hls_exec_dir">
+<span class="sig-name descname"><span class="pre">get_vitis_hls_exec_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_hls_exec_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_linker_dir">
+<span class="sig-name descname"><span class="pre">get_vitis_linker_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_linker_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_unified_working_directory">
+<span class="sig-name descname"><span class="pre">get_vitis_unified_working_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.get_vitis_unified_working_directory" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.sanity_check">
+<span class="sig-name descname"><span class="pre">sanity_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.sanity_check" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_board_script_override">
+<span class="sig-name descname"><span class="pre">write_board_script_override</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_board_script_override" title="Link to this definition"></a></dt>
+<dd><p>No-op: Vitis Unified uses vitis-comp.json and hls_kernel_config, not project.tcl.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_bridge">
+<span class="sig-name descname"><span class="pre">write_bridge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_bridge" title="Link to this definition"></a></dt>
+<dd><p>Write the Python-C++ bridge (myproject_bridge.cpp)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_opts">
+<span class="sig-name descname"><span class="pre">write_build_opts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_opts" title="Link to this definition"></a></dt>
+<dd><p>No-op: Vitis Unified builds with v++ and the cfg files, not build_opt.tcl.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_prj_override">
+<span class="sig-name descname"><span class="pre">write_build_prj_override</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_prj_override" title="Link to this definition"></a></dt>
+<dd><p>No-op: Vitis Unified builds with v++ and the cfg files, not build_prj.tcl.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_script">
+<span class="sig-name descname"><span class="pre">write_build_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_build_script" title="Link to this definition"></a></dt>
+<dd><p>Write the TCL/Shell build scripts (project.tcl, build_prj.tcl, vivado_synth.tcl, build_lib.sh)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_driver">
+<span class="sig-name descname"><span class="pre">write_driver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_driver" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_hls">
+<span class="sig-name descname"><span class="pre">write_hls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_multigraph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_hls" title="Link to this definition"></a></dt>
+<dd><p>Write the HLS project. Calls the steps from VivadoWriter, adapted for Vitis</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_nnet_utils_unified_overrides">
+<span class="sig-name descname"><span class="pre">write_nnet_utils_unified_overrides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_nnet_utils_unified_overrides" title="Link to this definition"></a></dt>
+<dd><p>Copy VitisUnified-specific headers (AXI stream helpers and types) to the project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_tar">
+<span class="sig-name descname"><span class="pre">write_tar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_tar" title="Link to this definition"></a></dt>
+<dd><p>No-op for the parent write steps: the tar is written once at the end of write_hls, after all files exist.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_test_bench">
+<span class="sig-name descname"><span class="pre">write_test_bench</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_test_bench" title="Link to this definition"></a></dt>
+<dd><p>Write the testbench files (myproject_test.cpp and input/output .dat files)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_wrapper">
+<span class="sig-name descname"><span class="pre">write_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter.write_wrapper" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-hls4ml.writer.vitis_writer">
 <span id="hls4ml-writer-vitis-writer-module"></span><h2>hls4ml.writer.vitis_writer module<a class="headerlink" href="#module-hls4ml.writer.vitis_writer" title="Link to this heading"></a></h2>
 <dl class="py class">
@@ -1300,6 +1419,17 @@ For differences, refer to the myproject_test.cpp file.</p>
 <dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_tar">
 <span class="sig-name descname"><span class="pre">write_tar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_tar" title="Link to this definition"></a></dt>
 <dd><p>Write the generated project as a .tar.gz archive</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.writer.vivado_writer.VivadoWriter.write_tb_data">
+<span class="sig-name descname"><span class="pre">write_tb_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.writer.vivado_writer.VivadoWriter.write_tb_data" title="Link to this definition"></a></dt>
+<dd><p>Write the testbench input/output .dat files</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – the hls4ml model.</p>

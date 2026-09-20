@@ -36,6 +36,14 @@ hls4ml.report.quartus\_report module
    :show-inheritance:
    :undoc-members:
 
+hls4ml.report.vitis\_unified\_report module
+-------------------------------------------
+
+.. automodule:: hls4ml.report.vitis_unified_report
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 hls4ml.report.vivado\_report module
 -----------------------------------
 

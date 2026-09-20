@@ -73,6 +73,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
@@ -191,7 +192,15 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimization.transform"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimization.transform()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.execute_cosim_to_profile_fifos"><code class="docutils literal notranslate"><span class="pre">execute_cosim_to_profile_fifos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimizationPost</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost.get_hls_project_path"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimizationPost.get_hls_project_path()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost.transform"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimizationPost.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationProfile"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimizationProfile</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationProfile.transform"><code class="docutils literal notranslate"><span class="pre">FifoDepthOptimizationProfile.transform()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.generate_depths_file"><code class="docutils literal notranslate"><span class="pre">generate_depths_file()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.get_vitis_optimized_fifo_depths"><code class="docutils literal notranslate"><span class="pre">get_vitis_optimized_fifo_depths()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.initialize_large_fifos"><code class="docutils literal notranslate"><span class="pre">initialize_large_fifos()</span></code></a></li>
@@ -211,7 +220,7 @@
 <span id="hls4ml-backends-vitis-vitis-backend-module"></span><h2>hls4ml.backends.vitis.vitis_backend module<a class="headerlink" href="#module-hls4ml.backends.vitis.vitis_backend" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.backends.vitis.vitis_backend.VitisBackend">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.vitis_backend.</span></span><span class="sig-name descname"><span class="pre">VitisBackend</span></span><a class="headerlink" href="#hls4ml.backends.vitis.vitis_backend.VitisBackend" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.vitis_backend.</span></span><span class="sig-name descname"><span class="pre">VitisBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Vitis'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.vitis_backend.VitisBackend" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend" title="hls4ml.backends.vivado.vivado_backend.VivadoBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">VivadoBackend</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vitis.vitis_backend.VitisBackend.build">

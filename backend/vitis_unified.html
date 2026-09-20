@@ -1,0 +1,459 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VitisUnified &mdash; hls4ml 1.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="oneAPI" href="oneapi.html" />
+    <link rel="prev" title="VivadoAccelerator" href="accelerator.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/contributing.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">VitisUnified</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#system-flow">System Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#axi-interface-modes">AXI interface modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-options">Configuration options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-options">Build options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#limitations">Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tutorial">Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xls.html">XLS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/snn.html">Spiking Neural Networks (PyTorch/SNN)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/plugins.html">External Backend and Writer Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/multimodelgraph.html">MultiModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">VitisUnified</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/backend/vitis_unified.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="vitisunified">
+<h1>VitisUnified<a class="headerlink" href="#vitisunified" title="Link to this heading"></a></h1>
+<p>The <strong>VitisUnified</strong> backend provides an end-to-end workflow for AMD SoC boards, from an ML model to a design that is ready to deploy on <a class="reference external" href="http://pynq.io/">PYNQ</a>. It is inherited from the <a class="reference internal" href="vitis.html"><span class="doc">Vitis</span></a> backend. We use the new Vitis Unified software, which can automatically link the HLS kernel to the system hardware. The current version supports only SoC boards with a PYNQ Python driver.</p>
+<p>It is the recommended flow for AMD SoC boards with Vitis 2023.2 or newer. Models with <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> or with <code class="docutils literal notranslate"><span class="pre">ap_fixed</span></code> interface types stay with the <a class="reference internal" href="accelerator.html"><span class="doc">VivadoAccelerator</span></a> backend.</p>
+<p>Currently <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> officially supports the following boards and tool versions:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.xilinx.com/products/boards-and-kits/ek-u1-zcu102-g.html">zcu102</a> (Vitis and Vivado 2023.2)</p></li>
+<li><p><a class="reference external" href="https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html">kv260</a> (Vitis and Vivado 2023.2 and 2025.2)</p></li>
+</ul>
+<p>If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. The steps are covered in the platform setup tutorial in the accelerator backend section of the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">hls4ml-tutorial</a> repository.</p>
+<section id="system-flow">
+<h2>System Flow<a class="headerlink" href="#system-flow" title="Link to this heading"></a></h2>
+<p>The figure below shows the flow of the backend, from the generated HLS files to the files that are ready to ship to the board.</p>
+<a class="reference internal image-reference" href="../_images/vitis_unified_flow.png"><img alt="Vitis Unified backend system flow" class="align-center" src="../_images/vitis_unified_flow.png" style="width: 450px;" />
+</a>
+</section>
+<section id="axi-interface-modes">
+<span id="vitis-unified-axi-modes"></span><h2>AXI interface modes<a class="headerlink" href="#axi-interface-modes" title="Link to this heading"></a></h2>
+<p>The backend supports two ways to move data between the PS and the kernel, selected with <code class="docutils literal notranslate"><span class="pre">axi_mode</span></code>.
+In both modes the CPU controls the kernel through AXI-Lite and receives an interrupt when the kernel is done.</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">axi_master</span></code> (default)</dt><dd><p>The kernel reads its input and writes its output in DDR by itself through an AXI master port.
+The driver allocates one DDR buffer per model input and output, so models with several inputs or outputs are supported.
+It takes the offsets of the pointer and batch-size registers from the hardware handoff file through PYNQ, so it does not depend on the register layout.</p>
+<a class="reference internal image-reference" href="../_images/vitis_unified_axi_master.png"><img alt="axi_master mode" class="align-center" src="../_images/vitis_unified_axi_master.png" style="width: 450px;" />
+</a>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">axi_stream</span></code></dt><dd><p>The kernel has one AXI-Stream input and one AXI-Stream output. An AXI DMA in the platform moves the data between DDR and the kernel.
+Only models with one input and one output are supported.
+The driver expects the DMA instance to be called <code class="docutils literal notranslate"><span class="pre">axi_dma_0</span></code>; another name can be passed with its <code class="docutils literal notranslate"><span class="pre">dma_name</span></code> argument.</p>
+<a class="reference internal image-reference" href="../_images/vitis_unified_axi_stream.png"><img alt="axi_stream mode" class="align-center" src="../_images/vitis_unified_axi_stream.png" style="width: 450px;" />
+</a>
+<p>The stream interface follows this contract:</p>
+<ul class="simple">
+<li><p>Each beat carries one element. The data field uses the <code class="docutils literal notranslate"><span class="pre">input_type</span></code> format, 32 bits for <code class="docutils literal notranslate"><span class="pre">float</span></code> and 64 bits for <code class="docutils literal notranslate"><span class="pre">double</span></code>.
+The platforms built by the shipped Tcl scripts have a 32-bit DMA, so <code class="docutils literal notranslate"><span class="pre">double</span></code> is rejected with them and needs your own platform.</p></li>
+<li><p>For each kernel start the kernel reads exactly <code class="docutils literal notranslate"><span class="pre">batch_size</span> <span class="pre">×</span> <span class="pre">N_IN</span></code> input beats and writes exactly <code class="docutils literal notranslate"><span class="pre">batch_size</span> <span class="pre">×</span> <span class="pre">N_OUT</span></code> output beats. <code class="docutils literal notranslate"><span class="pre">N_IN</span></code> and <code class="docutils literal notranslate"><span class="pre">N_OUT</span></code> are the flattened input and output sizes of the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TLAST</span></code> is set only on the last output beat of the batch. <code class="docutils literal notranslate"><span class="pre">TLAST</span></code> on the input is ignored, so a transfer with fewer beats than expected makes the kernel wait.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TKEEP</span></code> is driven all-ones on every output beat. It is required by the AXI DMA, which never completes a transfer without it. <code class="docutils literal notranslate"><span class="pre">TKEEP</span></code> on the input is not checked, every beat is taken as a full element.</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="configuration-options">
+<h2>Configuration options<a class="headerlink" href="#configuration-options" title="Link to this heading"></a></h2>
+<p>The options below are passed as keyword arguments to the converter (for example <code class="docutils literal notranslate"><span class="pre">convert_from_keras_model</span></code>).
+They are stored under <code class="docutils literal notranslate"><span class="pre">VitisUnifiedConfig</span></code> in the model configuration.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 18.0%" />
+<col style="width: 52.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">board</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">zcu102</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Target board.</div>
+<div class="line">It selects the FPGA part, the platform, and the Python driver template.</div>
+<div class="line">The current version only supports the boards in <code class="docutils literal notranslate"><span class="pre">supported_boards.json</span></code> (<code class="docutils literal notranslate"><span class="pre">zcu102</span></code> and <code class="docutils literal notranslate"><span class="pre">kv260</span></code>).</div>
+<div class="line">Any other board name is rejected with an error, unless <code class="docutils literal notranslate"><span class="pre">platform</span></code> and <code class="docutils literal notranslate"><span class="pre">part</span></code> are given.</div>
+<div class="line">You can use your own board: build its platform by following the platform setup tutorial in the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">hls4ml-tutorial</a> repository and pass it with <code class="docutils literal notranslate"><span class="pre">platform</span></code>.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">part</span></code></p></td>
+<td><p>from board</p></td>
+<td><div class="line-block">
+<div class="line">FPGA part name.</div>
+<div class="line">If not given, it is taken from the board entry in <code class="docutils literal notranslate"><span class="pre">supported_boards.json</span></code>.</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">platform</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Path to your own platform file, <code class="docutils literal notranslate"><span class="pre">.xpfm</span></code> or <code class="docutils literal notranslate"><span class="pre">.xsa</span></code>.</div>
+<div class="line">When given, the platform of the board entry is not used, so a board that is not in <code class="docutils literal notranslate"><span class="pre">supported_boards.json</span></code> works together with <code class="docutils literal notranslate"><span class="pre">part</span></code>.</div>
+<div class="line">The driver does not depend on the platform, only on the linked design. For <code class="docutils literal notranslate"><span class="pre">axi_master</span></code> any Vitis embedded platform with a PS, DDR, and an interrupt input works.</div>
+<div class="line">For <code class="docutils literal notranslate"><span class="pre">axi_stream</span></code> the platform must expose the two AXI-Stream ports of an AXI DMA with the tags <code class="docutils literal notranslate"><span class="pre">DMA_MM2S</span></code> and <code class="docutils literal notranslate"><span class="pre">DMA_S2MM</span></code>, and the DMA’s <code class="docutils literal notranslate"><span class="pre">s2mm_introut</span></code> must reach the PS. The shipped Tcl scripts show how.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clock_period</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Kernel clock period in ns.</div>
+<div class="line">The same clock is used when the kernel is linked to the platform.</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">clock_uncertainty</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">27%</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Clock uncertainty passed to Vitis HLS. The default is the same as in the Vitis backend.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">io_type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">io_stream</span></code></p></td>
+<td><div class="line-block">
+<div class="line">hls4ml I/O type of the model.</div>
+<div class="line">The current version only supports <code class="docutils literal notranslate"><span class="pre">io_stream</span></code>.</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">axi_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">axi_master</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Interface between the PS and the kernel: <code class="docutils literal notranslate"><span class="pre">axi_master</span></code> or <code class="docutils literal notranslate"><span class="pre">axi_stream</span></code>.</div>
+<div class="line">See <a class="reference internal" href="#vitis-unified-axi-modes"><span class="std std-ref">AXI interface modes</span></a>.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">driver</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">python</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Type of driver generated for the board.</div>
+<div class="line">The current version only supports <code class="docutils literal notranslate"><span class="pre">python</span></code> (PYNQ).</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">input_type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Data type of the model input on the AXI interface.</div>
+<div class="line">The current version only supports <code class="docutils literal notranslate"><span class="pre">float</span></code> and <code class="docutils literal notranslate"><span class="pre">double</span></code>.</div>
+<div class="line">The PYNQ driver uses the matching NumPy type.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">output_type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Data type of the model output on the AXI interface.</div>
+<div class="line">The current version only supports <code class="docutils literal notranslate"><span class="pre">float</span></code> and <code class="docutils literal notranslate"><span class="pre">double</span></code>.</div>
+<div class="line">It must be the same as <code class="docutils literal notranslate"><span class="pre">input_type</span></code>.</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">in_stream_buf_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">128</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Depth of the FIFO between the wrapper input (AXI master read or AXI-Stream) and the HLS model. Used in both AXI modes.</div>
+<div class="line">The unit is one entry of the model input stream. One entry holds the last dimension of the input shape: the channels of one pixel for an image, the whole vector for a flat input.</div>
+<div class="line">One sample takes <code class="docutils literal notranslate"><span class="pre">N_IN</span> <span class="pre">/</span> <span class="pre">channels</span></code> entries. For a <code class="docutils literal notranslate"><span class="pre">4x4x1</span></code> input an entry is one element and the default holds 8 samples; for a <code class="docutils literal notranslate"><span class="pre">32x32x3</span></code> input an entry is 3 elements and the default holds 128 of the 1024 entries of one sample.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">out_stream_buf_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">128</span></code></p></td>
+<td><div class="line-block">
+<div class="line">Depth of the FIFO between the HLS model and the wrapper output (AXI master write or AXI-Stream). Used in both AXI modes.</div>
+<div class="line">The unit is one entry of the model output stream. One entry holds the last dimension of the output shape, and one sample takes <code class="docutils literal notranslate"><span class="pre">N_OUT</span> <span class="pre">/</span> <span class="pre">channels</span></code> entries, the same rule as for the input.</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                                                       <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                                                       <span class="n">output_dir</span><span class="o">=</span><span class="s1">'hls4ml_prj_unified'</span><span class="p">,</span>
+                                                       <span class="n">backend</span><span class="o">=</span><span class="s1">'VitisUnified'</span><span class="p">,</span>
+                                                       <span class="n">board</span><span class="o">=</span><span class="s1">'kv260'</span><span class="p">,</span>
+                                                       <span class="n">axi_mode</span><span class="o">=</span><span class="s1">'axi_stream'</span><span class="p">,</span>
+                                                       <span class="n">clock_period</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                                                       <span class="n">in_stream_buf_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+                                                       <span class="n">out_stream_buf_size</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">version</span></code> argument of the converter (default <code class="docutils literal notranslate"><span class="pre">1.0.0</span></code>) sets <code class="docutils literal notranslate"><span class="pre">package.ip.version</span></code> of the kernel, and the generated driver binds to <code class="docutils literal notranslate"><span class="pre">xilinx.com:hls:&lt;top&gt;:&lt;major.minor&gt;</span></code>.</p>
+<section id="output-directory-layout">
+<h3>Output directory layout<a class="headerlink" href="#output-directory-layout" title="Link to this heading"></a></h3>
+<p>All paths inside the generated files are relative, so the output directory can be moved or copied to another machine.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;output_dir&gt;/
+├── firmware/                          HLS sources: model, AXI wrapper, weights
+├── tb_data/                           testbench input and reference output
+├── &lt;project_name&gt;_test.cpp            C testbench of the AXI wrapper
+├── &lt;project_name&gt;_bridge.cpp          bridge used by hls_model.predict()
+├── build_lib.sh                       builds the shared library for predict()
+├── hls4ml_config.yml
+├── fifo_depths.json                   with FIFO depth optimization only
+├── &lt;step&gt;_stdout.log, &lt;step&gt;_stderr.log   with log_to_stdout=False only
+├── vitis_workspace/
+│   ├── &lt;project_name&gt;/
+│   │   ├── vitis-comp.json            Vitis Unified component
+│   │   ├── hls_kernel_config_csim.cfg     Vitis HLS config for csynth, package, and csim
+│   │   ├── hls_kernel_config_cosim.cfg    the same for cosim
+│   │   ├── hls_kernel_config_cosim_fifo_sizing.cfg   cosim with FIFO sizing on (vitis_fifo_sizing=True)
+│   │   └── vitis_unified_project/     hls/, logs/, reports/, &lt;project_name&gt;_axi_*.xo
+│   ├── system_link/
+│   │   ├── link_system.cfg, link_system.sh
+│   │   ├── &lt;project_name&gt;.xclbin      link output (bitfile=True)
+│   │   └── _x/                        Vivado project of the system link
+│   └── &lt;board&gt;/
+│       └── tcl_scripts/               create_xsa.tcl, platform tcl, output/&lt;board&gt;_*.xsa
+├── export/
+│   ├── system.bit                     bitstream (bitfile=True)
+│   ├── system.hwh                     hardware handoff (bitfile=True)
+│   └── axi_master_driver.py or axi_stream_driver.py
+└── final_reports/                     timing, utilization, power, link summary, hls_compile.rpt
+</pre></div>
+</div>
+</section>
+</section>
+<section id="build-options">
+<h2>Build options<a class="headerlink" href="#build-options" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hls_model.build()</span></code> runs the Vitis tools on the written project. Each step is selected with a keyword argument.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 74.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">synth=True</span></code></p></td>
+<td><p>Runs C synthesis with <code class="docutils literal notranslate"><span class="pre">v++</span></code> and then packages the kernel as a <code class="docutils literal notranslate"><span class="pre">.xo</span></code> file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">csim=True</span></code></p></td>
+<td><p>Runs the C simulation of the AXI wrapper with the generated test bench.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cosim=True</span></code></p></td>
+<td><p>Runs RTL co-simulation. It turns on <code class="docutils literal notranslate"><span class="pre">synth</span></code> by itself.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fifo_opt=True</span></code></p></td>
+<td><p>Runs the FIFO depth optimization. It turns on <code class="docutils literal notranslate"><span class="pre">cosim</span></code> by itself.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vitis_fifo_sizing=True</span></code></p></td>
+<td><p>Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on <code class="docutils literal notranslate"><span class="pre">cosim</span></code> by itself.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bitfile=True</span></code></p></td>
+<td><p>Links the packaged kernel to the board platform and writes the bitstream and the hardware handoff file to <code class="docutils literal notranslate"><span class="pre">export/</span></code>. It needs the <code class="docutils literal notranslate"><span class="pre">.xo</span></code> file from <code class="docutils literal notranslate"><span class="pre">synth=True</span></code>, <code class="docutils literal notranslate"><span class="pre">xclbinutil</span></code> and <code class="docutils literal notranslate"><span class="pre">vivado</span></code> on the PATH, and <code class="docutils literal notranslate"><span class="pre">XILINX_VITIS</span></code> set, which sourcing the Vitis <code class="docutils literal notranslate"><span class="pre">settings64.sh</span></code> does.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">log_to_stdout=False</span></code></p></td>
+<td><p>Writes the output of each step to <code class="docutils literal notranslate"><span class="pre">&lt;step&gt;_stdout.log</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;step&gt;_stderr.log</span></code> instead of the terminal.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reset=True</span></code></p></td>
+<td><p>Deletes the Vitis HLS project and the link work directory before the selected steps run.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">validation</span></code>, <code class="docutils literal notranslate"><span class="pre">export</span></code>, <code class="docutils literal notranslate"><span class="pre">vsynth</span></code></p></td>
+<td><p>Accepted for compatibility with the other backends. They are ignored with a warning. The kernel is always packaged by <code class="docutils literal notranslate"><span class="pre">synth=True</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">build()</span></code> returns a dictionary with the same keys as the Vitis backend: <code class="docutils literal notranslate"><span class="pre">CSynthesisReport</span></code> after <code class="docutils literal notranslate"><span class="pre">synth=True</span></code> and <code class="docutils literal notranslate"><span class="pre">CosimReport</span></code> after <code class="docutils literal notranslate"><span class="pre">cosim=True</span></code>.
+The raw reports are under <code class="docutils literal notranslate"><span class="pre">vitis_workspace/&lt;project_name&gt;/vitis_unified_project/</span></code> and, after <code class="docutils literal notranslate"><span class="pre">bitfile=True</span></code>, under <code class="docutils literal notranslate"><span class="pre">final_reports/</span></code>.</p>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading"></a></h2>
+<p>The following are not supported in this version:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> models. Only <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> is supported.</p></li>
+<li><p>Fixed-point interface types. <code class="docutils literal notranslate"><span class="pre">input_type</span></code> and <code class="docutils literal notranslate"><span class="pre">output_type</span></code> must be <code class="docutils literal notranslate"><span class="pre">float</span></code> or <code class="docutils literal notranslate"><span class="pre">double</span></code>, and they must be the same.</p></li>
+<li><p>Weights that become external BRAM ports through <code class="docutils literal notranslate"><span class="pre">BramFactor</span></code>. The conversion stops with an error.</p></li>
+<li><p>Models with several inputs or outputs in <code class="docutils literal notranslate"><span class="pre">axi_stream</span></code> mode. Use <code class="docutils literal notranslate"><span class="pre">axi_master</span></code> for them.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">double</span></code> in <code class="docutils literal notranslate"><span class="pre">axi_stream</span></code> mode with the shipped platforms. Their DMA is 32 bits wide, so pass your own platform with a 64-bit DMA.</p></li>
+<li><p>Multigraph models.</p></li>
+<li><p>A C or C++ host driver. Only the Python (PYNQ) driver is generated.</p></li>
+<li><p>Boards other than SoC boards with a PYNQ driver.</p></li>
+</ul>
+</section>
+<section id="tutorial">
+<h2>Tutorial<a class="headerlink" href="#tutorial" title="Link to this heading"></a></h2>
+<p>A step-by-step tutorial with notebooks is available in the accelerator backend section of the
+<a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">hls4ml-tutorial</a> repository.
+It covers prediction, C simulation, co-simulation, FIFO depth optimization, bitstream generation, and how to build your own platform.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="accelerator.html" class="btn btn-neutral float-left" title="VivadoAccelerator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="oneapi.html" class="btn btn-neutral float-right" title="oneAPI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

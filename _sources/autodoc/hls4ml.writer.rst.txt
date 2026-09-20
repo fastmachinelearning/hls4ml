@@ -52,6 +52,14 @@ hls4ml.writer.symbolic\_writer module
    :show-inheritance:
    :undoc-members:
 
+hls4ml.writer.vitis\_unified\_writer module
+-------------------------------------------
+
+.. automodule:: hls4ml.writer.vitis_unified_writer
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 hls4ml.writer.vitis\_writer module
 ----------------------------------
 
