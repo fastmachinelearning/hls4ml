@@ -1,0 +1,73 @@
+name: Plan / RFC
+description: Propose a design before implementing it
+labels: ["rfc"]
+title: "[RFC] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for changes worth agreeing on before code exists: a new backend or frontend, a change to the
+        intermediate representation or optimizer machinery, a new configuration axis, or anything that
+        changes behaviour for existing users.
+
+        The contributing guidelines ask you to discuss new functionality with us first. This is that
+        discussion, in a form we can track and refer back to.
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: The problem this solves, and who has it. Include the current behaviour you find inadequate.
+    validations:
+      required: true
+
+  - type: textarea
+    id: design
+    attributes:
+      label: Proposed design
+      description: |
+        How it would work. Name the user-facing surface (config keys, API, generated code) and the internal
+        mechanism (passes, templates, types) as concretely as you can.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Components affected
+      description: |
+        Frontends, backends and parts of the tree. Say explicitly what happens on the backends that do not
+        support this, if it is not universal.
+    validations:
+      required: true
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and migration
+      description: |
+        Does existing user code, configuration or generated output change? If so, what do users have to do?
+        Write "no change" if there is none.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Designs you rejected and why. A rejected alternative is often the most useful part of an RFC.
+
+  - type: textarea
+    id: plan
+    attributes:
+      label: Implementation plan
+      description: Optional. How this would land — in one pull request or several, and in what order.
+
+  - type: checkboxes
+    id: ai_disclosure
+    attributes:
+      label: AI assistance
+      description: See the [contributing guidelines](https://github.com/fastmachinelearning/hls4ml/blob/main/CONTRIBUTING.md#use-of-ai-tools).
+      options:
+        - label: An AI tool helped produce this proposal, and I have checked its content myself.
+          required: false
