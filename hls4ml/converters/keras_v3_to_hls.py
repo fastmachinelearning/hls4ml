@@ -188,11 +188,7 @@ class KerasV3HandlerDispatcher:
                 print('alkaid not installed. Set `allow_da_fallback=False` to disable DA fallback.')
                 pass  # alkaid not installed
             except Exception as e:
-                # A DA handler exists, but it could not trace this layer (e.g. an unsupported layer
-                # option, or a configuration DA cannot represent). Let the remaining fallbacks try;
-                # they may handle the layer, or reject it with a more specific error. The DA error is
-                # only surfaced if no other fallback is able to handle the layer at all.
-                da_error = e
+                da_error = e  # error within alkaid, store to raise if not handled by v2 fallback
         if self.allow_v2_fallback:
             ret = self.v2_call(layer, inp_tensors, out_tensors)
             if ret is not None:
