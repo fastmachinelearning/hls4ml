@@ -15,11 +15,14 @@ from hls4ml.backends.vitis.vitis_backend import VitisBackend  # isort: skip
 from hls4ml.backends.coyote.coyote_backend import CoyoteBackend
 from hls4ml.backends.xls.xls_backend import XLSBackend
 
+from hls4ml.backends.vitis_unified.vitis_unified_backend import VitisUnifiedBackend  # isort: skip
+
 
 def _register_builtin_backends():
     register_backend('Vivado', VivadoBackend)
     register_backend('VivadoAccelerator', VivadoAcceleratorBackend)
     register_backend('Vitis', VitisBackend)
+    register_backend('VitisUnified', VitisUnifiedBackend)
     register_backend('Quartus', QuartusBackend)
     register_backend('Catapult', CatapultBackend)
     register_backend('SymbolicExpression', SymbolicExpressionBackend)
