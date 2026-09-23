@@ -228,7 +228,20 @@ def activation_types_hlsmodel(model):
     data['layer'].append('model')
     data['low'].append(-F)
     data['high'].append(I - 1 if S else I)
+
+    # Input variable precisions (so the type overlay covers inputs)
+    input_var_names = set()
+    for input_var in model.get_input_variables():
+        T = input_var.type.precision
+        W, I, F, S = ap_fixed_WIFS(T)
+        data['layer'].append(input_var.name)
+        data['low'].append(-F)
+        data['high'].append(I - 1 if S else I)
+        input_var_names.add(input_var.name)
+
     for layer in model.get_layers():
+        if layer.name in input_var_names:
+            continue
         T = layer.get_output_variable().type.precision
         W, I, F, S = ap_fixed_WIFS(T)
         data['layer'].append(layer.name)
@@ -321,13 +334,50 @@ keras_process_layer_map = defaultdict(
 )
 
 
+def _normalize_input_data(X, input_names):
+    """Return list of (name, ndarray) pairs from X, respecting input_names order."""
+    if isinstance(X, dict):
+        return [(n, np.asarray(X[n])) for n in input_names if n in X]
+    if isinstance(X, (list, tuple)):
+        return [(n, np.asarray(a)) for n, a in zip(input_names, X)]
+    return [(input_names[0], np.asarray(X))]
+
+
+def _add_input_distributions(data, X, input_names, fmt='longform', plot='boxplot'):
+    """Prepend input-data distribution entries to *data* (modified in place)."""
+    for name, arr in _normalize_input_data(X, input_names):
+        print(f'   {name}')
+        y = arr.flatten()
+        y = abs(y[y != 0])
+        if len(y) == 0:
+            print(f'Input data for {name} contains only zeros, ignoring.')
+            continue
+        if fmt == 'longform':
+            data['x'].extend(y.tolist())
+            data['weight'].extend([name] * len(y))
+        elif fmt == 'summary':
+            data.append(array_to_summary(y, fmt=plot))
+            data[-1]['weight'] = name
+
+
 def activations_hlsmodel(model, X, fmt='summary', plot='boxplot'):
     if fmt == 'longform':
         raise NotImplementedError
     elif fmt == 'summary':
         data = []
 
-    _, trace = model.trace(np.ascontiguousarray(X))
+    input_vars = model.get_input_variables()
+    input_names = [var.name for var in input_vars]
+    _add_input_distributions(data, X, input_names, fmt=fmt, plot=plot)
+
+    if isinstance(X, (list, tuple)):
+        trace_input = [np.ascontiguousarray(xi) for xi in X]
+    elif isinstance(X, dict):
+        trace_input = [np.ascontiguousarray(X[name]) for name in input_names]
+    else:
+        trace_input = np.ascontiguousarray(X)
+
+    _, trace = model.trace(trace_input)
 
     if len(trace) == 0:
         raise RuntimeError('ModelGraph must have tracing on for at least 1 layer (this can be set in its config)')
@@ -390,6 +440,11 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
         # return summary statistics for matplotlib.axes.Axes.bxp
         # or histogram bin edges and heights
         data = []
+
+    input_names = [layer.name for layer in model.layers if isinstance(layer, keras.layers.InputLayer)]
+    if input_names:
+        _add_input_distributions(data, X, input_names, fmt=fmt, plot=plot)
+
     outputs = _get_outputs(
         [layer for layer in model.layers if not isinstance(layer, keras.layers.InputLayer)], X, model.input
     )
@@ -403,7 +458,7 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
             continue
         if fmt == 'longform':
             data['x'].extend(y.tolist())
-            data['weight'].extend([layer_name for i in range(len(y))])
+            data['weight'].extend([layer_name] * len(y))
         elif fmt == 'summary':
             data.append(array_to_summary(y, fmt=plot))
             data[-1]['weight'] = layer_name
@@ -421,12 +476,14 @@ def weights_torch(model, fmt='longform', plot='boxplot'):
 
 
 def activations_torch(model, X, fmt='longform', plot='boxplot'):
-    X = torch.Tensor(X)
     if fmt == 'longform':
         data = {'x': [], 'weight': []}
     elif fmt == 'summary':
         data = []
 
+    _add_input_distributions(data, X, ['input'], fmt=fmt, plot=plot)
+
+    X = torch.Tensor(X)
     partial_model = torch.nn.Sequential
     layers = []
     for layer in model.children():
@@ -441,7 +498,7 @@ def activations_torch(model, X, fmt='longform', plot='boxplot'):
             continue
         if fmt == 'longform':
             data['x'].extend(y.tolist())
-            data['weight'].extend([lname for _ in range(len(y))])
+            data['weight'].extend([lname] * len(y))
         elif fmt == 'summary':
             data.append(array_to_summary(y, fmt=plot))
             data[-1]['weight'] = lname
