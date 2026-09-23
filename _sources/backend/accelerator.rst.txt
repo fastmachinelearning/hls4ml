@@ -116,7 +116,7 @@ run inference using the inputs from ``tb_data``. Similar to the Python overlay, 
 Example
 ======================
 
-Similar to the ``VivadoAccelerator``backend, we first generate a bitstream from a Keras model ``model`` and a config.
+Similar to the ``VivadoAccelerator`` backend, we first generate a bitstream from a Keras model ``model`` and a config.
 
 .. code-block:: Python
 
