@@ -55,7 +55,7 @@ hls4ml.utils.fetch_example_list()
 ```
 
 ### Building a project.
-We will build the project using Xilinx Vivado HLS, which can be downloaded and installed from [here](https://www.xilinx.com/products/design-tools/vivado/integration/esl-design.html). Alongside Vivado HLS, hls4ml also supports Vitis HLS, Intel HLS, Catapult HLS and has some experimental support dor Intel oneAPI. The target back-end can be changed using the argument backend when building the model.
+We will build the project using Xilinx Vivado HLS, which can be downloaded and installed from [here](https://www.xilinx.com/products/design-tools/vivado/integration/esl-design.html). Alongside Vivado HLS, hls4ml also supports Vitis HLS, Intel HLS, Catapult HLS and has experimental support for the Altera backend. The target back-end can be changed using the argument backend when building the model.
 
 ```Python
 # Use Vivado HLS to synthesize the model

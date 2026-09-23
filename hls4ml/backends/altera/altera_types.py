@@ -1,0 +1,279 @@
+"""
+This package includes Altera-specific customizations to the variable types
+"""
+
+import numpy as np
+
+from hls4ml.backends.fpga.fpga_types import (
+    ACFixedPrecisionDefinition,
+    ACFloatPrecisionDefinition,
+    ACIntegerPrecisionDefinition,
+    ACStandardFloatPrecisionDefinition,
+    FloatPrecisionType,
+    FPGAPrecisionConverter,
+    HLSTypeConverter,
+    NamedTypeConverter,
+    PrecisionDefinition,
+    StandardFloatPrecisionType,
+    TypeDefinition,
+    TypePrecisionConverter,
+    VariableDefinition,
+)
+from hls4ml.model.types import (
+    CompressedType,
+    ExponentPrecisionType,
+    ExponentType,
+    FixedPrecisionType,
+    IntegerPrecisionType,
+    NamedType,
+    PackedType,
+    XnorPrecisionType,
+)
+from hls4ml.utils.fixed_point_utils import next_pow2
+from hls4ml.utils.string_utils import convert_to_pascal_case
+
+
+class ACExponentPrecisionDefinition(PrecisionDefinition):
+    def definition_cpp(self):
+        typestring = f'std::pair<ac_int<1, false>, ac_int<{self.width}, true>>'
+        return typestring
+
+
+class AlteraACTypeConverter(FPGAPrecisionConverter):
+    def __init__(self):
+        super().__init__(
+            type_map={
+                FixedPrecisionType: ACFixedPrecisionDefinition,
+                IntegerPrecisionType: ACIntegerPrecisionDefinition,
+                FloatPrecisionType: ACFloatPrecisionDefinition,
+                StandardFloatPrecisionType: ACStandardFloatPrecisionDefinition,
+                ExponentPrecisionType: ACExponentPrecisionDefinition,
+                XnorPrecisionType: ACIntegerPrecisionDefinition,
+            },
+            prefix='AC',
+        )
+
+
+class AlteraCompressedTypeConverter(TypeDefinition, TypePrecisionConverter):
+    """Use a tuple for storing a compressed type for Altera since it's better supported. (Currently unused)"""
+
+    def definition_cpp(self):
+        """tuple format is row_index, col_index, weight"""
+        cpp_fmt = 'typedef std::tuple<{index}, {index}, {precision}> {name};\n'
+        return cpp_fmt.format(name=self.name, index=self.index_precision, precision=self.precision.definition_cpp())
+
+    def convert_precision(self, precision_converter):
+        super().convert_precision(precision_converter)
+        self.index_precision = precision_converter.convert(self.index_precision)
+
+
+class AlteraExponentTypeConverter(TypeDefinition, TypePrecisionConverter):
+    """Use a pair for storing a exponent type for Altera since it's better supported"""
+
+    def definition_cpp(self):
+        cpp_fmt = 'typedef std::pair<{sign}, {precision}> {name};\n'
+        return cpp_fmt.format(name=self.name, precision=self.precision.definition_cpp(), sign=self.sign.definition_cpp())
+
+    def convert_precision(self, precision_converter):
+        super().convert_precision(precision_converter)
+        self.sign = precision_converter.convert(self.sign)
+
+
+class AlteraPackedTypeConverter(TypeDefinition, TypePrecisionConverter):
+    def definition_cpp(self):
+        n_elem_expr = '/' if self.unpack else '*'
+        return 'typedef nnet::array<{precision}, {n_elem}> {name};\n'.format(
+            name=self.name,
+            precision=self.precision.definition_cpp(),
+            n_elem=str(self.n_elem) + n_elem_expr + str(self.n_pack),
+        )
+
+    def convert_precision(self, precision_converter):
+        self.precision = precision_converter.convert(self.precision)
+
+
+class AlteraHLSTypeConverter(HLSTypeConverter):
+    def __init__(self, precision_converter):
+        self.precision_converter = precision_converter
+        self.type_map = {
+            NamedType: NamedTypeConverter,
+            CompressedType: AlteraCompressedTypeConverter,
+            ExponentType: AlteraExponentTypeConverter,
+            PackedType: AlteraPackedTypeConverter,
+        }
+
+
+# region ArrayVarable
+
+
+class AlteraArrayVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        if self.pragma and not isinstance(self.pragma, tuple):
+            return f'[[{self.pragma}]] {self.type.name} {self.name}{name_suffix}'
+        else:
+            return f'{self.type.name} {self.name}{name_suffix}'
+
+
+class AlteraInplaceArrayVariableDefinition(VariableDefinition):
+    def definition_cpp(self):
+        return f'auto& {self.name} = {self.input_var.name}'
+
+
+class AggregratedArrayVariableConverter:
+    """This is a bit of an extension of the standard ArrayVariableConverter"""
+
+    def __init__(self, type_converter, prefix, definition_cls):
+        self.type_converter = type_converter
+        self.prefix = prefix
+        self.definition_cls = definition_cls
+
+    def convert(self, tensor_var, pragma='', depth=0, n_pack=1):
+        if isinstance(tensor_var, self.definition_cls):  # Already converted
+            return tensor_var
+
+        tensor_var.pragma = pragma
+        if pragma == 'stream':
+            if depth == 0:
+                depth = np.prod(tensor_var.shape) // tensor_var.shape[-1]
+            tensor_var.pragma = ('stream', depth)
+            n_elem = tensor_var.shape[-1]
+        else:
+            tensor_var.pragma = pragma
+            n_elem = tensor_var.size()
+            n_pack = 1  # ignore any passed value
+
+        tensor_var.type = self.type_converter.convert(
+            PackedType(tensor_var.type.name, tensor_var.type.precision, n_elem, n_pack)
+        )
+
+        # pipe_name and pipe_id are only used for io_stream and interface variables in io_parallel
+        tensor_var.pipe_name = f'{convert_to_pascal_case(tensor_var.name)}Pipe'
+        tensor_var.pipe_id = f'{convert_to_pascal_case(tensor_var.name)}PipeID'
+        tensor_cls_fqn = tensor_var.__class__.__module__ + '.' + tensor_var.__class__.__qualname__
+
+        tensor_var.__class__ = type(
+            self.prefix + 'AggregateArrayVariable', (type(tensor_var), self.definition_cls), {'_wrapped': tensor_cls_fqn}
+        )
+        return tensor_var
+
+
+class AlteraArrayVariableConverter(AggregratedArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Altera', definition_cls=AlteraArrayVariableDefinition)
+
+
+class AlteraInplaceArrayVariableConverter(AggregratedArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Altera', definition_cls=AlteraInplaceArrayVariableDefinition)
+
+
+# endregion
+
+# region InterfaceMemberVariable
+
+
+class AlteraInterfaceVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=False):
+        if self.pragma and not isinstance(self.pragma, tuple):
+            return f'[[{self.pragma}]] {self.type.name} {self.name}{name_suffix}'
+        else:
+            return f'{self.type.name} {self.name}{name_suffix}'
+
+    def declare_cpp(self, pipe_min_size=0, indent=''):
+        lines = indent + f'class {self.pipe_id};\n'
+        lines += indent + (
+            f'using {self.pipe_name} = sycl::ext::altera::experimental::pipe<{self.pipe_id}, '
+            f'{self.type.name}, {pipe_min_size}, PipeProps>;\n'
+        )
+        return lines
+
+
+class AlteraInterfaceVariableConverter(AggregratedArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Altera', definition_cls=AlteraInterfaceVariableDefinition)
+
+
+# endregion
+
+
+# region StreamVariable
+class AlteraStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self, name_suffix='', as_reference=True):
+        return f'{self.name}{name_suffix}'
+
+    def declare_cpp(self, indent=''):
+        lines = indent + f'class {self.pipe_id};\n'
+        lines += indent + (
+            f'using {self.pipe_name} = sycl::ext::altera::experimental::pipe<{self.pipe_id}, '
+            f'{self.type.name}, {self.pragma[-1]}>;\n'
+        )
+        return lines
+
+
+class AlteraInplaceStreamVariableDefinition(VariableDefinition):
+    def definition_cpp(self):
+        return f'using {self.name} = {self.input_var.name}'
+
+
+class AlteraStreamVariableConverter(AggregratedArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Altera', definition_cls=AlteraStreamVariableDefinition)
+
+
+class AlteraInplaceStreamVariableConverter(AggregratedArrayVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(
+            type_converter=type_converter, prefix='Altera', definition_cls=AlteraInplaceStreamVariableDefinition
+        )
+
+
+# region WeightsVariable
+
+
+class AlteraStaticWeightVariableDefinition(VariableDefinition):
+    def definition_cpp(self, reuse_factor):
+        """Write the appropriate weight definiiton"""
+        # first determine whether to store in register or bram (heuristic)
+        if reuse_factor == 1 or self.data_length < 2048 or self.type.precision.width < 3:
+            attribute = '[[intel::fpga_register]]'
+        else:
+            # revisit this heuristic
+            nbanks = int(2 ** np.ceil(np.log2(self.data_length)) / 2)
+            var_width = int(np.ceil(self.type.precision.width / 8))
+            bwidth = next_pow2(var_width)
+            attribute = (
+                f'[[intel::bankwidth({bwidth}), intel::numbanks({nbanks}), '
+                'intel::max_replicates(1), intel::fpga_memory("BLOCK_RAM")]]'
+            )
+        if self.storage == 'register':
+            return f'{attribute} static constexpr {self.type.name} {self.name}'
+        else:
+            return f'{attribute} {self.type.name} {self.name}'
+
+
+class AlteraStaticWeightVariableConverter:
+    def __init__(self, type_converter):
+        self.type_converter = type_converter
+
+    def convert(self, weight_var):
+        if isinstance(weight_var, AlteraStaticWeightVariableDefinition):  # Already converted
+            return weight_var
+
+        weight_var.weight_class = weight_var.__class__.__name__
+        weight_var.storage = 'register'
+        weight_var.type = self.type_converter.convert(
+            PackedType(weight_var.name + '_t', weight_var.type.precision, weight_var.data_length, 1)
+        )
+        weight_cls_fqn = weight_var.__class__.__module__ + '.' + weight_var.__class__.__qualname__
+
+        weight_var.__class__ = type(
+            'AlteraStaticWeightVariable',
+            (type(weight_var), AlteraStaticWeightVariableDefinition),
+            {'_wrapped': weight_cls_fqn},
+        )
+        return weight_var
+
+
+# endregion
+
+# endregion
