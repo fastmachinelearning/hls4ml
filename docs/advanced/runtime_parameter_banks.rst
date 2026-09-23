@@ -75,6 +75,10 @@ Scalar bundles (Dense biases) have no preload path: they power up as zero in eve
 bank and must be written through the wrapper's loader while ``quiescent`` is
 high, before the first inference. ``img.per_bank`` holds the values to write.
 
+For parameters preloaded through ``INIT_HEX``, the ``ld_*`` interface is not
+needed during normal inference. It is only required to initialize parameters
+without a preload path, or to replace bank contents after configuration.
+
 Selecting a bank at runtime
 ---------------------------
 
@@ -103,8 +107,10 @@ Integrating the wrapper
 
 Add ``parameter_banks/rtl/*.sv`` and the HLS RTL
 (``<project>_prj/solution1/syn/verilog/*.v``) to your sources and instantiate
-``<project>_parameter_banks`` as one block in your existing design. The
-surrounding design supplies data, transaction control
+``<project>_parameter_banks`` as the single accelerator block in your design.
+It already contains the original HLS compute IP, parameter storage, bank-selection
+logic and loader, so the HLS IP should not be instantiated separately.
+The surrounding design supplies data, transaction control
 (``ext_ap_start``/``ext_ap_ready``/``ext_ap_done``), bank selection
 (``ext_bank_id``) and any runtime parameter writes (``ld_*``).
 ``create_parameter_banks.tcl`` synthesizes the packaged design stand-alone as a
