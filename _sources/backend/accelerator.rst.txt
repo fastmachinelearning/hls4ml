@@ -100,7 +100,7 @@ CoyoteOverlay
 
 Similar to the VivadoAccelerator backend, the Coyote backend creates a custom **neural network overlay** that interacts with the FPGA.
 This overlay can be used to provide inputs, run inference and retrieve the predictions. Additionally, the overlay provides a utility
-functon to load the model bitstream and driver for some clusters. On others, the users need to manually load the bitstream and driver.
+function to load the model bitstream and driver for some clusters. On others, the users need to manually load the bitstream and driver.
 For guidance, see the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
 
 .. note:: To use the Coyote backend, hls4ml must be cloned with submodules using ``git clone --recurse-submodules``.
