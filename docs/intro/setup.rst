@@ -192,6 +192,9 @@ Optional Dependencies
    # For DSP-aware pruning
    pip install hls4ml[optimization]
 
+   # For PQuantML frontend
+   pip install hls4ml[pquant-ml]
+
    # For weights and activation range visualization
    pip install hls4ml[profiling]
 
@@ -204,6 +207,12 @@ Optional Dependencies
    # For Quartus report parsing
    pip install hls4ml[quartus-report]
 
+   # For snnTorch frontend
+   pip install hls4ml[snn]
+
+   # For SparsePixels frontend
+   pip install hls4ml[sparsepixels]
+
    # For symbolic regression
    pip install hls4ml[sr]
 
@@ -215,3 +224,12 @@ Optional Dependencies
 
    # For testing (developers)
    pip install hls4ml[testing]
+
+   # For Keras testing (developers)
+   pip install hls4ml[testing-keras2]
+
+   # For Keras v3 testing (developers)
+   pip install hls4ml[testing-keras3]
+
+   # For QKeras-v3 testing (developers)
+   pip install hls4ml[testing-qkeras-v3]
