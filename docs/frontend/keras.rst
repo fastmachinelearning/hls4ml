@@ -4,7 +4,7 @@ Keras and its quantized variants
 
 Keras and its quantized variants are supported in ``hls4ml``. Both Keras v2 (``tf.keras``) and the new Keras v3 are supported. While the Keras v2 support is based on parsing the serialized json representation of the model, the Keras v3 support uses direct model inspection.
 
-For Keras v2, QKeras, and HGQ, ``hls4ml`` supports most of its layers, including core layers, convolutional layers, pooling layers, recurrent layers (not implemented in HGQ), merging/reshaping layers, and activation layers. The ``(Q)BatchNormalization`` layer is also supported. Experimental support for ``LayerNormalization`` is added for vanilla Keras v2.
+For Keras v2, QKeras, and HGQ, ``hls4ml`` supports most of its layers, including core layers, convolutional layers, pooling layers, recurrent layers (not implemented in HGQ), merging/reshaping layers, and activation layers. The ``(Q)BatchNormalization`` layer is also supported. Experimental support for ``LayerNormalization`` is added for vanilla Keras v2. The ``InstanceNormalization`` layer (e.g. from TensorFlow-Addons, which computes the per-channel statistics from the input itself) is supported for 1D/2D spatial inputs with the Vivado/Vitis backends in ``io_parallel`` mode.
 
 For Keras v3, the support for EinsumDense layer is added in addition, but without recurrent layers in general. For HGQ2, some extra layers are supported in addition, such as ``QEinsum``, ``QMultiHeadAttention``, `QUnaryFunctionLUT` (arbitrary unary function as a 1-d lookup table) and some binary operators.
 

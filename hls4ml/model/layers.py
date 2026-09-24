@@ -1256,6 +1256,39 @@ class LayerNormalization(Layer):
         self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
 
 
+class InstanceNormalization(Layer):
+    """
+    Instance normalization, e.g. as provided by ``tensorflow_addons.layers.InstanceNormalization``.
+
+    In contrast to BatchNormalization, the per-channel statistics (mean, variance) are computed
+    from the input itself at inference time, so only the affine parameters (gamma, beta) are
+    stored as weights. Only normalization over the spatial dimensions, i.e. per-channel statistics,
+    of 1D/2D inputs is supported; the input must be channels last.
+    """
+
+    _expected_attributes = [
+        Attribute('n_in'),
+        Attribute('n_filt'),
+        Attribute('n_spatial'),
+        Attribute('epsilon', value_type=float, default=1e-3),
+        WeightAttribute('scale'),
+        WeightAttribute('bias'),
+        TypeAttribute('scale'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        inp = self.get_input_variable()
+        shape = inp.shape
+        self.add_output_variable(shape)
+
+        scale = self.get_attr('gamma_data')
+        bias = self.get_attr('beta_data')
+
+        self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
+        self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
+
+
 class Merge(Layer):
     def initialize(self):
         assert len(self.inputs) == 2
@@ -2065,6 +2098,7 @@ layer_map = {
     'LayerGroup': LayerGroup,
     'SymbolicExpression': SymbolicExpression,
     'LayerNormalization': LayerNormalization,
+    'InstanceNormalization': InstanceNormalization,
     'EinsumDense': EinsumDense,
     'Einsum': Einsum,
     # TensorFlow-specific layers:

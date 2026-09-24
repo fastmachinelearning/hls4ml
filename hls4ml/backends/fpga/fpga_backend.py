@@ -25,6 +25,7 @@ from hls4ml.model.layers import (
     GarNetStack,
     GlobalPooling1D,
     GlobalPooling2D,
+    InstanceNormalization,
     LayerNormalization,
     MatMul,
     Merge,
@@ -86,6 +87,7 @@ class FPGABackend(Backend):
 
         rf_layers = accum_layers + [
             BatchNormalization,
+            InstanceNormalization,
             Activation,
             Embedding,
             GarNet,
