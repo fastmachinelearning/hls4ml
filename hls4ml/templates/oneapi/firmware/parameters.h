@@ -6,6 +6,8 @@
 #include "nnet_utils/nnet_code_gen.h"
 #include "nnet_utils/nnet_helpers.h"
 
+// hls-fpga-machine-learning insert softmax tables
+
 // hls-fpga-machine-learning insert includes
 
 // hls-fpga-machine-learning insert layer-config
