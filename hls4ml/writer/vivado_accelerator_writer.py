@@ -405,6 +405,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
         )
 
     def write_new_tar(self, model):
+        if not self.should_write_tar(model):
+            return
         tarfile = model.config.get_output_dir() + '.tar.gz'
         if os.path.exists(tarfile):
             os.remove(tarfile)
