@@ -46,7 +46,7 @@ The following Python packages are all optional and are only required if you inte
 
 * `Keras <https://pypi.org/project/keras/>`_ is required by the Keras converter.
    * `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.8 to 2.14) is required by the Keras v2 converter (keras v2 is included in TensorFlow).
-   * `Keras <https://pypi.org/project/keras/>` 3.0 or above is required by the Keras v3 converter. Keras v3 supports multiple backends for training and inference, and the conversion is not tied any specific backend. Notice that Keras v3 may **not** coexist with Keras v2 in the same Python environment.
+   * `Keras <https://pypi.org/project/keras/>`_ 3.0 or above is required by the Keras v3 converter. Keras v3 supports multiple backends for training and inference, and the conversion is not tied any specific backend. Notice that Keras v3 may **not** coexist with Keras v2 in the same Python environment.
 
 * `ONNX <https://pypi.org/project/onnx/>`_ (version 1.4.0 and newer) is required by the ONNX converter.
 
@@ -72,7 +72,7 @@ To run FPGA synthesis, installation of following tools is required:
 
 * Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the ``Quartus`` backend.
 
-* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions of ``OneAPI`` removed FPGA support and **will to work** with ``hls4ml``.
+* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions of ``OneAPI`` removed FPGA support and **will not work** with ``hls4ml``.
 
 Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.
 
