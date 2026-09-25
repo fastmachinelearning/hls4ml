@@ -418,6 +418,23 @@ class ModelGraph(Serializable):
         self.output_vars = {}
         self._top_function_lib = None
 
+    def __del__(self):
+        if self._top_function_lib is not None:
+            if platform.system() == 'Linux':
+                libdl_libs = ['libdl.so', 'libdl.so.2']
+                for libdl in libdl_libs:
+                    try:
+                        dlclose_func = ctypes.CDLL(libdl).dlclose
+                        break
+                    except Exception:
+                        continue
+            elif platform.system() == 'Darwin':
+                dlclose_func = ctypes.CDLL('libc.dylib').dlclose
+
+            dlclose_func.argtypes = [ctypes.c_void_p]
+            dlclose_func.restype = ctypes.c_int
+            dlclose_func(self._top_function_lib._handle)
+
     @classmethod
     def from_layer_list(cls, config_dict, layer_list, inputs=None, outputs=None, initial_index=0):
         def _find_output_variable_names(layer_list, layer_names):
