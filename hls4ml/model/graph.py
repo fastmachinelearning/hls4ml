@@ -19,6 +19,8 @@ from hls4ml.model.optimizer import get_available_passes, optimize_model
 from hls4ml.model.types import Serializable
 from hls4ml.utils.string_utils import convert_to_snake_case
 
+top_function_lib = None
+
 
 class HLSConfig(Serializable):
     """The configuration class as stored in the ModelGraph.
@@ -416,7 +418,10 @@ class ModelGraph(Serializable):
         self._applied_flows = []  # keep track of the applied flows
         self.index = initial_index
         self.output_vars = {}
-        self._top_function_lib = None
+        if self.config.backend.name == 'Altera':
+            self._top_function_lib = top_function_lib
+        else:
+            self._top_function_lib = None
 
     @classmethod
     def from_layer_list(cls, config_dict, layer_list, inputs=None, outputs=None, initial_index=0):
@@ -802,8 +807,12 @@ class ModelGraph(Serializable):
         self._compile()
 
     def _compile(self):
+
+        global top_function_lib
+
         lib_name = self.config.backend.compile(self)
-        if self._top_function_lib is not None:
+        altera_res = (self.config.backend.name == 'Altera') and (top_function_lib is not None)
+        if (self._top_function_lib is not None) or altera_res:
             if platform.system() == 'Linux':
                 libdl_libs = ['libdl.so', 'libdl.so.2']
                 for libdl in libdl_libs:
@@ -819,6 +828,9 @@ class ModelGraph(Serializable):
             dlclose_func.restype = ctypes.c_int
             dlclose_func(self._top_function_lib._handle)
         self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
+
+        if self.config.backend.name == 'Altera':
+            top_function_lib = self._top_function_lib
 
     def _get_top_function(self, x, *args, **kwargs):
         backend = self.config.backend
@@ -1166,8 +1178,12 @@ class MultiModelGraph:
         self._predict = ModelGraph._predict.__get__(self, MultiModelGraph)
 
     def _initialize_io_attributes(self, graphs):
+
         self.graph_reports = None
-        self._top_function_lib = None
+        if graphs[0].config.backend.name == 'Altera':
+            self._top_function_lib = top_function_lib
+        else:
+            self._top_function_lib = None
         self.inputs = graphs[0].inputs
         self.outputs = graphs[-1].outputs
         self.output_vars = {k: v for graph in graphs for k, v in graph.output_vars.items()}
