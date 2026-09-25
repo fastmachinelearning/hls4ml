@@ -1,6 +1,6 @@
-This folder contains the implementation of custom KL divergence layer.
+This folder contains the implementation of a custom KL divergence layer.
 This is a custom implementation and not a built-in layer in any deep learning framework.
-It was developed specifically for [AD@L1 CMS paper](https://www.nature.com/articles/s42256-022-00441-3).
+It was developed specifically for the [AD@L1 CMS paper](https://www.nature.com/articles/s42256-022-00441-3).
 
 # Files
 
@@ -11,7 +11,7 @@ It was developed specifically for [AD@L1 CMS paper](https://www.nature.com/artic
 # Usage
 
 `kl_layer.py` contains the example of how to use the KL layer.
-To run do
+To run, do:
 
 ```
 python kl_layer.py
