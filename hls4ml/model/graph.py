@@ -418,10 +418,7 @@ class ModelGraph(Serializable):
         self._applied_flows = []  # keep track of the applied flows
         self.index = initial_index
         self.output_vars = {}
-        if self.config.backend.name == 'Altera':
-            self._top_function_lib = top_function_lib
-        else:
-            self._top_function_lib = None
+        self._top_function_lib = top_function_lib
 
     @classmethod
     def from_layer_list(cls, config_dict, layer_list, inputs=None, outputs=None, initial_index=0):
@@ -811,8 +808,7 @@ class ModelGraph(Serializable):
         global top_function_lib
 
         lib_name = self.config.backend.compile(self)
-        altera_res = (self.config.backend.name == 'Altera') and (top_function_lib is not None)
-        if (self._top_function_lib is not None) or altera_res:
+        if self._top_function_lib is not None:
             if platform.system() == 'Linux':
                 libdl_libs = ['libdl.so', 'libdl.so.2']
                 for libdl in libdl_libs:
@@ -828,9 +824,7 @@ class ModelGraph(Serializable):
             dlclose_func.restype = ctypes.c_int
             dlclose_func(self._top_function_lib._handle)
         self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
-
-        if self.config.backend.name == 'Altera':
-            top_function_lib = self._top_function_lib
+        top_function_lib = self._top_function_lib
 
     def _get_top_function(self, x, *args, **kwargs):
         backend = self.config.backend
@@ -1180,10 +1174,7 @@ class MultiModelGraph:
     def _initialize_io_attributes(self, graphs):
 
         self.graph_reports = None
-        if graphs[0].config.backend.name == 'Altera':
-            self._top_function_lib = top_function_lib
-        else:
-            self._top_function_lib = None
+        self._top_function_lib = top_function_lib
         self.inputs = graphs[0].inputs
         self.outputs = graphs[-1].outputs
         self.output_vars = {k: v for graph in graphs for k, v in graph.output_vars.items()}
