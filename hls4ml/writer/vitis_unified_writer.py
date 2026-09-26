@@ -1,10 +1,21 @@
 import os
+import re
 import stat
 from pathlib import Path
 from shutil import copytree
 
 from hls4ml.backends.vitis_unified.vitis_unified_config import VitisUnifiedConfig
 from hls4ml.writer.vitis_writer import VitisWriter
+
+PYNQ_HANDOFF_BLOCK = """[ -f ../../export/system.bit ] && rm -f ../../export/system.bit
+[ -f ../../export/system.hwh ] && rm -f ../../export/system.hwh
+
+xclbinutil --dump-section BITSTREAM:RAW:../../export/system.bit --input {PROJECT_NAME}.xclbin
+# the linked design is always named vitis_design; skip the sub-block and platform copies of the handoff
+HWH=$(find _x/link/vivado/vpl/prj -name vitis_design.hwh -not -path "*/ip/*")
+[ "$(printf '%s\\n' "$HWH" | grep -c .)" -eq 1 ] || { echo "ERROR: expected exactly one vitis_design.hwh under \
+_x/link/vivado/vpl/prj, found:"; echo "$HWH"; exit 1; }
+cp "$HWH" ../../export/system.hwh"""
 
 
 class VitisUnifiedWriter(VitisWriter):
@@ -270,10 +281,20 @@ fi
         else:
             platform_path_for_vpp = self.vitis_unified_config.get_platform_path()
             platform_generator_block = ''
-            if '${XILINX_VITIS}' in platform_path_for_vpp:
-                platform_generator_block = (
-                    ': "${XILINX_VITIS:?XILINX_VITIS is not set. Source the Vitis settings64.sh first.}"\n'
+            rooted_at = re.search(r'\$\{(\w+)\}', platform_path_for_vpp)
+            if rooted_at:
+                var = rooted_at.group(1)
+                hint = (
+                    'Source the Vitis settings64.sh first.'
+                    if var == 'XILINX_VITIS'
+                    else 'Set it to the directory holding the card platforms.'
                 )
+                platform_generator_block = f': "${{{var}:?{var} is not set. {hint}}}"\n'
+
+        # The raw bitstream and the hardware handoff are only needed by the PYNQ driver
+        handoff_block = ''
+        if self.vitis_unified_config.get_driver() == 'python':
+            handoff_block = PYNQ_HANDOFF_BLOCK.replace('{PROJECT_NAME}', self._get_project_name(model))
 
         output_path = f'{self.get_vitis_linker_dir(model)}/link_system.sh'
         self._fill_template(
@@ -281,6 +302,7 @@ fi
             output_path,
             replacements={
                 '{XSA_GENERATOR_BLOCK}': platform_generator_block,
+                '{PYNQ_HANDOFF_BLOCK}': handoff_block,
                 '{PLATFORM_PATH}': platform_path_for_vpp,
                 '{KERNEL_XO}': self._get_xo_file_path(model),
                 '{PROJECT_NAME}': self._get_project_name(model),
@@ -291,14 +313,19 @@ fi
 
     def _write_linker_config(self, model):
         def connectivity(indent):
-            if not self._is_axi_stream():
+            if self._is_axi_stream():
+                top_mod_inst_name = self._get_wrap_ip_name(model, False)
+                return (
+                    '\n[connectivity]\n'
+                    f'nk={self._get_kernel_declaration(model)}\n'
+                    f'stream_connect=DMA_MM2S:{top_mod_inst_name}.axi_input_stream\n'
+                    f'stream_connect={top_mod_inst_name}.axi_output_stream:DMA_S2MM\n'
+                )
+            memory = self.vitis_unified_config.get_memory()
+            if not memory:
                 return ''
-            top_mod_inst_name = self._get_wrap_ip_name(model, False)
-            return (
-                '\n[connectivity]\n'
-                f'nk={self._get_kernel_declaration(model)}\n'
-                f'stream_connect=DMA_MM2S:{top_mod_inst_name}.axi_input_stream\n'
-                f'stream_connect={top_mod_inst_name}.axi_output_stream:DMA_S2MM\n'
+            return f'\n[connectivity]\nnk={self._get_kernel_declaration(model)}\n' + self._get_memory_assignment(
+                model, memory
             )
 
         self._fill_template(
@@ -311,6 +338,29 @@ fi
             },
             blocks={'# hls-fpga-machine-learning insert custom connection': connectivity},
         )
+
+    def _get_memory_assignment(self, model, memory):
+        """One contiguous slice of the card's memory banks per kernel pointer argument.
+
+        The host must allocate each buffer in the same banks, which the generated XRT driver does
+        through the kernel argument index.
+        """
+        instance = self._get_wrap_ip_name(model, True)
+        ports = [self._get_io_port_name(var, True, idx) for idx, var in enumerate(model.get_input_variables())]
+        ports += [self._get_io_port_name(var, False, idx) for idx, var in enumerate(model.get_output_variables())]
+        kind, banks = memory['type'], memory['banks']
+        if banks < len(ports):
+            raise ValueError(
+                f'the board has {banks} {kind} bank(s) but the kernel has {len(ports)} pointer arguments; '
+                'pass your own platform and connectivity for this model'
+            )
+        per_port = banks // len(ports)
+        lines = ''
+        for idx, port in enumerate(ports):
+            first = idx * per_port
+            span = f'{kind}[{first}]' if per_port == 1 else f'{kind}[{first}:{first + per_port - 1}]'
+            lines += f'sp={instance}.{port}:{span}\n'
+        return lines
 
     # ===== Bridge generation =====
     def _gen_bridge_body(self, model, dtype, indent):

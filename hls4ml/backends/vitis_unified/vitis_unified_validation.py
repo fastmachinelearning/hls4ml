@@ -29,6 +29,12 @@ def platform_file(board_info, axi_mode):
     return path.get(axi_mode) if isinstance(path, dict) else path
 
 
+def memory_config(board_info):
+    """Off-chip memory the kernel pointers are assigned to, for cards that need an explicit bank map."""
+    memory = board_info.get('memory')
+    return memory if isinstance(memory, dict) else {}
+
+
 def validate_config(board, axi_mode, driver, input_type, output_type, supported_boards=None, platform=None, part=None):
     supported_boards = supported_boards or load_supported_boards()
     if axi_mode not in ['axi_stream', 'axi_master']:
@@ -47,8 +53,12 @@ def validate_config(board, axi_mode, driver, input_type, output_type, supported_
             raise Exception('platform must be a .xpfm or .xsa file')
         if board not in supported_boards and part is None:
             raise Exception(f'Board "{board}" is not in supported_boards.json, so part must be given together with platform')
-    if driver != 'python':
-        raise Exception('driver must be python; the current version only generates the PYNQ driver')
+    if driver not in ['python', 'xrt']:
+        raise Exception('driver must be either python (PYNQ) or xrt')
+    if driver == 'xrt' and axi_mode != 'axi_master':
+        raise Exception('driver xrt is only supported with axi_mode axi_master')
+    if platform is None and driver == 'python' and memory_config(supported_boards[board]):
+        raise Exception(f'board "{board}" is a data-center card, which has no PYNQ runtime. Pass driver="xrt" to use it.')
     for name, value in [('input_type', input_type), ('output_type', output_type)]:
         if value not in ['float', 'double']:
             raise Exception(f'{name} must be float or double')
