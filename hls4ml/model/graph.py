@@ -408,6 +408,8 @@ class ModelGraph(Serializable):
         outputs (list, optional):  The outputs to the model. If None, determined from layer_list
     """
 
+    _top_function_lib = None
+
     def __init__(self, config, inputs=None, outputs=None, initial_index=0):
         self.config = config
         self.inputs = inputs
@@ -416,7 +418,7 @@ class ModelGraph(Serializable):
         self._applied_flows = []  # keep track of the applied flows
         self.index = initial_index
         self.output_vars = {}
-        self._top_function_lib = None
+        # self._top_function_lib = None
 
     def __del__(self):
         if self._top_function_lib is not None:
@@ -820,7 +822,7 @@ class ModelGraph(Serializable):
 
     def _compile(self):
         lib_name = self.config.backend.compile(self)
-        if self._top_function_lib is not None:
+        if ModelGraph._top_function_lib is not None:
             if platform.system() == 'Linux':
                 libdl_libs = ['libdl.so', 'libdl.so.2']
                 for libdl in libdl_libs:
@@ -834,8 +836,8 @@ class ModelGraph(Serializable):
 
             dlclose_func.argtypes = [ctypes.c_void_p]
             dlclose_func.restype = ctypes.c_int
-            dlclose_func(self._top_function_lib._handle)
-        self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
+            dlclose_func(ModelGraph._top_function_lib._handle)
+        ModelGraph._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
     def _get_top_function(self, x, *args, **kwargs):
         backend = self.config.backend
@@ -843,7 +845,7 @@ class ModelGraph(Serializable):
         if hasattr(backend, 'get_top_function') and callable(backend.get_top_function):
             return backend.get_top_function(self, x, *args, **kwargs)
 
-        if self._top_function_lib is None:
+        if ModelGraph._top_function_lib is None:
             raise Exception('Model not compiled')
         if len(self.get_input_variables()) == 1:
             xlist = [x]
@@ -859,10 +861,10 @@ class ModelGraph(Serializable):
 
         x0 = xlist[0]
         if x0.dtype in [np.single, np.float32]:
-            top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_float')
+            top_function = getattr(ModelGraph._top_function_lib, self.config.get_project_name() + '_float')
             ctype = ctypes.c_float
         elif x0.dtype in [np.double, np.float64]:
-            top_function = getattr(self._top_function_lib, self.config.get_project_name() + '_double')
+            top_function = getattr(ModelGraph._top_function_lib, self.config.get_project_name() + '_double')
             ctype = ctypes.c_double
         else:
             raise Exception(
@@ -958,16 +960,16 @@ class ModelGraph(Serializable):
                 trace_output[layer.name] = []
                 layer_sizes[layer.name] = layer.get_output_variable().shape
 
-        collect_func = self._top_function_lib.collect_trace_output
+        collect_func = ModelGraph._top_function_lib.collect_trace_output
         collect_func.argtypes = [ctypes.POINTER(TraceData)]
         collect_func.restype = None
         trace_data = (TraceData * n_traced)()
 
-        alloc_func = self._top_function_lib.allocate_trace_storage
+        alloc_func = ModelGraph._top_function_lib.allocate_trace_storage
         alloc_func.argtypes = [ctypes.c_size_t]
         alloc_func.restype = None
 
-        free_func = self._top_function_lib.free_trace_storage
+        free_func = ModelGraph._top_function_lib.free_trace_storage
         free_func.argtypes = None
         free_func.restype = None
 
@@ -1184,7 +1186,7 @@ class MultiModelGraph:
 
     def _initialize_io_attributes(self, graphs):
         self.graph_reports = None
-        self._top_function_lib = None
+        ModelGraph._top_function_lib = None
         self.inputs = graphs[0].inputs
         self.outputs = graphs[-1].outputs
         self.output_vars = {k: v for graph in graphs for k, v in graph.output_vars.items()}
@@ -1372,7 +1374,7 @@ class MultiModelGraph:
         dump_tb_inputs_float
         dump_tb_inputs_double
         """
-        if self._top_function_lib is None:
+        if ModelGraph._top_function_lib is None:
             self.compile()
 
         if isinstance(x, (list, tuple)):
@@ -1400,7 +1402,7 @@ class MultiModelGraph:
             if not arr.flags['C_CONTIGUOUS']:
                 raise ValueError('Input arrays must be C_CONTIGUOUS')
 
-        fn = getattr(self._top_function_lib, fn_name)
+        fn = getattr(ModelGraph._top_function_lib, fn_name)
         fn.restype = None
         fn.argtypes = [ctypes.c_char_p] + [npc.ndpointer(ctype, flags='C_CONTIGUOUS') for _ in xlist]
 
