@@ -66,7 +66,7 @@ As opposed to the parallel processing style, in ``io_stream`` mode data is passe
 With the ``io_stream`` IO type, each layer is connected with the subsequent layer through first-in first-out (FIFO) buffers.
 The implementation of the FIFO buffers contribute to the overall resource utilization of the design, impacting in particular the BRAM or LUT utilization.
 Because the neural networks can have complex architectures generally, it is hard to know a priori the correct depth of each FIFO buffer.
-By default ``hls4ml`` choses the most conservative possible depth for each FIFO buffer, which can result in a an unnecessary overutilization of resources.
+By default ``hls4ml`` chooses the most conservative possible depth for each FIFO buffer, which can result in an unnecessary overutilization of resources.
 
 In order to reduce the impact on the resources used for FIFO buffer implementation, we have a FIFO depth optimization flow. This is described
 in the :ref:`FIFO Buffer Depth Optimization` section.

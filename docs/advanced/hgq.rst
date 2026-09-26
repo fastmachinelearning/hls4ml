@@ -3,7 +3,7 @@ High Granularity Quantization (HGQ2)
 ======================================
 
 .. note::
-   New projects are encouraged to use ``HGQ2`` instead of the original ``HGQ`` (doc page moved `here <./hgq1   .html>`_).
+   New projects are encouraged to use ``HGQ2`` instead of the original ``HGQ`` (doc page moved `here <./hgq1.html>`_).
    HGQ2 is a major improvement over HGQ with more supported layers, more quantizer options, better performance. As HGQ2 moves to Keras v3, it can be used natively with ``JAX``, ``PyTorch``, and ``TensorFlow`` backends.
 
 .. image:: https://img.shields.io/badge/License-LGPLv3-blue.svg
@@ -17,7 +17,7 @@ High Granularity Quantization (HGQ2)
 
 HGQ2 (High Granularity Quantization 2) is a quantization-aware training framework built on Keras v3, targeting real-time deep learning applications on edge devices like FPGAs. It provides a comprehensive set of tools for creating and training quantized neural networks with minimal effort.
 
-HGQ2 implements an gradient-based automatic bitwidth optimization and quantization-aware training algorithm. By laveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.
+HGQ2 implements a gradient-based automatic bitwidth optimization and quantization-aware training algorithm. By leveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.
 
 .. rst-class:: light
 .. image:: _static/hgq-overview.svg

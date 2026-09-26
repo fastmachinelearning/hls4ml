@@ -5,7 +5,7 @@ Extension API
 ``hls4ml`` natively supports a large number of neural network layers.
 But what if a desired layer is not supported?
 If it is standard enough and its implementation would benefit the community as a whole, we would welcome a contribution to add it to the standard set of supported layers.
-However, if it is a somewhat niche custom layer, there is another approach we can take to extend hls4ml through the *extension API*. This feature is support for both keras and pytorch layers.
+However, if it is a somewhat niche custom layer, there is another approach we can take to extend hls4ml through the *extension API*. This feature is supported for both keras and pytorch layers.
 
 Complete end-to-end examples are available for both `keras <https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions.py>`_ and `pytorch <https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions_pytorch.py>`_, which are part of our testing suite. The description here uses the keras example.
 To implement a custom layer in ``hls4ml`` with the extension API, the required components are:
@@ -56,7 +56,7 @@ We can define the equivalent layer in hls4ml ``HReverse``, which inherits from `
 A parser for the Keras to HLS converter is also required.
 This parser reads the attributes of the Keras layer instance and populates a dictionary of attributes for the hls4ml layer.
 It also returns a list of output shapes (one shape for each output).
-In this case, there a single output with the same shape as the input.
+In this case, there is a single output with the same shape as the input.
 
 .. tabs::
     .. tab:: Keras v2
@@ -97,7 +97,7 @@ In this case, there a single output with the same shape as the input.
                     assert len(in_tensors[0].shape) == 2, 'KReverse is only supported for 2D tensors'
                     return {'n_in': in_tensors[0].shape[-1]}
 
-Next, we need the actual HLS implementaton of the function, which can be written in a header file ``nnet_reverse.h``.
+Next, we need the actual HLS implementation of the function, which can be written in a header file ``nnet_reverse.h``.
 
 .. code-block:: C++
 

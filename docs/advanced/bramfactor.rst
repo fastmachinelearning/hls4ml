@@ -39,4 +39,4 @@ Having set ``BramFactor=100``, only layers with more than 100 weights will be ex
         #pragma HLS INTERFACE bram port=w2,w4
         ...
 
-When integrating the design, users can use the exposed interface to implement weight reloading scheme.
+When integrating the design, users can use the exposed interface to a weight reloading scheme.
