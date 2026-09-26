@@ -2,7 +2,7 @@
 ModelGraph Class
 ================
 
-This page documents our ``ModelGraph`` class usage. You can generate generate an instance of this class through ``hls4ml``'s API, for example by converting a Keras model:
+This page documents our ``ModelGraph`` class usage. You can generate an instance of this class through ``hls4ml``'s API, for example by converting a Keras model:
 
 .. code-block:: python
 
@@ -94,11 +94,11 @@ The returned ``report`` object will contain the result of build step, which may 
 
 The trace method is an advanced version of the ``predict`` method. It's used to trace individual outputs from each layer of the hls_model. This is useful for debugging and setting the appropriate configuration.
 
-**Return:** A dictionary where the keys are the names of the layers, and its values are the layers's outputs.
+**Return:** A dictionary where the keys are the names of the layers, and its values are the layers' outputs.
 
 .. code-block:: python
 
-   predict_ouputs, trace_outputs =  hls_model.trace(X)
+   predict_outputs, trace_outputs =  hls_model.trace(X)
 
    #We also support a similar function for keras
    keras_trace = hls4ml.model.profiling.get_ymodel_keras(keras_model, X)

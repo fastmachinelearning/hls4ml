@@ -40,7 +40,7 @@ The code block below showcases three use cases of the hls4ml Optimization API - 
     loss_fn = CategoricalCrossentropy(from_logits=True)
 
     # Define the metric to monitor, as well as if its increasing or decreasing
-    # This disctinction allows us to optimize both regression and classification models
+    # This distinction allows us to optimize both regression and classification models
     # In regression, e.g. minimize validation MSE & for classification e.g. maximize accuracy
     metric, increasing = CategoricalAccuracy(), True
     # Relative tolerance (rtol) is the relative loss in metric the optimized model is allowed to incur
@@ -66,7 +66,7 @@ The code block below showcases three use cases of the hls4ml Optimization API - 
     sparsity, layers = get_model_sparsity(optimized_model)
     print(f'Optimized Keras accuracy: {acc_optimized}')
     print(f'Optimized Keras sparsity, overall: {sparsity}')
-    print(f'Opimized Keras sparsity, per-layer: {layers}')
+    print(f'Optimized Keras sparsity, per-layer: {layers}')
 
 In a similar manner, it is possible to target GPU FLOPs or Vivado DSPs. However, in that case, sparsity is not equivalent to model sparsity.
 Instead, it is the sparsity of the target resource. As an example: Starting with a network utilizing 512 DSPs and a final sparsity of 50%; the optimized network will use 256 DSPs.
@@ -131,4 +131,4 @@ Note, to ensure DSPs are optimized, "unrolled" Dense multiplication must be used
 
     hls_config = config_from_keras_model(optimized_model)
     hls_config['Model']['Strategy'] = 'Unrolled'
-    # Any addition hls4ml config, reuse factor etc...
+    # Any additional hls4ml config, reuse factor etc...

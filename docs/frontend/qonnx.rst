@@ -2,7 +2,7 @@
 ONNX and QONNX
 ==============
 
-Parsing of ONNX and QONNX models is made in conjunction with the `qonnx <https://github.com/fastmachinelearning/qonnx>`_ package, even if it no quantization is used. This is a common initial parser shared with the AMD/Xilinx FINN project. The first step is to do constant folding, shape inference, etc., on the ONNX graph, commonly known as `cleaning`.  If a model has convolution layers, the model also needs to be converted to a channels-last format, since that is what hls4ml mainly supports. The ``qonnx`` package also provides a number of additional transforms that may need to be used. For example, ``Gemm`` nodes need to converted to ``MatMul`` and ``Add`` nodes.
+Parsing of ONNX and QONNX models is made in conjunction with the `qonnx <https://github.com/fastmachinelearning/qonnx>`_ package, even if no quantization is used. This is a common initial parser shared with the AMD/Xilinx FINN project. The first step is to do constant folding, shape inference, etc., on the ONNX graph, commonly known as `cleaning`.  If a model has convolution layers, the model also needs to be converted to a channels-last format, since that is what hls4ml mainly supports. The ``qonnx`` package also provides a number of additional transforms that may need to be used. For example, ``Gemm`` nodes need to be converted to ``MatMul`` and ``Add`` nodes.
 
 There are command-line based versions of cleaning and channels-last conversion:
 
@@ -46,7 +46,7 @@ Note, unlike the Keras version, "name" granularity is the default for ``config_f
 
 One can subsequently call the ``predict`` function to check the performance or build the project.
 
-Note that ``execute_onnx`` in ``qonnx.core.onnx_exec`` can be use to run the QONNX graphs directly, and it also provides the values at intermediate layers for validating the model (tracing).
+Note that ``execute_onnx`` in ``qonnx.core.onnx_exec`` can be used to run the QONNX graphs directly, and it also provides the values at intermediate layers for validating the model (tracing).
 
 Quant nodes
 ===========
