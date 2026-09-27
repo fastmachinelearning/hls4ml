@@ -316,3 +316,138 @@ def test_bidirectional_no_bias(test_case_id, cell_type):
     keras_prediction = model.predict(X)
     hls_prediction = hls_model.predict(X)
     np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
+
+
+# Tolerance for the small reset_after GRU tests below. The HLS-vs-Keras error for this model is at most ~9e-3
+# with ap_fixed<32, 16> across all tested backends, strategies and io types (dominated by the sigmoid/tanh lookup
+# tables); the 32-unit, 12-step models above need the looser 5e-2.
+GRU_RESET_ATOL = 2e-2
+
+
+def create_gru_reset_model(reset_after, bidirectional=False):
+    """Small GRU with fixed, non-zero weights and biases (zero biases would hide reset-gate placement errors)."""
+    n_steps, n_features, n_units = 5, 3, 4
+    gru = GRU(n_units, reset_after=reset_after, name='gru')
+    model = Sequential()
+    model.add(Input(shape=(n_steps, n_features)))
+    model.add(Bidirectional(gru, name='gru_bidir') if bidirectional else gru)
+
+    rng = np.random.default_rng(0)
+    model.layers[0].set_weights([rng.uniform(-1, 1, w.shape).astype('float32') for w in model.layers[0].get_weights()])
+    X = rng.uniform(-1, 1, (50, n_steps, n_features)).astype('float32')
+    return model, X
+
+
+def gru_reference(X, kernel, recurrent_kernel, bias, reset_before):
+    """NumPy GRU in Keras gate order (z, r, h), return_sequences=False.
+
+    reset_before=True:  h~ = tanh(W_h x + b_h + U_h (r * h))
+    reset_before=False: h~ = tanh(W_h x + b_h + r * (U_h h + b_rh))
+    """
+    n = recurrent_kernel.shape[0]
+    bias_in, bias_rec = (bias[0], bias[1]) if bias.ndim == 2 else (bias, np.zeros_like(bias))
+
+    def sigmoid(v):
+        return 1 / (1 + np.exp(-v))
+
+    h = np.zeros((X.shape[0], n))
+    for t in range(X.shape[1]):
+        x_part = X[:, t] @ kernel + bias_in
+        h_part = h @ recurrent_kernel + bias_rec
+        z = sigmoid(x_part[:, :n] + h_part[:, :n])
+        r = sigmoid(x_part[:, n : 2 * n] + h_part[:, n : 2 * n])
+        if reset_before:
+            h_cand = np.tanh(x_part[:, 2 * n :] + (r * h) @ recurrent_kernel[:, 2 * n :])
+        else:
+            h_cand = np.tanh(x_part[:, 2 * n :] + r * h_part[:, 2 * n :])
+        h = z * h + (1 - z) * h_cand
+    return h
+
+
+@pytest.mark.parametrize('reset_after', [True, False])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize(
+    'io_type, strategy, static, reuse_factor',
+    [
+        ('io_parallel', 'latency', True, 1),
+        ('io_parallel', 'latency', False, 1),
+        ('io_parallel', 'resource', True, 4),
+        ('io_parallel', 'resource_unrolled', True, 4),
+        ('io_stream', 'latency', True, 1),
+        ('io_stream', 'resource', False, 4),
+    ],
+)
+def test_gru_reset_after_accuracy(test_case_id, reset_after, backend, io_type, strategy, static, reuse_factor):
+    """Both Keras GRU formulations (reset_after=True/False) match Keras numerically."""
+    model, X = create_gru_reset_model(reset_after)
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32, 16>', backend=backend
+    )
+    hls_config['LayerName']['gru']['static'] = static
+    hls_config['LayerName']['gru']['Strategy'] = strategy
+    hls_config['LayerName']['gru']['ReuseFactor'] = reuse_factor
+    hls_config['LayerName']['gru']['RecurrentReuseFactor'] = reuse_factor
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    gru_layer = [layer for layer in hls_model.get_layers() if layer.class_name == 'GRU'][0]
+    assert gru_layer.get_attr('apply_reset_gate') == ('after' if reset_after else 'before')
+    assert gru_layer.get_attr('recurrent_reuse_factor') == reuse_factor
+    hls_model.compile()
+
+    keras_prediction = model.predict(X)
+    hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=GRU_RESET_ATOL)
+
+
+@pytest.mark.parametrize('reset_after', [True, False])
+def test_gru_reset_gate_placement(test_case_id, reset_after):
+    """The HLS GRU follows the candidate equation selected by reset_after and not the other one.
+
+    U_h (r * h) and r * (U_h h + b_rh) are computed from the same weights with NumPy; the model's
+    weights and biases make them differ by much more than the comparison tolerance.
+    """
+    model, X = create_gru_reset_model(reset_after)
+    kernel, recurrent_kernel, bias = model.layers[0].get_weights()
+    expected = gru_reference(X, kernel, recurrent_kernel, bias, reset_before=not reset_after)
+    other = gru_reference(X, kernel, recurrent_kernel, bias, reset_before=reset_after)
+
+    keras_prediction = model.predict(X)
+    np.testing.assert_allclose(expected, keras_prediction, rtol=0.0, atol=1e-5)
+    assert np.abs(expected - other).max() > 0.2  # the two equations are distinguishable for this model
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32, 16>', backend='Vivado'
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
+    )
+    hls_model.compile()
+    hls_prediction = hls_model.predict(X).reshape(expected.shape)
+
+    np.testing.assert_allclose(hls_prediction, expected, rtol=0.0, atol=GRU_RESET_ATOL)
+    assert np.abs(hls_prediction - other).max() > 0.15
+
+
+@pytest.mark.parametrize('reset_after', [True, False])
+@pytest.mark.parametrize('static', [True, False])
+def test_bidirectional_gru_reset_after_accuracy(test_case_id, reset_after, static):
+    """Bidirectional GRU with both reset_after settings matches Keras."""
+    model, X = create_gru_reset_model(reset_after, bidirectional=True)
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32, 16>', backend='Vivado'
+    )
+    hls_config['LayerName']['gru_bidir']['static'] = static
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
+    )
+    hls_model.compile()
+
+    keras_prediction = model.predict(X)
+    hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=GRU_RESET_ATOL)
