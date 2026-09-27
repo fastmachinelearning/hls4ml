@@ -397,7 +397,8 @@ struct gru_config {
 // Notes:
 //  - reset_after = true:  r(t)*(Wh*h(t-1) + br)
 //  - reset_after = false: Wh*(r(t)*h(t-1)), br is zero
-//  - reset_after = false reuses the full recurrent multiplication (mult_config2); a candidate-only multiplication could reduce resource use
+//  - reset_after = false reuses the full recurrent multiplication (mult_config2); a candidate-only
+//    multiplication could reduce resource use
 template <class res_T, typename CONFIG_T>
 void gru_candidate_recurrent(res_T h_state[CONFIG_T::n_state], typename CONFIG_T::accum_t tmpres_zr[CONFIG_T::n_state * 2],
                              typename CONFIG_T::accum_t tmpres_state_zr[CONFIG_T::n_state * 3],
