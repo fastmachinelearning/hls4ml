@@ -43,7 +43,7 @@ The code block below showcases three use cases of the hls4ml Optimization API - 
     # This disctinction allows us to optimize both regression and classification models
     # In regression, e.g. minimize validation MSE & for classification e.g. maximize accuracy
     metric, increasing = CategoricalAccuracy(), True
-    # Relative tolerance (rtol) is the the relative loss in metric the optimized model is allowed to incur
+    # Relative tolerance (rtol) is the relative loss in metric the optimized model is allowed to incur
     rtol = 0.975
 
     # A scheduler defines how the sparsity is incremented at each step

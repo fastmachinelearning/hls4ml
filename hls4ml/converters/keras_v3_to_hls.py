@@ -176,6 +176,7 @@ class KerasV3HandlerDispatcher:
     def fallback_handler(
         self, layer: 'keras.layers.Layer', inp_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor']
     ):
+        da_error: Exception | None = None
         if self.allow_da_fallback:
             try:
                 ret = self.da_call(layer, inp_tensors, out_tensors)
@@ -186,11 +187,15 @@ class KerasV3HandlerDispatcher:
             except ImportError:
                 print('alkaid not installed. Set `allow_da_fallback=False` to disable DA fallback.')
                 pass  # alkaid not installed
+            except Exception as e:
+                da_error = e  # error within alkaid, store to raise if not handled by v2 fallback
         if self.allow_v2_fallback:
             ret = self.v2_call(layer, inp_tensors, out_tensors)
             if ret is not None:
                 print(f'Keras v2 handler used for layer {layer.name}')
                 return ret
+        if da_error is not None:
+            raise da_error
         return None
 
     @requires('da')
