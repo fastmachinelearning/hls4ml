@@ -171,8 +171,7 @@ def test_rnn_no_bias_substitutes_zeros():
 
 
 def test_gru_reset_after_false_parsed():
-    # The parser represents 'before' faithfully with a flat bias and a zero recurrent bias;
-    # the backend kernel selects the matching candidate-state equation
+    # reset_after=False has a flat bias and a zero recurrent bias
     reader = SyntheticReader({'kernel': (8, 12), 'recurrent_kernel': (4, 12), 'bias': (12,)})
     layer, _ = parse_rnn_layer(make_rnn_config('GRU', reset_after=False), None, [[None, 5, 8]], reader)
     assert layer['apply_reset_gate'] == 'before'

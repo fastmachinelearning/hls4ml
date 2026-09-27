@@ -854,8 +854,7 @@ def test_qlstm_no_bias(test_case_id, backend):
 
 
 def test_qgru_reset_after_false_parse(test_case_id):
-    """reset_after=False is parsed faithfully (apply_reset_gate='before', flat bias, zero
-    recurrent bias); the backend kernel selects the matching candidate-state equation."""
+    """reset_after=False parses as apply_reset_gate='before', flat bias, zero recurrent bias."""
     model = Sequential()
     model.add(
         QGRU(

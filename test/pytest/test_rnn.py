@@ -318,14 +318,12 @@ def test_bidirectional_no_bias(test_case_id, cell_type):
     np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
 
 
-# Tolerance for the small reset_after GRU tests below. The HLS-vs-Keras error for this model is at most ~9e-3
-# with ap_fixed<32, 16> across all tested backends, strategies and io types (dominated by the sigmoid/tanh lookup
-# tables); the 32-unit, 12-step models above need the looser 5e-2.
+# Max error for the small GRU below is ~9e-3 (activation lookup tables)
 GRU_RESET_ATOL = 2e-2
 
 
 def create_gru_reset_model(reset_after, bidirectional=False):
-    """Small GRU with fixed, non-zero weights and biases (zero biases would hide reset-gate placement errors)."""
+    """Small GRU with fixed non-zero weights and biases."""
     n_steps, n_features, n_units = 5, 3, 4
     gru = GRU(n_units, reset_after=reset_after, name='gru')
     model = Sequential()
@@ -339,7 +337,7 @@ def create_gru_reset_model(reset_after, bidirectional=False):
 
 
 def gru_reference(X, kernel, recurrent_kernel, bias, reset_before):
-    """NumPy GRU in Keras gate order (z, r, h), return_sequences=False.
+    """NumPy GRU, Keras gate order (z, r, h), last state only.
 
     reset_before=True:  h~ = tanh(W_h x + b_h + U_h (r * h))
     reset_before=False: h~ = tanh(W_h x + b_h + r * (U_h h + b_rh))
@@ -378,7 +376,7 @@ def gru_reference(X, kernel, recurrent_kernel, bias, reset_before):
     ],
 )
 def test_gru_reset_after_accuracy(test_case_id, reset_after, backend, io_type, strategy, static, reuse_factor):
-    """Both Keras GRU formulations (reset_after=True/False) match Keras numerically."""
+    """GRU matches Keras for both reset_after settings."""
     model, X = create_gru_reset_model(reset_after)
 
     hls_config = hls4ml.utils.config_from_keras_model(
@@ -404,11 +402,7 @@ def test_gru_reset_after_accuracy(test_case_id, reset_after, backend, io_type, s
 
 @pytest.mark.parametrize('reset_after', [True, False])
 def test_gru_reset_gate_placement(test_case_id, reset_after):
-    """The HLS GRU follows the candidate equation selected by reset_after and not the other one.
-
-    U_h (r * h) and r * (U_h h + b_rh) are computed from the same weights with NumPy; the model's
-    weights and biases make them differ by much more than the comparison tolerance.
-    """
+    """HLS GRU follows the candidate equation selected by reset_after, not the other one."""
     model, X = create_gru_reset_model(reset_after)
     kernel, recurrent_kernel, bias = model.layers[0].get_weights()
     expected = gru_reference(X, kernel, recurrent_kernel, bias, reset_before=not reset_after)
@@ -416,7 +410,7 @@ def test_gru_reset_gate_placement(test_case_id, reset_after):
 
     keras_prediction = model.predict(X)
     np.testing.assert_allclose(expected, keras_prediction, rtol=0.0, atol=1e-5)
-    assert np.abs(expected - other).max() > 0.2  # the two equations are distinguishable for this model
+    assert np.abs(expected - other).max() > 0.2  # The two equations give different results
 
     hls_config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='ap_fixed<32, 16>', backend='Vivado'
@@ -435,7 +429,7 @@ def test_gru_reset_gate_placement(test_case_id, reset_after):
 @pytest.mark.parametrize('reset_after', [True, False])
 @pytest.mark.parametrize('static', [True, False])
 def test_bidirectional_gru_reset_after_accuracy(test_case_id, reset_after, static):
-    """Bidirectional GRU with both reset_after settings matches Keras."""
+    """Bidirectional GRU matches Keras for both reset_after settings."""
     model, X = create_gru_reset_model(reset_after, bidirectional=True)
 
     hls_config = hls4ml.utils.config_from_keras_model(

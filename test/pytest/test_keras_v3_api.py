@@ -627,8 +627,7 @@ def test_rnn_rejects_go_backwards(test_case_id):
 
 
 def test_gru_reset_after_false_parsed(test_case_id):
-    # The parser represents 'before' faithfully with a flat bias and a zero recurrent bias;
-    # the backend kernel selects the matching candidate-state equation
+    # reset_after=False has a flat bias and a zero recurrent bias
     model = keras.Sequential([keras.layers.Input((5, 8)), keras.layers.GRU(4, reset_after=False)])
     hls_model = _convert_parse_only(model, test_case_id)
     gru_layer = [layer for layer in hls_model.get_layers() if layer.class_name == 'GRU'][0]

@@ -86,7 +86,7 @@ recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
     static const bool pytorch_order = {pytorch};{reset_after}
 }};\n"""
 
-# GRU only: where the reset gate is applied in the candidate state (Keras reset_after)
+# GRU reset_after template
 gru_reset_after_template = '\n    static const bool reset_after = {};'
 
 # Bidirectional templates
@@ -139,7 +139,6 @@ recr_include_list = ['nnet_utils/nnet_recurrent.h']
 
 
 def _gru_reset_after(class_name, apply_reset_gate):
-    """Config line selecting the GRU candidate-state equation; empty for LSTM."""
     if 'GRU' not in class_name:
         return ''
     return gru_reset_after_template.format('true' if apply_reset_gate == 'after' else 'false')
