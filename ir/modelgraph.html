@@ -146,7 +146,7 @@
              
   <section id="modelgraph-class">
 <h1>ModelGraph Class<a class="headerlink" href="#modelgraph-class" title="Link to this heading"></a></h1>
-<p>This page documents our <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> class usage. You can generate generate an instance of this class through <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>’s API, for example by converting a Keras model:</p>
+<p>This page documents our <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> class usage. You can generate an instance of this class through <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code>’s API, for example by converting a Keras model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hls4ml</span>
 
 <span class="c1"># Generate a simple configuration from keras model</span>
@@ -208,8 +208,8 @@
 <section id="trace-method">
 <span id="id5"></span><h2><code class="docutils literal notranslate"><span class="pre">trace</span></code> method<a class="headerlink" href="#trace-method" title="Link to this heading"></a></h2>
 <p>The trace method is an advanced version of the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method. It’s used to trace individual outputs from each layer of the hls_model. This is useful for debugging and setting the appropriate configuration.</p>
-<p><strong>Return:</strong> A dictionary where the keys are the names of the layers, and its values are the layers’s outputs.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">predict_ouputs</span><span class="p">,</span> <span class="n">trace_outputs</span> <span class="o">=</span>  <span class="n">hls_model</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<p><strong>Return:</strong> A dictionary where the keys are the names of the layers, and its values are the layers’ outputs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">predict_outputs</span><span class="p">,</span> <span class="n">trace_outputs</span> <span class="o">=</span>  <span class="n">hls_model</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
 <span class="c1">#We also support a similar function for keras</span>
 <span class="n">keras_trace</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">profiling</span><span class="o">.</span><span class="n">get_ymodel_keras</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>

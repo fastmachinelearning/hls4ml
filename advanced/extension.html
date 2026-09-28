@@ -147,7 +147,7 @@
 <p><code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> natively supports a large number of neural network layers.
 But what if a desired layer is not supported?
 If it is standard enough and its implementation would benefit the community as a whole, we would welcome a contribution to add it to the standard set of supported layers.
-However, if it is a somewhat niche custom layer, there is another approach we can take to extend hls4ml through the <em>extension API</em>. This feature is support for both keras and pytorch layers.</p>
+However, if it is a somewhat niche custom layer, there is another approach we can take to extend hls4ml through the <em>extension API</em>. This feature is supported for both keras and pytorch layers.</p>
 <p>Complete end-to-end examples are available for both <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions.py">keras</a> and <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/blob/main/test/pytest/test_extensions_pytorch.py">pytorch</a>, which are part of our testing suite. The description here uses the keras example.
 To implement a custom layer in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> with the extension API, the required components are:</p>
 <ul class="simple">
@@ -192,7 +192,7 @@ We can define the equivalent layer in hls4ml <code class="docutils literal notra
 <p>A parser for the Keras to HLS converter is also required.
 This parser reads the attributes of the Keras layer instance and populates a dictionary of attributes for the hls4ml layer.
 It also returns a list of output shapes (one shape for each output).
-In this case, there a single output with the same shape as the input.</p>
+In this case, there is a single output with the same shape as the input.</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Keras v2</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Keras v3</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Parser for converter</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_reverse_layer</span><span class="p">(</span><span class="n">keras_layer</span><span class="p">,</span> <span class="n">input_names</span><span class="p">,</span> <span class="n">input_shapes</span><span class="p">,</span> <span class="n">data_reader</span><span class="p">):</span>
@@ -227,7 +227,7 @@ In this case, there a single output with the same shape as the input.</p>
 </pre></div>
 </div>
 </div></div>
-<p>Next, we need the actual HLS implementaton of the function, which can be written in a header file <code class="docutils literal notranslate"><span class="pre">nnet_reverse.h</span></code>.</p>
+<p>Next, we need the actual HLS implementation of the function, which can be written in a header file <code class="docutils literal notranslate"><span class="pre">nnet_reverse.h</span></code>.</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#ifndef NNET_REVERSE_H_</span>
 <span class="cp">#define NNET_REVERSE_H_</span>
 

@@ -173,7 +173,7 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">CategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># Define the metric to monitor, as well as if its increasing or decreasing</span>
-<span class="c1"># This disctinction allows us to optimize both regression and classification models</span>
+<span class="c1"># This distinction allows us to optimize both regression and classification models</span>
 <span class="c1"># In regression, e.g. minimize validation MSE &amp; for classification e.g. maximize accuracy</span>
 <span class="n">metric</span><span class="p">,</span> <span class="n">increasing</span> <span class="o">=</span> <span class="n">CategoricalAccuracy</span><span class="p">(),</span> <span class="kc">True</span>
 <span class="c1"># Relative tolerance (rtol) is the relative loss in metric the optimized model is allowed to incur</span>
@@ -199,7 +199,7 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 <span class="n">sparsity</span><span class="p">,</span> <span class="n">layers</span> <span class="o">=</span> <span class="n">get_model_sparsity</span><span class="p">(</span><span class="n">optimized_model</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Optimized Keras accuracy: </span><span class="si">{</span><span class="n">acc_optimized</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Optimized Keras sparsity, overall: </span><span class="si">{</span><span class="n">sparsity</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Opimized Keras sparsity, per-layer: </span><span class="si">{</span><span class="n">layers</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Optimized Keras sparsity, per-layer: </span><span class="si">{</span><span class="n">layers</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In a similar manner, it is possible to target GPU FLOPs or Vivado DSPs. However, in that case, sparsity is not equivalent to model sparsity.
@@ -257,7 +257,7 @@ Instead, it is the sparsity of the target resource. As an example: Starting with
 Note, to ensure DSPs are optimized, “unrolled” Dense multiplication must be used before synthesizing HLS, by modifying the config:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">hls_config</span> <span class="o">=</span> <span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">optimized_model</span><span class="p">)</span>
 <span class="n">hls_config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Unrolled'</span>
-<span class="c1"># Any addition hls4ml config, reuse factor etc...</span>
+<span class="c1"># Any additional hls4ml config, reuse factor etc...</span>
 </pre></div>
 </div>
 </section>

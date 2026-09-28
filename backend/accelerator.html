@@ -251,13 +251,13 @@ run inference using the inputs from <code class="docutils literal notranslate"><
 <span class="n">hls_model</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">bitfile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>After this command completes, the FPGA must be programmed with the bistream. Additionally, the Coyote driver must be loaded.
+<p>After this command completes, the FPGA must be programmed with the bitstream. Additionally, the Coyote driver must be loaded.
 For some platforms, Coyote provides utility functions to load the bitstream and driver. For others, this can be achieved using
 the Vivado hardware manager and Linux commands. More detail can be found in the <a class="reference external" href="https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote">Coyote documentation.</a>.</p>
 <p>Finally, we can create a <code class="docutils literal notranslate"><span class="pre">CoyoteOverlay</span></code> object, which can be used to run inference on the FPGA. Additionally, the overlay provides a utility
-functon to load the model bitstream and driver for some clusters.
+function to load the model bitstream and driver for some clusters.
 When running inference, we must provide the input tensor and the shape of the output tensor (to allocate the buffers for the data transfer).
-Optionally, batch size can be specified..
+Optionally, batch size can be specified.
 The <code class="docutils literal notranslate"><span class="pre">predict</span></code> method will send the input data to the FPGA and return the output data <code class="docutils literal notranslate"><span class="pre">y_hw</span></code>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.backends.coyote</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoyoteOverlay</span>
 

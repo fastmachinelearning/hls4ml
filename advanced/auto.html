@@ -150,10 +150,10 @@ and <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.util
 <p>The approach taken by the precision inference is to set accumulator (the internal variable used to accumulate values in the matrix multiplications) and other precisions
 to never truncate, using only the bitwidths of the inputs (not the values). This is quite conservative, especially in cases where post-training quantization is used, or
 if the bit widths were set fairly loosely. The recommended action in that case is to edit the configuration and explicitly set some widths in it, potentially in an iterative process
-after profiling the data. Another option is to pass a maximum precision using the <code class="docutils literal notranslate"><span class="pre">max_precison</span></code> parameter of the <code class="docutils literal notranslate"><span class="pre">config_form_*</span></code> functions. Then the automatic precision
-inference will never set a bitwdith larger than the bitwidth of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> or an integer part larger than the integer part of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> that is passed.
+after profiling the data. Another option is to pass a maximum precision using the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> parameter of the <code class="docutils literal notranslate"><span class="pre">config_from_*</span></code> functions. Then the automatic precision
+inference will never set a bitwidth larger than the bitwidth of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> or an integer part larger than the integer part of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> that is passed.
 (The bitwidth and integer parts of the <code class="docutils literal notranslate"><span class="pre">max_precision</span></code> are treated separately.)</p>
-<p>When manually setting bitdwidths, the accumulator can overflow, and the precision may need to be reduced. For the accumulator, it is usually a bad idea to explicitly
+<p>When manually setting bitwidths, the accumulator can overflow, and the precision may need to be reduced. For the accumulator, it is usually a bad idea to explicitly
 enable rounding or saturation modes since it dramatically increases the execution time. For other types (e.g. output types or weight types), however, rounding and saturation handling
 can be enabled as needed.</p>
 <div class="admonition note">
