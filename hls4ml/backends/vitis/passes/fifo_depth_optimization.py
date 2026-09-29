@@ -59,9 +59,7 @@ def get_vitis_optimized_fifo_depths(model, hls_prj_path):
         zip_ref.extractall(path_to_zip_file)
 
     # the channel_info.csv file contains the mapping of each fifo name (i.e layer4_out_U) to the respective
-    # chan_status*.csv file. Each row is "<instance path>,<fifo name>,,<chan_status file>". The instance path is empty
-    # for FIFOs of the top function (Vitis backend) and non-empty when the model is wrapped (Vitis Unified backend), so
-    # rows are selected by FIFO name instead, which also skips the wrapper's own streams.
+    # chan_status*.csv file.
     names_file_path = hls_prj_path + '/.autopilot/db/channel_info.csv'
 
     model_fifo_names = {output_variable.name for output_variable in model.output_vars.values()}
@@ -70,7 +68,7 @@ def get_vitis_optimized_fifo_depths(model, hls_prj_path):
     with open(names_file_path) as names_file:
         for line in names_file:
             fields = [field.strip() for field in line.split(',')]
-            if len(fields) < 4:
+            if len(fields) < 4: # Safe for both Vitis and VitisUnified 
                 continue
             # remove "_U" or "_i_U" (AXI stream wrapper) from the name
             fifo_name = re.sub(r'(_i)?_U$', '', fields[1])
