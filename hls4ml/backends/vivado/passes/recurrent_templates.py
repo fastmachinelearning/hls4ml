@@ -83,11 +83,9 @@ recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
     static const bool use_static = {static};
-    static const bool pytorch_order = {pytorch};{reset_after}
+    static const bool pytorch_order = {pytorch};
+    static const bool reset_after = {reset_after};
 }};\n"""
-
-# GRU reset_after template
-gru_reset_after_template = '\n    static const bool reset_after = {};'
 
 # Bidirectional templates
 
@@ -108,7 +106,8 @@ single_config_template = """struct config{index} : nnet::single_layer_config {{
     static const unsigned n_in  = {n_in};
     static const unsigned n_state = {n_state};
     static const unsigned n_mult = {n_mult};
-    static const bool pytorch_order = {pytorch};{reset_after}
+    static const bool pytorch_order = {pytorch};
+    static const bool reset_after = {reset_after};
 }};\n"""
 
 bidirectional_config_template = """struct config{index} : nnet::bidirectional_config {{
@@ -136,12 +135,6 @@ recr_function_template_initial_states_gru = 'nnet::{recr_type}_stack<{input_t}, 
 bidirectional_function_template = 'nnet::bidirectional_stack<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {wr}, {b}, {br}, {w_b}, {wr_b}, {b_b}, {br_b});'  # noqa: E501
 
 recr_include_list = ['nnet_utils/nnet_recurrent.h']
-
-
-def _gru_reset_after(class_name, apply_reset_gate):
-    if 'GRU' not in class_name:
-        return ''
-    return gru_reset_after_template.format('true' if apply_reset_gate == 'after' else 'false')
 
 
 class RecurrentConfigTemplate(LayerConfigTemplate):
@@ -177,7 +170,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         params['pytorch'] = 'true' if node.get_attr('pytorch', False) else 'false'
         params['recr_type'] = node.class_name.lower()
         params['RECR_TYPE'] = node.class_name
-        params['reset_after'] = _gru_reset_after(node.class_name, node.get_attr('apply_reset_gate', 'after'))
+        params['reset_after'] = 'true' if node.get_attr('apply_reset_gate', 'after') == 'after' else 'false'
 
         if node.class_name == 'LSTM':
             n_recr_mult = 4
@@ -318,9 +311,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             )
             layer_params['act_t'] = '{}_config{}'.format(node.get_attr(f'{d}_activation'), str(node.index) + f'_{d[0]}')
             layer_params['RECR_TYPE'] = node.get_attr(f'{d}_class_name')
-            layer_params['reset_after'] = _gru_reset_after(
-                node.get_attr(f'{d}_class_name'), node.get_attr(f'{d}_apply_reset_gate', 'after')
-            )
+            layer_params['reset_after'] = 'true' if node.get_attr(f'{d}_apply_reset_gate', 'after') == 'after' else 'false'
 
             layer_params['weight_t'] = layer_params[f'{d}_weight_t']
             layer_params['recurrent_weight_t'] = layer_params[f'{d}_recurrent_weight_t']
