@@ -55,7 +55,9 @@ def dense_chain(activation=None, n_layers=4, seed=0, n_in=N, widths=None):
     return model
 
 
-def convert(model, strategy, output_dir, reuse_factor=4, io_type='io_parallel', backend='Vitis', precisions=None):
+def convert(
+    model, strategy, output_dir, reuse_factor=4, io_type='io_parallel', backend='Vitis', precisions=None, model_config=None
+):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', backend=backend, default_precision='ap_fixed<16,6>'
     )
@@ -63,6 +65,8 @@ def convert(model, strategy, output_dir, reuse_factor=4, io_type='io_parallel', 
         if name.startswith('fc'):
             config['LayerName'][name]['Strategy'] = strategy
             config['LayerName'][name]['ReuseFactor'] = reuse_factor
+
+    config['Model'].update(model_config or {})
 
     for name, precision in (precisions or {}).items():
         config['LayerName'][name]['Precision'] = dict(config['LayerName'][name].get('Precision', {}))
@@ -102,8 +106,8 @@ def binary_tanh(x):
 
 
 # One case per activation the kernel computes. The classes matter more than the names: LeakyReLU and ELU
-# are ParametrizedActivation and carry one number, hard_sigmoid is HardActivation and carries two, and
-# treating either as a plain Activation would compute relu instead and discard those numbers.
+# are ParametrizedActivation with one parameter, hard_sigmoid is HardActivation with two, and treating
+# either as a plain Activation would compute relu and lose the parameters.
 FOLDED_ACTIVATIONS = [
     ('relu', lambda n: Activation('relu', name=n)),
     ('sigmoid', lambda n: Activation('sigmoid', name=n)),
@@ -121,7 +125,7 @@ FOLDED_ACTIVATIONS = [
 
 @pytest.mark.parametrize('activation', FOLDED_ACTIVATIONS, ids=[case[0] for case in FOLDED_ACTIVATIONS])
 def test_folded_activations(test_case_id, activation):
-    """Each folded activation is computed in the Dense layer and gives the numbers it gave on its own."""
+    """Each activation is computed inside the Dense layer and gives the same results as its own layer."""
 
     name, layer = activation
     model = dense_chain(layer)
@@ -160,8 +164,8 @@ CARRIED_NUMBERS = [
 
 @pytest.mark.parametrize('case', CARRIED_NUMBERS, ids=[case[0] for case in CARRIED_NUMBERS])
 def test_carried_numbers_reach_the_kernel(test_case_id, case):
-    """A number the activation carries reaches the kernel. The values are away from the defaults, so
-    dropping one changes the result."""
+    """The parameters of an activation reach the kernel. The values differ from the defaults, so losing
+    one would change the result."""
 
     name, layer, attribute, expected = case
     model = dense_chain(layer)
@@ -214,7 +218,7 @@ def test_folded_table_size(test_case_id):
     ],
 )
 def test_chain_length(test_case_id, n_layers, expected):
-    """Layers alternate dot and axpy, and a chain of odd length is given a leading conventional layer."""
+    """Layers alternate dot and axpy, and a chain of odd length starts with a plain layer."""
 
     model = dense_chain(lambda n: Activation('relu', name=n), n_layers=n_layers)
     fused, y_fused, y_latency = compare_with_latency(model, test_case_id)
@@ -225,8 +229,8 @@ def test_chain_length(test_case_id, n_layers, expected):
 
 @pytest.mark.parametrize('reuse_factor', [2, 4, 8, 16, 32, 64])
 def test_reuse_factor(test_case_id, reuse_factor):
-    """The result does not depend on the reuse factor. Below n_out every factor builds one design,
-    since a layer cannot use more multipliers than the dimension it iterates over."""
+    """The results do not depend on the reuse factor. Every reuse factor below the layer width builds
+    the same design, since a layer cannot use more multipliers than that."""
 
     model = dense_chain(lambda n: Activation('relu', name=n))
     fused, y_fused, y_latency = compare_with_latency(model, test_case_id, reuse_factor=reuse_factor)
@@ -245,8 +249,8 @@ def test_layers_of_different_sizes(test_case_id):
 
     assert forms(fused) == ['plain', 'dot', 'axpy']
     multipliers = [node.get_attr('fused_multipliers') for node in fused.get_layers() if node.name.startswith('fc')]
-    # The leading layer works through its outputs, as the axpy form does, so its 7 outputs are its
-    # limit; the pair after it is levelled to the lower of its two counts, the 7 inputs of the dot.
+    # The plain layer can use at most its 7 outputs; the dot and axpy pair after it gets the lower of
+    # their two counts, which is the 7 inputs of the dot.
     assert multipliers == [7, 7, 7]
     np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
@@ -272,18 +276,75 @@ def not_dense_between():
     return Model(inputs, Dense(N, name='fc1')(x))
 
 
-@pytest.mark.parametrize('build', [one_layer, two_readers, not_dense_between], ids=['single', 'two_readers', 'not_dense'])
+def scaling_after_activation():
+    """A scaling layer after each activation, where nothing merges it, so no chain forms. The activation
+    layers must stay when their Dense layers are not fused."""
+
+    inputs = Input(shape=(N,))
+    x = inputs
+    for i in range(3):
+        x = Dense(N, name=f'fc{i}')(x)
+        x = Activation('relu', name=f'act{i}')(x)
+        x = BatchNormalization(name=f'scale{i}')(x)
+    return Model(inputs, Dense(N, name='fc3')(x))
+
+
+@pytest.mark.parametrize(
+    'build',
+    [one_layer, two_readers, not_dense_between, scaling_after_activation],
+    ids=['single', 'two_readers', 'not_dense', 'scaling_after_activation'],
+)
 def test_what_ends_a_chain(test_case_id, build):
-    """Nothing is fused where a layer has no neighbour it can overlap with, and the numbers still match."""
+    """A layer with no neighbour to run alongside is not fused, and the results still match.
+
+    It is built with the resource strategy, at the reuse factor it was given.
+    """
 
     fused, y_fused, y_latency = compare_with_latency(build(), test_case_id)
 
-    assert forms(fused)[0] is None
+    left_out = [node for node in fused.get_layers() if node.name.startswith('fc')]
+    assert all(node.get_attr('fused_form') is None for node in left_out)
+    assert all(node.get_attr('strategy') == 'resource' for node in left_out)
+    assert all(node.get_attr('reuse_factor') == 4 for node in left_out)
     np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 
+def chain_and_a_layer_on_its_own():
+    """A chain of two, then a softmax, then a Dense layer with no neighbour to fuse with."""
+
+    inputs = Input(shape=(N,))
+    x = Dense(N, name='fc0')(inputs)
+    x = Activation('relu', name='act0')(x)
+    x = Dense(N, name='fc1')(x)
+    x = Activation('softmax', name='head')(x)
+    return Model(inputs, Dense(N, name='fc2')(x))
+
+
+REPORT_CASES = [
+    ('reported', {}),
+    ('silenced', {'FusedReport': False}),
+    ('style_replaced', {'FusedReport': False, 'PipelineStyle': 'pipeline'}),
+]
+
+
+@pytest.mark.parametrize('case', REPORT_CASES, ids=[case[0] for case in REPORT_CASES])
+def test_fusion_report(test_case_id, capsys, case):
+    """The conversion prints what was built, and FusedReport turns that off. Replacing a PipelineStyle
+    from the configuration is a warning and is printed either way."""
+
+    name, model_config = case
+    convert(chain_and_a_layer_on_its_own(), 'Fused', str(test_root_path / test_case_id), model_config=model_config)
+
+    printed = capsys.readouterr().out
+    reported = name == 'reported'
+    assert ('fc0 (dot' in printed and 'fc1 (axpy' in printed) == reported
+    assert ('asked for strategy' in printed) == reported
+    assert ('pipeline style "dataflow"' in printed) == reported
+    assert ('PipelineStyle "pipeline" replaced with "dataflow"' in printed) == (name == 'style_replaced')
+
+
 def test_other_layer_type_ends_the_chain(test_case_id, capsys):
-    """A layer type that does not implement the strategy is reported and built with its own strategy."""
+    """A layer type the strategy does not support is reported and built with the resource strategy."""
 
     inputs = Input(shape=(N, 2))
     x = Conv1D(2, 3, padding='same', name='conv')(inputs)
@@ -308,7 +369,7 @@ def test_other_layer_type_ends_the_chain(test_case_id, capsys):
 
 
 def test_chain_inside_a_larger_model(test_case_id):
-    """A chain fused inside a model of other layer types, which are built as they would be otherwise."""
+    """A chain inside a model with other layer types, which are built as usual."""
 
     inputs = Input(shape=(N, 2))
     x = Conv1D(4, 3, padding='same', activation='relu', name='conv')(inputs)
@@ -418,18 +479,19 @@ def test_precision_differs_between_layers(test_case_id):
 
 
 def test_scaling_layer_between_dense_layers(test_case_id):
-    """A scaling layer between Dense layers, as power-of-two weight quantisation produces, does not
-    end the chain."""
+    """A scaling layer straight after a Dense layer, where power-of-two weight quantisation places it,
+    is merged into that layer and does not end the chain."""
 
     inputs = Input(shape=(N,))
     x = inputs
     for i in range(3):
         x = Dense(N, name=f'fc{i}')(x)
-        x = Activation('relu', name=f'act{i}')(x)
         x = BatchNormalization(name=f'scale{i}')(x)
+        x = Activation('relu', name=f'act{i}')(x)
     model = Model(inputs, Dense(N, name='fc3')(x))
     fused, y_fused, y_latency = compare_with_latency(model, test_case_id)
 
+    assert forms(fused) == ['dot', 'axpy', 'dot', 'axpy']
     np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 

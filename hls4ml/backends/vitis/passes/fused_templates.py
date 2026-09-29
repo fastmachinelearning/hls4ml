@@ -2,8 +2,7 @@ from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Dense
 
-# Names of the folded activations as the kernel knows them. The fusion pass records the activation on the
-# Dense layer; anything not listed here is not folded and keeps its own layer.
+# The kernel's name for each activation that FoldActivationIntoFused can move into a Dense layer
 FUSED_ACTIVATIONS = {
     None: 'FUSED_LINEAR',
     'linear': 'FUSED_LINEAR',
@@ -78,12 +77,12 @@ class DenseFusedConfigTemplate(LayerConfigTemplate):
         params['table_size'] = node.get_attr('fused_table_size') or 1024
         table_t = node.get_attr('fused_table_t')
         params['table_t'] = table_t.name if table_t is not None else 'ap_fixed<18,8>'
-        # Each number keeps the type hls4ml gave it in the activation layer, since they differ
+        # Each parameter keeps the type it had in the activation layer
         params['param_t'] = self._type_name(node, 'fused_param_t', 'ap_fixed<16,6>')
         params['slope_t'] = self._type_name(node, 'fused_slope_t', 'ap_ufixed<16,0>')
         params['shift_t'] = self._type_name(node, 'fused_shift_t', 'ap_ufixed<2,0>')
-        # The type the activation is computed on: what the layer produced before the fold, or its own
-        # output type when no activation was folded into it.
+        # The type the activation is applied to: the output type before the fold, or the current output
+        # type when nothing was folded
         preact_t = node.get_attr('fused_preact_t')
         params['preact_t'] = preact_t.name if preact_t is not None else node.get_output_variable().type.name
         params['activation_param'] = node.get_attr('fused_activation_param', 0.0)

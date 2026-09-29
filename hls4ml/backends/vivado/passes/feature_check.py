@@ -7,12 +7,12 @@ FUSION_FLOW = 'fuse_dense'
 class ValidateFusedStrategy(OptimizerPass):
     """Stop a build that asks for the fused strategy on a backend that does not provide it.
 
-    The configured strategy is read rather than the layer attribute, so layer types whose initializer
-    ignores the value are reported instead of falling back to another strategy silently.
+    It reads the strategy from the configuration, not the layer attribute, so a layer type whose
+    initializer ignores the setting is still caught.
     """
 
     def match(self, node):
-        # Layers that take no strategy at all, such as the input, are not what the setting is about
+        # Layers without a strategy, such as the input layer
         if node.get_attr('strategy') is None:
             return False
         if str(node.model.config.get_strategy(node)).lower() != 'fused':

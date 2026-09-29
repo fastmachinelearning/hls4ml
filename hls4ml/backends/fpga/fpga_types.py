@@ -382,13 +382,9 @@ class StreamVariableConverter:
 class ScalarStreamVariableConverter:
     """Convert a tensor variable into a stream that carries one value at a time.
 
-    ``StreamVariableConverter`` wraps the type in a ``PackedType`` covering the last dimension, so a
-    single read of the stream returns all values of that dimension. This converter leaves the type alone,
-    so a read returns one value and the variable keeps its own precision.
-
-    This is what a layer needs in order to start work on the first value the layer before it produces,
-    instead of waiting for the complete tensor. It also means that in a chain of layers of different
-    precisions, each stream has the type of the layer that writes it.
+    Unlike ``StreamVariableConverter``, which packs the whole last dimension into each read, this keeps
+    the type of the variable, so each read returns a single value. A layer can then start on the first
+    value the layer before it produces, and each stream keeps the precision of the layer that writes it.
     """
 
     def __init__(self, type_converter, prefix, definition_cls):

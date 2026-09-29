@@ -30,16 +30,17 @@ class VitisBackend(VivadoBackend):
             'vitis:validate_resource_unrolled_strategy',
             'vitis:validate_bidirectional_merge_mode',
             'vitis:validate_bidirectional_io_type',
+            'vitis:validate_fused_io_type',
             'vitis:validate_std_cpp_types',
         ]
         validation_flow = register_flow('validation', validation_passes, requires=['vivado:init_layers'], backend=self.name)
 
-        # Marks the layers and their outputs, before vivado:specific_types turns them into variables
         fusion_passes = [
-            'vitis:fold_activation_into_fused',
             'vitis:plan_dense_fusion',
+            'vitis:substitute_unfused_strategy',
+            'vitis:fold_activation_into_fused',
             'vitis:layout_fused_dot_weights',
-            'vitis:validate_fused_configuration',
+            'vitis:validate_dense_fusion',
         ]
         fusion_flow = register_flow('fuse_dense', fusion_passes, requires=['vivado:init_layers'], backend=self.name)
 

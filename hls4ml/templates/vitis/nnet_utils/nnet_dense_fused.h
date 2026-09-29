@@ -11,10 +11,10 @@
 //
 //   dense_fused_dot   array in, stream out   weights w[j * n_in + i], transposed by the fusion pass
 //   dense_fused_axpy  stream in, array out   weights w[i * n_out + j], as hls4ml stores them
-//   dense_fused       array in, array out    the leading layer of a chain of odd length
+//   dense_fused       array in, array out    weights w[j * n_in + i], first layer of an odd-length chain
 //
 // A dot layer and the axpy layer after it run at the same time. The activation that followed the layer
-// is computed here; it gives the same numbers as its own layer, using the same tables and arithmetic.
+// is computed here, with the same tables and arithmetic as the separate layer, so the results are equal.
 
 namespace nnet {
 
@@ -63,8 +63,8 @@ struct dense_fused_config {
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
-// Fill the table with the function hls4ml uses for a separate layer. An activation that needs no table
-// leaves it untouched, and it is then removed as unused.
+// Fill the lookup table the same way the separate activation layer does. An activation without a table
+// leaves it empty, and the tool removes it.
 template <typename CONFIG_T> void fused_init_table(typename CONFIG_T::table_t table[CONFIG_T::table_size]) {
     if (CONFIG_T::activation == FUSED_SIGMOID) {
         init_sigmoid_table<CONFIG_T, CONFIG_T::table_size>(table);
@@ -172,8 +172,8 @@ void dense_fused(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
     typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=PAR
 
-    // All outputs together, one input at a time, as the axpy form does. The tool does not merge the
-    // loops of the one-output-at-a-time shape here, so every output would fill and empty the pipeline.
+    // All outputs together, one input at a time, like the axpy kernel. Written one output at a time,
+    // like the dot kernel, the loops are not merged here and the pipeline fills and empties per output.
 FusedFirst:
     for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
         #pragma HLS PIPELINE II=1
@@ -214,8 +214,7 @@ FusedResult:
     FUSED_PAD(CONFIG_T::pad_cycles)
 }
 
-// Array in, stream out: each output is written as soon as it is finished, which is what the layer
-// reading it overlaps with.
+// Array in, stream out: each output is written as soon as it is finished, so the next layer can start.
 template <class data_T, class res_T, typename CONFIG_T>
 void dense_fused_dot(data_T data[CONFIG_T::n_in], hls::stream<res_T> &res,
                      typename CONFIG_T::weight_t weights[CONFIG_T::n_out * CONFIG_T::n_in],
@@ -275,8 +274,8 @@ void dense_fused_axpy(hls::stream<data_T> &data, res_T res[CONFIG_T::n_out],
     typename CONFIG_T::table_t table[CONFIG_T::table_size];
     fused_init_table<CONFIG_T>(table);
 
-    // The first input is handled separately so the bias starts each sum. Choosing bias or accumulator
-    // inside the loop below costs no cycles but lengthens its longest path, and timing then fails.
+    // The first input has its own loop, which starts each sum from the bias. Choosing between bias and
+    // sum inside the main loop costs no cycles, but lengthens its critical path and timing then fails.
     data_T first = data.read();
 FusedAxpyFirst:
     for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
@@ -308,8 +307,8 @@ FusedAxpyAccum:
         }
     }
 
-// Applying the activation on the last input instead would save n_out / PAR cycles, but it lengthens
-// the longest path through that loop and timing then fails.
+// Applying the activation during the last input instead would save n_out / PAR cycles, but it
+// lengthens the critical path of that loop and timing then fails.
 FusedAxpyResult:
     for (unsigned j = 0; j < CONFIG_T::n_out; j++) {
         #pragma HLS UNROLL factor=PAR
