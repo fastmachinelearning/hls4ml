@@ -86,7 +86,6 @@ def test_keras_v3_numerical_profiling_conv_model():
 
 
 @pytest.mark.skipif(not __keras_profiling_enabled__, reason='Keras 3.0 or higher is required')
-@pytest.mark.skip(reason='convert_from_config needs update for Keras v3 model serialization format')
 def test_keras_v3_numerical_profiling_with_hls_model(test_case_id):
     """Test numerical profiling with both Keras v3 model and hls4ml model."""
     import hls4ml
@@ -101,8 +100,10 @@ def test_keras_v3_numerical_profiling_with_hls_model(test_case_id):
     # Generate test data
     X_test = np.random.rand(100, 8).astype(np.float32)
 
-    # Create hls4ml model
+    # Create hls4ml model, tracing every layer so that activations can be profiled
     config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    for layer in config['LayerName'].keys():
+        config['LayerName'][layer]['Trace'] = True
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,
@@ -113,6 +114,43 @@ def test_keras_v3_numerical_profiling_with_hls_model(test_case_id):
     )
 
     # Test profiling with both models
+    wp, wph, ap, aph = numerical(model, hls_model=hls_model, X=X_test)
+
+    assert wp is not None  # Keras model weights (before optimization)
+    assert wph is not None  # HLS model weights (after optimization)
+    assert ap is not None  # Keras model activations (before optimization)
+    assert aph is not None  # HLS model activations (after optimization)
+
+
+@pytest.mark.skipif(not __keras_profiling_enabled__, reason='Keras 3.0 or higher is required')
+def test_keras_v3_numerical_profiling_multiple_inputs(test_case_id):
+    """Test numerical profiling of a model with more than one input, of differing shapes."""
+    import hls4ml
+
+    input_1 = keras.Input(shape=(16, 21), name='basic_input')
+    input_2 = keras.Input(shape=(1,), name='jet_pt')
+    x = keras.layers.Flatten()(input_1)
+    x = keras.layers.Dense(8, activation='relu')(x)
+    x = keras.layers.Concatenate()([x, input_2])
+    outputs = keras.layers.Dense(4, activation='softmax')(x)
+    model = keras.Model(inputs=[input_1, input_2], outputs=outputs)
+    model.compile(optimizer='adam', loss='categorical_crossentropy')
+
+    # One array per model input, with different shapes
+    X_test = [np.random.rand(10, 16, 21).astype(np.float32), np.random.rand(10, 1).astype(np.float32)]
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+    for layer in config['LayerName'].keys():
+        config['LayerName'][layer]['Trace'] = True
+
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=str(Path(__file__).parent / test_case_id),
+        backend='Vivado',
+    )
+    hls_model.compile()
+
     wp, wph, ap, aph = numerical(model, hls_model=hls_model, X=X_test)
 
     assert wp is not None  # Keras model weights (before optimization)

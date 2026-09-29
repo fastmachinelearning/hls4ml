@@ -327,7 +327,10 @@ def activations_hlsmodel(model, X, fmt='summary', plot='boxplot'):
     elif fmt == 'summary':
         data = []
 
-    _, trace = model.trace(np.ascontiguousarray(X))
+    if isinstance(X, (list, tuple)):
+        _, trace = model.trace([np.ascontiguousarray(x) for x in X])
+    else:
+        _, trace = model.trace(np.ascontiguousarray(X))
 
     if len(trace) == 0:
         raise RuntimeError('ModelGraph must have tracing on for at least 1 layer (this can be set in its config)')
@@ -457,8 +460,11 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     Args:
         model (optional): Keras of PyTorch model. Defaults to None.
         hls_model (ModelGraph, optional): The ModelGraph to profile. Defaults to None.
-        X (ndarray, optional): Test data on which to evaluate the model to profile activations.
-            Must be formatted suitably for the ``model.predict(X)``. Defaults to None.
+        X (ndarray or list of ndarray, optional): Test data on which to evaluate the model to profile
+            activations. Must be formatted suitably for the ``model.predict(X)``. For models with
+            multiple inputs, pass a list holding one array per model input, ordered as
+            ``hls_model.get_input_variables()`` (i.e. the order of the inputs of the original model).
+            Defaults to None.
         plot (str, optional): The type of plot to produce. Options are: 'boxplot' (default), 'violinplot', 'histogram',
             'FacetGrid'. Defaults to 'boxplot'.
 
@@ -682,7 +688,9 @@ def compare(keras_model, hls_model, X, plot_type='dist_diff'):
     Args:
         keras_model: Original keras model.
         hls_model (ModelGraph): Converted ModelGraph, with "Trace:True" in the configuration file.
-        X (ndarray): Input tensor for the model.
+        X (ndarray or list of ndarray): Input tensor for the model. For models with multiple inputs,
+            pass a list holding one array per model input, ordered as
+            ``hls_model.get_input_variables()`` (i.e. the order of the inputs of the original model).
         plot_type (str, optional): Different methods to visualize the y_model and y_sim differences.
             Possible options include:
             - 'norm_diff':: square root of the sum of the squares of the differences between each output vectors.
@@ -696,7 +704,10 @@ def compare(keras_model, hls_model, X, plot_type='dist_diff'):
     # Take in output from both models
     # Note that each y is a dictionary with structure {"layer_name": flattened ouput array}
     ymodel = get_ymodel_keras(keras_model, X)
-    _, ysim = hls_model.trace(X)
+    if isinstance(X, (list, tuple)):
+        _, ysim = hls_model.trace([np.ascontiguousarray(x) for x in X])
+    else:
+        _, ysim = hls_model.trace(np.ascontiguousarray(X))
 
     print('Plotting difference...')
     f = plt.figure()
