@@ -59,23 +59,30 @@ def get_vitis_optimized_fifo_depths(model, hls_prj_path):
         zip_ref.extractall(path_to_zip_file)
 
     # the channel_info.csv file contains the mapping of each fifo name (i.e layer4_out_U) to the respective
-    # chan_status*.csv file
+    # chan_status*.csv file. Each row is "<instance path>,<fifo name>,,<chan_status file>". The instance path is empty
+    # for FIFOs of the top function (Vitis backend) and non-empty when the model is wrapped (Vitis Unified backend), so
+    # rows are selected by FIFO name instead, which also skips the wrapper's own streams.
     names_file_path = hls_prj_path + '/.autopilot/db/channel_info.csv'
+
+    model_fifo_names = {output_variable.name for output_variable in model.output_vars.values()}
 
     csv_fifo_depth_files = {}
     with open(names_file_path) as names_file:
         for line in names_file:
-            fields = line.split(',')
-            if len(fields[0]) == 0:
+            fields = [field.strip() for field in line.split(',')]
+            if len(fields) < 4:
                 continue
-            csv_fifo_depth_files[fields[1]] = fields[3][:-1]
+            # remove "_U" or "_i_U" (AXI stream wrapper) from the name
+            fifo_name = re.sub(r'(_i)?_U$', '', fields[1])
+            if fifo_name in model_fifo_names:
+                csv_fifo_depth_files[fifo_name] = fields[3]
 
     optimized_fifo_depths = {}
-    for layer_name, file_name in csv_fifo_depth_files.items():
+    for fifo_name, file_name in csv_fifo_depth_files.items():
         with open(path_to_zip_file + file_name) as chan_status_file:
             lines = chan_status_file.readlines()
-            # remove "_U" or "_i_U" (AXI stream wrapper) from the name and keep the last line that contains the max depth
-            optimized_fifo_depths[re.sub(r'(_i)?_U$', '', layer_name)] = int(lines[-1])
+            # keep the last line that contains the max depth
+            optimized_fifo_depths[fifo_name] = int(lines[-1])
 
     return optimized_fifo_depths
 
@@ -194,6 +201,13 @@ class FifoDepthOptimizationPost(ModelOptimizerPass):
     def transform(self, model):
         optimized_fifo_depths = get_vitis_optimized_fifo_depths(model, self.get_hls_project_path(model))
         depths = _read_depths_file(model)
+        missing_fifos = [fifo_name for fifo_name in depths if fifo_name not in optimized_fifo_depths]
+        if missing_fifos:
+            raise RuntimeError(
+                f'FIFO depth optimization could not find the profiled depths of {", ".join(missing_fifos)} in '
+                f'{self.get_hls_project_path(model)}/.autopilot/db/channel_info.csv. Make sure that the co-simulation '
+                'completed successfully.'
+            )
         for fifo_name in depths:
             depths[fifo_name]['optimized'] = optimized_fifo_depths[fifo_name]
         _write_depths_file(model, depths)
