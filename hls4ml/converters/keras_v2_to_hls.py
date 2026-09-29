@@ -232,6 +232,7 @@ def parse_keras_model(model_arch, reader):
         'Activation',
         'LeakyReLU',
         'ThresholdedReLU',
+        'ClippedReLU',
         'ELU',
         'PReLU',
         'Softmax',

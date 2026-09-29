@@ -263,9 +263,17 @@ def _(layer: SparseFlatten):
 
 @_request_kif.register
 def _(layer: DACombinational):
-    comb = layer.attributes['da_comb_trace']
+    comb = layer.attributes['da_comb_logic']
     k, i, f = comb.inp_kifs
-    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
+    inp_shapes = get_input_shapes(layer)
+    kk, ii, ff = [], [], []
+    bias = 0
+    for shape in inp_shapes:
+        size = prod(shape)
+        kk.append(k[bias : bias + size].reshape(shape).astype(np.int16))
+        ii.append(i[bias : bias + size].reshape(shape).astype(np.int16))
+        ff.append(f[bias : bias + size].reshape(shape).astype(np.int16))
+    return tuple(zip(kk, ii, ff))
 
 
 def requested_kif(layer: Layer) -> KIF_t:
@@ -550,14 +558,42 @@ def _(layer: Conv1D | Conv2D):
     bias = _bias.data if _bias is not None else 0
     k_in, i_in, f_in = get_input_kifs(layer)[0]
     k_in, i_in, f_in = pad_arrs(layer, 0, k_in, i_in, f_in)
-    k_in, i_in, f_in = im2col(kernel.shape, k_in, i_in, f_in)
-    k_in, i_in, f_in = stride_arrs(layer, k_in, i_in, f_in)
-    kernel = kernel.reshape(-1, kernel.shape[-1])
-    qint_in = QIntervalArray.from_kif(k_in, i_in, f_in)
-    qint_out = qint_in @ kernel
-    qint_out = qint_out + bias
-    k, i, f = qint_out.to_kif()
-    return k.astype(np.int16), i, f
+
+    in_per_group = kernel.shape[-2]
+    n_chan = k_in.shape[-1]
+    if in_per_group == n_chan:
+        k_in, i_in, f_in = im2col(kernel.shape, k_in, i_in, f_in)
+        k_in, i_in, f_in = stride_arrs(layer, k_in, i_in, f_in)
+        kernel = kernel.reshape(-1, kernel.shape[-1])
+        qint_in = QIntervalArray.from_kif(k_in, i_in, f_in)
+        qint_out = qint_in @ kernel
+        qint_out = qint_out + bias
+        k, i, f = qint_out.to_kif()
+        return k.astype(np.int16), i, f
+
+    # Grouped/depthwise: process each group as an independent conv over its channel
+    # slice and concatenate along the channel axis.
+    out_chan = kernel.shape[-1]
+    groups = n_chan // in_per_group
+    out_per_group = out_chan // groups
+    k_outs, i_outs, f_outs = [], [], []
+    for g in range(groups):
+        in_sl = slice(g * in_per_group, (g + 1) * in_per_group)
+        out_sl = slice(g * out_per_group, (g + 1) * out_per_group)
+        kernel_g = kernel[..., out_sl]
+        kg, ig, fg = im2col(kernel_g.shape, k_in[..., in_sl], i_in[..., in_sl], f_in[..., in_sl])
+        kg, ig, fg = stride_arrs(layer, kg, ig, fg)
+        qint_in = QIntervalArray.from_kif(kg, ig, fg)
+        qint_out = qint_in @ kernel_g.reshape(-1, out_per_group)
+        qint_out = qint_out + (bias[out_sl] if _bias is not None else 0)
+        k, i, f = qint_out.to_kif()
+        k_outs.append(k)
+        i_outs.append(i)
+        f_outs.append(f)
+    k = np.concatenate(k_outs, axis=-1).astype(np.int16)
+    i = np.concatenate(i_outs, axis=-1)
+    f = np.concatenate(f_outs, axis=-1)
+    return k, i, f
 
 
 @_produce_kif.register(Pooling1D)
@@ -710,14 +746,17 @@ def _(layer: UnaryLUT):
 
 @_produce_kif.register
 def _(layer: DACombinational):
-    from da4ml.trace import FixedVariableArray, comb_trace
+    from alkaid.trace import FVArray, trace
 
-    k_in, i_in, f_in = get_input_kifs(layer)[0]
-    inp = FixedVariableArray.from_kif(k_in, i_in, f_in)
-    out = layer.attributes['da_comb_logic'](inp)
-    comb = comb_trace(inp, out)
+    kifs = [np.array(kif).reshape(3, -1) for kif in get_input_kifs(layer)]
+    kif = np.concatenate(kifs, axis=1)
+    inp = FVArray.from_kif(*kif)
+    out = layer.attributes['da_comb_logic'](inp.ravel())
+    comb = trace(inp, out)
     k, i, f = comb.out_kifs
-    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
+    shape = get_output_shape(layer)
+
+    return (k.astype(np.int16).reshape(shape), i.astype(np.int16).reshape(shape), f.astype(np.int16).reshape(shape))
 
 
 @_produce_kif.register
@@ -796,14 +835,15 @@ def _(layer: SparseActivation):
 @_produce_kif.register
 def _(layer: SparsePooling2D):
     k_in, i_in, f_in = get_input_kifs(layer)[0]
-    # Average pooling divides by pool_size^2, which adds ceil(log2(pool_size^2)) fractional bits
-    # (matching standard Pooling2D). Max pooling just selects an input, so the precision is unchanged.
-    pool_size = layer.attributes['pool_size']
+    # Average pooling divides by the pool area, which adds ceil(log2(pool_height * pool_width))
+    # fractional bits (matching standard Pooling2D). Max pooling just selects an input, so the
+    # precision is unchanged.
+    pool_area = layer.attributes['pool_height'] * layer.attributes['pool_width']
     n_chan = layer.attributes['n_chan']
     if layer.attributes.get('pool_op', 'avg') == 'max':
         extra_f = 0
     else:
-        extra_f = int(np.ceil(np.log2(pool_size * pool_size)))
+        extra_f = int(np.ceil(np.log2(pool_area)))
     k_ch = k_in[:n_chan]
     i_ch = i_in[:n_chan]
     f_ch = f_in[:n_chan] + extra_f

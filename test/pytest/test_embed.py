@@ -76,3 +76,16 @@ def test_embedding_accuracy(data, keras_model, hls_model):
     y_hls4ml = hls_model.predict(X.astype(float)).reshape(y_keras.shape)
     # "accuracy" of hls4ml predictions vs keras
     np.testing.assert_allclose(y_keras, y_hls4ml, rtol=0, atol=1e-03, verbose=True)
+
+
+def test_embedding_rejects_mask_zero(test_case_id):
+    """mask_zero=True implies masking semantics that hls4ml cannot represent."""
+    inputs = Input(shape=(10,), name='embedding_input', dtype='int32')
+    embedding = Embedding(input_dim=650, output_dim=2, mask_zero=True, name='embedding')(inputs)
+    model = Model(inputs=inputs, outputs=embedding)
+
+    with pytest.raises(NotImplementedError, match='mask_zero'):
+        config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+        hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, output_dir=str(test_root_path / test_case_id), backend='Vivado'
+        )

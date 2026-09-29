@@ -39,7 +39,11 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader):
     elif '2D' in keras_layer['class_name']:
         layer, output_shape = parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader)
 
-    layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
+    if layer['class_name'].startswith('DepthwiseConv'):
+        # Depthwise-shaped grouped QConv is routed to DepthwiseConv by the base parser
+        layer['depthwise_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
+    else:
+        layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
     layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
 
     return layer, output_shape

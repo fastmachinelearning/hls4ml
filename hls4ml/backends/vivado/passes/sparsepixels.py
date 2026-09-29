@@ -62,9 +62,9 @@ class SparseGraphOptimizer(OptimizerPass):
                 n.set_attr('hash_in_name', h_in)
                 n.set_attr('hash_out_name', h_out)
                 hash_map[name] = h_out
-                ps = n.get_attr('pool_size')
+                ph, pw = n.get_attr('pool_height'), n.get_attr('pool_width')
                 prev_h, prev_w = spatial.get(src, spatial.get(n.inputs[0], (0, 0)))
-                spatial[name] = (prev_h // ps, prev_w // ps)
+                spatial[name] = (prev_h // ph, prev_w // pw)
 
             elif isinstance(n, SparseFlatten):
                 src = n.inputs[0]
@@ -134,7 +134,10 @@ sparse_activation_config = """struct config{index} {{
 sparse_pooling2d_config = """struct config{index} {{
     static const unsigned n_sparse = {n_sparse};
     static const unsigned n_chan = {n_chan};
-    static const unsigned pool_size = {pool_size};
+    static const unsigned in_height = {in_height};
+    static const unsigned in_width = {in_width};
+    static const unsigned pool_height = {pool_height};
+    static const unsigned pool_width = {pool_width};
     typedef {accum_t.name} accum_t;
 }};\n"""
 
@@ -217,12 +220,14 @@ sparse_pooling2d_prefix = (
 # Average pooling takes an accum_t; max pooling does not. Both take the two parallelization factors.
 sparse_pooling2d_avg_call = (
     'sparse_pooling_avg<{input_t}, {output_t}, ap_uint<{hash_bits}>, {accum_t_name}, '
-    '{n_sparse}, {n_chan}, {pool_size}, {pixel_parallel_factor}, {chan_parallel_factor}>'
+    '{n_sparse}, {n_chan}, {in_height}, {in_width}, {pool_height}, {pool_width}, '
+    '{pixel_parallel_factor}, {chan_parallel_factor}>'
     '({input}, {output}, {hash_in}, {hash_out});'
 )
 sparse_pooling2d_max_call = (
     'sparse_pooling_max<{input_t}, {output_t}, ap_uint<{hash_bits}>, '
-    '{n_sparse}, {n_chan}, {pool_size}, {pixel_parallel_factor}, {chan_parallel_factor}>'
+    '{n_sparse}, {n_chan}, {in_height}, {in_width}, {pool_height}, {pool_width}, '
+    '{pixel_parallel_factor}, {chan_parallel_factor}>'
     '({input}, {output}, {hash_in}, {hash_out});'
 )
 
@@ -309,7 +314,10 @@ class SparsePooling2DFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         params['n_sparse'] = node.get_attr('n_sparse')
         params['n_chan'] = node.get_attr('n_chan')
-        params['pool_size'] = node.get_attr('pool_size')
+        params['in_height'] = node.get_attr('in_height')
+        params['in_width'] = node.get_attr('in_width')
+        params['pool_height'] = node.get_attr('pool_height')
+        params['pool_width'] = node.get_attr('pool_width')
         params['hash_bits'] = _get_hash_bits(node)
         params['hash_in'] = node.get_attr('hash_in_name')
         params['hash_out'] = node.get_attr('hash_out_name')

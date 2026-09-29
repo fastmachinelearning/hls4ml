@@ -3,9 +3,9 @@ FIFO Buffer Depth Optimization
 ==============================
 
 With the ``io_stream`` IO type, each layer is connected with the subsequent layer through first-in first-out (FIFO) buffers.
-The implementation of the FIFO buffers contribute to the overall resource utilization of the design, impacting in particular the BRAM or LUT utilization.
+The implementation of the FIFO buffers contributes to the overall resource utilization of the design, impacting in particular the BRAM or LUT utilization.
 Because the neural networks can have complex architectures generally, it is hard to know a priori the correct depth of each FIFO buffer.
-By default ``hls4ml`` choses the most conservative possible depth for each FIFO buffer, which can result in a an unnecessary over-utilization of resources.
+By default ``hls4ml`` chooses the most conservative possible depth for each FIFO buffer, which can result in an unnecessary over-utilization of resources.
 
 In order to reduce the impact on the resources used for FIFO buffer implementation, an optimization flow has been developed that correctly sizes the depth
 of the FIFO buffers by analyzing the RTL co-simulation. This feature is currently available in ``Vitis`` and ``Vivado`` backends.

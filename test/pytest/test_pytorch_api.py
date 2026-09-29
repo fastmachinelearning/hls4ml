@@ -22,9 +22,11 @@ class LinearModel(nn.Module):
         return self.linear(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_linear(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = LinearModel()
     model.eval()
 
@@ -74,9 +76,11 @@ def test_linear(test_case_id, backend, io_type):
     ],
     ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'prelu', 'sigmoid', 'threshold'],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(test_case_id, activation_function, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = torch.nn.Sequential(nn.Linear(1, 1), activation_function).to()
     model.eval()
 
@@ -85,7 +89,13 @@ def test_activations(test_case_id, activation_function, backend, io_type):
 
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    config = config_from_pytorch_model(model, (1,))
+    config = config_from_pytorch_model(model, (1,), granularity='name')
+    # XLS uses a custom algorithm for determining lookup table boundaries,
+    # so we need to increase the table size for some activations
+    # (note that other backends use a hardcoded range [-8; 8]).
+    # See hls4ml/backends/xls/passes/build_tables.py
+    if backend == 'XLS' and activation_function.__class__.__name__ == 'Tanh':
+        config['LayerName']['_1']['TableSize'] = 4096
     output_dir = str(test_root_path / test_case_id)
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
     hls_model.compile()
@@ -181,9 +191,11 @@ class SigmoidModel(nn.Module):
     ],
     ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'sigmoid', 'threshold'],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activation_functionals(test_case_id, activation_function, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = activation_function
     model.eval()
 
@@ -215,9 +227,11 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(test_case_id, padds, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -322,9 +336,11 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(test_case_id, padds, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     n_in = 2
     n_out = 2
     kernel_size = 3
@@ -477,7 +493,7 @@ pooling_layers = [MaxPool1d, MaxPool2d, AvgPool1d, AvgPool2d]
 
 @pytest.mark.parametrize('pooling', pooling_layers, ids=['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d'])
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_pooling(test_case_id, pooling, padds, backend):
     assert '1d' in pooling.__name__ or '2d' in pooling.__name__
 
@@ -597,9 +613,11 @@ class BatchNormModel(nn.Module):
         return self.bn(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_bn(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = BatchNormModel()
     model.eval()
 
@@ -638,6 +656,7 @@ class SqueezeModel(nn.Module):
         return x
 
 
+# TODO: this test fails for XLS due to PyTorch weights shape mismatch.
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_squeeze(test_case_id, backend, io_type):
@@ -673,7 +692,7 @@ def test_squeeze(test_case_id, backend, io_type):
         assert list(hls_model.get_layers())[3].attributes['target_shape'] == [3]
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_flatten(test_case_id, backend):
     input = torch.randn(1, 1, 5, 5)
     model = nn.Sequential(nn.Conv2d(1, 32, 5, 1, 1), nn.Flatten(), nn.ReLU())
@@ -717,9 +736,11 @@ class ModelSkippedLayers(nn.Module):
         return x
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_skipped_layers(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     model = ModelSkippedLayers()
     model.eval()
 
@@ -750,7 +771,7 @@ def test_skipped_layers(test_case_id, backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # Only io_parallel for now
 @pytest.mark.parametrize('tensor_rank', [2, 3])
 def test_remove_transpose(test_case_id, backend, io_type, tensor_rank):
@@ -817,9 +838,12 @@ def test_remove_transpose(test_case_id, backend, io_type, tensor_rank):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_view(test_case_id, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     class TestModel(nn.Module):
         def __init__(self, n_in, n_out, size_in):
             super().__init__()
@@ -984,3 +1008,274 @@ def test_einsum_single_input(test_case_id, backend, io_type):
     hls_prediction = np.reshape(hls_model.predict(X_input), pytorch_prediction.shape)
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=0.01)
+
+
+# ---------------------------------------------------------------------------- #
+# Parser behavior for configurations that used to be silently misparsed:
+# faithful 'same'/'valid' padding, positional arguments of functional calls,
+# clipped ReLU activations and rejects of unsupported options.
+# ---------------------------------------------------------------------------- #
+
+
+def _convert_parse_only(model, test_case_id, input_shape, io_type='io_parallel'):
+    """Converts without compiling, to assert parse results and parse-time rejects."""
+    config = config_from_pytorch_model(model, input_shape, channels_last_conversion='off', transpose_outputs=False)
+    output_dir = str(test_root_path / test_case_id)
+    return convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type=io_type)
+
+
+@pytest.mark.parametrize('kernel_size', [1, 2, 3, 4, 5, 7])
+@pytest.mark.parametrize('padds', ['same', 'valid'])
+def test_conv1d_string_padding(test_case_id, kernel_size, padds):
+    n_chan = 2
+    size_in = 8
+
+    model = torch.nn.Sequential(nn.Conv1d(n_chan, n_chan, kernel_size, padding=padds)).to()
+    model.eval()
+
+    X_input = np.random.rand(5, n_chan, size_in)
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    config = config_from_pytorch_model(model, (n_chan, size_in), channels_last_conversion='full', transpose_outputs=True)
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(
+        model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type='io_parallel'
+    )
+    hls_model.compile()
+
+    hls_prediction = np.reshape(hls_model.predict(X_input), pytorch_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
+
+
+@pytest.mark.parametrize('kernel_size', [3, 4])
+@pytest.mark.parametrize('padds', ['same', 'valid'])
+def test_conv2d_string_padding(test_case_id, kernel_size, padds):
+    n_chan = 2
+    size_in = 8
+
+    model = torch.nn.Sequential(nn.Conv2d(n_chan, n_chan, kernel_size, padding=padds)).to()
+    model.eval()
+
+    X_input = np.random.rand(5, n_chan, size_in, size_in)
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    config = config_from_pytorch_model(
+        model, (n_chan, size_in, size_in), channels_last_conversion='full', transpose_outputs=True
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(
+        model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type='io_parallel'
+    )
+    hls_model.compile()
+
+    hls_prediction = np.reshape(hls_model.predict(X_input), pytorch_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
+
+
+def test_conv2d_asymmetric_dilation_rejected(test_case_id):
+    model = torch.nn.Sequential(nn.Conv2d(2, 2, 3, dilation=(2, 1)))
+    model.eval()
+
+    with pytest.raises(NotImplementedError, match='dilation'):
+        _convert_parse_only(model, test_case_id, (2, 8, 8))
+
+
+class FunctionalCallModel(nn.Module):
+    """Wraps a function of one tensor, so that it traces as a functional call."""
+
+    def __init__(self, function):
+        super().__init__()
+        self.function = function
+        self.linear = nn.Linear(4, 4)
+
+    def forward(self, x):
+        return self.function(self.linear(x))
+
+
+functional_activations = {
+    'leaky_relu_positional': lambda x: torch.nn.functional.leaky_relu(x, 0.2),
+    'leaky_relu_default': lambda x: torch.nn.functional.leaky_relu(x),
+    'elu_positional': lambda x: torch.nn.functional.elu(x, 0.5),
+    'threshold_positional': lambda x: torch.nn.functional.threshold(x, 0.5, 0.0),
+    'softmax_positional': lambda x: torch.nn.functional.softmax(x, 1),
+}
+
+
+@pytest.mark.parametrize('activation', functional_activations.keys())
+def test_functional_activation_arguments(test_case_id, activation):
+    """Functional activations with positional (or omitted) arguments parse and match torch."""
+    model = FunctionalCallModel(functional_activations[activation])
+    model.eval()
+
+    X_input = np.random.rand(10, 4)
+    X_input = np.round(X_input * 2**10) * 2**-10
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    config = config_from_pytorch_model(model, (4,))
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(
+        model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type='io_parallel'
+    )
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(X_input)
+    # the table-based softmax is coarser than the other activations at the default precision
+    atol = 0.05 if 'softmax' in activation else 0.01
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=atol)
+
+
+@pytest.mark.parametrize('activation', ['relu6_module', 'hardtanh_module', 'relu6_functional', 'hardtanh_functional'])
+def test_clipped_relu_parsed(test_case_id, activation):
+    # ReLU6 and Hardtanh(0, x) are ingested as the ClippedReLU parametrized activation.
+    # No kernel computes it yet; the backends are responsible for rejecting it.
+    if activation == 'relu6_module':
+        model = torch.nn.Sequential(nn.Linear(4, 4), nn.ReLU6())
+        max_value = 6.0
+    elif activation == 'hardtanh_module':
+        model = torch.nn.Sequential(nn.Linear(4, 4), nn.Hardtanh(0.0, 4.0))
+        max_value = 4.0
+    elif activation == 'relu6_functional':
+        model = FunctionalCallModel(lambda x: torch.nn.functional.relu6(x))
+        max_value = 6.0
+    else:
+        model = FunctionalCallModel(lambda x: torch.nn.functional.hardtanh(x, 0.0, 4.0))
+        max_value = 4.0
+    model.eval()
+
+    hls_model = _convert_parse_only(model, test_case_id, (4,))
+
+    act_layer = list(hls_model.get_layers())[-1]
+    assert act_layer.attributes['activation'] == 'clippedrelu'
+    assert act_layer.attributes['activ_param'] == max_value
+
+
+def test_hardtanh_below_zero_rejected(test_case_id):
+    model = torch.nn.Sequential(nn.Linear(4, 4), nn.Hardtanh())  # min_val=-1 by default
+    model.eval()
+
+    with pytest.raises(NotImplementedError, match='min_val'):
+        _convert_parse_only(model, test_case_id, (4,))
+
+
+def test_threshold_replacement_value_rejected(test_case_id):
+    # nn.Threshold(threshold, value) outputs `value` below the threshold; only 0 maps to ThresholdedReLU
+    model = torch.nn.Sequential(nn.Linear(4, 4), nn.Threshold(1.0, 5.0))
+    model.eval()
+
+    with pytest.raises(NotImplementedError, match='replacement value'):
+        _convert_parse_only(model, test_case_id, (4,))
+
+
+class FunctionalPoolModel(nn.Module):
+    """Wraps a pooling function of one tensor, so that it traces as a functional call."""
+
+    def __init__(self, function):
+        super().__init__()
+        self.function = function
+
+    def forward(self, x):
+        return self.function(x)
+
+
+functional_pools = {
+    'max_pool1d_positional': (lambda x: torch.nn.functional.max_pool1d(x, 2, 2), 1),
+    'max_pool2d_default_stride': (lambda x: torch.nn.functional.max_pool2d(x, 2), 2),
+    'avg_pool1d_positional': (lambda x: torch.nn.functional.avg_pool1d(x, 2, 2), 1),
+    'avg_pool2d_no_count_include_pad': (lambda x: torch.nn.functional.avg_pool2d(x, 2, 2, 1, False, False), 2),
+}
+
+
+@pytest.mark.parametrize('pool', functional_pools.keys())
+def test_functional_pooling_arguments(test_case_id, pool):
+    """Functional pooling with positional (or omitted) arguments parses and matches torch."""
+    function, dims = functional_pools[pool]
+    n_chan = 2
+    size_in = 8
+
+    model = FunctionalPoolModel(function)
+    model.eval()
+
+    input_shape = (n_chan, size_in) if dims == 1 else (n_chan, size_in, size_in)
+    X_input = np.random.rand(5, *input_shape)
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    config = config_from_pytorch_model(model, input_shape, channels_last_conversion='full', transpose_outputs=True)
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(
+        model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type='io_parallel'
+    )
+    hls_model.compile()
+
+    hls_prediction = np.reshape(hls_model.predict(X_input), pytorch_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
+
+
+pooling_rejects = {
+    'ceil_mode': (lambda: nn.MaxPool2d(2, ceil_mode=True), 'ceil_mode'),
+    'dilation': (lambda: nn.MaxPool1d(3, stride=1, dilation=2), 'dilation'),
+    'divisor_override': (lambda: nn.AvgPool2d(2, divisor_override=3), 'divisor_override'),
+}
+
+
+@pytest.mark.parametrize('reject', pooling_rejects.keys())
+def test_pooling_option_rejected(test_case_id, reject):
+    layer_factory, match = pooling_rejects[reject]
+    model = torch.nn.Sequential(layer_factory())
+    model.eval()
+
+    input_shape = (2, 8) if '1d' in type(model[0]).__name__.lower() else (2, 8, 8)
+    with pytest.raises(NotImplementedError, match=match):
+        _convert_parse_only(model, test_case_id, input_shape)
+
+
+functional_pooling_rejects = {
+    # signature positions: max_pool(input, kernel_size, stride, padding, dilation, ceil_mode),
+    # avg_pool2d(input, kernel_size, stride, padding, ceil_mode, count_include_pad, divisor_override)
+    'ceil_mode': (lambda x: torch.nn.functional.max_pool2d(x, 2, 2, 0, 1, True), (2, 8, 8), 'ceil_mode'),
+    'dilation': (lambda x: torch.nn.functional.max_pool1d(x, 3, 1, 0, 2), (2, 8), 'dilation'),
+    'divisor_override': (
+        lambda x: torch.nn.functional.avg_pool2d(x, 2, 2, 0, False, True, 3),
+        (2, 8, 8),
+        'divisor_override',
+    ),
+}
+
+
+@pytest.mark.parametrize('reject', functional_pooling_rejects.keys())
+def test_functional_pooling_option_rejected(test_case_id, reject):
+    """The unsupported pooling options are also rejected when passed positionally to the functional forms."""
+    function, input_shape, match = functional_pooling_rejects[reject]
+    model = FunctionalPoolModel(function)
+    model.eval()
+
+    with pytest.raises(NotImplementedError, match=match):
+        _convert_parse_only(model, test_case_id, input_shape)
+
+
+def test_view_literal_batch_size(test_case_id):
+    """A literal batch size in view() must not corrupt the deduction of a -1 entry."""
+
+    class ViewModel(nn.Module):
+        # the linear layer keeps the reshape from being the final layer, which would be optimized away
+        def __init__(self):
+            super().__init__()
+            self.linear = nn.Linear(12, 4)
+
+        def forward(self, x):
+            return self.linear(x.view(4, -1))
+
+    model = ViewModel()
+    model.eval()
+
+    hls_model = _convert_parse_only(model, test_case_id, (2, 6))
+
+    reshape_layer = next(layer for layer in hls_model.get_layers() if layer.attributes['class_name'] == 'Reshape')
+    assert reshape_layer.attributes['target_shape'] == [12]
+
+
+def test_functional_threshold_replacement_value_rejected(test_case_id):
+    model = FunctionalCallModel(lambda x: torch.nn.functional.threshold(x, 0.5, 5.0))
+    model.eval()
+
+    with pytest.raises(NotImplementedError, match='replacement value'):
+        _convert_parse_only(model, test_case_id, (4,))

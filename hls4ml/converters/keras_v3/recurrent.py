@@ -29,6 +29,13 @@ class RecurentHandler(KerasV3LayerHandler):
 
         if layer.return_state:
             raise Exception(f'return_state=True is not supported for {layer.__class__} layer.')
+        if layer.go_backwards:
+            raise NotImplementedError(f'Layer {layer.name}: go_backwards=True is not supported.')
+        if layer.stateful:
+            print(
+                f'WARNING: "stateful" of layer {layer.name} is ignored; '
+                'hls4ml inference does not carry state between inputs.'
+            )
 
         config = {
             'direction': 'forward',
@@ -46,8 +53,13 @@ class RecurentHandler(KerasV3LayerHandler):
         if layer.use_bias:
             if isinstance(layer, keras.layers.GRU):
                 bias = self.load_weight(layer.cell, 'bias')
-                config['bias_data'] = bias[0]
-                config['recurrent_bias_data'] = bias[1]
+                if layer.reset_after:
+                    config['bias_data'] = bias[0]
+                    config['recurrent_bias_data'] = bias[1]
+                else:
+                    # reset_after=False has a single flat bias and no recurrent bias
+                    config['bias_data'] = bias
+                    config['recurrent_bias_data'] = np.zeros_like(bias)
             else:
                 config['bias_data'] = self.load_weight(layer.cell, 'bias')
         else:
@@ -96,6 +108,10 @@ class BidirectionalHandler(KerasV3LayerHandler):
         for rnn_layer in [rnn_forward_layer, rnn_backward_layer]:
             class_name = rnn_layer.__class__.__name__
             assert class_name in rnn_layers or class_name[1:] in rnn_layers
+            if 'SimpleRNN' in class_name:
+                raise NotImplementedError(
+                    f'Layer {layer.name}: Bidirectional is only supported with LSTM or GRU sub-layers.'
+                )
 
         config = {}
 
@@ -110,6 +126,9 @@ class BidirectionalHandler(KerasV3LayerHandler):
         config['n_timesteps'] = in_tensors[0].shape[1]
         config['n_in'] = in_tensors[0].shape[2]
         config['merge_mode'] = layer.merge_mode
+        if layer.merge_mode is None:
+            # merge_mode=None returns two separate output tensors, which the Bidirectional layer cannot represent
+            raise NotImplementedError(f'Layer {layer.name}: merge_mode=None is not supported.')
 
         for direction, rnn_layer in [('forward', rnn_forward_layer), ('backward', rnn_backward_layer)]:
             config[f'{direction}_name'] = rnn_layer.name
@@ -127,10 +146,15 @@ class BidirectionalHandler(KerasV3LayerHandler):
             config[f'{direction}_recurrent_weight_data'] = self.load_weight(rnn_layer.cell, 'recurrent_kernel')
 
             if rnn_layer.use_bias:
-                if isinstance(rnn_layer.cell, keras.layers.GRU):
+                if isinstance(rnn_layer, keras.layers.GRU):
                     bias = self.load_weight(rnn_layer.cell, 'bias')
-                    config[f'{direction}_bias_data'] = bias[0]
-                    config[f'{direction}_recurrent_bias_data'] = bias[1]
+                    if rnn_layer.reset_after:
+                        config[f'{direction}_bias_data'] = bias[0]
+                        config[f'{direction}_recurrent_bias_data'] = bias[1]
+                    else:
+                        # reset_after=False has a single flat bias and no recurrent bias
+                        config[f'{direction}_bias_data'] = bias
+                        config[f'{direction}_recurrent_bias_data'] = np.zeros_like(bias)
                 else:
                     config[f'{direction}_bias_data'] = self.load_weight(rnn_layer.cell, 'bias')
             else:

@@ -12,9 +12,12 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('merge_layer', [Add, Average, Maximum, Minimum, Multiply, Subtract])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('swap_inputs', [True, False])
 def test_merge(test_case_id, merge_layer, io_type, backend, swap_inputs):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     input_shape = (10, 10, 3)
 
     in1 = Input(shape=input_shape, name='inp1')
@@ -47,8 +50,11 @@ def test_merge(test_case_id, merge_layer, io_type, backend, swap_inputs):
 
 @pytest.mark.parametrize('axes', [1])
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # No io_stream implementation yet
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_dot(test_case_id, axes, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     # Only 1D implemented
     input_shape = (10,)
 
@@ -76,8 +82,11 @@ def test_dot(test_case_id, axes, io_type, backend):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_concatenate1d(test_case_id, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     input_shape1 = (10,)
     input_shape2 = (8,)
 
@@ -106,8 +115,11 @@ def test_concatenate1d(test_case_id, io_type, backend):
 
 @pytest.mark.parametrize('axis', [1, 2])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_concatenate2d(test_case_id, axis, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     input_shape1 = [10, 3]
     input_shape2 = [10, 4]
 
@@ -139,8 +151,11 @@ def test_concatenate2d(test_case_id, axis, io_type, backend):
 
 @pytest.mark.parametrize('axis', [1, 2, 3])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
 def test_concatenate3d(test_case_id, axis, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     input_shape1 = [10, 10, 3]
     input_shape2 = [10, 10, 4]
 
@@ -168,3 +183,18 @@ def test_concatenate3d(test_case_id, axis, io_type, backend):
     hls_prediction = hls_model.predict([X_input1, X_input2]).reshape(keras_prediction.shape)
 
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
+
+
+def test_dot_rejects_normalize(test_case_id):
+    """Dot(normalize=True) (cosine similarity) was silently computed as a plain dot product."""
+    input_shape = (16,)
+    in1 = Input(shape=input_shape)
+    in2 = Input(shape=input_shape)
+    out = Dot(axes=1, normalize=True)([in1, in2])
+    model = tf.keras.models.Model(inputs=[in1, in2], outputs=out)
+
+    with pytest.raises(NotImplementedError, match='normalize'):
+        config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+        hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, output_dir=str(test_root_path / test_case_id), backend='Vivado'
+        )

@@ -6,6 +6,7 @@
     intro/status
     intro/setup
     intro/faq
+    intro/contributing
     intro/release_notes
     intro/reference
 
@@ -35,10 +36,12 @@
 
     backend/vitis
     backend/accelerator
+    backend/vitis_unified
     backend/oneapi
     backend/catapult
     backend/quartus
     backend/sr
+    backend/xls
 
 .. toctree::
     :hidden:

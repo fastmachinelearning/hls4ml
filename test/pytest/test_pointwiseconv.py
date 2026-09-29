@@ -37,14 +37,21 @@ strides2d_options = [(1, 1), (2, 2)]
         ('Vitis', 'io_stream', 'resource', 1),
         ('Catapult', 'io_stream', 'latency', 1),
         ('Catapult', 'io_stream', 'resource', 1),
+        ('XLS', 'io_parallel', 'latency', 1),
     ],
 )
 def test_pointwiseconv1d(test_case_id, chans, padds, strides, backend, io_type, strategy, rf):
     model = tf.keras.models.Sequential()
     input_shape = (28, 3)
+    filters = 32
+    # XLS test is slow due to big IR size, we reduce dimensions to make it faster.
+    if backend == 'XLS':
+        input_shape = (14, 3)
+        filters = 8
+
     model.add(
         Conv1D(
-            filters=32,
+            filters=filters,
             kernel_size=(1,),
             strides=strides,
             padding=padds,
@@ -72,7 +79,7 @@ def test_pointwiseconv1d(test_case_id, chans, padds, strides, backend, io_type, 
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
-    if not (backend in ['Quartus', 'oneAPI'] and io_type == 'io_stream'):
+    if backend != 'XLS' and not (backend in ['Quartus', 'oneAPI'] and io_type == 'io_stream'):
         # Quartus io_stream does not currently have a special pointwise implementation
         assert 'Pointwise' in list(hls_model.graph.values())[1].class_name
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
@@ -94,14 +101,22 @@ def test_pointwiseconv1d(test_case_id, chans, padds, strides, backend, io_type, 
         ('Vivado', 'io_stream', 'resource'),
         ('Catapult', 'io_stream', 'latency'),
         ('Catapult', 'io_stream', 'resource'),
+        ('XLS', 'io_parallel', 'latency'),
     ],
 )
 def test_pointwiseconv2d(test_case_id, chans, padds, strides, backend, io_type, strategy):
     model = tf.keras.models.Sequential()
     input_shape = (28, 28, 3)
+    filters = 32
+
+    # XLS test is slow due to big IR size, we reduce dimensions to make it faster.
+    if backend == 'XLS':
+        input_shape = (14, 14, 3)
+        filters = 8
+
     model.add(
         Conv2D(
-            filters=32,
+            filters=filters,
             kernel_size=(1, 1),
             strides=strides,
             padding=padds,
@@ -129,7 +144,7 @@ def test_pointwiseconv2d(test_case_id, chans, padds, strides, backend, io_type, 
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
-    if not (backend in ['Quartus', 'oneAPI'] and io_type == 'io_stream'):
+    if backend != 'XLS' and not (backend in ['Quartus', 'oneAPI'] and io_type == 'io_stream'):
         # Quartus io_stream does not currently have a special pointwise implementation
         assert 'Pointwise' in list(hls_model.graph.values())[1].class_name
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)

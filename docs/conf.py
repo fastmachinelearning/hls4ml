@@ -71,7 +71,10 @@ extensions = [
     'sphinx_contributors',
     'sphinx_github_changelog',
     'sphinx_tabs.tabs',
+    'myst_parser',
 ]
+
+autodoc_mock_imports = ['keras_tuner']
 
 # Note: to build locally, you will need to set the SPHINX_GITHUB_CHANGELOG_TOKEN
 # environment variable to a personal access token with repo scope

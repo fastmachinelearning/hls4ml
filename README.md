@@ -4,7 +4,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19134628.svg)](https://doi.org/10.5281/zenodo.19134628)
 [![License](https://img.shields.io/badge/License-Apache_2.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Documentation Status](https://github.com/fastmachinelearning/hls4ml/actions/workflows/build-sphinx.yml/badge.svg)](https://fastmachinelearning.org/hls4ml)
+[![Documentation Status](https://github.com/fastmachinelearning/hls4ml/actions/workflows/sphinx.yml/badge.svg)](https://fastmachinelearning.org/hls4ml)
 [![PyPI version](https://badge.fury.io/py/hls4ml.svg)](https://badge.fury.io/py/hls4ml)
 [![Downloads](https://static.pepy.tech/personalized-badge/hls4ml?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Downloads)](https://pepy.tech/project/hls4ml)
 <a href="https://anaconda.org/conda-forge/hls4ml/"><img alt="conda-forge" src="https://img.shields.io/conda/dn/conda-forge/hls4ml.svg?label=conda-forge"></a>
@@ -14,7 +14,7 @@ A package for machine learning inference in FPGAs. We create firmware implementa
 hls4ml is designed for ultra-low-latency inference on FPGAs. While it has strong roots in high-energy physics applications (e.g., L1 trigger systems at the CERN Large Hadron Collider), it has also been adopted across diverse scientific and industrial domains. Example use cases include control systems for quantum computing, feedback loops in nuclear fusion, low-power environmental monitoring on satellites, and biomedical signal processing (e.g., arrhythmia classification).
 
 
-If you have any questions, comments, or ideas regarding hls4ml or just want to show us how you use hls4ml, don't hesitate to reach us through the [discussions](https://github.com/fastmachinelearning/hls4ml/discussions) tab.
+If you have any questions, comments, or ideas regarding hls4ml or just want to show us how you use hls4ml, don't hesitate to reach out to us through the [discussions](https://github.com/fastmachinelearning/hls4ml/discussions) tab.
 
 # Documentation & Tutorial
 
@@ -54,8 +54,8 @@ hls_model = hls4ml.converters.keras_v2_to_hls(config)
 hls4ml.utils.fetch_example_list()
 ```
 
-### Building a project.
-We will build the project using Xilinx Vivado HLS, which can be downloaded and installed from [here](https://www.xilinx.com/products/design-tools/vivado/integration/esl-design.html). Alongside Vivado HLS, hls4ml also supports Vitis HLS, Intel HLS, Catapult HLS and has some experimental support dor Intel oneAPI. The target back-end can be changed using the argument backend when building the model.
+### Building a project
+We will build the project using Xilinx Vivado HLS, which can be downloaded and installed from [here](https://www.xilinx.com/products/design-tools/vivado/integration/esl-design.html). Alongside Vivado HLS, hls4ml also supports Vitis HLS, Intel HLS, Catapult HLS and has some experimental support for Intel oneAPI. The target backend can be changed using the argument backend when building the model.
 
 ```Python
 # Use Vivado HLS to synthesize the model
@@ -68,7 +68,7 @@ hls4ml.report.read_vivado_report('my-hls-test')
 
 # FAQ
 
-List of frequently asked questions and common HLS synthesis can be found [here](https://fastmachinelearning.org/hls4ml/intro/faq.html)
+The list of frequently asked questions and common HLS synthesis issues can be found [here](https://fastmachinelearning.org/hls4ml/intro/faq.html).
 
 # Citation
 If you use this software in a publication, please cite the software
@@ -189,7 +189,7 @@ Spiking Neural Networks (SNNs):
 ```
 
 # Acknowledgments
-If you benefited from participating in our community, we ask that you please acknowledge the Fast Machine Learning collaboration, and particular individuals who helped you, in any publications.
+If you benefited from participating in our community, we ask that you please acknowledge the Fast Machine Learning collaboration and particular individuals who helped you in any publications.
 Please use the following text for this acknowledgment:
   > We acknowledge the Fast Machine Learning collective as an open community of multi-domain experts and collaborators. This community and \<names of individuals\>, in particular, were important for the development of this project.
 

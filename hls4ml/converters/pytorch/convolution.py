@@ -1,5 +1,10 @@
 from hls4ml.converters.pytorch_to_hls import pytorch_handler
-from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
+from hls4ml.converters.utils import (
+    compute_padding_1d_pytorch,
+    compute_padding_2d_pytorch,
+    is_depthwise_conv,
+    parse_data_format,
+)
 
 
 @pytorch_handler('Conv1d')
@@ -13,7 +18,18 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['class_name'] = 'Conv1D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
-    layer['weight_data'] = class_object.weight.data.numpy()
+    if is_depthwise_conv(class_object):
+        layer['class_name'] = 'DepthwiseConv1D'
+        layer['depthwise_data'] = (
+            class_object.weight.data.numpy().reshape(  # (n_chan, depth_mult, spatial) -> (depth_mult, n_chan, spatial)
+                1,
+                class_object.in_channels,
+                *class_object.kernel_size,
+            )
+        )
+        layer['depth_multiplier'] = 1
+    else:
+        layer['weight_data'] = class_object.weight.data.numpy()
     if class_object.bias is not None:
         layer['bias_data'] = class_object.bias.data.numpy()
     else:
@@ -58,7 +74,18 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['class_name'] = 'Conv2D'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
-    layer['weight_data'] = class_object.weight.data.numpy()
+    if is_depthwise_conv(class_object):
+        layer['class_name'] = 'DepthwiseConv2D'
+        layer['depthwise_data'] = (
+            class_object.weight.data.numpy().reshape(  # (n_chan, depth_mult, spatial) -> (depth_mult, n_chan, spatial)
+                1,
+                class_object.in_channels,
+                *class_object.kernel_size,
+            )
+        )
+        layer['depth_multiplier'] = 1
+    else:
+        layer['weight_data'] = class_object.weight.data.numpy()
     if class_object.bias is not None:
         layer['bias_data'] = class_object.bias.data.numpy()
     else:
@@ -75,12 +102,21 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['filt_width'] = class_object.kernel_size[1]
     layer['stride_height'] = class_object.stride[0]
     layer['stride_width'] = class_object.stride[1]
+    if class_object.dilation[0] != class_object.dilation[1]:
+        raise NotImplementedError(
+            f'Layer {layer_name}: Conv2d with different dilation factors per dimension is not supported.'
+        )
     layer['dilation'] = class_object.dilation[0]
-    layer['pad_top'] = layer['pad_bottom'] = class_object.padding[0]
-    layer['pad_left'] = layer['pad_right'] = class_object.padding[1]
 
     # Ouput info
-    (layer['out_height'], layer['out_width'], _, _, _, _) = compute_padding_2d_pytorch(
+    (
+        layer['out_height'],
+        layer['out_width'],
+        layer['pad_top'],
+        layer['pad_bottom'],
+        layer['pad_left'],
+        layer['pad_right'],
+    ) = compute_padding_2d_pytorch(
         class_object.padding,
         layer['in_height'],
         layer['in_width'],

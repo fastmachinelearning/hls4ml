@@ -15,19 +15,20 @@ def parse_reshape_layer(operation, layer_name, input_names, input_shapes, node, 
     layer['name'] = layer_name
     layer['inputs'] = input_names
 
-    layer['target_shape'] = [int(i) for i in node.args[1:]]
+    target_shape = [int(i) for i in node.args[1:]]
+    # The first target dimension is the batch dimension; remove it before deducing a -1 entry,
+    # so that a literal batch size does not enter the deduction
+    target_shape = target_shape[1:]
     # View can have -1 as one as the dimensions,
     # leaving it to us to deduce it from the other dimensions and the overall size
-    if -1 in layer['target_shape']:
+    if -1 in target_shape:
         size = np.prod(input_shapes[0][1:])
-        for i in range(0, len(layer['target_shape'])):
-            if layer['target_shape'][i] == -1:
-                cl = layer['target_shape'][:]
+        for i in range(0, len(target_shape)):
+            if target_shape[i] == -1:
+                cl = target_shape[:]
                 cl.remove(-1)
-                layer['target_shape'][i] = int(size / np.prod(cl))
-
-    # remove the batch dimension
-    layer['target_shape'] = layer['target_shape'][1:]
+                target_shape[i] = int(size / np.prod(cl))
+    layer['target_shape'] = target_shape
 
     output_shape = input_shapes[0][:1] + layer['target_shape']
 
@@ -132,28 +133,48 @@ def handle_upsample(operation, layer_name, input_names, input_shapes, node, clas
     layer['class_name'] = 'Resize'
     layer['data_format'] = 'channels_first'
 
+    def output_size(in_size, scale_factor, target_size, dim_name):
+        """Computes one output dimension from either the scale factor or the target size."""
+        if scale_factor is not None:
+            return int(in_size * scale_factor)
+        if target_size % in_size != 0:
+            raise NotImplementedError(
+                f'Layer {layer_name}: upsampling from {dim_name} {in_size} to {target_size} '
+                'is not supported (the target size must be an integer multiple of the input size).'
+            )
+        return target_size
+
+    scale_factor = class_object.scale_factor
+    target_size = class_object.size  # set when the layer was constructed with size= instead of scale_factor=
+
     input_shape = parse_data_format(input_shapes[0], 'channels_first')
     if len(input_shape) == 2:
         layer['in_height'] = 1
         layer['in_width'], layer['n_chan'] = input_shape
 
+        if isinstance(target_size, (tuple, list)):
+            target_size = target_size[0]
+
         layer['out_height'] = 1
-        layer['out_width'] = int(layer['in_width'] * class_object.scale_factor)
+        layer['out_width'] = output_size(layer['in_width'], scale_factor, target_size, 'width')
 
         output_shape = [input_shapes[0][0], layer['n_chan'], layer['out_width']]
     elif len(input_shape) == 3:
         layer['in_height'], layer['in_width'], layer['n_chan'] = input_shape
 
-        scale_factor = class_object.scale_factor
         if isinstance(scale_factor, tuple):
             scale_height = scale_factor[0]
             scale_width = scale_factor[1]
         else:
             scale_height = scale_factor
             scale_width = scale_factor
+        if isinstance(target_size, (tuple, list)):
+            target_height, target_width = target_size
+        else:
+            target_height = target_width = target_size
 
-        layer['out_height'] = int(layer['in_height'] * scale_height)
-        layer['out_width'] = int(layer['in_width'] * scale_width)
+        layer['out_height'] = output_size(layer['in_height'], scale_height, target_height, 'height')
+        layer['out_width'] = output_size(layer['in_width'], scale_width, target_width, 'width')
 
         output_shape = [input_shapes[0][0], layer['n_chan'], layer['out_height'], layer['out_width']]
     else:

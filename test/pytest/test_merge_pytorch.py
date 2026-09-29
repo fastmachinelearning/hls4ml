@@ -72,3 +72,110 @@ def test_merge(test_case_id, merge_op, io_type, backend):
     hls_prediction = np.transpose(hls_prediction.reshape(output_shape_cl), axes=[0, 3, 1, 2])
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.001)
+
+
+# ---------------------------------------------------------------------------- #
+# Scalar operands, positional concatenation dimension, and rejects of merges
+# hls4ml cannot represent.
+# ---------------------------------------------------------------------------- #
+
+
+class ScalarMergeModel(nn.Module):
+    """Applies an elementwise operation with a scalar operand, in either position."""
+
+    def __init__(self, function):
+        super().__init__()
+        self.function = function
+
+    def forward(self, x):
+        return self.function(x)
+
+
+scalar_merge_ops = {
+    'add': lambda x: x + 2.5,
+    'sub': lambda x: x - 2.5,
+    'rsub': lambda x: 2.5 - x,  # the scalar in the first position used to replace the wrong argument
+    'mul': lambda x: x * 0.5,
+}
+
+
+@pytest.mark.parametrize('merge_op', scalar_merge_ops.keys())
+def test_merge_scalar_operand(test_case_id, merge_op):
+    model = ScalarMergeModel(scalar_merge_ops[merge_op])
+    model.eval()
+
+    config = hls4ml.utils.config_from_pytorch_model(model, (8,), default_precision='ap_fixed<32,16>')
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, hls_config=config, output_dir=output_dir, io_type='io_parallel', backend='Vivado'
+    )
+    hls_model.compile()
+
+    X_input = np.round(np.random.rand(10, 8) * 2**10) * 2**-10
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+    hls_prediction = hls_model.predict(X_input)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.001)
+
+
+class ConcatPositionalDimModel(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.dim = dim
+
+    def forward(self, x, y):
+        return torch.cat([x, y], self.dim)  # the positional dim used to be ignored, defaulting to the batch axis
+
+
+@pytest.mark.parametrize('dim', [1, -1])
+def test_concat_positional_dim(test_case_id, dim):
+    model = ConcatPositionalDimModel(dim)
+    model.eval()
+
+    config = hls4ml.utils.config_from_pytorch_model(model, [(8,), (8,)], default_precision='ap_fixed<32,16>')
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, hls_config=config, output_dir=output_dir, io_type='io_parallel', backend='Vivado'
+    )
+    hls_model.compile()
+
+    X_input1 = np.round(np.random.rand(10, 8) * 2**10) * 2**-10
+    X_input2 = np.round(np.random.rand(10, 8) * 2**10) * 2**-10
+    pytorch_prediction = model(torch.Tensor(X_input1), torch.Tensor(X_input2)).detach().numpy()
+    hls_prediction = hls_model.predict([X_input1, X_input2])
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.001)
+
+
+def test_concat_batch_dim_rejected(test_case_id):
+    class ConcatBatchModel(nn.Module):
+        def forward(self, x, y):
+            return torch.cat([x, y], 0)
+
+    model = ConcatBatchModel()
+    model.eval()
+
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.raises(NotImplementedError, match='batch dimension'):
+        # config_from_pytorch_model traces the model too, so the reject can fire already there
+        config = hls4ml.utils.config_from_pytorch_model(model, [(8,), (8,)])
+        hls4ml.converters.convert_from_pytorch_model(
+            model, hls_config=config, output_dir=output_dir, io_type='io_parallel', backend='Vivado'
+        )
+
+
+def test_merge_broadcast_rejected(test_case_id):
+    class BroadcastMergeModel(nn.Module):
+        def forward(self, x, y):
+            return x + y
+
+    model = BroadcastMergeModel()
+    model.eval()
+
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.raises(NotImplementedError, match='broadcasting'):
+        # config_from_pytorch_model traces the model too, so the reject can fire already there
+        config = hls4ml.utils.config_from_pytorch_model(model, [(2, 6), (6,)])
+        hls4ml.converters.convert_from_pytorch_model(
+            model, hls_config=config, output_dir=output_dir, io_type='io_parallel', backend='Vivado'
+        )

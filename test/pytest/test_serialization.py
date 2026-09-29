@@ -1,3 +1,4 @@
+import tarfile
 from pathlib import Path
 
 import numpy as np
@@ -68,6 +69,90 @@ def test_save_load__model(test_case_id, io_type, backend):
     y_clone = hls_model_clone.predict(X)
 
     np.testing.assert_equal(y_original, y_clone)
+
+
+@pytest.mark.parametrize('backend', ['Vitis'])
+@pytest.mark.parametrize(
+    'input_configured,output_configured',
+    [
+        pytest.param(True, True, id='both'),
+        pytest.param(True, False, id='input-only'),
+        pytest.param(False, True, id='output-only'),
+        pytest.param(False, False, id='neither'),
+    ],
+)
+def test_save_load_testbench_data(test_case_id, backend, input_configured, output_configured):
+    input_shape = (8, 8, 3)
+
+    keras_model = qkeras_model(input_shape)
+
+    config = hls4ml.utils.config.config_from_keras_model(
+        keras_model, granularity='name', backend=backend, default_precision='fixed<16,6>'
+    )
+
+    for layer in config['LayerName']:
+        if layer.startswith('Softmax'):
+            config['LayerName'][layer]['Implementation'] = 'legacy'
+
+    out_dir = test_root_path / test_case_id
+    out_dir.mkdir(parents=True, exist_ok=True)
+    input_data = np.linspace(0, 1, num=2 * np.prod(input_shape), dtype=np.float32).reshape((2, *input_shape))
+    output_predictions = np.arange(10, dtype=np.float32).reshape((2, 5))
+    input_path = out_dir / 'input_data.npy'
+    output_path = out_dir / 'output_predictions.npy'
+    np.save(input_path, input_data)
+    np.save(output_path, output_predictions)
+
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        keras_model,
+        output_dir=str(out_dir / 'original'),
+        io_type='io_parallel',
+        backend=backend,
+        hls_config=config,
+    )
+    if input_configured:
+        hls_model.config.config['InputData'] = str(input_path)
+    if output_configured:
+        hls_model.config.config['OutputPredictions'] = str(output_path)
+
+    fml_path = out_dir / 'qkeras_model.fml'
+    hls_model.save(fml_path)
+
+    with tarfile.open(fml_path, mode='r:gz') as archive:
+        archive_members = {member.name for member in archive.getmembers()}
+
+    expected_members = set()
+    if input_configured:
+        expected_members.add('input_data_tb.npy')
+    if output_configured:
+        expected_members.add('output_data_tb.npy')
+
+    testbench_members = {'input_data_tb.npy', 'output_data_tb.npy'}
+    missing_members = expected_members - archive_members
+    unexpected_members = (testbench_members - expected_members) & archive_members
+    assert not missing_members, (
+        f'Missing testbench data files {sorted(missing_members)} from saved model archive; '
+        f'archive members: {sorted(archive_members)}'
+    )
+    assert not unexpected_members, (
+        f'Unexpected testbench data files {sorted(unexpected_members)} in saved model archive; '
+        f'archive members: {sorted(archive_members)}'
+    )
+
+    reload_dir = out_dir / 'reload'
+    reload_dir.mkdir(exist_ok=True)
+    hls_model_clone = hls4ml.converters.load_saved_model(fml_path, output_dir=reload_dir)
+
+    if input_configured:
+        restored_input_path = Path(hls_model_clone.config.config['InputData'])
+        np.testing.assert_array_equal(np.load(restored_input_path), input_data)
+    else:
+        assert hls_model_clone.config.config.get('InputData') is None
+    if output_configured:
+        restored_output_path = Path(hls_model_clone.config.config['OutputPredictions'])
+        np.testing.assert_array_equal(np.load(restored_output_path), output_predictions)
+    else:
+        assert hls_model_clone.config.config.get('OutputPredictions') is None
 
 
 @pytest.mark.parametrize('backend', ['Vitis'])  # Disabling OneAPI for now excessive run time

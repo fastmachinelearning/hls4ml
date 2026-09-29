@@ -40,8 +40,8 @@ from hls4ml.utils.einsum_utils import parse_einsum
 
 
 class VivadoBackend(FPGABackend):
-    def __init__(self):
-        super().__init__('Vivado')
+    def __init__(self, name='Vivado'):
+        super().__init__(name)
         self._register_layer_attributes()
         self._register_flows()
 

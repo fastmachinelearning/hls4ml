@@ -65,6 +65,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
     """
     Generate a Verilog testbench for a given neural network configuration.
     The testbench includes:
+
       - Clock and reset logic
       - DUT instantiation and AXI4-Stream/Partition interfaces
       - Stimulus generation for inputs

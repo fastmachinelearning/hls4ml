@@ -31,10 +31,11 @@ def _sanitize_test_id(s: str) -> str:
 def test_case_id(request):
     """
     Return a unique identifier for the current parametrized test case.
-    Format: test_file_test_name_param_id (from test_file.py::test_name[param_id]).
-    Used for generating output directory names.
+    Format: hls4mlprj_test_file_test_name_param_id (from test_file.py::test_name[param_id]).
+    Used for generating output directory names; the hls4mlprj_ prefix keeps the
+    generated project directories covered by .gitignore.
     """
-    return _sanitize_test_id(request.node.nodeid)
+    return 'hls4mlprj_' + _sanitize_test_id(request.node.nodeid)
 
 
 def str_to_bool(val):
@@ -57,12 +58,14 @@ def synthesis_config():
         'tools_version': {
             'Vivado': os.getenv('VIVADO_VERSION', '2020.1'),
             'Vitis': os.getenv('VITIS_VERSION', '2024.1'),
+            'VitisUnified': os.getenv('VITIS_VERSION', '2024.1'),
             'Quartus': os.getenv('QUARTUS_VERSION', 'latest'),
             'oneAPI': os.getenv('ONEAPI_VERSION', '2025.0.1'),
         },
         'build_args': {
             'Vivado': {'csim': False, 'synth': True, 'export': False},
             'Vitis': {'csim': False, 'synth': True, 'export': False},
+            'VitisUnified': {'csim': False, 'synth': True},
             'Quartus': {'synth': True, 'fpgasynth': False},
             'oneAPI': {'build_type': 'report', 'run': False},
         },
