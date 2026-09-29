@@ -68,7 +68,7 @@ def get_vitis_optimized_fifo_depths(model, hls_prj_path):
     with open(names_file_path) as names_file:
         for line in names_file:
             fields = [field.strip() for field in line.split(',')]
-            if len(fields) < 4: # Safe for both Vitis and VitisUnified 
+            if len(fields) < 4:  # Safe for both Vitis and VitisUnified
                 continue
             # remove "_U" or "_i_U" (AXI stream wrapper) from the name
             fifo_name = re.sub(r'(_i)?_U$', '', fields[1])
