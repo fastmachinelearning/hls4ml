@@ -56,15 +56,29 @@ def dense_chain(activation=None, n_layers=4, seed=0, n_in=N, widths=None):
 
 
 def convert(
-    model, strategy, output_dir, reuse_factor=4, io_type='io_parallel', backend='Vitis', precisions=None, model_config=None
+    model,
+    strategy,
+    output_dir,
+    reuse_factor=4,
+    io_type='io_parallel',
+    backend='Vitis',
+    precisions=None,
+    model_config=None,
+    level='name',
 ):
+    """Convert with the strategy set for each Dense layer by name, or with level='model' for the whole model."""
+
     config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', backend=backend, default_precision='ap_fixed<16,6>'
+        model, granularity=level, backend=backend, default_precision='ap_fixed<16,6>'
     )
-    for name in config['LayerName']:
-        if name.startswith('fc'):
-            config['LayerName'][name]['Strategy'] = strategy
-            config['LayerName'][name]['ReuseFactor'] = reuse_factor
+    if level == 'model':
+        config['Model']['Strategy'] = strategy
+        config['Model']['ReuseFactor'] = reuse_factor
+    else:
+        for name in config['LayerName']:
+            if name.startswith('fc'):
+                config['LayerName'][name]['Strategy'] = strategy
+                config['LayerName'][name]['ReuseFactor'] = reuse_factor
 
     config['Model'].update(model_config or {})
 
@@ -522,6 +536,7 @@ CONFIGURATION_ERRORS = [
     ('interval_reading_differs', dict(target=60, readings={'fc0': True, 'fc1': False}), 'use the reuse factor'),
     ('reuse_factor_one', dict(reuse_factor=1), 'set ReuseFactor to 8'),
     ('io_stream', dict(io_type='io_stream'), 'io_parallel'),
+    ('io_stream_model_level', dict(io_type='io_stream', level='model'), 'io_parallel'),
     ('vivado_backend', dict(backend='Vivado'), 'fused'),
 ]
 

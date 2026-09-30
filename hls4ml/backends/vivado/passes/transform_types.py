@@ -39,9 +39,7 @@ class TransformTypes(GlobalOptimizerPass):
                     new_var = self.inplace_array_var_converter.convert(var, pragma='')
                 elif node.get_attr('fused_stream_out', False) and out_name not in node.model.outputs:
                     # Connection inside a fused region: carries one value at a time, never a model output
-                    new_var = self.scalar_stream_var_converter.convert(
-                        var, depth=int(node.get_attr('fused_stream_depth', 0) or 0)
-                    )
+                    new_var = self.scalar_stream_var_converter.convert(var)
                 else:
                     new_var = self.array_var_converter.convert(var, pragma='partition')
             else:
