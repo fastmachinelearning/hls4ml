@@ -100,10 +100,13 @@ def layer_names(hls_model):
     return [layer.name for layer in hls_model.get_layers()]
 
 
-def compare_with_latency(model, test_case_id, reuse_factor=4):
-    """Build the model twice and run both on the same inputs. Returns the fused model and both outputs."""
+def compare_with_latency(model, test_case_id, reuse_factor=4, backend='Vitis'):
+    """Build the model twice and run both on the same inputs. Returns the fused model and both outputs.
 
-    fused = convert(model, 'Fused', str(test_root_path / f'{test_case_id}_fused'), reuse_factor)
+    The fused model is built with `backend`, the one it is compared against with Vitis.
+    """
+
+    fused = convert(model, 'Fused', str(test_root_path / f'{test_case_id}_fused'), reuse_factor, backend=backend)
     latency = convert(model, 'Latency', str(test_root_path / f'{test_case_id}_latency'), reuse_factor)
     fused.compile()
     latency.compile()
@@ -380,6 +383,16 @@ def test_other_layer_type_ends_the_chain(test_case_id, capsys):
     assert 'conv' in reported and 'Dense layers only' in reported
     conv = [node for node in hls_model.get_layers() if node.name == 'conv'][0]
     assert conv.get_attr('strategy') != 'fused'
+
+
+def test_coyote_backend(test_case_id):
+    """Coyote builds on the Vitis backend and runs the same fused chain."""
+
+    model = dense_chain(lambda n: Activation('relu', name=n), n_layers=3)
+    fused, y_fused, y_latency = compare_with_latency(model, test_case_id, backend='Coyote')
+
+    assert forms(fused) == ['plain', 'dot', 'axpy']
+    np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 
 def test_chain_inside_a_larger_model(test_case_id):

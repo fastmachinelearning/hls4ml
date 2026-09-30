@@ -2,9 +2,9 @@
 Fused Strategy
 ==============
 
-``Strategy: Fused`` is available in the **Vitis** backend only. The other strategies decide how each layer is computed on its own; the fused strategy
-decides how a chain of ``Dense`` layers is computed together. The layers of a chain run at the same time in a ``DATAFLOW`` region, each starting as soon as
-the layer before it produces its first output, instead of one after another.
+``Strategy: Fused`` is available in the **Vitis** backend, and in **Coyote**, which builds on it. The other strategies decide how each layer is computed on
+its own; the fused strategy decides how a chain of ``Dense`` layers is computed together. The layers of a chain run at the same time in a ``DATAFLOW``
+region, each starting as soon as the layer before it produces its first output, instead of one after another.
 
 When to use it
 ==============
@@ -44,7 +44,7 @@ Requirements
 
 A chain is fused when all of the following hold:
 
-* **The Vitis backend.** Other backends report an error naming the layer and the backend.
+* **The Vitis or Coyote backend.** Other backends report an error naming the layer and the backend.
 * **io_parallel.** A model using ``io_stream`` is rejected during conversion.
 * **Two or more** ``Dense`` **layers in sequence**, each using the strategy, where the output of each layer is read only by the next one.
 
