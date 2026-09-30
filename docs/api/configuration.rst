@@ -90,7 +90,7 @@ Or to set the precision of a specific layer's weight:
 
    config['LayerName']['fc1']['Precision']['weight'] = 'fixed<8,4>'
 
-To better understand how the configuration hierachy works, refer to the next section for more details.
+To better understand how the configuration hierarchy works, refer to the next section for more details.
 
 Finally, one then uses the configuration to create an hls model:
 
@@ -166,7 +166,7 @@ For Vivado backend the options are:
 
   * **ReuseFactor**\ : in the case that you are pipelining, this defines the pipeline interval or initiation interval
   * **ParallelizationFactor**\ : The number of output "pixels" to compute in parallel in convolutional layers. Increasing this parameter results in significant increase in resources required on the FPGA.
-  * **Strategy**\ : Optimization strategy on FPGA, either "Latency", "Resource", "distributed_arithmetic" (or "da"), or "Unrolled". If none is supplied then hl4ml uses "Latency" as default. Note that a reuse factor must be 1 if using "distributed_arithmetic", and should be larger than 1 when using "resource" or "unrolled" strategy.
+  * **Strategy**\ : Optimization strategy on FPGA, either "Latency", "Resource", "distributed_arithmetic" (or "da"), or "Unrolled". If none is supplied then hls4ml uses "Latency" as default. Note that a reuse factor must be 1 if using "distributed_arithmetic", and should be larger than 1 when using "resource" or "unrolled" strategy.
   * **PipelineStyle**\ : Set the top level pipeline style. Valid options are "auto", "pipeline" and "dataflow". If unspecified, it defaults to "auto".
   * **PipelineInterval**\ : Optionally override the desired initiation interval of the design. Only valid in combination with "pipeline" style. If unspecified, it is left to the compiler to decide, ideally matching the largest reuse factor of the network.
   * **Precision**\ : this defines the precision of your inputs, outputs, weights and biases. It is denoted by ``fixed<X,Y>``\ , where ``Y`` is the number of bits representing the signed number above the binary point (i.e. the integer part), and ``X`` is the total number of bits. Additionally, integers in the type (\ ``int<N>``\ , where ``N`` is a bit-size from 1 to 1024) can also be used. The format follows ``ap_fixed`` and ``ap_int`` conventions. You have a chance to further configure this more finely with per-layer configuration described below. In the per-layer configuration (but not globally) one can also use ``'auto'`` precision.
@@ -218,7 +218,7 @@ A specific layer can be targeted like this:
            ReuseFactor: 12
            Strategy: Resource
 
-In this case, the default model configuration will use ``fixed<16,6>`` and a ``ReuseFactor`` of 16. The layer named ``dense1`` (defined in the user provided model architecture file) will instead use different precision for the ``weight``\ , ``bias``\ , and ``result`` (output) variables, a ``ReuseFactor`` of 12, and the ``Resource`` strategy (while the model default is ``Latency`` strategy.
+In this case, the default model configuration will use ``fixed<16,6>`` and a ``ReuseFactor`` of 16. The layer named ``dense1`` (defined in the user provided model architecture file) will instead use different precision for the ``weight``\ , ``bias``\ , and ``result`` (output) variables, a ``ReuseFactor`` of 12, and the ``Resource`` strategy (while the model default is ``Latency`` strategy).
 
 More than one layer can have a configuration specified, e.g.:
 
