@@ -99,6 +99,7 @@ class AlteraWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
         project_name = model.config.get_project_name()
+        stamp = model.config.get_config_value('Stamp')
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
@@ -118,7 +119,7 @@ class AlteraWriter(Writer):
             for line in f.readlines():
                 # Add headers to weights and biases
                 if 'myproject' in line:
-                    newline = line.replace('myproject', project_name)
+                    newline = line.replace('myproject', project_name).replace('mystamp', stamp)
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
@@ -205,6 +206,7 @@ class AlteraWriter(Writer):
         """
 
         project_name = model.config.get_project_name()
+        stamp = model.config.get_config_value('Stamp')
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
@@ -225,7 +227,7 @@ class AlteraWriter(Writer):
                     newline = line.replace('MYPROJECT', format(project_name.upper()))
 
                 elif 'myproject' in line:
-                    newline = line.replace('myproject', project_name)
+                    newline = line.replace('myproject', project_name).replace('mystamp', stamp)
 
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))

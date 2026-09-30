@@ -4,8 +4,10 @@
 
 // hls-fpga-machine-learning insert weights
 
-// The inter-task pipes need to be declared in the global scope
+// The inter-task pipes need to be declared at namespace scope
+namespace myproject_mystamp {
 // hls-fpga-machine-learning insert inter-task pipes
+} // namespace myproject_mystamp
 
 using sycl::ext::altera::experimental::task_sequence;
 
