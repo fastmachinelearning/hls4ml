@@ -393,12 +393,6 @@ struct gru_config {
     template <class x_T, class y_T, class config_T> using activation = nnet::activation::relu<x_T, y_T, config_T>;
 };
 
-// Recurrent part of the GRU candidate state
-// Notes:
-//  - reset_after = true:  r(t)*(Wh*h(t-1) + br)
-//  - reset_after = false: Wh*(r(t)*h(t-1)), br is zero
-//  - reset_after = false reuses the full recurrent multiplication (mult_config2); a candidate-only
-//    multiplication could reduce resource use
 template <class res_T, typename CONFIG_T>
 void gru_candidate_recurrent(res_T h_state[CONFIG_T::n_state], typename CONFIG_T::accum_t tmpres_zr[CONFIG_T::n_state * 2],
                              typename CONFIG_T::accum_t tmpres_state_zr[CONFIG_T::n_state * 3],
@@ -408,7 +402,6 @@ void gru_candidate_recurrent(res_T h_state[CONFIG_T::n_state], typename CONFIG_T
     #pragma HLS INLINE
 
     if (CONFIG_T::reset_after) {
-        // Operation: r(t)*(Wh*h(t-1) + br)
         for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
             #pragma HLS UNROLL
             if (CONFIG_T::pytorch_order)
@@ -418,18 +411,14 @@ void gru_candidate_recurrent(res_T h_state[CONFIG_T::n_state], typename CONFIG_T
                     tmpres_zr[iacc + (CONFIG_T::n_state)] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
         }
     } else {
-        res_T h_reset[CONFIG_T::n_state];                                     // r(t)*h(t-1)
-        typename CONFIG_T::accum_t tmpres_state_reset[CONFIG_T::n_state * 3]; // Wh*(r(t)*h(t-1)) + br
+        res_T h_reset[CONFIG_T::n_state];
+        typename CONFIG_T::accum_t tmpres_state_reset[CONFIG_T::n_state * 3];
         #pragma HLS ARRAY_PARTITION variable=h_reset            complete
         #pragma HLS ARRAY_PARTITION variable=tmpres_state_reset complete
 
-        // Operation: r(t)*h(t-1)
         for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
             #pragma HLS UNROLL
-            if (CONFIG_T::pytorch_order)
-                h_reset[iacc] = (res_T)(tmpres_zr[iacc] * h_state[iacc]);
-            else
-                h_reset[iacc] = (res_T)(tmpres_zr[iacc + (CONFIG_T::n_state)] * h_state[iacc]);
+            h_reset[iacc] = (res_T)(tmpres_zr[iacc + (CONFIG_T::n_state)] * h_state[iacc]);
         }
 
         nnet::dense<res_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config2>(h_reset, tmpres_state_reset,
@@ -485,7 +474,6 @@ void gru(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_
 
     // Activation function Sub layer -- END
 
-    // Recurrent part of the candidate state
     nnet::gru_candidate_recurrent<res_T, CONFIG_T>(h_newstate, tmpres_zr, tmpres_state_zr, param_zr, param_br,
                                                    tmpres_state_h);
 
@@ -561,7 +549,6 @@ void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[
 
     // Activation function Sub layer -- END
 
-    // Recurrent part of the candidate state
     nnet::gru_candidate_recurrent<res_T, CONFIG_T>(h_state, tmpres_zr, tmpres_state_zr, param_zr, param_br, tmpres_state_h);
 
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {

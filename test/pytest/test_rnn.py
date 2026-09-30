@@ -318,10 +318,6 @@ def test_bidirectional_no_bias(test_case_id, cell_type):
     np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
 
 
-# Max error for the small GRU below is ~9e-3 (activation lookup tables)
-GRU_RESET_ATOL = 2e-2
-
-
 def create_gru_reset_model(reset_after, bidirectional=False):
     """Small GRU with fixed non-zero weights and biases."""
     n_steps, n_features, n_units = 5, 3, 4
@@ -331,8 +327,10 @@ def create_gru_reset_model(reset_after, bidirectional=False):
     model.add(Bidirectional(gru, name='gru_bidir') if bidirectional else gru)
 
     rng = np.random.default_rng(0)
-    model.layers[0].set_weights([rng.uniform(-1, 1, w.shape).astype('float32') for w in model.layers[0].get_weights()])
-    X = rng.uniform(-1, 1, (50, n_steps, n_features)).astype('float32')
+    weights = [rng.uniform(-1, 1, w.shape) for w in model.layers[0].get_weights()]
+    model.layers[0].set_weights([(np.round(w * 2**16) * 2**-16).astype('float32') for w in weights])
+    X = rng.uniform(-1, 1, (50, n_steps, n_features))
+    X = (np.round(X * 2**16) * 2**-16).astype('float32')
     return model, X
 
 
@@ -397,7 +395,7 @@ def test_gru_reset_after_accuracy(test_case_id, reset_after, backend, io_type, s
 
     keras_prediction = model.predict(X)
     hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
-    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=GRU_RESET_ATOL)
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=5e-2)
 
 
 @pytest.mark.parametrize('reset_after', [True, False])
@@ -422,7 +420,7 @@ def test_gru_reset_gate_placement(test_case_id, reset_after):
     hls_model.compile()
     hls_prediction = hls_model.predict(X).reshape(expected.shape)
 
-    np.testing.assert_allclose(hls_prediction, expected, rtol=0.0, atol=GRU_RESET_ATOL)
+    np.testing.assert_allclose(hls_prediction, expected, rtol=0.0, atol=5e-2)
     assert np.abs(hls_prediction - other).max() > 0.15
 
 
@@ -444,4 +442,4 @@ def test_bidirectional_gru_reset_after_accuracy(test_case_id, reset_after, stati
 
     keras_prediction = model.predict(X)
     hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
-    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=GRU_RESET_ATOL)
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=5e-2)
