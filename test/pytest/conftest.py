@@ -58,11 +58,13 @@ def synthesis_config():
         'tools_version': {
             'Vivado': os.getenv('VIVADO_VERSION', '2020.1'),
             'Vitis': os.getenv('VITIS_VERSION', '2024.1'),
+            'VitisUnified': os.getenv('VITIS_VERSION', '2024.1'),
             'oneAPI': os.getenv('ONEAPI_VERSION', '2025.0.1'),
         },
         'build_args': {
             'Vivado': {'csim': False, 'synth': True, 'export': False},
             'Vitis': {'csim': False, 'synth': True, 'export': False},
+            'VitisUnified': {'csim': False, 'synth': True},
             'oneAPI': {'build_type': 'report', 'run': False},
         },
     }

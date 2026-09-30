@@ -2177,7 +2177,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote
 
@@ -2281,7 +2281,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote
 
@@ -2387,7 +2387,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, Catapult, Coyote
 
@@ -2535,7 +2535,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, Coyote
 

@@ -1,0 +1,96 @@
+name: Performance or resource usage issue
+description: A model synthesizes, but is slower or larger than expected
+labels: ["performance"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for latency, initiation interval, resource usage or clock frequency that is worse than you
+        expect. The generated design has to build for this to be actionable — if it does not, file a bug
+        report instead.
+
+        Please give numbers rather than impressions, and say which stage they come from. C synthesis reports
+        estimates; co-simulation gives true latency; logic synthesis gives true resources.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Quick summary
+      description: What is worse than expected, and compared to what?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: hls4ml version
+      placeholder: "1.1.0, or commit abc1234"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      options:
+        - Vitis
+        - Vivado
+        - VivadoAccelerator
+        - Quartus
+        - oneAPI
+        - Catapult
+        - Libero
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: tool_version
+    attributes:
+      label: HLS tool and version
+      placeholder: "Vitis HLS 2024.1"
+    validations:
+      required: true
+
+  - type: input
+    id: part
+    attributes:
+      label: Part and clock period
+      placeholder: "xcvu13p-flga2577-2-e, 5 ns"
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Model and configuration
+      description: |
+        Layer shapes, precision, `io_type`, Strategy and reuse factor — ideally the script that produced
+        the project.
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: numbers
+    attributes:
+      label: Numbers observed and expected
+      description: |
+        Latency, initiation interval, LUT, FF, DSP, BRAM and achieved clock, as applicable.
+      value: |
+        | Measurement | Observed | Expected | Source (csynth / cosim / logic synth) |
+        |---|---|---|---|
+        |  |  |  |  |
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: ai_disclosure
+    attributes:
+      label: AI assistance
+      description: |
+        See the [contributing guidelines](https://github.com/fastmachinelearning/hls4ml/blob/main/CONTRIBUTING.md#use-of-ai-tools).
+        All numbers above must come from runs you actually performed.
+      options:
+        - label: An AI tool helped produce this report, and I have checked its content myself.
+          required: false

@@ -1,0 +1,144 @@
+import asyncio
+import time
+
+import numpy as np
+from pynq import PL, DefaultIP, Interrupt, Overlay, allocate
+
+
+def _as_list(value):
+    """A single shape or a list of shapes, one per model input/output port."""
+    if isinstance(value, (list, tuple)) and len(value) > 0 and isinstance(value[0], (list, tuple)):
+        return list(value)
+    return [value]
+
+
+class NeuralNetworkOverlay(Overlay):
+    def __init__(
+        self,
+        bitfile_name,
+        x_shape,
+        y_shape,
+        input_dtype=np.float32,
+        output_dtype=None,
+        reset_pl=True,
+        dtbo=None,
+        download=True,
+        ignore_version=False,
+        device=None,
+    ):
+        if reset_pl:
+            PL.reset()
+        super().__init__(bitfile_name, dtbo=dtbo, download=download, ignore_version=ignore_version, device=device)
+        output_dtype = output_dtype or input_dtype
+        self.input_buffers = [allocate(shape=shape, dtype=input_dtype) for shape in _as_list(x_shape)]
+        self.output_buffers = [allocate(shape=shape, dtype=output_dtype) for shape in _as_list(y_shape)]
+        self.input_buffer = self.input_buffers[0]
+        self.output_buffer = self.output_buffers[0]
+        self.ip = self.<TOP_WRAPPER_NAME>
+        self.interrupt = Interrupt('<TOP_WRAPPER_NAME>/interrupt')
+
+    def calculate_performance(self, N, execution_time):
+        rate = N / execution_time if execution_time > 0 else float('inf')
+        print(f'Processed elements: {N}, Execution time: {execution_time:.4f} seconds, Performance rate: {rate:.2f} inferences/second')
+        return rate
+
+    def predict(self, X, profile=False):
+        """
+        Obtain the predictions of the NN implemented in the FPGA.
+        Parameters:
+        - X : the input vector. Should be numpy ndarray, or a list of ndarrays for multi-input models
+              (one entry per input port, in port order). The first dimension is the batch.
+              Its dtype must match `input_dtype` given to the constructor, which in turn must match the
+              interface of the accelerator: 'np.float32' for a 'float' interface and 'np.float64' for 'double'.
+        - profile : boolean. Set it to `True` to print the performance of the algorithm in term of `inference/s`.
+        - return: an output array based on `np.ndarray` with a shape equal to `y_shape` and a `dtype` equal to
+                  `output_dtype`, or a list of such arrays for multi-output models. With `profile=True` it
+                  returns a tuple (output, execution time in seconds, inferences per second).
+        """
+        inputs = list(X) if isinstance(X, (list, tuple)) else [X]
+        if len(inputs) != len(self.input_buffers):
+            raise ValueError(f'expected {len(self.input_buffers)} input array(s) for this accelerator, got {len(inputs)}')
+        for buffer, x in zip(self.input_buffers, inputs):
+            np.copyto(buffer, x)
+
+        exec_time = self.ip.transfer(self.input_buffers, self.output_buffers, self.interrupt, profile)
+        result = self.output_buffers[0] if len(self.output_buffers) == 1 else self.output_buffers
+        if profile:
+            return result, exec_time, self.calculate_performance(len(inputs[0]), exec_time)
+        return result
+
+
+class HLS4ML_IP(DefaultIP):
+    bindto = ['xilinx.com:hls:<TOP_NAME>:<IP_VERSION>']
+
+    REG_ADDR_AP_CTRL = 0x00
+    REG_ADDR_GIE = 0x04
+    REG_ADDR_IER = 0x08
+    REG_ADDR_ISR = 0x0C
+
+    def __init__(self, description):
+        super().__init__(description=description)
+        self.INP_PORT_NAMEs = [
+            # hls-driver-input-names
+        ]
+        self.OUT_PORT_NAMEs = [
+            # hls-driver-output-names
+        ]
+        registers = description.get('registers') or {}
+        if not registers:
+            raise RuntimeError('no register map for <TOP_WRAPPER_NAME>; load the overlay together with its .hwh file')
+        self.REG_ADDR_INP_PTRs = [self._pointer_offsets(registers, name) for name in self.INP_PORT_NAMEs]
+        self.REG_ADDR_OUT_PTRs = [self._pointer_offsets(registers, name) for name in self.OUT_PORT_NAMEs]
+        self.REG_ADDR_BATCH_SIZE = registers['batch_size']['address_offset']
+
+    @staticmethod
+    def _pointer_offsets(registers, name):
+        # a 64-bit pointer argument is two 32-bit registers: <name>_1 (low word) and <name>_2 (high word)
+        return registers[f'{name}_1']['address_offset'], registers[f'{name}_2']['address_offset']
+
+    def set_pointer(self, offsets, buffer):
+        low, high = offsets
+        self.write(low, buffer.physical_address & 0xFFFFFFFF)
+        self.write(high, buffer.physical_address >> 32)
+
+    def prepare_intr(self):
+        self.write(self.REG_ADDR_GIE, 0x01)
+        self.write(self.REG_ADDR_IER, 0x01)
+        self.write(self.REG_ADDR_ISR, 0x01)
+
+    def ctrl_start(self):
+        self.write(self.REG_ADDR_AP_CTRL, 0x01)
+
+    def build_event_and_run(self, intr, profile):
+        async def wait_for_acc():
+            t_start = time.perf_counter()
+            self.ctrl_start()
+            await intr.wait()
+            exec_time = time.perf_counter() - t_start
+            if profile:
+                print(f'Accelerator execution time: {exec_time * 1e3:.3f} ms')
+            return exec_time
+
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(loop.create_task(wait_for_acc()))
+
+    def transfer(self, input_buffers, output_buffers, intr, profile=False):
+        in_buffers = list(input_buffers) if isinstance(input_buffers, (list, tuple)) else [input_buffers]
+        out_buffers = list(output_buffers) if isinstance(output_buffers, (list, tuple)) else [output_buffers]
+        if len(in_buffers) != len(self.REG_ADDR_INP_PTRs):
+            raise ValueError(f'kernel has {len(self.REG_ADDR_INP_PTRs)} input port(s), got {len(in_buffers)} buffer(s)')
+        if len(out_buffers) != len(self.REG_ADDR_OUT_PTRs):
+            raise ValueError(f'kernel has {len(self.REG_ADDR_OUT_PTRs)} output port(s), got {len(out_buffers)} buffer(s)')
+
+        for offsets, buffer in zip(self.REG_ADDR_INP_PTRs, in_buffers):
+            buffer.flush()
+            self.set_pointer(offsets, buffer)
+        for offsets, buffer in zip(self.REG_ADDR_OUT_PTRs, out_buffers):
+            self.set_pointer(offsets, buffer)
+        # every port carries the same batch, so the first one defines the batch size
+        self.write(self.REG_ADDR_BATCH_SIZE, in_buffers[0].shape[0])
+        self.prepare_intr()
+        exec_time = self.build_event_and_run(intr, profile)
+        for buffer in out_buffers:
+            buffer.invalidate()
+        return exec_time
