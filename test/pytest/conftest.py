@@ -60,7 +60,7 @@ def synthesis_config():
             'Vitis': os.getenv('VITIS_VERSION', '2024.1'),
             'VitisUnified': os.getenv('VITIS_VERSION', '2024.1'),
             'Quartus': os.getenv('QUARTUS_VERSION', 'latest'),
-            'Altera': os.getenv('ONEAPI_VERSION', '2025.0.1'),
+            'Altera': os.getenv('ALTERA_VERSION', '2026.1.0'),
         },
         'build_args': {
             'Vivado': {'csim': False, 'synth': True, 'export': False},
