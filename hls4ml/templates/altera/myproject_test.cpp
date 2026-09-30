@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 
             // hls-fpga-machine-learning insert data
 
-            q.single_task(MyProject{});
+            // hls-fpga-machine-learning insert NeuralNet
 
             // hls-fpga-machine-learning convert output
 
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
         // hls-fpga-machine-learning insert top-level-function
         for (int i = 0; i < num_iterations; i++) {
             // hls-fpga-machine-learning insert zero
-            q.single_task(MyProject{});
+            // hls-fpga-machine-learning insert NeuralNet
             // hls-fpga-machine-learning convert output
             for (auto outval : outputs) {
                 std::cout << outval << " ";

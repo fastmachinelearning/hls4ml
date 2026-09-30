@@ -4,10 +4,12 @@
 
 // hls-fpga-machine-learning insert weights
 
+using sycl::ext::altera::experimental::task_sequence;
+
+// hls-fpga-machine-learning lib stamp
+
 // The inter-task pipes need to be declared in the global scope
 // hls-fpga-machine-learning insert inter-task pipes
-
-using sycl::ext::altera::experimental::task_sequence;
 
 void MyProject::operator()() const {
     // ****************************************
@@ -22,3 +24,5 @@ void MyProject::operator()() const {
 
     // hls-fpga-machine-learning return
 }
+
+// hls-fpga-machine-learning namespace end

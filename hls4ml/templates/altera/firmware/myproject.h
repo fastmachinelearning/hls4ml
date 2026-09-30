@@ -9,6 +9,8 @@
 
 using PipeProps = decltype(sycl::ext::oneapi::experimental::properties(sycl::ext::altera::experimental::ready_latency<0>));
 
+// hls-fpga-machine-learning lib stamp
+
 // Need to declare the input and output pipes
 
 // hls-fpga-machine-learning insert inputs
@@ -26,5 +28,7 @@ struct MyProject {
 
     SYCL_EXTERNAL void operator()() const;
 };
+
+// hls-fpga-machine-learning namespace end
 
 #endif
