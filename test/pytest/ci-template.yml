@@ -1,6 +1,6 @@
 .pytest:
   stage: test
-  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.0.bambu_altera
+  image: gitlab-registry.cern.ch/fastmachinelearning/hls4ml-testing:0.1.1.bambu_altera
   tags:
     - k8s-default
   variables:
