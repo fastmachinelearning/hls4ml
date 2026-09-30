@@ -16,6 +16,8 @@ using PipeProps = decltype(sycl::ext::oneapi::experimental::properties(sycl::ext
 // hls-fpga-machine-learning insert inputs
 // hls-fpga-machine-learning insert outputs
 
+// hls-fpga-machine-learning namespace end
+
 class MyProjectID;
 
 struct MyProject {
@@ -28,7 +30,4 @@ struct MyProject {
 
     SYCL_EXTERNAL void operator()() const;
 };
-
-// hls-fpga-machine-learning namespace end
-
 #endif

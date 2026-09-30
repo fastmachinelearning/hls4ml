@@ -11,6 +11,8 @@ using sycl::ext::altera::experimental::task_sequence;
 // The inter-task pipes need to be declared in the global scope
 // hls-fpga-machine-learning insert inter-task pipes
 
+// hls-fpga-machine-learning namespace end
+
 void MyProject::operator()() const {
     // ****************************************
     // NETWORK INSTANTIATION
@@ -24,5 +26,3 @@ void MyProject::operator()() const {
 
     // hls-fpga-machine-learning return
 }
-
-// hls-fpga-machine-learning namespace end

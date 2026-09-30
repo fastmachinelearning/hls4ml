@@ -132,7 +132,7 @@ class AlteraWriter(Writer):
                 elif '// hls-fpga-machine-learning namespace end' in line:
                     libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
                     newline = line
-                    newline = f'}} // namespace {libstamp}'
+                    newline = f'}} // namespace {libstamp}\n'
 
                 # Altera pipes need to be declared and passed as template parameters
                 elif '// hls-fpga-machine-learning insert inter-task pipes' in line:
@@ -252,7 +252,8 @@ class AlteraWriter(Writer):
                 elif '// hls-fpga-machine-learning namespace end' in line:
                     libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
                     newline = line
-                    newline = f'}} // namespace {libstamp}'
+                    newline = f'}} // namespace {libstamp}\n\n'
+                    newline += f'using namespace {libstamp};\n'
 
                 # Declarations for the inputs. May need modification when io_stream is supported
                 elif '// hls-fpga-machine-learning insert inputs' in line:
@@ -425,9 +426,6 @@ class AlteraWriter(Writer):
                     newline += (
                         indent + f'nnet::convert_data<float, {libstamp}::{inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
                     )
-                elif '// hls-fpga-machine-learning insert NeuralNet' in line:
-                    newline = line
-                    newline = indent + f'q.single_task({libstamp}::{convert_to_pascal_case(project_name)}{{}});\n'
                 elif '// hls-fpga-machine-learning convert output' in line:
                     newline = line
                     out = model_outputs[0]
@@ -498,7 +496,7 @@ class AlteraWriter(Writer):
                     newline += (
                         indent
                         + f'q.single_task<{convert_to_pascal_case(project_name)}Class{dtype.capitalize()}_{stamp}>'
-                        + f'({libstamp}::{convert_to_pascal_case(project_name)}{{}});\n'
+                        + f'({convert_to_pascal_case(project_name)}{{}});\n'
                     )
 
                     for i in model_inputs:
