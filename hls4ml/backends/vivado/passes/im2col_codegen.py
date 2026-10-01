@@ -39,6 +39,7 @@ class GenerateConvIm2col(OptimizerPass):
             kernel=node.get_attr('filt_width'),
             stride=node.get_attr('stride_width'),
             pad=(node.get_attr('pad_left'), node.get_attr('pad_right')),
+            dilation=node.get_attr('dilation'),
         )
 
         node.set_attr('line_buffer_codegen', Source(code_str))

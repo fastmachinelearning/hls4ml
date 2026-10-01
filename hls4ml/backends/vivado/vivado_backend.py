@@ -373,6 +373,12 @@ class VivadoBackend(FPGABackend):
     # TODO consolidate these functions into a single `init_conv`
     @layer_optimizer(Conv1D)
     def init_conv1d(self, layer):
+        # Dilated convolutions are not supported by the io_stream implementation.
+        if layer.get_attr('dilation') != 1 and layer.model.config.get_config_value('IOType') != 'io_parallel':
+            raise NotImplementedError(
+                f'Layer {layer.name}: Conv1D dilation_rate={layer.get_attr("dilation")} is only supported with io_parallel.'
+            )
+
         if len(layer.weights['weight'].data.shape) == 2:  # This can happen if we assign weights of Dense layer to 1x1 Conv1D
             layer.weights['weight'].data = np.expand_dims(layer.weights['weight'].data, axis=(0, 1))
 
