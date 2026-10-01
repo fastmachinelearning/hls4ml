@@ -462,9 +462,9 @@ def test_interval_reading(test_case_id):
             layer.name: layer.get_attr('fused_multipliers') for layer in fused.get_layers() if layer.name.startswith('fc')
         }
         assert multipliers == {'fc0': 2, 'fc1': 2}
-        # dot needs n_out * ceil(n_in / m) = 32 cycles, axpy (n_in + 1) * ceil(n_out / m) = 36, and
-        # the headroom of both is 10 + ceil(8 / 2) = 14
-        assert pads(fused) == {'fc0': 60 - (32 + 14), 'fc1': 60 - (36 + 14)}
+        # dot needs n_out * n_in / m = 32 cycles and 14 more, axpy (n_in + 1) * n_out / m = 36 and 20 more.
+        # The two run together, so both wait for the cycles the slower one leaves
+        assert pads(fused) == {'fc0': 60 - (36 + 20), 'fc1': 60 - (36 + 20)}
 
         fused.compile()
         np.testing.assert_allclose(fused.predict(x), latency.predict(x), rtol=0, atol=1e-6)
@@ -539,7 +539,7 @@ def test_strategy_set_for_more_than_one_layer(test_case_id, granularity):
         model, hls_config=config, backend='Vitis', io_type='io_parallel', output_dir=str(test_root_path / test_case_id)
     )
     assert forms(fused) == ['dot', 'axpy']
-    assert pads(fused) == {'fc0': 60 - (32 + 14), 'fc1': 60 - (36 + 14)}
+    assert pads(fused) == {'fc0': 60 - (36 + 20), 'fc1': 60 - (36 + 20)}
 
 
 CONFIGURATION_ERRORS = [

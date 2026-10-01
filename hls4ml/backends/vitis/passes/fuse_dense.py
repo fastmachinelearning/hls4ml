@@ -1,3 +1,4 @@
+import math
 from copy import copy
 
 import numpy as np
@@ -256,26 +257,39 @@ class PlanDenseFusion(ModelOptimizerPass):
         return (n_in + 1) * trips
 
     def _headroom_cycles(self, layer, multipliers):
-        """Extra cycles for filling the pipeline and passing data between layers. Deliberately an
-        overestimate, since the exact number depends on the layer and the tool version, so that the
-        interval never comes out larger than requested."""
-        return 10 + -(-self._most_usable_multipliers(layer) // multipliers)
+        """Cycles beyond the work: the depth of the kernel's pipelines, which are measured upper bounds, and 4
+        for passing data between the layers of a region."""
+        form = layer.get_attr('fused_form')
+        trips = -(-self._most_usable_multipliers(layer) // multipliers)
+        if form == 'dot':
+            depth = 10
+        elif trips == 1:
+            depth = 5
+        elif form == 'axpy':
+            depth = 16
+        else:
+            # Selecting one of n_in inputs takes a pipeline stage per doubling of n_in
+            depth = 16 + math.ceil(math.log2(int(layer.get_attr('n_in'))))
+        return depth + 4
 
     def _set_from_interval(self, layer):
         """Use the fewest multipliers that keep the layer within the requested interval, and fill the
         remaining cycles with wait states. If even all of them are not enough, record the smallest
         interval the layer can reach, which ValidateDenseFusion reports as an error.
+
+        Only numbers of multipliers that divide the dimension the kernel works through are considered, since
+        any other number makes the pipelines deeper than _headroom_cycles allows for.
         """
         target = max(1, int(layer.get_attr('reuse_factor', 1) or 1))
         cap = self._most_usable_multipliers(layer)
-        for multipliers in range(1, cap + 1):
+        for multipliers in (m for m in range(1, cap + 1) if cap % m == 0):
             predicted = self._work_cycles(layer, multipliers) + self._headroom_cycles(layer, multipliers)
             if predicted <= target:
                 layer.set_attr('fused_multipliers', multipliers)
                 layer.set_attr('fused_pad_cycles', target - predicted)
-                # How much smaller than requested the interval may come out, 8 being the smallest
-                # headroom measured
-                layer.set_attr('fused_interval_slack', self._headroom_cycles(layer, multipliers) - 8)
+                # How much smaller than requested the interval may come out, 3 being the smallest
+                # overhead measured
+                layer.set_attr('fused_interval_slack', self._headroom_cycles(layer, multipliers) - 3)
                 return
         floor = self._work_cycles(layer, cap) + self._headroom_cycles(layer, cap)
         layer.set_attr('fused_multipliers', cap)
@@ -298,6 +312,13 @@ class PlanDenseFusion(ModelOptimizerPass):
         # A dot layer and the axpy layer after it run together, so extra multipliers in the faster one
         # would be wasted. Layers with ReuseFactorAsInterval already have the fewest that meet it.
         for dot, axpy in self._pairs(chains):
+            if _reads_interval(dot) and _reads_interval(axpy):
+                # The faster layer waits for the slower one before its wait states begin, so both
+                # wait only for the cycles the slower one leaves
+                pad = min(int(n.get_attr('fused_pad_cycles') or 0) for n in (dot, axpy))
+                for n in (dot, axpy):
+                    n.set_attr('fused_pad_cycles', pad)
+                continue
             if _reads_interval(dot) or _reads_interval(axpy):
                 continue
             shared = min(int(n.get_attr('fused_multipliers')) for n in (dot, axpy))

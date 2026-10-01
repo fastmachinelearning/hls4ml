@@ -118,9 +118,11 @@ in cycles, instead of setting the number of multipliers:
        config['LayerName'][layer]['ReuseFactor'] = 128          # the interval, in cycles
        config['LayerName'][layer]['ReuseFactorAsInterval'] = True
 
-The strategy uses the fewest multipliers that keep the layer within that interval, and fills the remaining cycles with wait states. The interval is then
-the requested one or a few cycles less, never more. The wait states add latency, so the layer is a little slower than it would be with the same number of
-multipliers and no wait states. They are added only in synthesis, so C simulation results do not change.
+The strategy uses the fewest multipliers that keep the layer within that interval, counting only numbers that divide the width the layer works through
+(see below), and fills the remaining cycles with wait states. A ``dot`` layer and the ``axpy`` layer after it wait the same number of cycles, since the
+faster of the two waits for the slower one. The interval is then the requested one or a few cycles less, never more. The wait states add latency, so the
+layer is a little slower than it would be with the same number of multipliers and no wait states. They are added only in synthesis, so C simulation
+results do not change.
 
 A setting for a layer name takes precedence over one for a layer type, which takes precedence over one for the model. Note that ``granularity='name'``
 writes a ``ReuseFactor`` for every layer, which then overrides one set for the model.
@@ -136,10 +138,11 @@ A chain is as slow as its slowest layer. A layer with ``m`` multipliers has an i
 
 .. code-block::
 
-   interval  =  passes * ceil(width / m)  +  c
+   interval  =  passes * width / m  +  c
 
-where ``width`` is the number of values the kernel works through in each pass, ``n_in`` for ``dot`` and ``n_out`` for the other forms, and ``passes`` is
-``n_out`` for ``dot`` and ``n_in + 1`` for the other forms, the extra pass applying the activation. ``c`` is the time to fill the pipeline and pass data
-between layers. The strategy uses an overestimate of ``c``, which is why the interval can come out a few cycles below the requested one but never above it.
+where ``width`` is the number of values the kernel works through in each pass, ``n_in`` for ``dot`` and ``n_out`` for the other forms, ``m`` divides
+``width``, and ``passes`` is ``n_out`` for ``dot`` and ``n_in + 1`` for the other forms, the extra pass applying the activation. ``c`` is the time to fill
+the pipelines and pass data between layers. The strategy uses an overestimate of ``c``, which is why the interval can come out a few cycles below the
+requested one but never above it.
 
-This estimate of ``c`` fits Vitis HLS 2023.2 and 2024.1. Vitis HLS 2025.1 is less predictable and is generally not supported.
+This estimate of ``c`` was measured with Vitis HLS 2024.1. Vitis HLS 2025.1 is less predictable and is generally not supported.
