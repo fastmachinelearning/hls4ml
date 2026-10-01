@@ -115,7 +115,7 @@ def create_model_accuracy(rnn_layer, return_sequences):
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
-    X = np.round(X * 2**16) * 2**-16
+    X = np.round(X * 2**22) * 2**-22
 
     layer_name = rnn_layer.__name__
     model = Sequential()
@@ -218,7 +218,7 @@ def test_rnn_accuracy(test_case_id, rnn_layer, return_sequences, backend, io_typ
 
     model, X = create_model_accuracy(rnn_layer, return_sequences)
 
-    default_precision = 'fixed<32, 16>'
+    default_precision = 'fixed<32, 10>'
     hls_config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision=default_precision, backend=backend
     )
@@ -243,7 +243,7 @@ def test_rnn_no_bias(test_case_id, rnn_layer):
     model.add(Input(shape=(5, 8)))
     model.add(rnn_layer(4, use_bias=False))
 
-    backend, default_precision, strategy = 'Vitis', 'fixed<32, 16>', 'Latency'
+    backend, default_precision, strategy = 'Vitis', 'fixed<32, 10>', 'Latency'
 
     hls_config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision=default_precision, backend=backend
@@ -268,7 +268,7 @@ def test_bidirectional_gru_accuracy(test_case_id):
     model.add(Bidirectional(GRU(4)))
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision='fixed<32, 16>', backend='Vitis'
+        model, granularity='name', default_precision='fixed<32, 10>', backend='Vitis'
     )
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
@@ -293,7 +293,7 @@ def test_bidirectional_no_bias(test_case_id, cell_type):
         model.add(Bidirectional(LSTM(4, use_bias=False)))
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision='fixed<32, 16>', backend='Vitis'
+        model, granularity='name', default_precision='fixed<32, 10>', backend='Vitis'
     )
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
