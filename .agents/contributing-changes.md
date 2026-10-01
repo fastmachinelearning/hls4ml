@@ -140,6 +140,12 @@ tests must pass completely.** Environmental failures elsewhere are acceptable at
 final state of the work. To close the gap, open the pull request as a draft — CI has the environments to
 run the full suite — and undraft once CI is green.
 
+To tell a regression from an environment failure, run the failing tests again on `main` in the same
+environment. Check out `main` in a separate worktree, point `PYTHONPATH` at it so the same interpreter imports
+that copy of the package (confirm with `hls4ml.__file__`), and run exactly the test ids that failed. A test
+that fails on the branch and passes on `main` is a regression, whatever its error message suggests; one that
+fails on both is the environment's.
+
 ## Documentation
 
 - User-facing features get a page under `docs/advanced/` (see `da.rst`, `auto.rst`, `bramfactor.rst` for the

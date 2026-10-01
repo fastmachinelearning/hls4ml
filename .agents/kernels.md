@@ -125,6 +125,18 @@ conv family too, because they share it; and a family whose io_stream form is a s
 Aim for one clear parallelism knob per kernel (hls4ml's is `reuse_factor`) and make the pragmas derive from
 it, so the cost is predictable across shapes.
 
+**Read the HLS log, not only the report.** When the tool cannot apply a directive as written, it often
+changes or drops it and says so only in a log message: a pipeline that misses its requested interval, a
+latency constraint ignored on a region that calls other functions, a loop it moved or merged. The synthesis
+still succeeds and the report then describes a design that does not do what the pragmas ask. After changing
+a kernel, search the log in the solution directory of the generated project for warnings that name your
+loops and arrays.
+
+**A factor derived from a layer dimension can break the tool itself.** Large reshape or partition factors
+make some tool versions crash during synthesis, while a neighbouring release builds the same design. If
+synthesis crashes rather than reporting an error, try a smaller factor, `ARRAY_PARTITION` in place of
+`ARRAY_RESHAPE`, or another tool version before debugging the kernel.
+
 ## If your backend does not look like this
 
 For a backend under development, or one of the non-Vivado backends, treat everything above as one worked

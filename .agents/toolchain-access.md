@@ -60,7 +60,6 @@ Three details matter:
 - **Give each run its own `HOME`.** Xilinx tools keep state in `$HOME/.Xilinx`. When several runs share it
   they interfere and fail, either unable to load a Tcl package or crashing during logic synthesis.
 - **Keep the wrapper's filename equal to the command name**, so both hls4ml's `build()` and generated build
-- **Keep the wrapper's filename equal to the command name**, so both hls4ml's `build()` and generated build
   scripts resolve it.
 
 Selecting a different version means pointing a wrapper at a different version directory. Keeping one wrapper

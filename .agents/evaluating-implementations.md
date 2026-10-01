@@ -5,7 +5,8 @@ description: >-
   baseline it wants to replace. Use whenever deciding go/no-go on a kernel change, a new strategy, an
   upstream PR, or any claim of the form "X is faster/smaller than Y" in hls4ml or its HLS backends. Covers
   building a fair comparison, the sweep matrix (shapes, io_type, reuse_factor), dependent-layer fallout,
-  synthesis artifacts that fake wins, and reporting a defensible verdict.
+  synthesis artifacts that fake wins, measuring with co-simulation, tool versions, and reporting a
+  defensible verdict.
 globs:
   - "hls4ml/templates/**"
   - "hls4ml/backends/**"
@@ -90,6 +91,35 @@ implementation in the mode it is actually aimed at, and if a claim is meant to h
 - **Estimates instead of measurements.** C synthesis under-reports multi-layer io_stream latency for both
   sides. Use it for relative comparison at matched conditions only.
 
+## Measuring with co-simulation
+
+Co-simulation runs the generated testbench, `myproject_test.cpp`, which reads its inputs from the project's
+`tb_data/` directory. Give it the inputs explicitly — the `input_data_tb` and `output_data_tb` arguments of
+the convert call take `.npy` or `.dat` files — and check the build log afterwards. When the testbench cannot
+open those files it says so in the log and falls back to a small default input set chosen by the backend; the
+run still completes and the report still has numbers in it.
+
+Run enough inputs for the design to reach its steady pace. In a design whose stages run at the same time, the
+buffers between stages accept the first inputs at the pace of the first stage, so with too few inputs the
+measured interval is the first stage's rather than the slowest one's. Several times as many inputs as there
+are buffering stages is a safe number. Where the report gives the smallest and largest value over the
+simulated inputs, take:
+
+- **latency** as the smallest — one input entering an idle design. In a design whose stages run at different
+  speeds, later inputs also wait in the buffers, so the largest latency describes that waiting, not the
+  design;
+- **interval** as the largest — the pace the design keeps once its buffers are full.
+
+Then check each number against what the design has to do: the interval cannot be shorter than the time its
+slowest stage needs for one input. A measurement that beats such a bound is wrong, whichever side it favors.
+
+## Tool versions
+
+Use one tool version for every configuration of a comparison wherever it can build them. Releases fail on
+designs that neighbouring releases build, so a version may not build some configurations. Build both sides of
+those configurations with another version, mark them in the results with the version they come from, and
+never compare a design built with one version against a design built with another.
+
 ## Check the layers that share the algorithm
 
 A change to the matrix-vector code path is not local: the convolution family reuses it, and recurrent layers
@@ -117,7 +147,10 @@ another is not a win.
 4. Forgetting the layer families that share the algorithm.
 5. Averaging across regimes, which hides a loss in the most common one.
 6. Reporting C synthesis estimates as final latency or resource numbers.
+7. Quoting a co-simulation without checking that it ran the inputs you gave it, and enough of them to reach
+   the steady interval.
+8. Comparing a design built with one tool version against one built with another.
 
-Latency numbers belong to co-simulation and resource numbers to logic synthesis, at one fixed tool version
-across the whole comparison. See [**toolchain access**](toolchain-access.md) for running those here, and
+Latency numbers belong to co-simulation and resource numbers to logic synthesis. See
+[**toolchain access**](toolchain-access.md) for running those here, and
 [**contributing changes**](contributing-changes.md) once a verdict says the change is worth proposing.
