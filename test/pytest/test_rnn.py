@@ -95,7 +95,7 @@ def compare_weights(hls_weights, keras_weights, keras_layer):
 def test_rnn_parsing(test_case_id, rnn_layer, return_sequences):
     model = create_model_parsing(rnn_layer, return_sequences)
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vitis')
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
 
@@ -243,7 +243,7 @@ def test_rnn_no_bias(test_case_id, rnn_layer):
     model.add(Input(shape=(5, 8)))
     model.add(rnn_layer(4, use_bias=False))
 
-    backend, default_precision, strategy = 'Vivado', 'fixed<32, 16>', 'Latency'
+    backend, default_precision, strategy = 'Vitis', 'fixed<32, 16>', 'Latency'
 
     hls_config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision=default_precision, backend=backend
@@ -268,11 +268,11 @@ def test_bidirectional_gru_accuracy(test_case_id):
     model.add(Bidirectional(GRU(4)))
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision='fixed<32, 16>', backend='Vivado'
+        model, granularity='name', default_precision='fixed<32, 16>', backend='Vitis'
     )
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vitis'
     )
     hls_model.compile()
 
@@ -293,11 +293,11 @@ def test_bidirectional_no_bias(test_case_id, cell_type):
         model.add(Bidirectional(LSTM(4, use_bias=False)))
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision='fixed<32, 16>', backend='Vivado'
+        model, granularity='name', default_precision='fixed<32, 16>', backend='Vitis'
     )
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vitis'
     )
     hls_model.compile()
 
