@@ -86,7 +86,7 @@ def convert(
         config['LayerName'][name]['Precision'] = dict(config['LayerName'][name].get('Precision', {}))
         config['LayerName'][name]['Precision']['result'] = precision
     return hls4ml.converters.convert_from_keras_model(
-        model, hls_config=config, backend=backend, io_type=io_type, output_dir=output_dir
+        model, hls_config=config, backend=backend, io_type=io_type, output_dir=output_dir, allow_da_fallback=False
     )
 
 

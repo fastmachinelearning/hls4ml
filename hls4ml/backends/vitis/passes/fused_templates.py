@@ -60,6 +60,7 @@ def _is_fused(node):
 class DenseFusedConfigTemplate(LayerConfigTemplate):
     def __init__(self):
         super().__init__(Dense)
+        self.name = 'dense_fused_config_template'
         self.template = dense_fused_config_template
 
     def _type_name(self, node, attribute, default):
@@ -98,6 +99,7 @@ class DenseFusedConfigTemplate(LayerConfigTemplate):
 class DenseFusedFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
         super().__init__(Dense, include_header=fused_include_list)
+        self.name = 'dense_fused_function_template'
         self.template = plain_function_template
 
     def match(self, node):
