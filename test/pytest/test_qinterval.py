@@ -94,6 +94,29 @@ def test_qinterval_einsum(qint_arr1, qint_arr2, eq):
     assert_is_represented(einsum_symbolic, einsum_sampled)
 
 
+@pytest.mark.parametrize('eq', ['ij,jk->k', 'ji,jk->k', 'ij,jk->i', 'ij,kj->i', 'ij,kl->'])
+def test_qinterval_einsum_direct_sum(eq):
+    """Direct sums on either input and at any axis preserve sampled results."""
+    inputs, out = eq.split('->', 1)
+    in0, in1 = inputs.split(',')
+    interval0 = random_arr(seed=1)[:3, :3]
+    interval1 = random_arr(seed=2)[:3, :3]
+    sampled0 = interval0.sample(1000)
+    sampled1 = interval1.sample(1000)
+
+    result = einsum(eq, interval0, interval1)
+    expected = np.einsum(f'A{in0},A{in1}->A{out}', sampled0, sampled1)
+    assert_is_represented(result, expected)
+
+    result = einsum(eq, interval0, sampled1[0])
+    expected = np.einsum(f'A{in0},{in1}->A{out}', sampled0, sampled1[0])
+    assert_is_represented(result, expected)
+
+    result = einsum(eq, sampled0[0], interval1)
+    expected = np.einsum(f'{in0},A{in1}->A{out}', sampled0[0], sampled1)
+    assert_is_represented(result, expected)
+
+
 def test_qinterval_to_kif(qint_arr1):
     k, i, f = qint_arr1.to_kif()
     samples = qint_arr1.sample(10000)
