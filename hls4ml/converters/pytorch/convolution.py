@@ -51,7 +51,7 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
     else:
         padding = class_object.padding
 
-    # Ouput info
+    # Output info
     (layer['out_width'], pad_left, pad_right) = compute_padding_1d_pytorch(
         padding, layer['in_width'], layer['stride_width'], layer['filt_width'], layer['dilation']
     )
@@ -108,7 +108,7 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
         )
     layer['dilation'] = class_object.dilation[0]
 
-    # Ouput info
+    # Output info
     (
         layer['out_height'],
         layer['out_width'],

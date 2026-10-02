@@ -316,7 +316,7 @@ def parse_vivado_report(hls_dir):
                 for line in f.readlines():
                     if re.search(r'\(top\)', line):
                         # Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 (|   URAM   )| DSP48 Blocks
-                        # skipping the first 2 unuseful cells with [:2]
+                        # skipping the first 2 unnecessary cells with [:2]
                         results = [_get_abs_and_percentage_values(elem) for elem in line.replace('|', '').split()[2:]]
                         implementation_report['TotLUTs'] = results[0][0]
                         implementation_report['TotLUTs%'] = results[0][1]

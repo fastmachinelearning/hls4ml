@@ -31,7 +31,7 @@ struct batchnorm_config {
 template <class data_T, class res_T, typename CONFIG_T>
 void normalize(const data_T &data, res_T &res, const typename CONFIG_T::scale_t &scale,
                const typename CONFIG_T::bias_t &bias) {
-// Calcuate result
+// Calculate result
 Result:
     #pragma unroll
     for (int ires = 0; ires < CONFIG_T::n_in; ires++) {

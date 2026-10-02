@@ -156,7 +156,7 @@ def get_branched_model():
 
 
 def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, model, output_dir=None):
-    """Execute the FIFO depth optimization sequence on a ONNX/QONNX model."""
+    """Execute the FIFO depth optimization sequence on an ONNX/QONNX model."""
 
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
