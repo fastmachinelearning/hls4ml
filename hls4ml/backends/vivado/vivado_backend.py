@@ -144,6 +144,11 @@ class VivadoBackend(FPGABackend):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
+        validation_passes = [
+            'vivado:validate_fused_strategy',
+        ]
+        validation_flow = register_flow('validation', validation_passes, requires=[init_flow], backend=self.name)
+
         streaming_passes = [
             'vivado:inplace_stream_flatten',  # Inform downstream changed packsize in case of skipping flatten
             'vivado:reshape_stream',
@@ -213,6 +218,7 @@ class VivadoBackend(FPGABackend):
             for opt_pass in all_passes
             if opt_pass
             not in initializers
+            + validation_passes
             + streaming_passes
             + quantization_passes
             + optimization_passes
@@ -229,6 +235,7 @@ class VivadoBackend(FPGABackend):
         ip_flow_requirements = [
             'optimize',
             init_flow,
+            validation_flow,
             streaming_flow,
             quantization_flow,
             optimization_flow,
@@ -366,6 +373,8 @@ class VivadoBackend(FPGABackend):
             if rf != 1:
                 raise Exception(f'Layer {layer.name} has rf = {rf} != 1, but has strategy = "distributed_arithmetic".')
             layer.set_attr('strategy', 'distributed_arithmetic')
+        elif layer.model.config.get_strategy(layer).lower() == 'fused':
+            layer.set_attr('strategy', 'fused')
         else:
             layer.set_attr('strategy', 'latency')
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', index_t))

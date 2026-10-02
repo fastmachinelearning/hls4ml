@@ -3,6 +3,7 @@ from hls4ml.backends.vivado.vivado_types import (
     VivadoArrayVariableConverter,
     VivadoInplaceArrayVariableConverter,
     VivadoInplaceStreamVariableConverter,
+    VivadoScalarStreamVariableConverter,
     VivadoStreamVariableConverter,
 )
 from hls4ml.model.optimizer import GlobalOptimizerPass
@@ -15,6 +16,7 @@ class TransformTypes(GlobalOptimizerPass):
         self.array_var_converter = VivadoArrayVariableConverter(type_converter=self.type_converter)
         self.inplace_array_var_converter = VivadoInplaceArrayVariableConverter(type_converter=self.type_converter)
         self.stream_var_converter = VivadoStreamVariableConverter(type_converter=self.type_converter)
+        self.scalar_stream_var_converter = VivadoScalarStreamVariableConverter(type_converter=self.type_converter)
         self.inplace_stream_var_converter = VivadoInplaceStreamVariableConverter(type_converter=self.type_converter)
         self.weight_var_converter = StaticWeightVariableConverter(type_converter=self.type_converter)
 
@@ -35,6 +37,9 @@ class TransformTypes(GlobalOptimizerPass):
                     new_var = self.array_var_converter.convert(var, pragma='reshape')
                 elif isinstance(var, InplaceTensorVariable):
                     new_var = self.inplace_array_var_converter.convert(var, pragma='')
+                elif node.get_attr('fused_stream_out', False) and out_name not in node.model.outputs:
+                    # Connection inside a fused region: carries one value at a time, never a model output
+                    new_var = self.scalar_stream_var_converter.convert(var)
                 else:
                     new_var = self.array_var_converter.convert(var, pragma='partition')
             else:
