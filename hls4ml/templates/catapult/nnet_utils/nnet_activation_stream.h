@@ -30,7 +30,7 @@ namespace nnet {
 // *************************************************
 //       LINEAR Activation
 // *************************************************
-// Adding this to work around problem with Catapult and SR model where the output channel appears to be inout
+// Adding this to work around problem with Catapult and SR model where the output channel appears to be input
 template <class data_T, class res_T, typename CONFIG_T> void linear(ac_channel<data_T> &data, ac_channel<res_T> &res) {
 LinearActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {

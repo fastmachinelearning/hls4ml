@@ -238,7 +238,7 @@ class DALatencyDenseTemplate(OptimizerPass):
             node.attributes['function_cpp'] = function_cpp
             node.attributes['include_header'] = ['nnet_utils/nnet_da_wrappers.h']
 
-        # avoid output weights and bias; alternatie entry point does not use them
+        # avoid output weights and bias; alternative entry point does not use them
         del node.attributes['weight_data']
         del node.attributes['bias_data']
         del node.attributes['weight']
@@ -328,7 +328,7 @@ class DALatencyConvTemplate(OptimizerPass):
         ]
         node.attributes['include_header'] = include_headers
 
-        # avoid output weights and bias; alternatie entry point does not use them
+        # avoid output weights and bias; alternative entry point does not use them
         del node.attributes['weight_data']
         del node.attributes['bias_data']
         del node.attributes['weight']
