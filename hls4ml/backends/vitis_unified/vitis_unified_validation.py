@@ -30,7 +30,7 @@ def platform_file(board_info, axi_mode):
 
 
 def memory_config(board_info):
-    """Off-chip memory the kernel pointers are assigned to, for cards that need an explicit bank map."""
+    """Off-chip memory the kernel pointers are assigned to for cards that need an explicit bank map."""
     memory = board_info.get('memory')
     return memory if isinstance(memory, dict) else {}
 
