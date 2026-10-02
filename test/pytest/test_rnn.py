@@ -224,6 +224,7 @@ def test_rnn_accuracy(test_case_id, rnn_layer, return_sequences, backend, io_typ
     )
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = strategy
+    hls_config['LayerName'][layer_name]['TableSize'] = 4096
     output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
