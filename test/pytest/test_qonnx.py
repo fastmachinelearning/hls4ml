@@ -506,7 +506,7 @@ def test_simple_model(test_case_id, request, model_name, io_type, backend):
         ('Catapult', 'Latency'),
         ('Vitis', 'Resource'),
         ('Vitis', 'Latency'),
-        ('oneAPI', 'Resource'),
+        ('Altera', 'Resource'),
     ],
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
