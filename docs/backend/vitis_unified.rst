@@ -2,7 +2,7 @@
 VitisUnified
 ============
 
-The **VitisUnified** backend provides an end-to-end workflow for AMD SoC boards, from an ML model to a design that is ready to deploy on `PYNQ <http://pynq.io/>`_. It is inherited from the :doc:`Vitis <vitis>` backend. We use the new Vitis Unified software, which can automatically link the HLS kernel to the system hardware. The current version supports only SoC boards with a PYNQ Python driver.
+The **VitisUnified** backend provides an end-to-end workflow for AMD SoC boards and data-center cards, from an ML model to a design that is ready to deploy. It is inherited from the :doc:`Vitis <vitis>` backend. We use the new Vitis Unified software, which can automatically link the HLS kernel to the system hardware. SoC boards are deployed with a `PYNQ <http://pynq.io/>`_ Python driver, data-center cards with an XRT one.
 
 It is the recommended flow for AMD SoC boards with Vitis 2023.2 or newer. Models with ``io_parallel`` or with ``ap_fixed`` interface types stay with the :doc:`VivadoAccelerator <accelerator>` backend.
 
@@ -10,6 +10,7 @@ Currently ``hls4ml`` officially supports the following boards and tool versions:
 
 * `zcu102 <https://www.xilinx.com/products/boards-and-kits/ek-u1-zcu102-g.html>`_ (Vitis and Vivado 2023.2)
 * `kv260 <https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html>`_ (Vitis and Vivado 2023.2 and 2025.2)
+* `alveo-u55c <https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html>`_ (Vitis 2023.2 or newer, ``axi_master`` with ``driver='xrt'``)
 
 If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. The steps are covered in the platform setup tutorial in the accelerator backend section of the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
 
@@ -61,6 +62,37 @@ In both modes the CPU controls the kernel through AXI-Lite and receives an inter
     * ``TLAST`` is set only on the last output beat of the batch. ``TLAST`` on the input is ignored, so a transfer with fewer beats than expected makes the kernel wait.
     * ``TKEEP`` is driven all-ones on every output beat. It is required by the AXI DMA, which never completes a transfer without it. ``TKEEP`` on the input is not checked, every beat is taken as a full element.
 
+.. _vitis_unified_cards:
+
+Data-center cards
+=================
+
+A card is linked against an installed card platform instead of one built by Vivado, and it is driven by XRT over PCIe instead of by PYNQ. Two things follow from that, and both are handled by the ``board`` and ``driver`` options:
+
+* The platform is looked up under ``PLATFORM_REPO_PATHS``, which has to be set when ``bitfile=True`` runs the link.
+* The kernel pointers are assigned to memory banks explicitly. The banks of the board entry are split evenly over the pointer arguments, one contiguous slice each, and the generated driver allocates every buffer in the banks of its own kernel argument. For one input and one output on a card with 32 HBM banks that gives ``HBM[0:15]`` and ``HBM[16:31]``.
+
+Only ``axi_master`` is supported on a card, and the raw bitstream and hardware handoff file that PYNQ needs are not written.
+
+.. code-block:: Python
+
+    hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                           hls_config=config,
+                                                           output_dir='hls4ml_prj_u55c',
+                                                           backend='VitisUnified',
+                                                           board='alveo-u55c',
+                                                           driver='xrt',
+                                                           clock_period=6.66)
+
+The generated ``export/axi_master_driver.py`` runs the linked ``.xclbin``:
+
+.. code-block:: Python
+
+    from axi_master_driver import NeuralNetworkAccelerator
+
+    accel = NeuralNetworkAccelerator('myproject.xclbin', X.shape, (len(X), n_out))
+    y = accel.predict(X)
+
 Configuration options
 =====================
 
@@ -78,7 +110,7 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
      - ``zcu102``
      - | Target board.
        | It selects the FPGA part, the platform, and the Python driver template.
-       | The current version only supports the boards in ``supported_boards.json`` (``zcu102`` and ``kv260``).
+       | The current version only supports the boards in ``supported_boards.json`` (``zcu102``, ``kv260`` and ``alveo-u55c``).
        | Any other board name is rejected with an error, unless ``platform`` and ``part`` are given.
        | You can use your own board: build its platform by following the platform setup tutorial in the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository and pass it with ``platform``.
    * - ``part``
@@ -109,7 +141,8 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
    * - ``driver``
      - ``python``
      - | Type of driver generated for the board.
-       | The current version only supports ``python`` (PYNQ).
+       | ``python`` is the PYNQ driver for SoC boards, ``xrt`` the PCIe driver for data-center cards.
+       | ``xrt`` requires ``axi_mode='axi_master'``. See :ref:`Data-center cards <vitis_unified_cards>`.
    * - ``input_type``
      - ``float``
      - | Data type of the model input on the AXI interface.
@@ -177,8 +210,8 @@ All paths inside the generated files are relative, so the output directory can b
     │   └── <board>/
     │       └── tcl_scripts/               create_xsa.tcl, platform tcl, output/<board>_*.xsa
     ├── export/
-    │   ├── system.bit                     bitstream (bitfile=True)
-    │   ├── system.hwh                     hardware handoff (bitfile=True)
+    │   ├── system.bit                     bitstream (bitfile=True, PYNQ driver only)
+    │   ├── system.hwh                     hardware handoff (bitfile=True, PYNQ driver only)
     │   └── axi_master_driver.py or axi_stream_driver.py
     └── final_reports/                     timing, utilization, power, link summary, hls_compile.rpt
 
@@ -204,7 +237,7 @@ Build options
    * - ``vitis_fifo_sizing=True``
      - Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on ``cosim`` by itself.
    * - ``bitfile=True``
-     - Links the packaged kernel to the board platform and writes the bitstream and the hardware handoff file to ``export/``. It needs the ``.xo`` file from ``synth=True``, ``xclbinutil`` and ``vivado`` on the PATH, and ``XILINX_VITIS`` set, which sourcing the Vitis ``settings64.sh`` does.
+     - Links the packaged kernel to the board platform and writes the ``.xclbin`` to ``vitis_workspace/system_link/``. With the PYNQ driver it also writes the bitstream and the hardware handoff file to ``export/``. It needs the ``.xo`` file from ``synth=True``, ``xclbinutil`` and ``vivado`` on the PATH, and ``XILINX_VITIS`` set, which sourcing the Vitis ``settings64.sh`` does. A card platform is found through ``PLATFORM_REPO_PATHS``.
    * - ``log_to_stdout=False``
      - Writes the output of each step to ``<step>_stdout.log`` and ``<step>_stderr.log`` instead of the terminal.
    * - ``reset=True``
@@ -227,8 +260,9 @@ The following are not supported in this version:
 * Models with several inputs or outputs in ``axi_stream`` mode. Use ``axi_master`` for them.
 * ``double`` in ``axi_stream`` mode with the shipped platforms. Their DMA is 32 bits wide, so pass your own platform with a 64-bit DMA.
 * Multigraph models.
-* A C or C++ host driver. Only the Python (PYNQ) driver is generated.
-* Boards other than SoC boards with a PYNQ driver.
+* A C or C++ host driver. Only Python drivers are generated, PYNQ for SoC boards and XRT for cards.
+* ``axi_stream`` on a data-center card. Its platform has no AXI DMA for the kernel to connect to.
+* Cards other than the ones in ``supported_boards.json``. Another card works by passing its ``platform`` and ``part``, but then the bank assignment has to be added to ``link_system.cfg`` by hand.
 
 
 Tutorial
