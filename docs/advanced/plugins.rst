@@ -55,6 +55,6 @@ Backends often rely on firmware templates or device description files. These ass
 packaged alongside the Python sources using the usual ``setuptools`` mechanisms (``package-data`` or
 ``include-package-data``) so they are available from the installed distribution.
 
-For an end-to-end example see the companion ``aie4ml`` [https://github.com/dimdano/aie4ml] package that ships alongside this project
+For an end-to-end example, see the companion `aie4ml <https://github.com/dimdano/aie4ml>`_ package that ships alongside this project
 as a standalone distribution; it encapsulates the existing AMD AIE backend as an installable plugin
 depending on ``hls4ml``.

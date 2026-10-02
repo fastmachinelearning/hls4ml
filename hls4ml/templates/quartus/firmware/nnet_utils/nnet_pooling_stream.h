@@ -14,7 +14,7 @@ namespace nnet {
  * Args:
  *   in_element - current elements from input image, data_T type is usually nnet::array, size of array corresponds to number
  * of channels res_stream - output stream, passed by reference to allow direct writing line_buffer - chained array of shift
- * registers, one for each row of the pool and channel kernel_window - array of values from the input curently being pooled
+ * registers, one for each row of the pool and channel kernel_window - array of values from the input currently being pooled
  *
  * Function executes 4 steps:
  *   (1) Shift line buffer - updates the contents of the chained shift registers, inserting the new inputs and removing last
@@ -100,7 +100,7 @@ ReadInputWidth:
  * Args:
  *   in_element - current elements from input image, data_T type is usually nnet::array, size of array corresponds to number
  * of channels res_stream - output stream, passed by reference to allow direct writing line_buffer - chained array of shift
- * registers, one for each row of the pool and channel kernel_window - array of values from the input curently being pooled
+ * registers, one for each row of the pool and channel kernel_window - array of values from the input currently being pooled
  *
  * Function executes 4 steps:
  *   (1) Shift line buffer - updates the contents of the chained shift registers, inserting the new inputs and removing last
@@ -173,7 +173,7 @@ void compute_pool_buffer_2d(
         sX = 0;
         pY++;
         sY = ((sY - lShiftY) == 0) ? (sY - CONFIG_T::stride_height + 1) : (sY + 1);
-        // Same row, same colum, therefore, move to the right
+        // Same row, same column, therefore, move to the right
     } else {
         pX++;
         sX = ((sX - lShiftX) == 0) ? (sX - CONFIG_T::stride_width + 1) : (sX + 1);

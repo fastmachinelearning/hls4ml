@@ -109,7 +109,7 @@ void gru_cell(data_T x[CONFIG_T::n_in], res_T h[CONFIG_T::n_units],
     nnet::dense_resource<data_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config_x>(x, mat_mul_x_w, weights,
                                                                                                bias);
 
-    // A matrix containing the values of matrix product between previou state (h) and recurrent weights (recurrent_weights),
+    // A matrix containing the values of matrix product between previous state (h) and recurrent weights (recurrent_weights),
     // for update, reset and candidate state gates, for each of the units
     hls_register typename CONFIG_T::accum_t mat_mul_h_wr[3 * CONFIG_T::n_units];
     nnet::dense_resource<res_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config_h>(
@@ -179,7 +179,7 @@ void gru(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_outputs * CONFIG_T::
         h[i] = 0;
     }
 
-    // Loop depedency - cannot pipeline
+    // Loop dependency - cannot pipeline
     #pragma disable_loop_pipelining
     for (int t = 0; t < CONFIG_T::n_timesteps; t++) {
         // Get data at current time step
@@ -221,7 +221,7 @@ void gru(data_T data[CONFIG_T::n_in], h_T h[CONFIG_T::n_units], res_T res[CONFIG
     //        h[i] = 0;
     //    }
 
-    // Loop depedency - cannot pipeline
+    // Loop dependency - cannot pipeline
     #pragma disable_loop_pipelining
     for (int t = 0; t < CONFIG_T::n_timesteps; t++) {
         // Get data at current time step

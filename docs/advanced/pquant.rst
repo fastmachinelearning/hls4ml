@@ -10,11 +10,12 @@ PQuantML
    :target: https://badge.fury.io/py/pquant-ml
 
 PQuantML is a hardware-aware model compression framework supporting:
-  - Joint pruning + quantization
-  - Layer-wise precision configuration
-  - Flexible training pipelines
-  - PyTorch and Keras V3 implementations
-  - Integration with hardware-friendly toolchains (e.g., hls4ml)
+
+- Joint pruning + quantization
+- Layer-wise precision configuration
+- Flexible training pipelines
+- PyTorch and Keras v3 implementations
+- Integration with hardware-friendly toolchains (e.g., hls4ml)
 
 PQuantML enables efficient deployment of compact neural networks on resource-constrained hardware such as FPGAs and embedded accelerators.
 
@@ -68,15 +69,15 @@ Key Characteristics
           x = self.dense4(x)
           return x
 
-      return Model(config)
+      return Model()
 
    PQmodel = build_model(config)
    PQmodel(torch.rand((1, 16)))
 
    ... # Training, evaluation, and anything else you want to do with the model
 
-   hls_config = {'Model': {'ChannelsLastConversion': 'full'}, 'InputShape': input_shape,}
-   hls_model = convert_from_pytorch_model(PQmodel, ...)
+   hls_config = {'Model': {'ChannelsLastConversion': 'full'}, 'InputShape': (16,)}
+   hls_model = convert_from_pytorch_model(PQmodel, hls_config=hls_config, ...)
    # Model-wise precision propagation is done automatically for PQuantML models for bit-exactness
    # Do NOT pass precision config if you don't know what you are doing
    # Note: Model-wise precision propagation needs ChannelsLastConversion to be active in order to work correctly with PyTorch models
@@ -84,4 +85,4 @@ Key Characteristics
    hls_model.compile()
 
 .. note::
-   Do not pass any precision configuration from ``hls4ml.converters.convert_from_<frontend>_model`` in general, as it may be ignored or lead to undefined behaviour! PQuantML-defined models will invoke model-wise precision propagation automatically to ensure bit-exactness between the PQuantML model and the generated HLS code (See `here <./precision.html>`__ for more details).
+   Do not pass any precision configuration to ``hls4ml.converters.convert_from_<frontend>_model`` in general, as it may be ignored or lead to undefined behaviour! PQuantML-defined models will invoke model-wise precision propagation automatically to ensure bit-exactness between the PQuantML model and the generated HLS code (See `here <./precision.html>`__ for more details).

@@ -114,7 +114,7 @@ class CoyoteBackend(VitisBackend):
         since this is the default frequency of Coyote (since the XDMA core defaults to 250 MHz). Coyote allows
         one to specify a different clock period for the model and use a clock-domain crossing (CDC) between the
         XDMA region and the model. This option is currently not exposed as part of the hls4ml backend, but advanced
-        users can easily set in the the CMake configuration of Coyote.
+        users can easily set in the CMake configuration of Coyote.
 
         NOTE: While the hardware will synthesize at 250 MHz, users can optionally pass a different HLS clock period
         This is primarily a work-around when HLS synthesize a kernel that doesn't meet timing during PnR.
