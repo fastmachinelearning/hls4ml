@@ -9,7 +9,7 @@ from hls4ml.converters import convert_from_keras_model
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult', 'oneAPI'])
 def test_repack_precision(test_case_id, backend: str):
     inp = keras.Input(shape=(3, 3), name='inp')
     out = keras.layers.Reshape((3, 3), name='reshape')(inp)
@@ -46,7 +46,6 @@ def test_repack_precision(test_case_id, backend: str):
 @pytest.mark.parametrize(
     'backend, strategy',
     [
-        ('Quartus', 'Resource'),
         ('oneAPI', 'Resource'),
         ('Vivado', 'Resource'),
         ('Vitis', 'Resource'),

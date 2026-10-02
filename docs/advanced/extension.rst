@@ -160,7 +160,7 @@ These two templates determine how to populate the config template based on the l
 
 Now, we need to tell hls4ml about the existence of this new layer by registering it.
 We also need to register the parser (a.k.a. the layer handler), the template passes, and HLS implementation source code with the particular backend.
-In this case, the HLS code is valid for both the Vivado and Quartus backends.
+In this case, the HLS code is valid for the Vivado backend.
 
 .. code-block:: Python
 
@@ -171,16 +171,14 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.
     # Register the hls4ml's IR layer
     hls4ml.model.layers.register_layer('KReverse', HReverse)
 
-    for backend_id in ['Vivado', 'Quartus']:
-        # Register the optimization passes (if any)
-        backend = hls4ml.backends.get_backend(backend_id)
+    backend = hls4ml.backends.get_backend('Vivado')
 
-        # Register template passes for the given backend
-        backend.register_template(HReverseConfigTemplate)
-        backend.register_template(HReverseFunctionTemplate)
+    # Register template passes for the backend
+    backend.register_template(HReverseConfigTemplate)
+    backend.register_template(HReverseFunctionTemplate)
 
-        # Register HLS implementation
-        backend.register_source('/path/to/your/nnet_reverse.h')
+    # Register HLS implementation
+    backend.register_source('/path/to/your/nnet_reverse.h')
 
 Finally, we can actually test the ``hls4ml`` custom layer compared to the Keras one.
 
@@ -198,17 +196,15 @@ Finally, we can actually test the ``hls4ml`` custom layer compared to the Keras 
     x = np.random.randint(-5, 5, (8,), dtype='int32')
     kres = kmodel(x)
 
-    for backend_id in ['Vivado', 'Quartus']:
+    hmodel = hls4ml.converters.convert_from_keras_model(
+        kmodel,
+        output_dir='hls4mlprj_extensions_Vivado',
+        backend='Vivado',
+        io_type='io_parallel',
+        hls_config={'Model': {'Precision': 'ap_int<6>', 'ReuseFactor': 1}},
+    )
 
-        hmodel = hls4ml.converters.convert_from_keras_model(
-            kmodel,
-            output_dir=str(f'hls4mlprj_extensions_{backend_id}'),
-            backend=backend_id,
-            io_type='io_parallel',
-            hls_config={'Model': {'Precision': 'ap_int<6>', 'ReuseFactor': 1}},
-        )
+    hmodel.compile()
+    hres = hmodel.predict(x.astype('float32'))
 
-        hmodel.compile()
-        hres = hmodel.predict(x.astype('float32'))
-
-        np.testing.assert_array_equal(kres, hres)
+    np.testing.assert_array_equal(kres, hres)

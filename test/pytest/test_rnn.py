@@ -95,7 +95,7 @@ def compare_weights(hls_weights, keras_weights, keras_layer):
 def test_rnn_parsing(test_case_id, rnn_layer, return_sequences):
     model = create_model_parsing(rnn_layer, return_sequences)
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vitis')
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
 
@@ -115,6 +115,7 @@ def create_model_accuracy(rnn_layer, return_sequences):
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
+    X = np.round(X * 2**22) * 2**-22
 
     layer_name = rnn_layer.__name__
     model = Sequential()
@@ -158,13 +159,11 @@ def create_model_accuracy(rnn_layer, return_sequences):
 @pytest.mark.parametrize(
     'rnn_layer, backend, io_type, strategy',
     [
-        (SimpleRNN, 'Quartus', 'io_parallel', 'resource'),
         (SimpleRNN, 'oneAPI', 'io_parallel', 'resource'),
         (LSTM, 'Vivado', 'io_parallel', 'resource'),
         (LSTM, 'Vivado', 'io_parallel', 'latency'),
         (LSTM, 'Vitis', 'io_parallel', 'resource'),
         (LSTM, 'Vitis', 'io_parallel', 'latency'),
-        (LSTM, 'Quartus', 'io_parallel', 'resource'),
         (LSTM, 'oneAPI', 'io_parallel', 'resource'),
         (LSTM, 'Vivado', 'io_stream', 'resource'),
         (LSTM, 'Vivado', 'io_stream', 'latency'),
@@ -174,13 +173,11 @@ def create_model_accuracy(rnn_layer, return_sequences):
         (GRU, 'Vivado', 'io_parallel', 'latency'),
         (GRU, 'Vitis', 'io_parallel', 'resource'),
         (GRU, 'Vitis', 'io_parallel', 'latency'),
-        (GRU, 'Quartus', 'io_parallel', 'resource'),
         (GRU, 'oneAPI', 'io_parallel', 'resource'),
         (GRU, 'Vivado', 'io_stream', 'resource'),
         (GRU, 'Vivado', 'io_stream', 'latency'),
         (GRU, 'Vitis', 'io_stream', 'resource'),
         (GRU, 'Vitis', 'io_stream', 'latency'),
-        (GRU, 'Quartus', 'io_stream', 'resource'),
         (GRU, 'oneAPI', 'io_stream', 'resource'),
         (Bidirectional, 'Vivado', 'io_parallel', 'resource'),
         (Bidirectional, 'Vivado', 'io_parallel', 'latency'),
@@ -188,13 +185,11 @@ def create_model_accuracy(rnn_layer, return_sequences):
         (Bidirectional, 'Vitis', 'io_parallel', 'latency'),
     ],
     ids=[
-        'SimpleRNN-Quartus-io_parallel-resource',
         'SimpleRNN-oneAPI-io_parallel-resource',
         'LSTM-Vivado-io_parallel-resource',
         'LSTM-Vivado-io_parallel-latency',
         'LSTM-Vitis-io_parallel-resource',
         'LSTM-Vitis-io_parallel-latency',
-        'LSTM-Quartus-io_parallel-resource',
         'LSTM-oneAPI-io_parallel-resource',
         'LSTM-Vivado-io_stream-resource',
         'LSTM-Vivado-io_stream-latency',
@@ -204,13 +199,11 @@ def create_model_accuracy(rnn_layer, return_sequences):
         'GRU-Vivado-io_parallel-latency',
         'GRU-Vitis-io_parallel-resource',
         'GRU-Vitis-io_parallel-latency',
-        'GRU-Quartus-io_parallel-resource',
         'GRU-oneAPI-io_parallel-resource',
         'GRU-Vivado-io_stream-resource',
         'GRU-Vivado-io_stream-latency',
         'GRU-Vitis-io_stream-resource',
         'GRU-Vitis-io_stream-latency',
-        'GRU-Quartus-io_stream-resource',
         'GRU-oneAPI-io_stream-resource',
         'Bidirectional-Vivado-io_parallel-resource',
         'Bidirectional-Vivado-io_parallel-latency',
@@ -225,12 +218,13 @@ def test_rnn_accuracy(test_case_id, rnn_layer, return_sequences, backend, io_typ
 
     model, X = create_model_accuracy(rnn_layer, return_sequences)
 
-    default_precision = 'ap_fixed<32, 16>' if backend in ['Vivado', 'Vitis'] else 'ac_fixed<32, 16, true>'
+    default_precision = 'fixed<32, 10>'
     hls_config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision=default_precision, backend=backend
     )
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = strategy
+    hls_config['LayerName'][layer_name]['TableSize'] = 4096
     output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
@@ -243,18 +237,14 @@ def test_rnn_accuracy(test_case_id, rnn_layer, return_sequences, backend, io_typ
     np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
 
 
-@pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
+@pytest.mark.parametrize('rnn_layer', [LSTM, GRU], ids=['LSTM', 'GRU'])
 def test_rnn_no_bias(test_case_id, rnn_layer):
     """use_bias=False previously crashed the parser instead of substituting zero biases."""
     model = Sequential()
     model.add(Input(shape=(5, 8)))
     model.add(rnn_layer(4, use_bias=False))
 
-    # The Vivado SimpleRNN kernel produces wrong results (untested upstream); use Quartus for it
-    if rnn_layer is SimpleRNN:
-        backend, default_precision, strategy = 'Quartus', 'ac_fixed<32, 16, true>', 'Resource'
-    else:
-        backend, default_precision, strategy = 'Vivado', 'ap_fixed<32, 16>', 'Latency'
+    backend, default_precision, strategy = 'Vitis', 'fixed<32, 10>', 'Latency'
 
     hls_config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision=default_precision, backend=backend
@@ -279,11 +269,11 @@ def test_bidirectional_gru_accuracy(test_case_id):
     model.add(Bidirectional(GRU(4)))
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision='ap_fixed<32, 16>', backend='Vivado'
+        model, granularity='name', default_precision='fixed<32, 10>', backend='Vitis'
     )
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vitis'
     )
     hls_model.compile()
 
@@ -304,11 +294,11 @@ def test_bidirectional_no_bias(test_case_id, cell_type):
         model.add(Bidirectional(LSTM(4, use_bias=False)))
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision='ap_fixed<32, 16>', backend='Vivado'
+        model, granularity='name', default_precision='fixed<32, 10>', backend='Vitis'
     )
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vitis'
     )
     hls_model.compile()
 

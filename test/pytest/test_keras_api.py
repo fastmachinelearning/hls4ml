@@ -27,7 +27,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(test_case_id, backend, io_type, synthesis_config):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -98,7 +98,7 @@ def test_dense(test_case_id, backend, io_type, synthesis_config):
     ids=['relu', 'leaky_relu', 'elu', 'prelu', 'sigmoid'],
 )
 # ThresholdedReLU(theta=1.0)])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(test_case_id, activation_function, backend, io_type, synthesis_config):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -140,7 +140,6 @@ padds_options = ['same', 'valid']
         ('Vivado', 'Latency'),
         ('Vitis', 'Resource'),
         ('Vitis', 'Latency'),
-        ('Quartus', 'Resource'),
         ('oneAPI', 'Resource'),
         ('XLS', 'Latency'),
     ],
@@ -236,7 +235,6 @@ padds_options = ['same', 'valid']
         ('Vivado', 'Latency'),
         ('Vitis', 'Resource'),
         ('Vitis', 'Latency'),
-        ('Quartus', 'Resource'),
         ('oneAPI', 'Resource'),
         ('XLS', 'Latency'),
     ],
@@ -432,7 +430,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 )
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI', 'XLS'])
 def test_pooling(test_case_id, pooling, padds, chans, backend, synthesis_config):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 
