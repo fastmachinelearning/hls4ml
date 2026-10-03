@@ -10,7 +10,7 @@ Currently ``hls4ml`` officially supports the following boards and tool versions:
 
 * `zcu102 <https://www.xilinx.com/products/boards-and-kits/ek-u1-zcu102-g.html>`_ (Vitis and Vivado 2023.2)
 * `kv260 <https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html>`_ (Vitis and Vivado 2023.2 and 2025.2)
-* `alveo-u55c <https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html>`_ (Vitis 2023.2 or newer, ``axi_master`` with ``driver='xrt'``)
+* `alveo-u55c <https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html>`_ (Vitis and Vivado 2024.2 with the ``xilinx_u55c_gen3x16_xdma_3_202210_1`` platform, ``axi_master`` with ``driver='xrt'``)
 
 If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. The steps are covered in the platform setup tutorial in the accelerator backend section of the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
 
@@ -72,7 +72,7 @@ A card is linked against an installed card platform instead of one built by Viva
 * The platform is looked up under ``PLATFORM_REPO_PATHS``, which has to be set when ``bitfile=True`` runs the link.
 * The kernel pointers are assigned to memory banks explicitly. The banks of the board entry are split evenly over the pointer arguments, one contiguous slice each, and the generated driver allocates every buffer in the banks of its own kernel argument. For one input and one output on a card with 32 HBM banks that gives ``HBM[0:15]`` and ``HBM[16:31]``.
 
-Only ``axi_master`` is supported on a card, and the raw bitstream and hardware handoff file that PYNQ needs are not written.
+Only ``axi_master`` is supported on a card. Instead of the raw bitstream and hardware handoff file that PYNQ needs, the ``.xclbin`` is copied to ``export/``.
 
 .. code-block:: Python
 
@@ -84,7 +84,7 @@ Only ``axi_master`` is supported on a card, and the raw bitstream and hardware h
                                                            driver='xrt',
                                                            clock_period=6.66)
 
-The generated ``export/axi_master_driver.py`` runs the linked ``.xclbin``:
+The generated ``export/axi_master_driver.py`` runs the ``.xclbin`` next to it. The input must have the shape the driver was constructed with:
 
 .. code-block:: Python
 
@@ -212,6 +212,7 @@ All paths inside the generated files are relative, so the output directory can b
     ├── export/
     │   ├── system.bit                     bitstream (bitfile=True, PYNQ driver only)
     │   ├── system.hwh                     hardware handoff (bitfile=True, PYNQ driver only)
+    │   ├── <project_name>.xclbin          linked design (bitfile=True, XRT driver only)
     │   └── axi_master_driver.py or axi_stream_driver.py
     └── final_reports/                     timing, utilization, power, link summary, hls_compile.rpt
 
@@ -237,7 +238,7 @@ Build options
    * - ``vitis_fifo_sizing=True``
      - Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on ``cosim`` by itself.
    * - ``bitfile=True``
-     - Links the packaged kernel to the board platform and writes the ``.xclbin`` to ``vitis_workspace/system_link/``. With the PYNQ driver it also writes the bitstream and the hardware handoff file to ``export/``. It needs the ``.xo`` file from ``synth=True``, ``xclbinutil`` and ``vivado`` on the PATH, and ``XILINX_VITIS`` set, which sourcing the Vitis ``settings64.sh`` does. A card platform is found through ``PLATFORM_REPO_PATHS``.
+     - Links the packaged kernel to the board platform and writes the ``.xclbin`` to ``vitis_workspace/system_link/``. With the PYNQ driver it also writes the bitstream and the hardware handoff file to ``export/``, with the XRT driver it copies the ``.xclbin`` there. It needs the ``.xo`` file from ``synth=True``, ``xclbinutil`` and ``vivado`` on the PATH, and ``XILINX_VITIS`` set, which sourcing the Vitis ``settings64.sh`` does. A card platform is found through ``PLATFORM_REPO_PATHS``. A prebuilt platform that cannot be found is reported before any step runs.
    * - ``log_to_stdout=False``
      - Writes the output of each step to ``<step>_stdout.log`` and ``<step>_stderr.log`` instead of the terminal.
    * - ``reset=True``

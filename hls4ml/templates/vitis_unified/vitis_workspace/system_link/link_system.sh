@@ -5,7 +5,7 @@ set -e
 {XSA_GENERATOR_BLOCK}
 
 v++ -l -t hw --platform {PLATFORM_PATH} {KERNEL_XO} --config link_system.cfg -o {PROJECT_NAME}.xclbin --save-temps
-{PYNQ_HANDOFF_BLOCK}
+{EXPORT_BLOCK}
 
 # Generate routed vectorless power estimate
 POWER_REPORT_TCL=report_power.tcl

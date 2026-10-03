@@ -57,7 +57,13 @@ def validate_config(board, axi_mode, driver, input_type, output_type, supported_
         raise Exception('driver must be either python (PYNQ) or xrt')
     if driver == 'xrt' and axi_mode != 'axi_master':
         raise Exception('driver xrt is only supported with axi_mode axi_master')
-    if platform is None and driver == 'python' and memory_config(supported_boards[board]):
+    card = memory_config(supported_boards.get(board, {}))
+    if driver == 'xrt' and board in supported_boards and not card:
+        raise Exception(
+            f'board "{board}" is an SoC board with a PYNQ runtime, so driver xrt is not supported on it. '
+            'Pass platform and part to target a card that is not listed.'
+        )
+    if driver == 'python' and card:
         raise Exception(f'board "{board}" is a data-center card, which has no PYNQ runtime. Pass driver="xrt" to use it.')
     for name, value in [('input_type', input_type), ('output_type', output_type)]:
         if value not in ['float', 'double']:

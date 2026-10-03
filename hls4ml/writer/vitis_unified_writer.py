@@ -291,10 +291,12 @@ fi
                 )
                 platform_generator_block = f': "${{{var}:?{var} is not set. {hint}}}"\n'
 
-        # The raw bitstream and the hardware handoff are only needed by the PYNQ driver
-        handoff_block = ''
+        # PYNQ loads the raw bitstream and the hardware handoff, XRT loads the .xclbin itself
+        project_name = self._get_project_name(model)
         if self.vitis_unified_config.get_driver() == 'python':
-            handoff_block = PYNQ_HANDOFF_BLOCK.replace('{PROJECT_NAME}', self._get_project_name(model))
+            export_block = PYNQ_HANDOFF_BLOCK.replace('{PROJECT_NAME}', project_name)
+        else:
+            export_block = f'cp {project_name}.xclbin ../../export/'
 
         output_path = f'{self.get_vitis_linker_dir(model)}/link_system.sh'
         self._fill_template(
@@ -302,7 +304,7 @@ fi
             output_path,
             replacements={
                 '{XSA_GENERATOR_BLOCK}': platform_generator_block,
-                '{PYNQ_HANDOFF_BLOCK}': handoff_block,
+                '{EXPORT_BLOCK}': export_block,
                 '{PLATFORM_PATH}': platform_path_for_vpp,
                 '{KERNEL_XO}': self._get_xo_file_path(model),
                 '{PROJECT_NAME}': self._get_project_name(model),

@@ -177,6 +177,8 @@ FAKE_COSIM_RPT = """+--------+--------+-----+-----+-----+-----+-----+-----+
         ('simple_unet', {'driver': 'opencl'}, '(?i)driver'),
         ('simple_unet', {'board': 'alveo-u55c', 'driver': 'python'}, '(?i)data-center'),
         ('simple_unet', {'driver': 'xrt', 'axi_mode': 'axi_stream'}, '(?i)axi_master'),
+        ('simple_unet', {'driver': 'xrt'}, '(?i)SoC'),
+        ('simple_unet', {'board': 'alveo-u55c', 'driver': 'python', 'platform': 'any.xpfm'}, '(?i)data-center'),
     ],
     ids=[
         'unknown_board',
@@ -186,6 +188,8 @@ FAKE_COSIM_RPT = """+--------+--------+-----+-----+-----+-----+-----+-----+
         'unknown_driver',
         'pynq_driver_on_card',
         'xrt_driver_on_axi_stream',
+        'xrt_driver_on_soc_board',
+        'pynq_driver_on_card_with_platform',
     ],
 )
 def test_invalid_config_rejected_at_conversion(request, test_case_id, model_name, bad_kwargs, match):
@@ -429,6 +433,24 @@ def test_card_driver_and_link(test_case_id, simple_unet):
     # the card platform is found through PLATFORM_REPO_PATHS, not the Vitis install
     assert 'PLATFORM_REPO_PATHS is not set' in link
     assert '--platform ${PLATFORM_REPO_PATHS}/' in link
+    assert '.xclbin ../../export/' in link
+
+
+def test_soc_link_keeps_pynq_handoff(test_case_id, simple_unet):
+    """The PYNQ driver still gets its bitstream and hardware handoff, and no .xclbin copy."""
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master'),
+    )
+    hls_model.write()
+
+    link = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.sh').read_text()
+    assert 'xclbinutil' in link and 'vitis_design.hwh' in link
+    assert '.xclbin ../../export/' not in link
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])

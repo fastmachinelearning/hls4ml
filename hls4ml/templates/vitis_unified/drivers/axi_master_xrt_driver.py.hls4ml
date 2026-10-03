@@ -71,7 +71,9 @@ class NeuralNetworkAccelerator:
         if len(inputs) != len(self.input_buffers):
             raise ValueError(f'expected {len(self.input_buffers)} input array(s) for this accelerator, got {len(inputs)}')
 
-        for (buffer, _, _), x in zip(self.input_buffers, inputs):
+        for (buffer, shape, _), x in zip(self.input_buffers, inputs):
+            if np.shape(x) != shape:
+                raise ValueError(f'expected an input of shape {shape}, got {np.shape(x)}')
             buffer.write(np.ascontiguousarray(x, dtype=self.input_dtype).tobytes(), 0)
             buffer.sync(pyxrt.xclBOSyncDirection.XCL_BO_SYNC_BO_TO_DEVICE)
 
