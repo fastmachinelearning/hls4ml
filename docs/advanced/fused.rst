@@ -141,8 +141,8 @@ A chain is as slow as its slowest layer. A layer with ``m`` multipliers has an i
    interval  =  passes * width / m  +  c
 
 where ``width`` is the number of values the kernel works through in each pass, ``n_in`` for ``dot`` and ``n_out`` for the other forms, ``m`` divides
-``width``, and ``passes`` is ``n_out`` for ``dot`` and ``n_in + 1`` for the other forms, the extra pass applying the activation. ``c`` is the time to fill
-the pipelines and pass data between layers. The strategy uses an overestimate of ``c``, which is why the interval can come out a few cycles below the
-requested one but never above it.
+``width``, and ``passes`` is ``n_out`` for ``dot`` and ``n_in + 1`` for the other forms, the extra pass adding the bias and applying the activation.
+``c`` is the time to fill the pipelines and pass data between layers. The strategy uses an overestimate of ``c``, which is why the interval can come
+out a few cycles below the requested one but never above it.
 
 This estimate of ``c`` was measured with Vitis HLS 2024.1. Vitis HLS 2025.1 is less predictable and is generally not supported.

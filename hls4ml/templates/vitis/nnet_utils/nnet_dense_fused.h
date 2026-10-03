@@ -169,27 +169,13 @@ void dense_fused(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
     typename CONFIG_T::table_t table[CONFIG_T::table_size];
     fused_init_table<CONFIG_T>(table);
 
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
+    // Static so that no loop is needed to clear the sums before each run: they start at zero, and the
+    // result loop adds the bias and sets them back to zero for the next run.
+    static typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=PAR
 
-    // All outputs together, one input at a time, like the axpy kernel. Written one output at a time,
-    // like the dot kernel, the loops are not merged here and the pipeline fills and empties per output.
-FusedFirst:
-    for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
-        #pragma HLS PIPELINE II=1
-        for (unsigned p = 0; p < PAR; p++) {
-            #pragma HLS UNROLL
-            unsigned j = jb + p;
-            if (j < CONFIG_T::n_out) {
-                acc[j] = (typename CONFIG_T::accum_t)biases[j] +
-                         CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
-                             data[0], weights[j * CONFIG_T::n_in]);
-            }
-        }
-    }
-
 FusedAccum:
-    for (unsigned i = 1; i < CONFIG_T::n_in; i++) {
+    for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
     FusedLanes:
         for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
             #pragma HLS PIPELINE II=1
@@ -207,7 +193,9 @@ FusedAccum:
 FusedResult:
     for (unsigned j = 0; j < CONFIG_T::n_out; j++) {
         #pragma HLS UNROLL factor=PAR
-        typename CONFIG_T::preact_t value = cast<data_T, typename CONFIG_T::preact_t, CONFIG_T>(acc[j]);
+        typename CONFIG_T::accum_t sum = acc[j] + (typename CONFIG_T::accum_t)biases[j];
+        acc[j] = 0;
+        typename CONFIG_T::preact_t value = cast<data_T, typename CONFIG_T::preact_t, CONFIG_T>(sum);
         res[j] = fused_activate<typename CONFIG_T::preact_t, res_T, CONFIG_T>(value, table);
     }
 
@@ -267,31 +255,16 @@ void dense_fused_axpy(hls::stream<data_T> &data, res_T res[CONFIG_T::n_out],
                       typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     const unsigned PAR = CONFIG_T::multiplier_limit;
 
-    typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
+    // Static, and set back to zero by the result loop
+    static typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=PAR
     #pragma HLS ARRAY_RESHAPE variable=weights cyclic factor=PAR dim=1
 
     typename CONFIG_T::table_t table[CONFIG_T::table_size];
     fused_init_table<CONFIG_T>(table);
 
-    // The first input has its own loop, which starts each sum from the bias. Choosing between bias and
-    // sum inside the main loop costs no cycles, but lengthens its critical path and timing then fails.
-    data_T first = data.read();
-FusedAxpyFirst:
-    for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
-        #pragma HLS PIPELINE II=1
-        for (unsigned p = 0; p < PAR; p++) {
-            #pragma HLS UNROLL
-            unsigned j = jb + p;
-            if (j < CONFIG_T::n_out) {
-                acc[j] = (typename CONFIG_T::accum_t)biases[j] +
-                         CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(first, weights[j]);
-            }
-        }
-    }
-
 FusedAxpyAccum:
-    for (unsigned i = 1; i < CONFIG_T::n_in; i++) {
+    for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         data_T cache = data.read();
     FusedAxpyLanes:
         for (unsigned jb = 0; jb < CONFIG_T::n_out; jb += PAR) {
@@ -307,12 +280,14 @@ FusedAxpyAccum:
         }
     }
 
-// Applying the activation during the last input instead would save n_out / PAR cycles, but it
-// lengthens the critical path of that loop and timing then fails.
+// Adding the bias and applying the activation during the last input instead would save n_out / PAR cycles,
+// but it lengthens the critical path of that loop and timing then fails.
 FusedAxpyResult:
     for (unsigned j = 0; j < CONFIG_T::n_out; j++) {
         #pragma HLS UNROLL factor=PAR
-        typename CONFIG_T::preact_t value = cast<data_T, typename CONFIG_T::preact_t, CONFIG_T>(acc[j]);
+        typename CONFIG_T::accum_t sum = acc[j] + (typename CONFIG_T::accum_t)biases[j];
+        acc[j] = 0;
+        typename CONFIG_T::preact_t value = cast<data_T, typename CONFIG_T::preact_t, CONFIG_T>(sum);
         res[j] = fused_activate<typename CONFIG_T::preact_t, res_T, CONFIG_T>(value, table);
     }
 

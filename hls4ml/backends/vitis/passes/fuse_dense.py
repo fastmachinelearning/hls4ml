@@ -253,7 +253,7 @@ class PlanDenseFusion(ModelOptimizerPass):
         trips = -(-self._most_usable_multipliers(layer) // multipliers)
         if layer.get_attr('fused_form') == 'dot':
             return n_out * trips
-        # Every input, plus the pass that applies the activation
+        # Every input, plus the pass that adds the bias and applies the activation
         return (n_in + 1) * trips
 
     def _headroom_cycles(self, layer, multipliers):
