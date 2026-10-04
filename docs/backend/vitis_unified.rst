@@ -74,6 +74,8 @@ A card is linked against an installed card platform instead of one built by Viva
 
 Only ``axi_master`` is supported on a card. Instead of the raw bitstream and hardware handoff file that PYNQ needs, the ``.xclbin`` is copied to ``export/``.
 
+The kernel runs on the card's scalable clock. Vitis implements it against the platform's default kernel frequency, 300 MHz on the U55C, and when routing misses that it lowers the clock in the ``.xclbin`` to the highest frequency that meets timing. The ``[clock]`` entry of ``link_system.cfg`` does not change this. ``clock_period`` still sets the HLS schedule, and since the HLS estimate leaves out routing, a short period pays off: a 16-64-32-32-5 jet tagger at ``ReuseFactor`` 1 shipped at 112 MHz with ``clock_period=6.66`` and at 200 MHz with ``clock_period=3.333``, with the same results on 1024 test samples.
+
 .. code-block:: Python
 
     hls_model = hls4ml.converters.convert_from_keras_model(model,
@@ -82,7 +84,7 @@ Only ``axi_master`` is supported on a card. Instead of the raw bitstream and har
                                                            backend='VitisUnified',
                                                            board='alveo-u55c',
                                                            driver='xrt',
-                                                           clock_period=6.66)
+                                                           clock_period=3.333)
 
 The generated ``export/axi_master_driver.py`` runs the ``.xclbin`` next to it. The input must have the shape the driver was constructed with:
 
