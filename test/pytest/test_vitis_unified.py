@@ -422,6 +422,8 @@ def test_card_driver_and_link(test_case_id, simple_unet):
 
     driver = (output_dir / 'export' / 'axi_master_driver.py').read_text()
     assert 'import pyxrt' in driver and 'from pynq' not in driver
+    # pyxrt's bo.read() returns a zero-stride array under numpy 2, so outputs are read through map()
+    assert 'buffer.map()' in driver and 'buffer.read(' not in driver
     assert '<TOP_' not in driver and '<IP_VERSION>' not in driver
     assert _driver_port_counts(output_dir / 'export' / 'axi_master_driver.py') == {
         'INP_PORT_NAMEs': 1,

@@ -87,7 +87,9 @@ class NeuralNetworkAccelerator:
         results = []
         for buffer, shape, nbytes in self.output_buffers:
             buffer.sync(pyxrt.xclBOSyncDirection.XCL_BO_SYNC_BO_FROM_DEVICE)
-            results.append(np.frombuffer(buffer.read(nbytes, 0), dtype=self.output_dtype).reshape(shape))
+            # bo.read() returns a zero-stride array under numpy 2, map() is the buffer's own host memory
+            data = np.frombuffer(buffer.map(), dtype=self.output_dtype, count=nbytes // self.output_dtype.itemsize)
+            results.append(data.reshape(shape).copy())
 
         result = results[0] if len(results) == 1 else results
         if profile:
