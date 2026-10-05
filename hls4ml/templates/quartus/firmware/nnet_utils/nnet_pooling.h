@@ -10,7 +10,7 @@ template <typename T, int N> T max(T x[N]) {
     hls_register T y = x[0];
 
     // Due to loop dependencies, pipelining & unrolling is not possible
-    // Explictily disabling pipeline significantly reduces resource usage
+    // Explicitly disabling pipeline significantly reduces resource usage
     #pragma disable_loop_pipelining
     for (int i = 1; i < N; i++) {
         if (x[i] > y)
@@ -25,7 +25,7 @@ template <typename T, int N> T avg(T (&x)[N]) {
     hls_register T y = 0;
 
     // Due to loop dependencies, pipelining & unrolling is not possible
-    // Explictily disabling pipeline significantly reduces resource usage
+    // Explicitly disabling pipeline significantly reduces resource usage
     #pragma disable_loop_pipelining
     for (int i = 0; i < N; i++) {
         y += x[i];
@@ -41,7 +41,7 @@ template <int W, int N> ac_int<W, true> avg(ac_int<W, true> (&x)[N]) {
     hls_register ac_int<W + ceillog2(N), true> tmp = 0;
 
     // Due to loop dependencies, pipelining & unrolling is not possible
-    // Explictily disabling pipeline significantly reduces resource usage
+    // Explicitly disabling pipeline significantly reduces resource usage
     #pragma disable_loop_pipelining
     for (int i = 0; i < N; i++) {
         tmp += x[i];
@@ -60,7 +60,7 @@ template <int W, int I, int N> ac_fixed<W, I, true> avg(ac_fixed<W, I, true> (&x
     hls_register ac_fixed<W + ceillog2(N), I + ceillog2(N), true> tmp = 0;
 
     // Due to loop dependencies, pipelining & unrolling is not possible
-    // Explictily disabling pipeline significantly reduces resource usage
+    // Explicitly disabling pipeline significantly reduces resource usage
     #pragma disable_loop_pipelining
     for (int i = 0; i < N; i++) {
         tmp += x[i];
@@ -86,7 +86,7 @@ template <typename T, int N, Pool_Op op> T pool_op(T (&x)[N]) {
 
 /*
  * In Tensorflow, pooling ignores the value in the padded cells
- * For Avg pooling, return 0 (the divisior is modified to the area overlapping the unpadded image.)
+ * For Avg pooling, return 0 (the divisor is modified to the area overlapping the unpadded image.)
  * For ax pooling, return the most negative value for the type.
  */
 template <typename T, Pool_Op op> inline T pad_val() {
@@ -102,7 +102,7 @@ template <typename T, Pool_Op op> inline T pad_val() {
 }
 
 struct pooling1d_config {
-    // Pooling paramaters
+    // Pooling parameters
     static const unsigned pool_width = 2;
     static const unsigned stride_width = 2;
 

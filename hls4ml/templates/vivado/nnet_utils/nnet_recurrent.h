@@ -48,7 +48,7 @@ struct lstm_config {
 //      - s_newstate = activation(U*input + W*state)
 //      - h_output   = activation(U*input + W*state)*activation(s_newstate)
 //  - If softmax is needed on output, perform *outside* this operations
-//  Originall had a version allows for the state in each layer to be saved, moved this to above (this requires are LARGE
+//  Originally had a version that allows for the state in each layer to be saved, moved this to above (this requires a LARGE
 //  dense network at the end)
 template <class data_T, class res_T, typename CONFIG_T>
 void lstm(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_T::n_state],

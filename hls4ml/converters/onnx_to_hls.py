@@ -188,7 +188,7 @@ def parse_onnx_model(onnx_model):
 
     # We don't infer the shapes because the qonnx package preprocessing does it.
 
-    # Obtain list of input/ouput layers
+    # Obtain list of input/output layers
     all_inputs = [x.name for x in onnx_model.graph.input]
     all_initializers = [x.name for x in onnx_model.graph.initializer]
     input_layers = [x for x in all_inputs if x not in all_initializers]
@@ -203,7 +203,7 @@ def parse_onnx_model(onnx_model):
         input_layer['class_name'] = 'InputLayer'
         inp_shape = get_global_input_shape(onnx_model.graph, inp)
         # We only support ONNX where the first dimension is the batch dimension.
-        # Remove the batch dimension in all subsequnt use
+        # Remove the batch dimension in all subsequent use
         input_layer['input_shape'] = inp_shape[1:]
 
         print('Input shape:', input_layer['input_shape'])

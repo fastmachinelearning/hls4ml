@@ -30,7 +30,7 @@ Standard hls4ml layers used inside an SNN, such as ``Dense``/linear layers,
 retain their normal ``ReuseFactor`` support. ``ReuseFactor`` can still be set at
 the model, layer type, or layer name level for these layers, and each dense layer
 uses its own configured value independently of the surrounding spiking neuron
-layers.  The spiking neuron kernels themselves, ``IFNeuron`` and ``LIFNeuron``, do not
+layers. The spiking neuron kernels themselves, ``IFNeuron`` and ``LIFNeuron``, do not
 currently expose ``ReuseFactor``. They process one timestep at a time, keep
 internal membrane state across timesteps, and unroll the per-neuron update loop
 across ``n_out`` channels.
@@ -112,7 +112,7 @@ membrane decision policies are:
 * ``argmax_membrane``
 * ``binary_logit`` (emits ``mem(class_1) - mem(class_0)`` for binary classifiers)
 
-This will be explained in a tutorial in the hls4ml-tutorials repo.
+This will be explained in a tutorial in the hls4ml-tutorial repo.
 
 Do not place a final spiking neuron before ``SNNReadout(output_mode="membrane")``
 unless you intentionally want the readout to consume that neuron's spike output.
@@ -168,7 +168,7 @@ SNN inference, call the compiled model once per timestep and pass exactly
        x_step = x_sequence[step].astype("float32")[None, :]
        last = hls_model.predict(x_step)
 
-After the last call in the window, generated HLS resets the neuron and readout
+After the last call in the window, the generated HLS resets the neuron and readout
 state for the next sequence. Avoid making stray single-timestep ``predict``
 calls before evaluating a sequence, because those calls advance the state.
 

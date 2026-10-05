@@ -62,7 +62,7 @@ fn validate_lookup_table<
 // Check arguments and create LUT
 pub fn create<
     LOG2_STEP: s32,
-    // Other parametes are deduced automatically, so we put them after LOG2_STEP
+    // Other parameters are deduced automatically, so we put them after LOG2_STEP
     NB_IN: u32, BE_IN: s32,
     NB_OUT: u32, BE_OUT: s32,
     SIZE: u32,
