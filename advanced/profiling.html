@@ -141,7 +141,7 @@
 <h1>Profiling<a class="headerlink" href="#profiling" title="Link to this heading"></a></h1>
 <p>In the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> configuration file, it is possible to specify the model <code class="docutils literal notranslate"><span class="pre">Precision</span></code> and <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> with up to layer-wise granularity.</p>
 <p>Using a low precision can help reduce the FPGA resource usage of a model, but may result in loss of model performance if chosen inappropriately. The profiling tools in <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> help you to decide the appropriate model precision.</p>
-<p>Profiling uses some extra dependencies, to install these, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[profiling]</span></code>. The profiling tools are provided as a <code class="docutils literal notranslate"><span class="pre">Python</span></code> module which you can use.</p>
+<p>Profiling uses some extra dependencies. To install them, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[profiling]</span></code>. The profiling tools are provided as a <code class="docutils literal notranslate"><span class="pre">Python</span></code> module which you can use.</p>
 <p>Three types of objects can be provided: <strong>a model object</strong>, <strong>test data</strong>, and a <strong>ModelGraph object</strong>. The model can be Keras or PyTorch.
 You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. <code class="docutils literal notranslate"><span class="pre">model.predict(X)</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.model.profiling</span><span class="w"> </span><span class="kn">import</span> <span class="n">numerical</span>
@@ -156,12 +156,12 @@ You will need to initialise these objects by using a trained model, loading a mo
 <span class="c1"># real code:</span>
 <span class="c1"># load your hls4ml .yml config file with yaml</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"keras-config.yml"</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="n">ymlfile</span><span class="p">:</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ymlfile</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">ymlfile</span><span class="p">)</span>
 
 <span class="n">hls_model</span> <span class="o">=</span> <span class="n">keras_v2_to_hls</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
 <span class="c1"># produce 4 plots</span>
-<span class="n">plots</span> <span class="o">=</span> <span class="n">numerical</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls_model</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
+<span class="n">plots</span> <span class="o">=</span> <span class="n">numerical</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">hls_model</span><span class="o">=</span><span class="n">hls_model</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -174,14 +174,14 @@ You will need to initialise these objects by using a trained model, loading a mo
 </a>
 <a class="reference internal image-reference" href="../_images/act_hls4ml.png"><img alt="../_images/act_hls4ml.png" src="../_images/act_hls4ml.png" style="width: 45%;" />
 </a>
-<p>Plots are title “before optimization” and “final / after optimization”.
+<p>Plots are titled “before optimization” and “final / after optimization”.
 The “before optimization” plots show the distributions of the original Keras or PyTorch model, while the “after optimization” plots show the distributions of the ModelGraph.
-In the example images, notice the “bn1”, “bn2”, “bn3” labels in the “before optimization” plots which are missing from the “after optimization”.
-These layer are BatchNormalization layers, which hls4ml has fused into the preceding Dense layers (labelled “fc{1,2,3}”).
+In the example images, notice the “bn1”, “bn2”, “bn3” labels in the “before optimization” plots which are missing from the “after optimization” plots.
+These layers are BatchNormalization layers, which hls4ml has fused into the preceding Dense layers (labelled “fc{1,2,3}”).
 Because of this optimization, the weights of “fc1” of the ModelGraph are actually the product of the weights of the Keras model “fc1” with “bn1”.
 Similarly, the output of “fc1” of the ModelGraph should correspond to the output of the Keras model “bn1”.
 When optimizing precision, the data types should be chosen to work well for the “after optimization” model.</p>
-<p>Different plots styles are available with the <code class="docutils literal notranslate"><span class="pre">plot</span></code> keyword argument. Valid options are <code class="docutils literal notranslate"><span class="pre">boxplot</span></code> (default), <code class="docutils literal notranslate"><span class="pre">histogram</span></code>, <code class="docutils literal notranslate"><span class="pre">violinplot</span></code>. In the default boxplot style, each variable in the neural network is evaluated using the given test data and the distribution of (non-zero) values is shown with a box and whisker diagram.</p>
+<p>Different plot styles are available with the <code class="docutils literal notranslate"><span class="pre">plot</span></code> keyword argument. Valid options are <code class="docutils literal notranslate"><span class="pre">boxplot</span></code> (default), <code class="docutils literal notranslate"><span class="pre">histogram</span></code>, and <code class="docutils literal notranslate"><span class="pre">violinplot</span></code>. In the default boxplot style, each variable in the neural network is evaluated using the given test data and the distribution of (non-zero) values is shown with a box and whisker diagram.</p>
 <p>When different combinations of the input objects are given, different plots will be produced:</p>
 <ol class="arabic simple">
 <li><p>Only Keras or PyTorch model: only the weights profile plot will be produced, the activation profile will be <code class="docutils literal notranslate"><span class="pre">None</span></code>. No grey boxes representing the data types will be shown.</p></li>
@@ -191,7 +191,7 @@ When optimizing precision, the data types should be chosen to work well for the 
 </ol>
 <p>Each box shows the median and quartiles of the distribution. The grey shaded boxes show the range which can be represented with the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> config file used.</p>
 <p>As a starting point, a good configuration would at least cover the box and whisker for each variable with the grey box. Make sure the box and whisker is contained to the right by using sufficient integer bits to avoid overflow. It might be that more precision is needed (grey boxes extend further to the left) to achieve satisfactory performance. In some cases, it is safe to barely cover the values and still achieve good accuracy.</p>
-<p>To establish whether the configuration gives good performance, run C Simulation with test data and compare the results to your model evaluated on the CPU with floating point.</p>
+<p>To establish whether the configuration gives good performance, run C simulation with test data and compare the results to your model evaluated on the CPU with floating point.</p>
 </section>
 
 

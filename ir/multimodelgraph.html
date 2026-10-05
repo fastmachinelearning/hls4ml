@@ -191,7 +191,7 @@ The central concept here is the division of a larger model into multiple smaller
 <section id="build-method">
 <span id="mmg-build-method"></span><h3><code class="docutils literal notranslate"><span class="pre">build</span></code> method<a class="headerlink" href="#build-method" title="Link to this heading"></a></h3>
 <p>Builds all subgraphs in parallel, each as if they were standalone <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> projects. Returns reports for each subgraph. If configured, it then runs the stitching flow in Vivado, connecting the individual exported IPs and allowing you to simulate the stitched design at the RTL level.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">..</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stitch_design</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sim_stitched_design</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">export_stitched_design</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">hls_multigraph_model</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stitch_design</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sim_stitched_design</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">export_stitched_design</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The returned <code class="docutils literal notranslate"><span class="pre">report</span></code> contains results from each subgraph’s build and, if stitching was performed, a combined report of the stitched design. Reports for individual <code class="docutils literal notranslate"><span class="pre">ModelGraph</span></code> instances are always accessible via
@@ -212,7 +212,7 @@ The central concept here is the division of a larger model into multiple smaller
 </section>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">MultiModelGraph</span></code> class is a tool for modular hardware design. By splitting a large neural network into multiple subgraphs, building each independently, and then stitching them together, you gain flexibility, parallelism, and facilitate hierarchical design, incremental optimization, and integrated system-level simulations.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">MultiModelGraph</span></code> class is a tool for modular hardware design. By splitting a large neural network into multiple subgraphs, building each independently, and then stitching them together, you gain flexibility and parallelism, and facilitate hierarchical design, incremental optimization, and integrated system-level simulations.</p>
 <section id="notes-and-known-issues">
 <h3>Notes and Known Issues<a class="headerlink" href="#notes-and-known-issues" title="Link to this heading"></a></h3>
 <section id="graph-splitting">
@@ -232,7 +232,7 @@ The central concept here is the division of a larger model into multiple smaller
 <section id="simulation-discrepancies">
 <h4>Simulation Discrepancies<a class="headerlink" href="#simulation-discrepancies" title="Link to this heading"></a></h4>
 <ul class="simple">
-<li><p>Users should carefully verify functional equivalence (particularly for models that use <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> interface)</p></li>
+<li><p>Users should carefully verify functional equivalence (particularly for models that use <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> interface).</p></li>
 <li><p>These discrepancies are more noticeable with raw output logits; applying a softmax layer at the model output can often help mask these differences, but this should be used with caution.</p></li>
 </ul>
 </section>
@@ -241,7 +241,7 @@ The central concept here is the division of a larger model into multiple smaller
 <ul class="simple">
 <li><p>Currently tested with Vitis 2024.1. Investigate compatibility with other versions.</p></li>
 <li><p>Add support for Verilator-based simulation to enable faster RTL simulation.</p></li>
-<li><p>Investigate <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> interface (output discrepancies, fifo optimization)</p></li>
+<li><p>Investigate <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> interface (output discrepancies, FIFO optimization)</p></li>
 <li><p>Investigate differences in resource utilization for the <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> interface.</p></li>
 </ul>
 </section>

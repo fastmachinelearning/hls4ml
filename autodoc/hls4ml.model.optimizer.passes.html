@@ -310,7 +310,7 @@ values or if a bias can go from zeros to other values.</p>
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.bipolar_quant_opt.</span></span><span class="sig-name descname"><span class="pre">BipolarQuantToActivation</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<p>This is for the case when scale is 1. It is a a 1:1 transformation of a BipolarQuant to an Activation.
+<p>This is for the case when scale is 1. It is a 1:1 transformation of a BipolarQuant to an Activation.
 This is not called when the input is constant.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantToActivation.match">
@@ -1343,7 +1343,7 @@ Note, if both are this optimizer runs twice.</p>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
 <p>This matches all multidimensional Dense layers and changes them to a convolution.
 Note:  the convolution may subsequently be changed to a pointwise convolution for
-bakends that implement special pointwise convolutions.</p>
+backends that implement special pointwise convolutions.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.multi_dense.ReplaceMultidimensionalDenseWithConv.match" title="Link to this definition"></a></dt>
@@ -1407,7 +1407,7 @@ The constant value was already used; this is just a cleanup uptimization.</p>
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.qkeras.</span></span><span class="sig-name descname"><span class="pre">ExtractTernaryThreshold</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<p>The input value (threshold) at which the output of a a ternary activation
+<p>The input value (threshold) at which the output of a ternary activation
 changes is configurable. This pass extracts that threshold point, inserting
 a BatchNormalization layer to execute the scaling. That BatchNormalization
 layer is then expected to be fused into a BatchNormalizationQuantizedTanh
@@ -1619,7 +1619,7 @@ optimized away right away.</p>
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.quant_opt.QuantToActivation">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.quant_opt.</span></span><span class="sig-name descname"><span class="pre">QuantToActivation</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.quant_opt.QuantToActivation" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<p>This is for the case when scale is a (positive) power of 2 and zeropt is 0. It is a a 1:1 transformation of
+<p>This is for the case when scale is a (positive) power of 2 and zeropt is 0. It is a 1:1 transformation of
 a Quant to an Activation.</p>
 <p>This is not called when the input is constant.</p>
 <dl class="py method">

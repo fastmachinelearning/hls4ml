@@ -140,7 +140,7 @@
   <section id="automatic-precision-inference">
 <h1>Automatic precision inference<a class="headerlink" href="#automatic-precision-inference" title="Link to this heading"></a></h1>
 <p>The automatic precision inference (implemented in <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes" title="hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferPrecisionTypes</span></code></a>) attempts to infer the appropriate
-widths for a given precision. It is initiated by setting a precision in the configuration as <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>. (Note, only layer-level precisions can be set to <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>,
+widths for a given precision. It is initiated by setting a precision in the configuration as <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>. (Note that only layer-level precisions can be set to <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>,
 not model-level.)  Functions like <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_keras_model" title="hls4ml.utils.config.config_from_keras_model"><code class="xref py py-class docutils literal notranslate"><span class="pre">config_from_keras_model</span></code></a>, <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_onnx_model" title="hls4ml.utils.config.config_from_onnx_model"><code class="xref py py-class docutils literal notranslate"><span class="pre">config_from_onnx_model</span></code></a>,
 and <a class="reference internal" href="../autodoc/hls4ml.utils.html#hls4ml.utils.config.config_from_pytorch_model" title="hls4ml.utils.config.config_from_pytorch_model"><code class="xref py py-class docutils literal notranslate"><span class="pre">config_from_pytorch_model</span></code></a> automatically set most precisions to <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> if the <code class="docutils literal notranslate"><span class="pre">'name'</span></code> granularity is used.</p>
 <div class="admonition note">
@@ -158,7 +158,7 @@ enable rounding or saturation modes since it dramatically increases the executio
 can be enabled as needed.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For supported models (Most <code class="docutils literal notranslate"><span class="pre">HGQ/HGQ2</span></code> models and some <code class="docutils literal notranslate"><span class="pre">QKeras</span></code> models), Model-wise Precision Inference (documented in <a class="reference external" href="../precision.html">model-wise precision inference</a>) can be used to achieve bit-exact conversion. Please refer to that section for more details.</p>
+<p>For supported models (most <code class="docutils literal notranslate"><span class="pre">HGQ/HGQ2</span></code> models and some <code class="docutils literal notranslate"><span class="pre">QKeras</span></code> models), Model-wise Precision Inference (documented in <a class="reference external" href="./precision.html">model-wise precision inference</a>) can be used to achieve bit-exact conversion. Please refer to that section for more details.</p>
 </div>
 </section>
 

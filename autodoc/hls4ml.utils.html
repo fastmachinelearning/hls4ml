@@ -255,8 +255,8 @@ Note:  Only integer and fixed precisions are supported</p></li>
 Users are advised to inspect the returned object to tweak the conversion configuration.
 The return object can be passed as <cite>hls_config</cite> parameter to <cite>convert_from_pytorch_model</cite>.</p>
 <p>Note that hls4ml internally follows the keras convention for nested tensors known as
-“channels last”, wherease pytorch uses the “channels first” convention.
-For exampe, for a tensor encoding an image with 3 channels, pytorch will expect the data
+“channels last”, whereas pytorch uses the “channels first” convention.
+For example, for a tensor encoding an image with 3 channels, pytorch will expect the data
 to be encoded as (Number_Of_Channels, Height , Width), whereas hls4ml expects
 (Height , Width, Number_Of_Channels). By default, hls4ml will perform the necessary
 conversions of the inputs and internal tensors automatically, but will return the output
@@ -612,7 +612,7 @@ All other methods are disabled and will raise an exception if accessed.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.plot.model_to_dot">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">model_to_dot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layer_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">96</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subgraph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.model_to_dot" title="Link to this definition"></a></dt>
-<dd><p>Convert a HLS model to dot format.</p>
+<dd><p>Convert an HLS model to dot format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -642,7 +642,7 @@ a <cite>pydot.Cluster</cite> instance representing nested model if
 <dl class="py function">
 <dt class="sig sig-object py" id="hls4ml.utils.plot.plot_model">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.utils.plot.</span></span><span class="sig-name descname"><span class="pre">plot_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_layer_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rankdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">96</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.utils.plot.plot_model" title="Link to this definition"></a></dt>
-<dd><p>Converts a HLS model to dot format and save to a file.</p>
+<dd><p>Converts an HLS model to dot format and saves it to a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

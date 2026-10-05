@@ -173,7 +173,7 @@ asynchronous/event-routed neuromorphic architecture (yet!).</p>
 retain their normal <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> support. <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> can still be set at
 the model, layer type, or layer name level for these layers, and each dense layer
 uses its own configured value independently of the surrounding spiking neuron
-layers.  The spiking neuron kernels themselves, <code class="docutils literal notranslate"><span class="pre">IFNeuron</span></code> and <code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code>, do not
+layers. The spiking neuron kernels themselves, <code class="docutils literal notranslate"><span class="pre">IFNeuron</span></code> and <code class="docutils literal notranslate"><span class="pre">LIFNeuron</span></code>, do not
 currently expose <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code>. They process one timestep at a time, keep
 internal membrane state across timesteps, and unroll the per-neuron update loop
 across <code class="docutils literal notranslate"><span class="pre">n_out</span></code> channels.</p>
@@ -243,7 +243,7 @@ membrane decision policies are:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">argmax_membrane</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">binary_logit</span></code> (emits <code class="docutils literal notranslate"><span class="pre">mem(class_1)</span> <span class="pre">-</span> <span class="pre">mem(class_0)</span></code> for binary classifiers)</p></li>
 </ul>
-<p>This will be explained in a tutorial in the hls4ml-tutorials repo.</p>
+<p>This will be explained in a tutorial in the hls4ml-tutorial repo.</p>
 <p>Do not place a final spiking neuron before <code class="docutils literal notranslate"><span class="pre">SNNReadout(output_mode=&quot;membrane&quot;)</span></code>
 unless you intentionally want the readout to consume that neuron’s spike output.
 The membrane mode does not recover or expose the internal membrane state of a
@@ -292,7 +292,7 @@ SNN inference, call the compiled model once per timestep and pass exactly
     <span class="n">last</span> <span class="o">=</span> <span class="n">hls_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_step</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>After the last call in the window, generated HLS resets the neuron and readout
+<p>After the last call in the window, the generated HLS resets the neuron and readout
 state for the next sequence. Avoid making stray single-timestep <code class="docutils literal notranslate"><span class="pre">predict</span></code>
 calls before evaluating a sequence, because those calls advance the state.</p>
 <p>For membrane readout, the PyTorch reference should match the generated readout

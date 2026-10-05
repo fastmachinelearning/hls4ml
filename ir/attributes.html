@@ -330,7 +330,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -397,7 +397,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -470,7 +470,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -533,7 +533,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -561,7 +561,7 @@
 </li>
 <li><p>implementation: list [latency,stable,argmax,legacy] (Default: stable)</p>
 <ul>
-<li><p>Choice of implementation of softmax function. “latency” provides good latency at the expense of extra resources. performs well on small number of classes. “stable” may require extra clock cycles but has better accuracy. “legacy” is the older implementation which has bad accuracy, but is fast and has low resource use. It is superseded by the “latency” implementation for most applications. “argmax” is a special implementation that can be used if only the output with the highest probability is important. Using this implementation will save resources and clock cycles.</p></li>
+<li><p>Choice of implementation of softmax function. “latency” provides good latency at the expense of extra resources. It performs well with a small number of classes. “stable” may require extra clock cycles but has better accuracy. “legacy” is the older implementation which has bad accuracy, but is fast and has low resource use. It is superseded by the “latency” implementation for most applications. “argmax” is a special implementation that can be used if only the output with the highest probability is important. Using this implementation will save resources and clock cycles.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -787,7 +787,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -856,7 +856,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -975,7 +975,7 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -1035,7 +1035,7 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -1109,13 +1109,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
+<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
@@ -1201,13 +1201,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
+<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
@@ -1293,13 +1293,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
+<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
@@ -1496,13 +1496,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
+<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
@@ -1717,13 +1717,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
+<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
@@ -1793,7 +1793,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -1857,7 +1857,7 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -1933,7 +1933,7 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -1998,7 +1998,7 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -2058,7 +2058,7 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -2287,7 +2287,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -2342,7 +2342,7 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -2417,7 +2417,7 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, oneAPI, oneAPI, Coyote, Coyote, Libero, Libero, XLS, XLS</p></li>
 </ul>
 </li>
@@ -2486,7 +2486,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -2629,7 +2629,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -2704,13 +2704,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
@@ -2808,13 +2808,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
@@ -2913,13 +2913,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
@@ -3030,31 +3030,31 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>forward_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>backward_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>forward_recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
 <li><p>backward_recurrent_reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
@@ -3124,7 +3124,7 @@
 <ul class="simple">
 <li><p>time_step_loop_parallelism: list [Off,Unroll,Pipeline] (Default: Off)</p>
 <ul>
-<li><p>Controls the amont and type of parallelism in the loop over time steps. If set to “off”, no parallelism will be used. If set to “unroll”, the loop will be unrolled. This may result in excessive resource use and cannot be used in “io_stream” mode. If set to “pipeline”, the loop will be pipelined.</p></li>
+<li><p>Controls the amount and type of parallelism in the loop over time steps. If set to “off”, no parallelism will be used. If set to “unroll”, the loop will be unrolled. This may result in excessive resource use and cannot be used in “io_stream” mode. If set to “pipeline”, the loop will be pipelined.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Coyote</p></li>
 </ul>
 </li>
@@ -3173,7 +3173,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, oneAPI, oneAPI, Coyote, Coyote, Libero, Libero, XLS, XLS</p></li>
 </ul>
 </li>
@@ -3242,7 +3242,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, oneAPI, oneAPI, Coyote, Coyote, Libero, Libero, XLS, XLS</p></li>
 </ul>
 </li>
@@ -3294,7 +3294,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -3396,7 +3396,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -3445,7 +3445,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -3599,7 +3599,7 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -3790,7 +3790,7 @@
 <ul class="simple">
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
@@ -4373,13 +4373,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
+<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>
@@ -4465,13 +4465,13 @@
 </li>
 <li><p>reuse_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
+<li><p>The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS</p></li>
 </ul>
 </li>
 <li><p>parallelization_factor: int (Default: 1)</p>
 <ul>
-<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occuring in parallel. Higher number results in more parallelism (lower latency and II) at the expense of resources used.Currently only supported in io_parallel.</p></li>
+<li><p>The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.</p></li>
 <li><p>Available in: Vivado, VivadoAccelerator, Vitis, Catapult, oneAPI, Coyote</p></li>
 </ul>
 </li>

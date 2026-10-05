@@ -22,7 +22,7 @@ Some features of ``hls4ml`` need extra dependencies. See the `Optional Dependenc
 Development version
 -------------------
 
-``hls4ml`` is rapidly evolving and many experimental features and bugfixes are available on the development branch. Development
+``hls4ml`` is rapidly evolving and many experimental features and bugfixes are available on the development branch. The development
 version can be installed directly from ``git``:
 
 .. code-block::
@@ -46,7 +46,7 @@ The following Python packages are all optional and are only required if you inte
 
 * `Keras <https://pypi.org/project/keras/>`_ is required by the Keras converter.
    * `TensorFlow <https://pypi.org/project/tensorflow/>`_ (version 2.8 to 2.14) is required by the Keras v2 converter (keras v2 is included in TensorFlow).
-   * `Keras <https://pypi.org/project/keras/>`_ 3.0 or above is required by the Keras v3 converter. Keras v3 supports multiple backends for training and inference, and the conversion is not tied any specific backend. Notice that Keras v3 may **not** coexist with Keras v2 in the same Python environment.
+   * `Keras <https://pypi.org/project/keras/>`_ 3.0 or above is required by the Keras v3 converter. Keras v3 supports multiple backends for training and inference, and the conversion is not tied to any specific backend. Note that Keras v3 may **not** coexist with Keras v2 in the same Python environment.
 
 * `ONNX <https://pypi.org/project/onnx/>`_ (version 1.4.0 and newer) is required by the ONNX converter.
 
@@ -58,21 +58,21 @@ The following Python packages are all optional and are only required if you inte
    * `HGQ <https://github.com/calad0i/HGQ>`_: Based on Keras v2. See `advanced/HGQ <../advanced/hgq.html>`_ for more details.
    * `HGQ2 <https://github.com/calad0i/HGQ2>`_: Based on Keras v3. See `advanced/HGQ2 <../advanced/hgq.html>`_ for more details.
    * `Brevitas <https://xilinx.github.io/brevitas/>`_: Based on PyTorch. See `frontend/pytorch <../frontend/pytorch.html>`_ for more details.
-   * `QONNX <https://github.com/fastmachinelearning/qonnx>`_: Based on ONNX. See `frontend/onnx <../frontend/onnx.html>`_ for more details.
+   * `QONNX <https://github.com/fastmachinelearning/qonnx>`_: Based on ONNX. See `frontend/qonnx <../frontend/qonnx.html>`_ for more details.
 
-Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On MacOS, when the *clang*-based ``g++`` finds issues with ``ap_types`` headers, one may still need to install GCC, using ``brew`` for example. For the oneAPI backend, one must have `oneAPI=2025.0` (2025.1 is known **not to work**) installed, along with the FPGA compiler, to run C/SYCL simulations.
+Running C simulation from Python requires a C++11-compatible compiler. On Linux, a GCC C++ compiler ``g++`` is required. Any version from a recent Linux should work. On macOS, when the *clang*-based ``g++`` finds issues with ``ap_types`` headers, one may still need to install GCC, using ``brew`` for example. For the oneAPI backend, one must have ``oneAPI=2025.0`` (2025.1 is known **not to work**) installed, along with the FPGA compiler, to run C/SYCL simulations.
 
-Specific functionalities may need additional Python packages. If any needed is missing, ``hls4ml`` will raise an error and prompt you to install the missing packages.
+Specific functionalities may need additional Python packages. If any of them is missing, ``hls4ml`` will raise an error and prompt you to install the missing packages.
 
-To run FPGA synthesis, installation of following tools is required:
+To run FPGA synthesis, installation of the following tools is required:
 
 * Xilinx Vivado HLS 2020.1 for synthesis for Xilinx FPGAs using the ``Vivado`` backend. Older versions may work, but use at your own risk.
 
 * Vitis HLS 2023.1 or newer is required for synthesis for Xilinx FPGAs using the ``Vitis`` backend.
 
-* Intel Quartus 20.1 to 21.4 for the synthesis for Intel/Altera FPGAs using the ``Quartus`` backend.
+* Intel Quartus 20.1 to 21.4 for synthesis for Intel/Altera FPGAs using the ``Quartus`` backend.
 
-* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions of ``OneAPI`` removed FPGA support and **will not work** with ``hls4ml``.
+* oneAPI 2024.1 to 2025.0 with the FPGA compiler and recent Intel/Altera Quartus for Intel/Altera FPGAs using the ``oneAPI`` backend. Newer versions of ``oneAPI`` removed FPGA support and **will not work** with ``hls4ml``.
 
 Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.
 

@@ -145,7 +145,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>New projects are encouraged to use <code class="docutils literal notranslate"><span class="pre">HGQ2</span></code> instead of the original <code class="docutils literal notranslate"><span class="pre">HGQ</span></code> (doc page moved <a class="reference external" href="./hgq1.html">here</a>).
-HGQ2 is a major improvement over HGQ with more supported layers, more quantizer options, better performance. As HGQ2 moves to Keras v3, it can be used natively with <code class="docutils literal notranslate"><span class="pre">JAX</span></code>, <code class="docutils literal notranslate"><span class="pre">PyTorch</span></code>, and <code class="docutils literal notranslate"><span class="pre">TensorFlow</span></code> backends.</p>
+HGQ2 is a major improvement over HGQ with more supported layers, more quantizer options, and better performance. As HGQ2 moves to Keras v3, it can be used natively with <code class="docutils literal notranslate"><span class="pre">JAX</span></code>, <code class="docutils literal notranslate"><span class="pre">PyTorch</span></code>, and <code class="docutils literal notranslate"><span class="pre">TensorFlow</span></code> backends.</p>
 </div>
 <a class="reference external image-reference" href="https://www.gnu.org/licenses/lgpl-3.0.en.html"><img alt="https://img.shields.io/badge/License-LGPLv3-blue.svg" src="https://img.shields.io/badge/License-LGPLv3-blue.svg" />
 </a>
@@ -194,7 +194,7 @@ HGQ2 is a major improvement over HGQ with more supported layers, more quantizer 
 
 <span class="o">...</span> <span class="c1"># Training, evaluation, and anything else you want to do with the model</span>
 
-<span class="n">model_hls</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">model_hls</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 <span class="c1"># Model-wise precision propagation is done automatically for HGQ models for bit-exactness</span>
 <span class="c1"># Do NOT pass precision config if you don't know what you are doing</span>
 
@@ -204,7 +204,7 @@ HGQ2 is a major improvement over HGQ with more supported layers, more quantizer 
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Do not pass any precision configuration from <code class="docutils literal notranslate"><span class="pre">hls4ml.converters.convert_from_keras</span></code> in general. HGQ-defined models will invoke model-wise precision propagation automatically to ensure bit-exactness between the Keras model and the generated HLS code (See <a class="reference external" href="./precision.html">here</a> for more details).</p>
+<p>Do not pass any precision configuration to <code class="docutils literal notranslate"><span class="pre">hls4ml.converters.convert_from_keras_model</span></code> in general. HGQ-defined models will invoke model-wise precision propagation automatically to ensure bit-exactness between the Keras model and the generated HLS code (See <a class="reference external" href="./precision.html">here</a> for more details).</p>
 </div>
 </section>
 </section>

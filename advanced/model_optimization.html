@@ -140,7 +140,7 @@
   <section id="hardware-aware-optimization-api">
 <h1>Hardware-aware Optimization API<a class="headerlink" href="#hardware-aware-optimization-api" title="Link to this heading"></a></h1>
 <p>Pruning and weight sharing are effective techniques to reduce model footprint and computational requirements. The hls4ml Optimization API introduces hardware-aware pruning and weight sharing.
-By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization etc.</p>
+By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the-box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization, etc.</p>
 <p>The code block below showcases three use cases of the hls4ml Optimization API - network sparsity (unstructured pruning), GPU FLOPs (structured pruning) and Vivado DSP utilization (pattern pruning). First, we start with unstructured pruning:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">accuracy_score</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.optimizers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Adam</span>
@@ -165,14 +165,14 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Baseline Keras sparsity, per-layer: </span><span class="si">{</span><span class="n">layers</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 <span class="c1"># Defining training parameters</span>
 <span class="c1"># Epochs refers to the number of maximum epochs to train a model, after imposing some sparsity</span>
-<span class="c1"># If the model is pre-trained, a good rule of thumb is to use between a 1/3 and 1/2 of the number of epochs used to train baseline model</span>
+<span class="c1"># If the model is pre-trained, a good rule of thumb is to use between 1/3 and 1/2 of the number of epochs used to train the baseline model</span>
 <span class="n">epochs</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
 <span class="n">metric</span> <span class="o">=</span> <span class="s1">'accuracy'</span>
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">()</span>
 <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">CategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="c1"># Define the metric to monitor, as well as if its increasing or decreasing</span>
+<span class="c1"># Define the metric to monitor, as well as whether it is increasing or decreasing</span>
 <span class="c1"># This distinction allows us to optimize both regression and classification models</span>
 <span class="c1"># In regression, e.g. minimize validation MSE &amp; for classification e.g. maximize accuracy</span>
 <span class="n">metric</span><span class="p">,</span> <span class="n">increasing</span> <span class="o">=</span> <span class="n">CategoricalAccuracy</span><span class="p">(),</span> <span class="kc">True</span>
@@ -180,9 +180,9 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 <span class="n">rtol</span> <span class="o">=</span> <span class="mf">0.975</span>
 
 <span class="c1"># A scheduler defines how the sparsity is incremented at each step</span>
-<span class="c1"># In this case, the maximum sparsity is 50% and it will be applied at a polynomially decreasing rate, for 10 steps</span>
+<span class="c1"># In this case, the maximum sparsity is 50% and it will be applied at a polynomially decreasing rate, for 5 steps</span>
 <span class="c1"># If the final sparsity is unspecified, it is set to 100%</span>
-<span class="c1"># The optimization algorithm stops either when (i) the relative drop in performance is below threshold or (ii) final sparsity reached</span>
+<span class="c1"># The optimization algorithm stops either when (i) the relative drop in performance is below threshold or (ii) the final sparsity is reached</span>
 <span class="n">scheduler</span> <span class="o">=</span> <span class="n">PolynomialScheduler</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">final_sparsity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 <span class="c1"># Get model attributes</span>
 <span class="n">model_attributes</span> <span class="o">=</span> <span class="n">get_attributes_from_keras_model</span><span class="p">(</span><span class="n">baseline_model</span><span class="p">)</span>
@@ -224,25 +224,25 @@ Instead, it is the sparsity of the target resource. As an example: Starting with
 <span class="nb">print</span><span class="p">(</span><span class="n">optimized_model</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p>Finally, optimizing Vivado DSPs is possible, given a hls4ml config:</p>
+<p>Finally, optimizing Vivado DSPs is possible, given an hls4ml config:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.utils.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">config_from_keras_model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives</span><span class="w"> </span><span class="kn">import</span> <span class="n">VivadoDSPEstimator</span>
 
 <span class="c1"># Note the change from optimize_model to optimize_keras_model_for_hls4ml</span>
 <span class="c1"># The function optimize_keras_model_for_hls4ml acts as a wrapper for the function, parsing hls4ml config to model attributes</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimize_keras_model_for_hls4ml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimize_keras_model_for_hls4ml</span>
 
 <span class="c1"># Create hls4ml config</span>
 <span class="n">default_reuse_factor</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="n">default_precision</span> <span class="o">=</span> <span class="s1">'ac_fixed&lt;16, 6&gt;'</span>
 <span class="n">hls_config</span> <span class="o">=</span> <span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">baseline_model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">default_precision</span><span class="o">=</span><span class="n">default_precision</span><span class="p">,</span> <span class="n">default_reuse_factor</span><span class="o">=</span><span class="n">default_reuse_factor</span><span class="p">)</span>
 <span class="n">hls_config</span><span class="p">[</span><span class="s1">'IOType'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'io_parallel'</span>
- <span class="n">hls_config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Resource'</span>   <span class="c1"># Strategy must be present for optimisation</span>
+<span class="n">hls_config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Resource'</span>   <span class="c1"># Strategy must be present for optimisation</span>
 
 <span class="c1"># Optimize model</span>
 <span class="c1"># Note the change from ParameterEstimator to VivadoDSPEstimator</span>
 <span class="n">optimized_model</span> <span class="o">=</span> <span class="n">optimize_keras_model_for_hls4ml</span><span class="p">(</span>
-    <span class="n">baseline_model</span><span class="p">,</span> <span class="n">model_attributes</span><span class="p">,</span> <span class="n">VivadoDSPEstimator</span><span class="p">,</span> <span class="n">scheduler</span><span class="p">,</span>
+    <span class="n">baseline_model</span><span class="p">,</span> <span class="n">hls_config</span><span class="p">,</span> <span class="n">VivadoDSPEstimator</span><span class="p">,</span> <span class="n">scheduler</span><span class="p">,</span>
     <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span>
     <span class="n">optimizer</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">increasing</span><span class="p">,</span> <span class="n">rtol</span>
 <span class="p">)</span>
@@ -253,8 +253,8 @@ Instead, it is the sparsity of the target resource. As an example: Starting with
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Optimized Keras accuracy: </span><span class="si">{</span><span class="n">acc_optimized</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>There are two more Vivado “optimizers” - VivadoFFEstimator, aimed at reducing register utilization and VivadoMultiObjectiveEstimator, aimed at optimizing BRAM and DSP utilization.
-Note, to ensure DSPs are optimized, “unrolled” Dense multiplication must be used before synthesizing HLS, by modifying the config:</p>
+<p>There are two more Vivado “optimizers” - VivadoFFEstimator, aimed at reducing register utilization, and VivadoMultiObjectiveEstimator, aimed at optimizing BRAM and DSP utilization.
+Note that to ensure DSPs are optimized, “unrolled” Dense multiplication must be used before synthesizing HLS, by modifying the config:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">hls_config</span> <span class="o">=</span> <span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">optimized_model</span><span class="p">)</span>
 <span class="n">hls_config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Unrolled'</span>
 <span class="c1"># Any additional hls4ml config, reuse factor etc...</span>

@@ -143,16 +143,14 @@
 </a>
 <a class="reference external image-reference" href="https://badge.fury.io/py/pquant-ml"><img alt="https://badge.fury.io/py/pquant-ml.svg" src="https://badge.fury.io/py/pquant-ml.svg" />
 </a>
-<dl class="simple">
-<dt>PQuantML is a hardware-aware model compression framework supporting:</dt><dd><ul class="simple">
+<p>PQuantML is a hardware-aware model compression framework supporting:</p>
+<ul class="simple">
 <li><p>Joint pruning + quantization</p></li>
 <li><p>Layer-wise precision configuration</p></li>
 <li><p>Flexible training pipelines</p></li>
-<li><p>PyTorch and Keras V3 implementations</p></li>
+<li><p>PyTorch and Keras v3 implementations</p></li>
 <li><p>Integration with hardware-friendly toolchains (e.g., hls4ml)</p></li>
 </ul>
-</dd>
-</dl>
 <p>PQuantML enables efficient deployment of compact neural networks on resource-constrained hardware such as FPGAs and embedded accelerators.</p>
 <section id="key-characteristics">
 <h2>Key Characteristics<a class="headerlink" href="#key-characteristics" title="Link to this heading"></a></h2>
@@ -203,15 +201,15 @@
        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dense4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
        <span class="k">return</span> <span class="n">x</span>
 
-   <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+   <span class="k">return</span> <span class="n">Model</span><span class="p">()</span>
 
 <span class="n">PQmodel</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 <span class="n">PQmodel</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">)))</span>
 
 <span class="o">...</span> <span class="c1"># Training, evaluation, and anything else you want to do with the model</span>
 
-<span class="n">hls_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'Model'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ChannelsLastConversion'</span><span class="p">:</span> <span class="s1">'full'</span><span class="p">},</span> <span class="s1">'InputShape'</span><span class="p">:</span> <span class="n">input_shape</span><span class="p">,}</span>
-<span class="n">hls_model</span> <span class="o">=</span> <span class="n">convert_from_pytorch_model</span><span class="p">(</span><span class="n">PQmodel</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">hls_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'Model'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ChannelsLastConversion'</span><span class="p">:</span> <span class="s1">'full'</span><span class="p">},</span> <span class="s1">'InputShape'</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,)}</span>
+<span class="n">hls_model</span> <span class="o">=</span> <span class="n">convert_from_pytorch_model</span><span class="p">(</span><span class="n">PQmodel</span><span class="p">,</span> <span class="n">hls_config</span><span class="o">=</span><span class="n">hls_config</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 <span class="c1"># Model-wise precision propagation is done automatically for PQuantML models for bit-exactness</span>
 <span class="c1"># Do NOT pass precision config if you don't know what you are doing</span>
 <span class="c1"># Note: Model-wise precision propagation needs ChannelsLastConversion to be active in order to work correctly with PyTorch models</span>
@@ -222,7 +220,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Do not pass any precision configuration from <code class="docutils literal notranslate"><span class="pre">hls4ml.converters.convert_from_&lt;frontend&gt;_model</span></code> in general, as it may be ignored or lead to undefined behaviour! PQuantML-defined models will invoke model-wise precision propagation automatically to ensure bit-exactness between the PQuantML model and the generated HLS code (See <a class="reference external" href="./precision.html">here</a> for more details).</p>
+<p>Do not pass any precision configuration to <code class="docutils literal notranslate"><span class="pre">hls4ml.converters.convert_from_&lt;frontend&gt;_model</span></code> in general, as it may be ignored or lead to undefined behaviour! PQuantML-defined models will invoke model-wise precision propagation automatically to ensure bit-exactness between the PQuantML model and the generated HLS code (See <a class="reference external" href="./precision.html">here</a> for more details).</p>
 </div>
 </section>
 </section>
