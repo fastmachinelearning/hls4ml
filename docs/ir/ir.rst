@@ -55,6 +55,8 @@ Parallel IO is applicable to small models that require a low-latency implementat
 
 In Vivado/Vitis backends, parallel convolution relies on the *im2col* transformation of the input, which turns convolution into a matrix-multiplication task. This task is then implemented as a sequence of matrix-vector multiplications using the routine mentioned above. The ``Latency`` and ``Resource`` strategies refer to the function used for the matrix-vector multiplication routine, with ``Resource`` allowing slightly larger models to be synthesized. Parallelism can be further controlled via the ``ParallelizationFactor``. The Catapult backend in turn uses a direct implementation of convolution via nested loops. The ``Quartus``, ``oneAPI``, and ``Catapult`` backends also implement a ``Winograd`` algorithm choosable by setting the ``implementation`` to ``Winograd`` or ``combination``. Winograd implementation is available for only a handful of filter size configurations, and it is less concerned about bit accuracy and overflow. In certain conditions it can be faster.
 
+Dilated Conv1D is supported by the Vivado/Vitis backends with ``io_parallel``. It is not supported with ``io_stream``.
+
 io_stream
 ^^^^^^^^^
 
