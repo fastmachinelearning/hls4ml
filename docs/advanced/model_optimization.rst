@@ -3,7 +3,7 @@ Hardware-aware Optimization API
 =================================
 
 Pruning and weight sharing are effective techniques to reduce model footprint and computational requirements. The hls4ml Optimization API introduces hardware-aware pruning and weight sharing.
-By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization etc.
+By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the-box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization, etc.
 
 The code block below showcases three use cases of the hls4ml Optimization API - network sparsity (unstructured pruning), GPU FLOPs (structured pruning) and Vivado DSP utilization (pattern pruning). First, we start with unstructured pruning:
 
@@ -32,14 +32,14 @@ The code block below showcases three use cases of the hls4ml Optimization API - 
     print(f'Baseline Keras sparsity, per-layer: {layers}')
     # Defining training parameters
     # Epochs refers to the number of maximum epochs to train a model, after imposing some sparsity
-    # If the model is pre-trained, a good rule of thumb is to use between a 1/3 and 1/2 of the number of epochs used to train baseline model
+    # If the model is pre-trained, a good rule of thumb is to use between 1/3 and 1/2 of the number of epochs used to train the baseline model
     epochs = 10
     batch_size = 128
     metric = 'accuracy'
     optimizer = Adam()
     loss_fn = CategoricalCrossentropy(from_logits=True)
 
-    # Define the metric to monitor, as well as if its increasing or decreasing
+    # Define the metric to monitor, as well as whether it is increasing or decreasing
     # This distinction allows us to optimize both regression and classification models
     # In regression, e.g. minimize validation MSE & for classification e.g. maximize accuracy
     metric, increasing = CategoricalAccuracy(), True
@@ -47,9 +47,9 @@ The code block below showcases three use cases of the hls4ml Optimization API - 
     rtol = 0.975
 
     # A scheduler defines how the sparsity is incremented at each step
-    # In this case, the maximum sparsity is 50% and it will be applied at a polynomially decreasing rate, for 10 steps
+    # In this case, the maximum sparsity is 50% and it will be applied at a polynomially decreasing rate, for 5 steps
     # If the final sparsity is unspecified, it is set to 100%
-    # The optimization algorithm stops either when (i) the relative drop in performance is below threshold or (ii) final sparsity reached
+    # The optimization algorithm stops either when (i) the relative drop in performance is below threshold or (ii) the final sparsity is reached
     scheduler = PolynomialScheduler(5, final_sparsity=0.5)
     # Get model attributes
     model_attributes = get_attributes_from_keras_model(baseline_model)
@@ -93,7 +93,7 @@ To optimize GPU FLOPs, the code is similar to above:
     print(baseline_model.summary())
     print(optimized_model.summary())
 
-Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
+Finally, optimizing Vivado DSPs is possible, given an hls4ml config:
 
 .. code-block:: Python
 
@@ -102,19 +102,19 @@ Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
 
     # Note the change from optimize_model to optimize_keras_model_for_hls4ml
     # The function optimize_keras_model_for_hls4ml acts as a wrapper for the function, parsing hls4ml config to model attributes
-    from hls4ml.optimization import optimize_keras_model_for_hls4ml
+    from hls4ml.optimization.dsp_aware_pruning import optimize_keras_model_for_hls4ml
 
     # Create hls4ml config
     default_reuse_factor = 4
     default_precision = 'ac_fixed<16, 6>'
     hls_config = config_from_keras_model(baseline_model, granularity='name', default_precision=default_precision, default_reuse_factor=default_reuse_factor)
     hls_config['IOType'] = 'io_parallel'
-     hls_config['Model']['Strategy'] = 'Resource'   # Strategy must be present for optimisation
+    hls_config['Model']['Strategy'] = 'Resource'   # Strategy must be present for optimisation
 
     # Optimize model
     # Note the change from ParameterEstimator to VivadoDSPEstimator
     optimized_model = optimize_keras_model_for_hls4ml(
-        baseline_model, model_attributes, VivadoDSPEstimator, scheduler,
+        baseline_model, hls_config, VivadoDSPEstimator, scheduler,
         X_train, y_train, X_val, y_val, batch_size, epochs,
         optimizer, loss_fn, metric, increasing, rtol
     )
@@ -124,8 +124,8 @@ Finally, optimizing Vivado DSPs is possible, given a hls4ml config:
     acc_optimized = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_optimized, axis=1))
     print(f'Optimized Keras accuracy: {acc_optimized}')
 
-There are two more Vivado "optimizers" - VivadoFFEstimator, aimed at reducing register utilization and VivadoMultiObjectiveEstimator, aimed at optimizing BRAM and DSP utilization.
-Note, to ensure DSPs are optimized, "unrolled" Dense multiplication must be used before synthesizing HLS, by modifying the config:
+There are two more Vivado "optimizers" - VivadoFFEstimator, aimed at reducing register utilization, and VivadoMultiObjectiveEstimator, aimed at optimizing BRAM and DSP utilization.
+Note that to ensure DSPs are optimized, "unrolled" Dense multiplication must be used before synthesizing HLS, by modifying the config:
 
 .. code-block:: Python
 

@@ -78,7 +78,7 @@ ColLoop:
 //       1D Convolution for 3x1 kernels from Winograd's algoirithm
 // ****************************************************************
 
-// Explicity transofrmed input (B'dB) needed for Winograd convolution, as explained by Lavin & Gray (2015)
+// Explicitly transformed input (B'dB) needed for Winograd convolution, as explained by Lavin & Gray (2015)
 template <typename data_T, typename res_T>
 inline void winograd_transform_input_tile_3x1_kernel(const data_T I[4], res_T D[4]) {
     D[0] = I[0] - I[2];

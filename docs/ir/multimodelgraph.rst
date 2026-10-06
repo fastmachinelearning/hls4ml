@@ -67,7 +67,7 @@ Builds all subgraphs in parallel, each as if they were standalone ``ModelGraph``
 
 .. code-block:: python
 
-   report = hls_multigraph_model.build(.., export=True, stitch_design=True, sim_stitched_design=True, export_stitched_design=True)
+   report = hls_multigraph_model.build(..., export=True, stitch_design=True, sim_stitched_design=True, export_stitched_design=True)
 
 The returned ``report`` contains results from each subgraph's build and, if stitching was performed, a combined report of the stitched design. Reports for individual ``ModelGraph`` instances are always accessible via
 ``MultiModelGraph.graph_reports``.
@@ -96,7 +96,7 @@ Performs a forward pass through the chained bridge file using the C-simulation (
 Summary
 --------------------------
 
-The ``MultiModelGraph`` class is a tool for modular hardware design. By splitting a large neural network into multiple subgraphs, building each independently, and then stitching them together, you gain flexibility, parallelism, and facilitate hierarchical design, incremental optimization, and integrated system-level simulations.
+The ``MultiModelGraph`` class is a tool for modular hardware design. By splitting a large neural network into multiple subgraphs, building each independently, and then stitching them together, you gain flexibility and parallelism, and facilitate hierarchical design, incremental optimization, and integrated system-level simulations.
 
 
 Notes and Known Issues
@@ -117,7 +117,7 @@ Multiple Inputs & Outputs
 Simulation Discrepancies
 ------------------------
 
-- Users should carefully verify functional equivalence (particularly for models that use ``io_stream`` interface)
+- Users should carefully verify functional equivalence (particularly for models that use ``io_stream`` interface).
 - These discrepancies are more noticeable with raw output logits; applying a softmax layer at the model output can often help mask these differences, but this should be used with caution.
 
 TODOs
@@ -125,5 +125,5 @@ TODOs
 
 - Currently tested with Vitis 2024.1. Investigate compatibility with other versions.
 - Add support for Verilator-based simulation to enable faster RTL simulation.
-- Investigate ``io_stream`` interface (output discrepancies, fifo optimization)
+- Investigate ``io_stream`` interface (output discrepancies, FIFO optimization)
 - Investigate differences in resource utilization for the ``io_parallel`` interface.

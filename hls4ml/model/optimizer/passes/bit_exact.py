@@ -343,7 +343,7 @@ def _(layer: FixedPointQuantizer):
     _i = np.minimum(i, li)
     _f = np.minimum(f, lf)
 
-    # Compansate for round-up/downs that may need extra bits for representing (ufixed<2,0> -> ufixed<2,1,RND>, 0.75->1.0)
+    # Compensate for round-up/downs that may need extra bits for representing (ufixed<2,0> -> ufixed<2,1,RND>, 0.75->1.0)
     if layer.RND != 'TRN':
         _i += ((lf > f) & (i > li)).astype(np.int16)
     else:
@@ -352,7 +352,7 @@ def _(layer: FixedPointQuantizer):
     if layer.SAT in ('SAT', 'SAT_SM'):
         k, i, f = _k, _i, _f
     else:
-        # Perserve repr boundaries unless overflow never happens
+        # Preserve repr boundaries unless overflow never happens
         mask = (2.0**i - 2.0**-f >= 2.0**li - 2.0**-lf) & (k >= lk)
         i = np.where(mask, _i, i)
         f = np.where(mask, _f, f)
@@ -1146,7 +1146,7 @@ class BitExact(ModelOptimizerPass):
             return False
 
         if self.has_fixed_quantizer(model):
-            # For HGQ-proxy model, no explicit linear layers will be reqired.
+            # For HGQ-proxy model, no explicit linear layers will be required.
             for k in list(model.graph.keys()):
                 v = model.graph[k]
                 if isinstance(v, Activation) and v.attributes.get('activation') == 'linear':

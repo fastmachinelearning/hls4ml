@@ -12,7 +12,7 @@ There are command-line based versions of cleaning and channels-last conversion:
     $ qonnx_to_channels_last filename_clean.onnx
     $ qonnx_clean filename_clean_channels_last.onnx  # good to do a clean again as a last step
 
-Things can similarly be done in python. This method is usually easier if you additionally need to call other transforms. An example is given below which also calls the ``GemmToMatMul`` converter:
+Things can similarly be done in Python. This method is usually easier if you additionally need to call other transforms. An example is given below which also calls the ``GemmToMatMul`` converter:
 
 .. code-block:: python
 
@@ -42,7 +42,7 @@ The next steps are very similar to if you are using a Keras model:
     )
     hls_model.compile()
 
-Note, unlike the Keras version, "name" granularity is the default for ``config_from_onnx_model``, and it must be used for QONNX models. Unquantized ONNX models can use "model" if so desired, but generally there is no benefit.
+Note that, unlike the Keras version, "name" granularity is the default for ``config_from_onnx_model``, and it must be used for QONNX models. Unquantized ONNX models can use "model" if so desired, but generally there is no benefit.
 
 One can subsequently call the ``predict`` function to check the performance or build the project.
 
@@ -53,4 +53,4 @@ Quant nodes
 
 Documentation for quant nodes is provided in the `qonnx package <https://github.com/fastmachinelearning/qonnx/tree/main/docs/qonnx-custom-ops>`_. Note that currently hls4ml only supports the `Quant operator <https://github.com/fastmachinelearning/qonnx/tree/main/docs/qonnx-custom-ops/quant_op.md>`_. Also, not all legal ``Quant`` configurations are parsable by hls4ml or synthesizable. The ``scale``, ``zeropt``, and ``bitwidth`` values must be constant (though not necessarily scalar for the ``scale`` and ``zeropt``).
 
-Generally if the ``zeropt`` is 0 and the ``scale`` is a scalar power of 2, hls4ml uses ``ap_fixed`` or ``ac_fixed`` types (depending on the backend) to represent the quantizations. In other cases, the ``scale`` and ``zeropt`` need to be explicitly handled by hls4ml, and there is more of a chance of hls4ml not being able to process the input. (Please report any issues that you find.)
+Generally, if the ``zeropt`` is 0 and the ``scale`` is a scalar power of 2, hls4ml uses ``ap_fixed`` or ``ac_fixed`` types (depending on the backend) to represent the quantizations. In other cases, the ``scale`` and ``zeropt`` need to be explicitly handled by hls4ml, and there is more of a chance of hls4ml not being able to process the input. (Please report any issues that you find.)
