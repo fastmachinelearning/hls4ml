@@ -475,6 +475,50 @@ def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_qconv2dbn_no_quantizer(test_case_id, randX_100_8_8_1, backend, io_type):
+    """
+    QConv2DBatchnorm without kernel_quantizer/bias_quantizer used to either crash
+    (weight_quantizer called as None) or silently skip BN folding for the bias
+    (bias_quantizer is None), see #928.
+    """
+    X = randX_100_8_8_1
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(
+        QConv2DBatchnorm(
+            4,
+            kernel_size=(3, 3),
+            input_shape=(8, 8, 1),
+            kernel_initializer='ones',
+            bias_initializer='zeros',
+        )
+    )
+    model.compile()
+
+    # Non-trivial BN stats so folding actually changes the weights/bias
+    bn = model.layers[0].batchnorm
+    bn.moving_mean.assign(np.array([1.0, -2.0, 0.5, 0.2], dtype=np.float32))
+    bn.moving_variance.assign(np.array([4.0, 9.0, 1.0, 0.25], dtype=np.float32))
+    bn.gamma.assign(np.array([2.0, 0.5, 1.5, 1.0], dtype=np.float32))
+    bn.beta.assign(np.array([0.1, 0.2, -0.3, 0.05], dtype=np.float32))
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=0, atol=2e-2)
+
+
 @pytest.fixture(scope='module')
 def randX_10_32_32_3():
     return np.random.rand(10, 32, 32, 3)
