@@ -42,10 +42,10 @@ def test_emulator(test_case_id, keras_model, io_type, backend):
     hls_model.compile()  # It's enough that the model compiles
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI', 'VivadoAccelerator'])
 @pytest.mark.parametrize('write_tar', [True, False])
 def test_write_tar(test_case_id, keras_model, write_tar, backend):
-    config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
+    config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
     odir = str(test_root_path / test_case_id)
 
     if os.path.exists(odir + '.tar.gz'):
@@ -58,6 +58,32 @@ def test_write_tar(test_case_id, keras_model, write_tar, backend):
 
     tar_written = os.path.exists(odir + '.tar.gz')
     assert tar_written == write_tar
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI', 'VivadoAccelerator'])
+@pytest.mark.parametrize(
+    'env_write_tar, expected_tar',
+    [
+        ('false', False),
+        ('1', True),
+    ],
+    ids=['write_tar_env_false', 'write_tar_env_true'],
+)
+def test_write_tar_env_override(test_case_id, keras_model, backend, monkeypatch, env_write_tar, expected_tar):
+    config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name', backend=backend)
+    odir = str(test_root_path / test_case_id)
+
+    if os.path.exists(odir + '.tar.gz'):
+        os.remove(odir + '.tar.gz')
+
+    monkeypatch.setenv('HLS4ML_WRITE_TAR', env_write_tar)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        keras_model, hls_config=config, output_dir=odir, backend=backend, write_tar=False
+    )
+    hls_model.write()
+
+    tar_written = os.path.exists(odir + '.tar.gz')
+    assert tar_written == expected_tar
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
