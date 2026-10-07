@@ -33,7 +33,7 @@ class FixedPointEmulator:
         self.decimal_bits = [0] * self.F if decimal_bits is None else decimal_bits
 
     """
-    Converts the fixed point number stored in self.bits to a floating pont
+    Converts the fixed point number stored in self.bits to a floating point
     Args:
         - None
     Returns:

@@ -48,7 +48,7 @@ struct lstm_config {
 //      - s_newstate = activation(U*input + W*state)
 //      - h_output   = activation(U*input + W*state)*activation(s_newstate)
 //  - If softmax is needed on output, perform *outside* this operations
-//  Originall had a version allows for the state in each layer to be saved, moved this to above (this requires are LARGE
+//  Originally had a version that allows for the state in each layer to be saved, moved this to above (this requires a LARGE
 //  dense network at the end)
 template <class data_T, class res_T, typename CONFIG_T>
 void lstm(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_T::n_state],
@@ -386,11 +386,51 @@ struct gru_config {
     static const bool store_weights_in_bram = false;
     static const bool use_static = true;
     static const bool pytorch_order = false;
+    static const bool reset_after = true;
     static const unsigned n_zeros = 0;
 
     template <class x_T, class y_T, class config_T> using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
     template <class x_T, class y_T, class config_T> using activation = nnet::activation::relu<x_T, y_T, config_T>;
 };
+
+template <class res_T, typename CONFIG_T>
+void gru_candidate_recurrent(res_T h_state[CONFIG_T::n_state], typename CONFIG_T::accum_t tmpres_zr[CONFIG_T::n_state * 2],
+                             typename CONFIG_T::accum_t tmpres_state_zr[CONFIG_T::n_state * 3],
+                             typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+                             typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3],
+                             typename CONFIG_T::accum_t tmpres_state_h[CONFIG_T::n_state]) {
+    #pragma HLS INLINE
+
+    if (CONFIG_T::reset_after) {
+        for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
+            #pragma HLS UNROLL
+            if (CONFIG_T::pytorch_order)
+                tmpres_state_h[iacc] = tmpres_zr[iacc] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
+            else
+                tmpres_state_h[iacc] =
+                    tmpres_zr[iacc + (CONFIG_T::n_state)] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
+        }
+    } else {
+        res_T h_reset[CONFIG_T::n_state];
+        typename CONFIG_T::accum_t tmpres_state_reset[CONFIG_T::n_state * 3];
+        #pragma HLS ARRAY_PARTITION variable=h_reset            complete
+        #pragma HLS ARRAY_PARTITION variable=tmpres_state_reset complete
+
+        for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
+            #pragma HLS UNROLL
+            h_reset[iacc] = (res_T)(tmpres_zr[iacc + (CONFIG_T::n_state)] * h_state[iacc]);
+        }
+
+        nnet::dense<res_T, typename CONFIG_T::accum_t, typename CONFIG_T::mult_config2>(h_reset, tmpres_state_reset,
+                                                                                        param_zr, param_br);
+
+        // Keep the h-matrix part (keras notation)
+        for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
+            #pragma HLS UNROLL
+            tmpres_state_h[iacc] = tmpres_state_reset[iacc + (2 * CONFIG_T::n_state)];
+        }
+    }
+}
 
 template <class data_T, class res_T, typename CONFIG_T>
 void gru(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_T::n_state],
@@ -434,16 +474,9 @@ void gru(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[CONFIG_
 
     // Activation function Sub layer -- END
 
-    // Hadamrd product of r(t) = inputacc_zr[2*n_state:n_state] and h(t-1) = h_newstate
-    for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
-        #pragma HLS UNROLL
-        if (CONFIG_T::pytorch_order)
-            tmpres_state_h[iacc] = tmpres_zr[iacc] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
-        else
-            tmpres_state_h[iacc] = tmpres_zr[iacc + (CONFIG_T::n_state)] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
-    }
+    nnet::gru_candidate_recurrent<res_T, CONFIG_T>(h_newstate, tmpres_zr, tmpres_state_zr, param_zr, param_br,
+                                                   tmpres_state_h);
 
-    // Assuming reset_after is false
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
         #pragma HLS UNROLL
         int index = iacc + CONFIG_T::n_state * 2;
@@ -516,16 +549,8 @@ void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[
 
     // Activation function Sub layer -- END
 
-    // Hadamrd product of r(t) = inputacc_zr[2*n_state:n_state] and h(t-1) = h_newstate
-    for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
-        #pragma HLS UNROLL
-        if (CONFIG_T::pytorch_order)
-            tmpres_state_h[iacc] = tmpres_zr[iacc] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
-        else
-            tmpres_state_h[iacc] = tmpres_zr[iacc + (CONFIG_T::n_state)] * tmpres_state_zr[iacc + (2 * CONFIG_T::n_state)];
-    }
+    nnet::gru_candidate_recurrent<res_T, CONFIG_T>(h_state, tmpres_zr, tmpres_state_zr, param_zr, param_br, tmpres_state_h);
 
-    // Assuming reset_after is false
     for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++) {
         #pragma HLS UNROLL
         int index = iacc + CONFIG_T::n_state * 2;
@@ -718,6 +743,7 @@ struct single_layer_config {
     static const unsigned n_state = 2;
     static const unsigned n_mult = 3;
     static const unsigned table_size = 1024;
+    static const bool reset_after = true;
 
     template <class x_T, class y_T, class config_T> using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
     template <class x_T, class y_T, class config_T> using activation = nnet::activation::relu<x_T, y_T, config_T>;

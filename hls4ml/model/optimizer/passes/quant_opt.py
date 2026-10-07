@@ -80,7 +80,7 @@ class QuantConstantParameters(OptimizerPass):
 
 class QuantToActivation(OptimizerPass):
     """
-    This is for the case when scale is a (positive) power of 2 and zeropt is 0. It is a a 1:1 transformation of
+    This is for the case when scale is a (positive) power of 2 and zeropt is 0. It is a 1:1 transformation of
     a Quant to an Activation.
 
     This is not called when the input is constant.
@@ -323,7 +323,7 @@ class ConstQuantToConstAlpha(OptimizerPass):
         scale = node.get_attr('scale')
         bias = node.get_attr('zeropt')
 
-        # caclucate the new value
+        # calculate the new value
         new_val = const_node.get_attr('value') / scale + bias
         const_node.set_attr('value', new_val)
         const_node.set_attr('quantizer', quantizer)
@@ -366,7 +366,7 @@ def _calculate_precision_quantizer(bitwidth, integer, signed, narrow, rounding_m
         )
 
     if narrow and not signed:
-        raise NotImplementedError('Narrow mode is only supported for singed numbers.')
+        raise NotImplementedError('Narrow mode is only supported for signed numbers.')
 
     if narrow:
         bn_sat = 'AP_SAT_SYM'

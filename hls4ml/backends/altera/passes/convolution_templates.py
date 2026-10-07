@@ -5,7 +5,7 @@ from hls4ml.model.layers import Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv1D
 
 # TODO - Dilation rate ?
 
-""" Shared mutliplication config """
+""" Shared multiplication config """
 conv_mult_config_template = """struct config{index}_mult : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};

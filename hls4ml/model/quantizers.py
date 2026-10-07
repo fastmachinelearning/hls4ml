@@ -59,7 +59,7 @@ class BinaryQuantizer(Quantizer):
         elif bits == 2:
             hls_type = IntegerPrecisionType(width=2)
         else:
-            raise Exception(f'BinaryQuantizer suppots 1 or 2 bits, but called with bits={bits}')
+            raise Exception(f'BinaryQuantizer supports 1 or 2 bits, but called with bits={bits}')
         super().__init__(bits, hls_type)
 
     def __call__(self, data):

@@ -9,7 +9,7 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/hls4ml?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Downloads)](https://pepy.tech/project/hls4ml)
 <a href="https://anaconda.org/conda-forge/hls4ml/"><img alt="conda-forge" src="https://img.shields.io/conda/dn/conda-forge/hls4ml.svg?label=conda-forge"></a>
 
-A package for machine learning inference in FPGAs. We create firmware implementations of machine learning algorithms using high level synthesis language (HLS). We translate traditional open-source machine learning package models into HLS that can be configured for your use-case!
+A package for machine learning inference in FPGAs. We create firmware implementations of machine learning algorithms using high-level synthesis (HLS). We translate traditional open-source machine learning package models into HLS that can be configured for your use-case!
 
 hls4ml is designed for ultra-low-latency inference on FPGAs. While it has strong roots in high-energy physics applications (e.g., L1 trigger systems at the CERN Large Hadron Collider), it has also been adopted across diverse scientific and industrial domains. Example use cases include control systems for quantum computing, feedback loops in nuclear fusion, low-power environmental monitoring on satellites, and biomedical signal processing (e.g., arrhythmia classification).
 
@@ -47,7 +47,7 @@ config = hls4ml.utils.fetch_example_model('KERAS_3layer.json')
 # You can print the configuration to see some default parameters
 print(config)
 
-# Convert it to a hls project
+# Convert it to an HLS project
 hls_model = hls4ml.converters.keras_v2_to_hls(config)
 
 # Print full list of example models if you want to explore more
@@ -55,7 +55,7 @@ hls4ml.utils.fetch_example_list()
 ```
 
 ### Building a project
-We will build the project using Xilinx Vivado HLS, which can be downloaded and installed from [here](https://www.xilinx.com/products/design-tools/vivado/integration/esl-design.html). Alongside Vivado HLS, hls4ml also supports Vitis HLS, Intel HLS, Catapult HLS and Altera HLS IP Gen. The target backend can be changed using the argument backend when building the model.
+We will build the project using Xilinx Vivado HLS, which can be downloaded and installed from [here](https://www.xilinx.com/products/design-tools/vivado/integration/esl-design.html). Alongside Vivado HLS, hls4ml also supports Vitis HLS, Intel HLS, Catapult HLS and Altera HLS IP Gen. The target backend can be changed using the `backend` argument when building the model.
 
 ```Python
 # Use Vivado HLS to synthesize the model
@@ -111,7 +111,7 @@ and the latest overview paper:
     reportNumber = "FERMILAB-PUB-25-0890-CSAID-ETD-PPD",
     year = "2026",
     doi = "10.1145/3801979",
-    journal = "ACM Trans. Reconfigurable Technol. Syst."
+    journal = "ACM Trans. Reconfigurable Technol. Syst.",
     volume = "19",
     pages = "19",
 }

@@ -50,7 +50,7 @@ HLS backends:
 * Altera
 * XLS (experimental)
 
-A summary of the on-going status of the ``hls4ml`` tool is in the table below.
+A summary of the ongoing status of the ``hls4ml`` tool is in the table below.
 
 .. table:: hls4ml Supported Features
 
@@ -99,7 +99,7 @@ Other feature notes:
 * BDT support has moved to the `Conifer <https://github.com/thesps/conifer>`__ package
 * ``*`` indicates that the support is through symbolic tracing fallback with `Alkaid <https://github.com/calad0i/alkaid>`__, which is available only when using ``io_parallel`` mode and implements the layer fully unrolled.
 
-.. [*] For compiling the projects for simulation or actual HLS. Otherwise, the code **may** be used on other platforms and it will likely to work. However, please note that Windows or other platforms are **not supported** in general and are not tested.
+.. [*] For compiling the projects for simulation or actual HLS. Otherwise, the code **may** be used on other platforms and it will likely work. However, please note that Windows or other platforms are **not supported** in general and are not tested.
 
 Example Models
 ==============

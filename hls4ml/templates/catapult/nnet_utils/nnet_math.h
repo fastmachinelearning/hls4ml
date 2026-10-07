@@ -75,7 +75,7 @@ template <class T> void sincos_lut(const T &input, T output[2]) {
         initialized = true;
     }
 
-    // Leaving this commented out makes the table to to BRAM
+    // Leaving this commented out makes the table go to BRAM
     //#pragma HLS ARRAY_PARTITION variable=sincos complete dim=0
 
     typedef ac_int<AP_MAX(T::width - T::iwidth - 3, 1), false> lutindextype1;

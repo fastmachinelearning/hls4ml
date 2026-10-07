@@ -562,7 +562,7 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
 # COMPARE OUTPUT IMPLEMENTATION
 #########
 def _is_ignored_layer(layer):
-    """Some layers need to be ingored during inference"""
+    """Some layers need to be ignored during inference"""
     if isinstance(layer, (keras.layers.InputLayer, keras.layers.Dropout)):
         return True
     return False
@@ -576,7 +576,7 @@ def _get_outputs(layers, X, model_input):
 
 
 def get_ymodel_keras(keras_model, X):
-    """Calculate each layer's ouput and put them into a dictionary.
+    """Calculate each layer's output and put them into a dictionary.
 
     Args:
         keras_model (_type_): A keras Model
@@ -584,7 +584,7 @@ def get_ymodel_keras(keras_model, X):
             Must be formatted suitably for the ``model.predict(X)``.
 
     Returns:
-        dict: A dictionary in the form {"layer_name": ouput array of layer}.
+        dict: A dictionary in the form {"layer_name": output array of layer}.
     """
     ymodel = {}
     traced_layers = []
@@ -694,7 +694,7 @@ def compare(keras_model, hls_model, X, plot_type='dist_diff'):
     """
 
     # Take in output from both models
-    # Note that each y is a dictionary with structure {"layer_name": flattened ouput array}
+    # Note that each y is a dictionary with structure {"layer_name": flattened output array}
     ymodel = get_ymodel_keras(keras_model, X)
     _, ysim = hls_model.trace(X)
 

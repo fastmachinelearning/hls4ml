@@ -125,6 +125,7 @@ lint.unfixable = []
 
 [tool.check-manifest]
 ignore = [
+  ".agents/**",
   ".github/**",
   ".pre-commit-config.yaml",
   "docs/**",

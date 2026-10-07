@@ -27,10 +27,10 @@
   * measurements of how long each step takes. One could easily combine them into a single function.
 
   * NOTE: There is a  difference between XRT (VitisAccelerator backend) and Coyote: in XRT it is necessary
-  * to sync the input data from the host memory to device memory (HBM/DDR) befor running the inference.
+  * to sync the input data from the host memory to device memory (HBM/DDR) before running the inference.
   * On the other hand, Coyote implements a shared virtual memory model, and the shell will automatically
   * fetch data from host memory and feed it to the model kernel, fully bypassing device memory. However,
-  * we still have a function set_data that esentially copies data from one host-side array (e.g., NumPy) to
+  * we still have a function set_data that essentially copies data from one host-side array (e.g., NumPy) to
   * an array that's a member variable of this class. This is not necessary and Coyote could equally work
   * with the NumPy array, but it makes it easier to manage multiple batches. Future optimizations could fix
   * this, if desired. For more details on Coyote's memory model, refer to the paper: https://arxiv.org/abs/2504.21538
@@ -84,7 +84,7 @@ class CoyoteInference {
     /**
      * @brief Coyote thread for inference
      *
-     * Coyote uses so called threads to interfact with th FPGA, which include
+     * Coyote uses so called threads to interact with the FPGA, which include
      * high-level functions for moving data, setting control registers,
      * polling on completions etc.
      */
