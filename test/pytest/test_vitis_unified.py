@@ -406,6 +406,9 @@ def test_card_memory_banks_assigned(request, test_case_id, model_name, expected_
     # the host allocates by kernel argument index, so the sp= order must be inputs then outputs
     ports = [line.split('=')[1].split(':')[0].split('.')[1] for line in sp_lines]
     assert ports == sorted(ports, key=lambda name: (not name.startswith('gmem_in'), name))
+    # with sp= and slr= both given, v++ pipelines the path between the banks and the kernel's SLR
+    instance = sp_lines[0].split('=')[1].split('.')[0]
+    assert [line for line in cfg.splitlines() if line.startswith('slr=')] == [f'slr={instance}:SLR2']
 
 
 def test_card_driver_and_link(test_case_id, simple_unet):

@@ -345,7 +345,8 @@ fi
         """One contiguous slice of the card's memory banks per kernel pointer argument.
 
         The host must allocate each buffer in the same banks, which the generated XRT driver does
-        through the kernel argument index.
+        through the kernel argument index. With the kernel's SLR given as well, v++ adds the
+        pipelining for the path between the banks and that SLR.
         """
         instance = self._get_wrap_ip_name(model, True)
         ports = [self._get_io_port_name(var, True, idx) for idx, var in enumerate(model.get_input_variables())]
@@ -362,6 +363,8 @@ fi
             first = idx * per_port
             span = f'{kind}[{first}]' if per_port == 1 else f'{kind}[{first}:{first + per_port - 1}]'
             lines += f'sp={instance}.{port}:{span}\n'
+        if memory.get('kernel_slr'):
+            lines += f'slr={instance}:{memory["kernel_slr"]}\n'
         return lines
 
     # ===== Bridge generation =====

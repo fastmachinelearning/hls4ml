@@ -22,7 +22,7 @@
   },
   "alveo-u55c": {
     "part": "xcu55c-fsvh2892-2L-e",
-    "memory": {"type": "HBM", "banks": 32},
+    "memory": {"type": "HBM", "banks": 32, "kernel_slr": "SLR2"},
     "axi_master": {
       "platform_file": "${PLATFORM_REPO_PATHS}/xilinx_u55c_gen3x16_xdma_3_202210_1/xilinx_u55c_gen3x16_xdma_3_202210_1.xpfm"
     }
