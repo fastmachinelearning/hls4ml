@@ -11,6 +11,7 @@ Currently ``hls4ml`` officially supports the following boards and tool versions:
 * `zcu102 <https://www.xilinx.com/products/boards-and-kits/ek-u1-zcu102-g.html>`_ (Vitis and Vivado 2023.2)
 * `kv260 <https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html>`_ (Vitis and Vivado 2023.2 and 2025.2)
 * `alveo-u55c <https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html>`_ (Vitis and Vivado 2024.2 with the ``xilinx_u55c_gen3x16_xdma_3_202210_1`` platform, ``axi_master`` with ``driver='xrt'``)
+* ``alveo-u50`` and ``alveo-u280`` (not tested on hardware, no ``kernel_slr``)
 
 If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. The steps are covered in the platform setup tutorial in the accelerator backend section of the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
 
@@ -122,7 +123,7 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
      - ``zcu102``
      - | Target board.
        | It selects the FPGA part, the platform, and the Python driver template.
-       | The current version only supports the boards in ``supported_boards.json`` (``zcu102``, ``kv260`` and ``alveo-u55c``).
+       | The current version only supports the boards in ``supported_boards.json`` (``zcu102``, ``kv260``, ``alveo-u55c``, ``alveo-u50`` and ``alveo-u280``).
        | Any other board name is rejected with an error, unless ``platform`` and ``part`` are given.
        | You can use your own board: build its platform by following the platform setup tutorial in the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository and pass it with ``platform``.
    * - ``part``

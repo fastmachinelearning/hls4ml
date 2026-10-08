@@ -83,7 +83,13 @@ def vitis_reference(simple_unet):
     return hls_model
 
 
-part_map = {'zcu102': 'xczu9eg-ffvb1156-2-e', 'kv260': 'xck26-sfvc784-2LV-c', 'alveo-u55c': 'xcu55c-fsvh2892-2L-e'}
+part_map = {
+    'zcu102': 'xczu9eg-ffvb1156-2-e',
+    'kv260': 'xck26-sfvc784-2LV-c',
+    'alveo-u55c': 'xcu55c-fsvh2892-2L-e',
+    'alveo-u50': 'xcu50-fsvh2104-2-e',
+    'alveo-u280': 'xcu280-fsvh2892-2L-e',
+}
 
 
 def _vitis_unified_convert_kwargs(io_type, axi_mode, board='zcu102', **extra):
@@ -408,6 +414,26 @@ def test_card_memory_banks_assigned(request, test_case_id, model_name, expected_
     assert ports == sorted(ports, key=lambda name: (not name.startswith('gmem_in'), name))
     instance = sp_lines[0].split('=')[1].split('.')[0]
     assert [line for line in cfg.splitlines() if line.startswith('slr=')] == [f'slr={instance}:SLR2']
+
+
+@pytest.mark.parametrize('board', ['alveo-u50', 'alveo-u280'])
+def test_other_hbm_cards(test_case_id, simple_unet, board):
+    """HBM bank map and platform, without an SLR assignment."""
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board=board, driver='xrt'),
+    )
+    hls_model.write()
+
+    cfg = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.cfg').read_text()
+    assert [line.split(':', 1)[1] for line in cfg.splitlines() if line.startswith('sp=')] == ['HBM[0:15]', 'HBM[16:31]']
+    assert not [line for line in cfg.splitlines() if line.startswith('slr=')]
+    link = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.sh').read_text()
+    assert board.replace('alveo-', 'xilinx_') + '_gen3x16_xdma_' in link
 
 
 def test_card_driver_and_link(test_case_id, simple_unet):
