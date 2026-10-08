@@ -97,8 +97,8 @@ class ACFixedPrecisionDefinition(PrecisionDefinition):
             self.saturation_bits,
         ]
         if args[0] == 1:
-            # Currently oneAPI ac_fixed requires at least two bits for both signed and unsigned cases
-            # Should be fixed in the future once oneAPI supports 1-bit unsigned ac_fixed
+            # Currently Altera ac_fixed requires at least two bits for both signed and unsigned cases
+            # Should be fixed in the future once Altera supports 1-bit unsigned ac_fixed
             # We convert the precision in lossless manner but this is not possible for 1 bit signed types
             if args[2] == 'true':
                 print(

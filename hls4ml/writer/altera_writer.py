@@ -746,7 +746,7 @@ class AlteraWriter(Writer):
             activations = (layer.get_attr('activation'), layer.get_attr('recurrent_activation'))
             is_softmax = any(activation in ('softmax', 'softmax_multidim') for activation in activations)
 
-            if not is_softmax or 'implementation' not in layer.attributes:
+            if not is_softmax:  # or 'implementation' not in layer.attributes:
                 continue
 
             implementation = layer.get_attr('implementation')
@@ -755,11 +755,7 @@ class AlteraWriter(Writer):
 
             for table_kind in ('exp', 'inv'):
                 table_name = f'{layer.name}_{table_kind}_table'
-
-                if implementation == 'stable':
-                    table_size = min(int(layer.get_attr('table_size')), int(layer.get_attr(f'{table_kind}_table_size')))
-                else:
-                    table_size = int(layer.get_attr(f'{table_kind}_table_size'))
+                table_size = int(layer.get_attr(f'{table_kind}_table_size'))
 
                 with open(f'{path}/{table_name}.h', 'w') as h_file:
                     h_file.write(f'#ifndef {table_name.upper()}_H_\n')

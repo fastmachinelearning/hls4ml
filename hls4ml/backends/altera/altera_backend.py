@@ -19,6 +19,7 @@ from hls4ml.model.layers import (
     Embedding,
     Layer,
     SimpleRNN,
+    Softmax,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
@@ -147,7 +148,7 @@ class AlteraBackend(FPGABackend):
     def create_initial_config(
         self, part='Agilex7', clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, **_
     ):
-        """Create initial configuration of the altera backend.
+        """Create initial configuration of the Altera backend.
 
         Args:
             part (str, optional): The FPGA part to be used. Defaults to 'Agilex7'.
@@ -208,13 +209,9 @@ class AlteraBackend(FPGABackend):
         builddir = outdir / 'build'
         builddir.mkdir(exist_ok=True)
         try:
-            subprocess.run('which icpx', shell=True, cwd=builddir, check=True)
+            subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
         except subprocess.CalledProcessError:
-            print('Could not find icpx, trying ahls instead.')
-            try:
-                subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
-            except subprocess.CalledProcessError:
-                raise RuntimeError('Could not find icpx or ahls. Please configure altera appropriately')
+            raise RuntimeError('Could not find ahls. Please configure the Altera HLS IP Gen toolchain appropriately')
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
@@ -261,6 +258,13 @@ class AlteraBackend(FPGABackend):
         if layer.get_attr('recurrent_activation') == 'tanh':
             layer.set_attr('recurrent_activation', 'dense_tanh')
 
+    @layer_optimizer(Softmax)
+    def init_softmax(self, layer):
+        if layer.model.config.get_config_value('IOType') == 'io_parallel':
+            assert len(layer.get_input_variable().shape) == 1, (
+                'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
+            )
+
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
         if layer.attributes['n_in'] is None:
@@ -284,7 +288,7 @@ class AlteraBackend(FPGABackend):
             )
         if 'table_size' not in layer.attributes:
             layer.set_attr('table_size', 1024)
-        if True:  # layer.model.config.is_resource_strategy(layer): ... altera only supports Dense resource multiplication
+        if True:  # layer.model.config.is_resource_strategy(layer): ... Altera only supports Dense resource multiplication
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
@@ -320,7 +324,7 @@ class AlteraBackend(FPGABackend):
 
         layer.set_attr(
             'n_partitions', 1
-        )  # TODO Not used yet as there is no codegen implementation of CNNs for altera backend
+        )  # TODO Not used yet as there is no codegen implementation of CNNs for Altera backend
 
     @layer_optimizer(Conv2D)
     def init_conv2d(self, layer):
@@ -351,7 +355,7 @@ class AlteraBackend(FPGABackend):
 
         layer.set_attr(
             'n_partitions', 1
-        )  # TODO Not used yet as there is no codegen implementation of CNNs for altera backend
+        )  # TODO Not used yet as there is no codegen implementation of CNNs for Altera backend
 
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
@@ -359,7 +363,7 @@ class AlteraBackend(FPGABackend):
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
         # We don't use RF yet
-        if True:  # layer.model.config.is_resource_strategy(layer): ... altera only supports Dense resource multiplication
+        if True:  # layer.model.config.is_resource_strategy(layer): ... Altera only supports Dense resource multiplication
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
             self.set_closest_reuse_factor(layer, n_in, n_out)
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
