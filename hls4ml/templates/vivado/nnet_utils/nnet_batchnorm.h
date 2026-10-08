@@ -47,7 +47,7 @@ void normalize(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in],
 
     #pragma HLS ALLOCATION operation instances=mul limit=CONFIG_T::multiplier_limit
 
-// Calcuate result
+// Calculate result
 Result:
     for (int ires = 0; ires < CONFIG_T::n_in; ires++) {
         if (CONFIG_T::n_filt == -1) {

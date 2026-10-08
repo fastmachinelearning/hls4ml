@@ -106,7 +106,7 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
 
                 # Winograd's minimal filtering algorithm transforms the weight matrix
                 # This transformation consists of addition and division (by 2&4) of the weight matrix
-                # Therefore, increase precision (if needed), to accomodate for new weights
+                # Therefore, increase precision (if needed), to accommodate for new weights
                 # This error is only noticeable for low precisions, such as those used with QKeras
 
                 # Integer precision is only updated if it exceeds the one defined in hls4ml config
@@ -152,7 +152,7 @@ class ApplyWinogradKernelTransformation(OptimizerPass):
 
                 # Winograd's minimal filtering algorithm transforms the weight matrix
                 # This transformation consists of addition and division (by 2&4) of the weight matrix
-                # Therefore, increase precision (if needed), to accomodate for new weights
+                # Therefore, increase precision (if needed), to accommodate for new weights
                 # This error is only noticeable for low precisions, such as those used with QKeras
 
                 # Integer precision is only updated if it exceeds the one defined in hls4ml config

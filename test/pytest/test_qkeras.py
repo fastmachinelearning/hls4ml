@@ -320,7 +320,7 @@ def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_relu_negative_slope(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
-    Test a a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
+    Test a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
     """
     X = randX_1000_1
     X = -X  # Make it negative so leaky relu does something
@@ -853,9 +853,8 @@ def test_qlstm_no_bias(test_case_id, backend):
 
 
 def test_qgru_reset_after_false_parse(test_case_id):
-    """reset_after=False is parsed faithfully (apply_reset_gate='before', flat bias, zero
-    recurrent bias); the kernels implement only the 'after' formulation and the backends
-    are responsible for rejecting 'before'."""
+    """reset_after=False is parsed faithfully (apply_reset_gate='before', flat bias,
+    zero recurrent bias); backends are responsible for implementing or rejecting it."""
     model = Sequential()
     model.add(
         QGRU(

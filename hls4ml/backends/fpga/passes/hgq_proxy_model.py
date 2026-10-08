@@ -25,7 +25,7 @@ def to_acfixed(k, b, i, RND, SAT):
 def generate_mask_fn(
     name: str, shape: tuple[int, ...], k: np.ndarray, b: np.ndarray, i: np.ndarray, RND: str, SAT: str, backend: str
 ) -> str:
-    """Generate heterogenous quantization mask function, ONLY works for IOType=io_parallel"""
+    """Generate heterogeneous quantization mask function, ONLY works for IOType=io_parallel"""
     assert k.shape[0] == b.shape[0] == i.shape[0] == 1
     assert backend.lower() in ('oneapi', 'vivado', 'vitis'), f'Backend {backend} not tested'
     Ks, Bs, Is = k[0], b[0], i[0]

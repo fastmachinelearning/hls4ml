@@ -331,7 +331,7 @@ def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_relu_negative_slope(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
-    Test a a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
+    Test a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
     """
     X = randX_1000_1
     X = -X  # Make it negative so leaky relu does something

@@ -473,7 +473,7 @@ class Reshape(Layer):
         # take care of -1 shapes
         shape = self._infer_output_shape(input_shape, target_shape)
 
-        # update the target shape with chnges from above
+        # update the target shape with changes from above
         self.set_attr('target_shape', shape)
 
         self.add_output_variable(shape)
@@ -1203,7 +1203,7 @@ class BatchNormalization(Layer):
             self.add_weights_variable(name='bias', var_name='b{index}')
 
 
-# TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
+# TODO:  discuss whether this should be renamed to something more descriptive, and whether the class hierarchy makes sense
 class ApplyAlpha(BatchNormalization):
     """A custom layer to scale the output of a QDense layer which used 'alpha != 1'
     Inference computation uses BatchNormalization methods"""

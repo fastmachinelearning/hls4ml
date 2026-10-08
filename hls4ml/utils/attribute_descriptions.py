@@ -4,7 +4,7 @@
 
 reuse_factor = (
     'The number of times each multiplier is used by controlling the amount of pipelining/unrolling. '
-    'Lower number results in more parallelism and lower latency at the expense of the resources used.'
+    'A lower number results in more parallelism and lower latency at the expense of the resources used. '
     'Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.'
 )
 
@@ -21,7 +21,7 @@ table_type = 'The datatype (precision) used for the values of the lookup table.'
 
 softmax_implementation = (
     'Choice of implementation of softmax function. '
-    '"latency" provides good latency at the expense of extra resources. performs well on small number of classes. '
+    '"latency" provides good latency at the expense of extra resources. It performs well with a small number of classes. '
     '"stable" may require extra clock cycles but has better accuracy. '
     '"legacy" is the older implementation which has bad accuracy, but is fast and has low resource use. '
     'It is superseded by the "latency" implementation for most applications. '
@@ -34,8 +34,8 @@ softmax_skip = 'If enabled, skips the softmax node and returns the raw outputs.'
 
 conv_pf = (
     'The number of outputs computed in parallel. Essentially the number of multiplications of input window with the '
-    'convolution kernel occuring in parallel. '
-    'Higher number results in more parallelism (lower latency and II) at the expense of resources used.'
+    'convolution kernel occurring in parallel. '
+    'A higher number results in more parallelism (lower latency and II) at the expense of resources used. '
     'Currently only supported in io_parallel.'
 )
 conv_implementation = (
@@ -45,7 +45,7 @@ conv_implementation = (
 # Recurrent-related attributes
 
 recurrent_static = (
-    'If set to True, will reuse the the same recurrent block for computation, resulting in lower resource '
+    'If set to True, will reuse the same recurrent block for computation, resulting in lower resource '
     'usage at the expense of serialized computation and higher latency/II.'
 )
 
@@ -57,7 +57,7 @@ table_range_power2 = (
 )
 
 time_distributed_loop = (
-    'Controls the amont and type of parallelism in the loop over time steps. If set to "off", no parallelism will be used. '
+    'Controls the amount and type of parallelism in the loop over time steps. If set to "off", no parallelism will be used. '
     'If set to "unroll", the loop will be unrolled. This may result in excessive resource use and cannot be used in '
     '"io_stream" mode. If set to "pipeline", the loop will be pipelined.'
 )

@@ -47,14 +47,14 @@ class GPUFLOPEstimator(ObjectiveEstimator):
         if weight_sharing:
             logging.warn(
                 'Weight sharing does not decrease FLOPs. \
-                         It is recommened to use the default attributes, returned from is_layer_optimizable(...)'
+                         It is recommended to use the default attributes, returned from is_layer_optimizable(...)'
             )
             return [0]
 
         if not pruning:
             logging.warn(
                 'Pruning needs to be enabled to decrease FLOPs. \
-                         It is recommened to use the default attributes, returned from is_layer_optimizable(...)'
+                         It is recommended to use the default attributes, returned from is_layer_optimizable(...)'
             )
             return [0]
 
@@ -76,6 +76,6 @@ class GPUFLOPEstimator(ObjectiveEstimator):
         else:
             logging.warn(
                 'FLOP savings occur with structured pruning. \
-                         It is recommened to use the default attributes, returned from is_layer_optimizable(...)'
+                         It is recommended to use the default attributes, returned from is_layer_optimizable(...)'
             )
             return [0]
