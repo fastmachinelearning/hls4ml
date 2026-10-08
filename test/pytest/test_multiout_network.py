@@ -50,7 +50,7 @@ def data_corner_cases():
     return X1, X2
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_multi_output_nn(test_case_id, model, data, backend: str, io_type: str):
     output_dir = str(test_root_path / test_case_id)
@@ -69,7 +69,7 @@ def test_multi_output_nn(test_case_id, model, data, backend: str, io_type: str):
     assert np.allclose(r_hls[1], r_keras[1], atol=1e-5, rtol=0)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Vitis', 'Catapult', 'OneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult', 'OneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['latency', 'resource'])
 def test_multi_output_nn_corner_cases(

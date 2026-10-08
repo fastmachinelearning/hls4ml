@@ -21,17 +21,11 @@ class FixSoftmaxTableSize(OptimizerPass):
         table_bw: int = node.get_attr('inv_table_t').precision.width  # type: ignore
         table_size = int(node.get_attr('table_size'))  # type: ignore
 
-        backend = model.config.config['Backend']
-
-        # Somehow, Intel want one extra bits for the table.
-        # I don't know why but if not simulation will crash with segmentation fault.
-        backend_limitation = -1 if backend == 'Quartus' else 0
-
-        if 2 ** (min(input_bw, table_bw) + backend_limitation) < table_size:
+        if 2 ** min(input_bw, table_bw) < table_size:
             # If table size is too large w.r.t. input bitwidth and table bitwidth,
             # reduce table size to avoid undefined behavior when cutting indices from,
             # fixed point number.
-            node.set_attr('table_size', str(2 ** (min(input_bw, table_bw) + backend_limitation)))
+            node.set_attr('table_size', str(2 ** min(input_bw, table_bw)))
             if 2**input_bw < table_size:
                 # The warning message does not have to be looking like this, but you are asking
                 # 125 characters long line.
@@ -51,14 +45,6 @@ class FixSoftmaxTableSize(OptimizerPass):
                         f'bitwidth {input_bw}. Setting table size to {2**input_bw}.'
                         'To avoid this warning, please increase input bitwidth or'
                         'decrease table size.'
-                    ),
-                    stacklevel=1,
-                )
-            if backend == 'Quartus':
-                warnings.warn(
-                    (
-                        "Quartus backend's table size is half of 2^min(input_bw-1,table_bw-1)"
-                        ' instead of 2^min(input_bw,table_bw).'
                     ),
                     stacklevel=1,
                 )

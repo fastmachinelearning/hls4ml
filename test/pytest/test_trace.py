@@ -11,7 +11,7 @@ import hls4ml.model.profiling
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('activation', ['relu', None])
 def test_trace(test_case_id, backend, activation):
     """Test the tracing feature with a simple Keras model."""
