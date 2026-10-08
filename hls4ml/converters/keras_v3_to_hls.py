@@ -179,13 +179,13 @@ class KerasV3HandlerDispatcher:
         if self.allow_da_fallback:
             try:
                 ret = self.da_call(layer, inp_tensors, out_tensors)
-                print(f'DA handler used for layer {layer.name}')
+                print(f'DA handler used for layer {layer.name} ({layer.__class__.__module__}.{layer.__class__.__name__}).')
                 return ret
             except KeyError:
                 pass  # missing DA handler
             except ImportError:
-                print('da4ml not installed. Set `allow_da_fallback=False` to disable DA fallback.')
-                pass  # da4ml not installed
+                print('alkaid not installed. Set `allow_da_fallback=False` to disable DA fallback.')
+                pass  # alkaid not installed
         if self.allow_v2_fallback:
             ret = self.v2_call(layer, inp_tensors, out_tensors)
             if ret is not None:
@@ -198,8 +198,8 @@ class KerasV3HandlerDispatcher:
         self, layer: 'keras.layers.Layer', inp_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor']
     ):
         import keras
-        from da4ml.converter import trace_model
-        from da4ml.trace import FixedVariableArrayInput, comb_trace
+        from alkaid.converter import trace_model
+        from alkaid.trace import FVArrayInput, trace
 
         if len(out_tensors) > 1:
             n_out = len(out_tensors)
@@ -207,10 +207,13 @@ class KerasV3HandlerDispatcher:
             raise ValueError(f'DA combinational requires n_out=1, got {n_out=} for layer {layer.name} ({cls_name}).')
 
         input_shapes: list[list[int]] = [list(t.shape[1:]) for t in inp_tensors]  # type: ignore
-        inp = tuple(FixedVariableArrayInput(tuple(shape)).quantize(1, 32, 32) for shape in input_shapes)
         _model = keras.Model(inp_tensors, out_tensors)
-        inp, out = trace_model(_model, inputs=inp)
-        comb = comb_trace(inp, out)
+        try:
+            inp, out = trace_model(_model)  # When input bw can be determined automatically
+        except (AssertionError, ValueError):
+            inp = tuple(FVArrayInput(tuple(shape)).quantize(1, 32, 32) for shape in input_shapes)
+            inp, out = trace_model(_model, inputs=inp)
+        comb = trace(inp, out)
         input_names = [t.name for t in inp_tensors]
         output_names = [t.name for t in out_tensors]
 

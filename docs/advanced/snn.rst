@@ -155,7 +155,7 @@ Only fixed-window reset is implemented in generated layer kernels today.
 ``window_size`` reset behavior.
 
 Running ``hls_model.predict()``
-==============================
+===============================
 
 Compiled SNN models are stateful across top-function calls. For fixed-window
 SNN inference, call the compiled model once per timestep and pass exactly

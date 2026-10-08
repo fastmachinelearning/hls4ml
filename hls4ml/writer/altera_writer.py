@@ -1,4 +1,5 @@
 import glob
+import math
 import os
 import tarfile
 from collections import OrderedDict
@@ -122,6 +123,18 @@ class AlteraWriter(Writer):
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning lib stamp' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'namespace {libstamp} {{'
+
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning namespace end' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'}} // namespace {libstamp}\n'
+
                 # Altera pipes need to be declared and passed as template parameters
                 elif '// hls-fpga-machine-learning insert inter-task pipes' in line:
                     newline = line
@@ -230,17 +243,30 @@ class AlteraWriter(Writer):
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning lib stamp' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'namespace {libstamp} {{'
+
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning namespace end' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'}} // namespace {libstamp}\n\n'
+                    newline += f'using namespace {libstamp};\n'
+
                 # Declarations for the inputs. May need modification when io_stream is supported
                 elif '// hls-fpga-machine-learning insert inputs' in line:
                     newline = line
                     for inp in model_inputs:
-                        newline += inp.declare_cpp()
+                        newline += inp.declare_cpp(pipe_min_size=inp.pragma[1] if inp.pragma[0] == 'stream' else 16)
 
                 # and declareations for the outputs
                 elif '// hls-fpga-machine-learning insert outputs' in line:
                     newline = line
                     for out in model_outputs:
-                        newline += out.declare_cpp()
+                        newline += out.declare_cpp(pipe_min_size=out.pragma[1] if out.pragma[0] == 'stream' else 16)
 
                 # Simply copy line, if no inserts are required
                 else:
@@ -376,6 +402,8 @@ class AlteraWriter(Writer):
                     output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
                 )
 
+        libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+
         with (
             open(os.path.join(filedir, '../templates/altera/myproject_test.cpp')) as f,
             open(f'{model.config.get_output_dir()}/src/{project_name}_test.cpp', 'w') as fout,
@@ -399,7 +427,9 @@ class AlteraWriter(Writer):
                     newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
                     newline += indent + '    vals[j] = 0.0; \n'
                     newline += indent + '}\n'
-                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    newline += (
+                        indent + f'nnet::convert_data<float, {libstamp}::{inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    )
                 elif '// hls-fpga-machine-learning insert data' in line:
                     newline = line
                     inp = model_inputs[0]
@@ -407,12 +437,17 @@ class AlteraWriter(Writer):
                     newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
                     newline += indent + '    vals[j] = in[j]; \n'
                     newline += indent + '}\n'
-                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    newline += (
+                        indent + f'nnet::convert_data<float, {libstamp}::{inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    )
                 elif '// hls-fpga-machine-learning convert output' in line:
                     newline = line
                     out = model_outputs[0]
                     newline += indent + f'float outputs[{out.size_cpp()}];\n'
-                    newline += indent + f'nnet::convert_data_back<{out.pipe_name}, float, {out.size_cpp()}>(q, outputs);\n'
+                    newline += (
+                        indent
+                        + f'nnet::convert_data_back<{libstamp}::{out.pipe_name}, float, {out.size_cpp()}>(q, outputs);\n'
+                    )
                 else:
                     newline = line
 
@@ -468,10 +503,9 @@ class AlteraWriter(Writer):
                     newline += indent + outputs_str + '\n'
 
                 elif '// hls-fpga-machine-learning insert wrapper' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
                     dtype = line.split('#', 1)[1].strip()
                     newline = ''
-                    for i in model_inputs:
-                        newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
 
                     newline += (
                         indent
@@ -479,9 +513,16 @@ class AlteraWriter(Writer):
                         + f'({convert_to_pascal_case(project_name)}{{}});\n'
                     )
 
+                    for i in model_inputs:
+                        newline += (
+                            indent
+                            + f'nnet::convert_data<{dtype}, {libstamp}::{i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
+                        )
+
                     for o in model_outputs:
                         newline += (
-                            indent + f'nnet::convert_data_back<{o.pipe_name}, {dtype}, {o.size_cpp()}>(q, {o.name});\n'
+                            indent
+                            + f'nnet::convert_data_back<{libstamp}::{o.pipe_name}, {dtype}, {o.size_cpp()}>(q, {o.name});\n'
                         )
                     newline += '\n'
                     newline += indent + 'q.wait();\n'
@@ -703,67 +744,103 @@ class AlteraWriter(Writer):
     def __write_softmax_tables(self, model, path):
         for layer in model.get_layers():
             activations = (layer.get_attr('activation'), layer.get_attr('recurrent_activation'))
-            implementation = layer.get_attr('implementation')
             is_softmax = any(activation in ('softmax', 'softmax_multidim') for activation in activations)
 
-            if is_softmax:
-                for table_kind in ('exp', 'inv'):
-                    table_name = f'{layer.name}_{table_kind}_table'
-                    table_size = int(layer.get_attr(f'{table_kind}_table_size', layer.get_attr('table_size')))
-                    index_bits = ceil_log2(table_size)
+            if not is_softmax:  # or 'implementation' not in layer.attributes:
+                continue
 
-                    with open(f'{path}/{table_name}.h', 'w') as h_file:
-                        h_file.write(f'#ifndef {table_name.upper()}_H_\n')
-                        h_file.write(f'#define {table_name.upper()}_H_\n\n')
-                        h_file.write(
-                            f'static constexpr nnet::array<{layer.get_attr(f"{table_kind}_table_t").name},{table_size}> '
-                            f'{table_name} = {{'
-                        )
+            implementation = layer.get_attr('implementation')
+            if implementation not in ('stable', 'latency', 'legacy'):
+                continue
 
-                        if implementation == 'stable':
-                            table_lookup_type = layer.get_attr('inp_norm_t' if table_kind == 'exp' else 'inv_inp_t')
-                        if implementation == 'latency':
-                            if table_kind == 'exp':
-                                table_lookup_type = layer.get_input_variable().type
-                            else:
-                                table_lookup_type = layer.get_attr('exp_table_t')
+            for table_kind in ('exp', 'inv'):
+                table_name = f'{layer.name}_{table_kind}_table'
+                table_size = int(layer.get_attr(f'{table_kind}_table_size'))
 
-                        sep = ''
+                with open(f'{path}/{table_name}.h', 'w') as h_file:
+                    h_file.write(f'#ifndef {table_name.upper()}_H_\n')
+                    h_file.write(f'#define {table_name.upper()}_H_\n\n')
+                    h_file.write(
+                        f'static constexpr nnet::array<{layer.get_attr(f"{table_kind}_table_t").name},{table_size}> '
+                        f'{table_name} = {{'
+                    )
+
+                    sep = ''
+                    N = ceil_log2(table_size)
+
+                    if implementation == 'stable':
+                        ac_type = layer.get_attr('inp_norm_t' if table_kind == 'exp' else 'inv_inp_t')
+                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                        fp_integer = ac_type.precision.integer
+
+                        # Guard mainly for development, this path is not meant to be taken as-is
+                        if N > fp_bits:
+                            raise Exception('Table size is bigger than what precision allows')
+
+                        maxval = 2**fp_integer - 1
+                        half_prec = 2.0 ** (fp_integer - N - 1) if N < fp_bits else 0.0
+
+                        if table_kind == 'exp':
+                            scale = (
+                                layer.attributes['exp_scale']
+                                if ('exp_scale' in layer.attributes and layer.attributes['exp_scale'] is not None)
+                                else 1.0
+                            )
+
                         for i in range(table_size):
-                            if implementation == 'legacy':
-                                if table_kind == 'exp':
-                                    in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
-                                    real_val = np.exp(in_val)
-                                else:
-                                    in_val = 64.0 * i / float(table_size)
-                                    real_val = 1.0 / in_val if in_val > 0.0 else 0
-                            elif implementation in ('stable', 'latency'):
-                                f = FixedPointEmulator(
-                                    table_lookup_type.precision.width,
-                                    table_lookup_type.precision.integer,
-                                    signed=table_lookup_type.precision.signed,
-                                )
-                                f.set_msb_bits(uint_to_binary(i, index_bits))
+                            # Norm type is always > 1, so force unsigned regardless of the quantiser's signedness,
+                            # but keep the width
+                            f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
+                            f.set_msb_bits(uint_to_binary(i, N))
+                            x = f.to_float()
 
-                                if implementation == 'stable':
-                                    if table_kind == 'exp':
-                                        scale = layer.attributes.get('exp_scale', 1)  # only implemented in stable?
-                                        real_val = (1.0 / f.exp_float()) * scale
-                                    else:
-                                        real_val = f.inv_float()
-                                elif implementation == 'latency':
-                                    if table_kind == 'exp':
-                                        real_val = f.exp_float()
-                                    else:
-                                        real_val = f.inv_float()
+                            if table_kind == 'exp':
+                                if half_prec and x > 0:  # x > 0 preserves (x_max - x) == 0 => exp(0) = 1
+                                    x += half_prec
+                                real_val = math.exp(-(x * scale))
                             else:
-                                real_val = 0  # dummy value, for argmax
+                                if half_prec and x != 1.0:  # preserve the special case where x = exp(0) => x = 0
+                                    x += half_prec
+                                real_val = 1.0 / x if x > 0 else maxval
+
+                            if real_val > maxval:
+                                real_val = maxval
 
                             h_file.write(sep + str(real_val))
                             sep = ', '
 
-                        h_file.write('};\n\n')
-                        h_file.write('#endif')
+                    elif implementation == 'latency':
+                        if table_kind == 'exp':
+                            ac_type = layer.get_input_variable().type
+                        else:
+                            # Note: keyed off exp_table_t, not inv_table_t/inv_inp_t
+                            ac_type = layer.get_attr('exp_table_t')
+
+                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                        fp_integer = ac_type.precision.integer
+                        fp_signed = ac_type.precision.signed
+
+                        for i in range(table_size):
+                            f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
+                            f.set_msb_bits(uint_to_binary(i, N))
+                            real_val = f.exp_float() if table_kind == 'exp' else f.inv_float()
+                            h_file.write(sep + str(real_val))
+                            sep = ', '
+
+                    else:  # legacy
+                        for i in range(table_size):
+                            if table_kind == 'exp':
+                                in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
+                                real_val = np.exp(in_val)
+                            else:
+                                in_val = 64.0 * i / float(table_size)
+                                real_val = 1.0 / in_val if in_val > 0.0 else 0
+
+                            h_file.write(sep + str(real_val))
+                            sep = ', '
+
+                    h_file.write('};\n\n')
+                    h_file.write('#endif')
 
     def write_activation_tables(self, model):
         """Write the lookup tables for activation functions
