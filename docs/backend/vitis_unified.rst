@@ -71,15 +71,11 @@ A card is linked against an installed card platform instead of one built by Viva
 
 * The platform is looked up under ``PLATFORM_REPO_PATHS``, which has to be set when ``bitfile=True`` runs the link.
 * The kernel pointers are assigned to memory banks explicitly. The banks of the board entry are split evenly over the pointer arguments, one contiguous slice each, and the generated driver allocates every buffer in the banks of its own kernel argument. For one input and one output on a card with 32 HBM banks that gives ``HBM[0:15]`` and ``HBM[16:31]``.
-* The kernel is assigned to the SLR given by ``kernel_slr`` in the board entry (``SLR2`` on the U55C). With both the banks and the SLR known, v++ pipelines the path between them; without it, that path, two SLRs long on the U55C, limits the clock.
+* The kernel is placed in the SLR given by ``kernel_slr`` in the board entry, so v++ pipelines the path to its memory banks.
 
 Only ``axi_master`` is supported on a card. Instead of the raw bitstream and hardware handoff file that PYNQ needs, the ``.xclbin`` is copied to ``export/``.
 
-The kernel runs on the card's scalable clock. Vitis implements it against the platform's default kernel frequency, 300 MHz on the U55C, and when routing misses that it lowers the clock in the ``.xclbin`` to the highest frequency that meets timing. The ``[clock]`` entry of ``link_system.cfg`` does not change this. ``clock_period`` still sets the HLS schedule, and since the HLS estimate leaves out routing, a short period pays off. For a 16-64-32-32-5 jet tagger at ``ReuseFactor`` 1, each with the same results on 1024 test samples:
-
-* ``clock_period=6.66``: 112 MHz
-* ``clock_period=3.333``: 237 MHz
-* ``clock_period=3.333`` and ``in_stream_buf_size=2``, with the ``[vivado]`` options below added to ``link_system.cfg`` after ``write()``: 256 MHz
+The kernel runs on the card's scalable clock. Vitis implements it against the platform's default kernel frequency, 300 MHz on the U55C, and when routing misses that it lowers the clock in the ``.xclbin`` to the highest frequency that meets timing. The ``[clock]`` entry of ``link_system.cfg`` does not change this. ``clock_period`` still sets the HLS schedule, and since the HLS estimate leaves out routing, a short period pays off. A 16-64-32-32-5 jet tagger at ``ReuseFactor`` 1 ships at 112 MHz with ``clock_period=6.66`` and at 237 MHz with ``clock_period=3.333``. Adding ``in_stream_buf_size=2`` and the options below to ``link_system.cfg`` after ``write()`` gives 256 MHz:
 
 .. code-block:: ini
 
@@ -88,7 +84,7 @@ The kernel runs on the card's scalable clock. Vitis implements it against the pl
     prop=run.impl_1.STEPS.POST_ROUTE_PHYS_OPT_DESIGN.IS_ENABLED=true
     prop=run.impl_1.STEPS.POST_ROUTE_PHYS_OPT_DESIGN.ARGS.DIRECTIVE=AggressiveExplore
 
-The clock Vitis ships is in the ``CLOCK_FREQ_TOPOLOGY`` section of the ``.xclbin`` (``xclbinutil --dump-section CLOCK_FREQ_TOPOLOGY:JSON:clk.json``). With Vivado 2024.2, do not combine the SLR assignment with ``run.impl_1.strategy=Performance_Explore``: the placer crashed in both builds that tried it.
+With Vivado 2024.2, ``run.impl_1.strategy=Performance_Explore`` crashes the placer when ``kernel_slr`` is set.
 
 .. code-block:: Python
 
