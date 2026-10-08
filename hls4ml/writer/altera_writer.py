@@ -123,6 +123,18 @@ class AlteraWriter(Writer):
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning lib stamp' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'namespace {libstamp} {{'
+
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning namespace end' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'}} // namespace {libstamp}\n'
+
                 # Altera pipes need to be declared and passed as template parameters
                 elif '// hls-fpga-machine-learning insert inter-task pipes' in line:
                     newline = line
@@ -231,17 +243,30 @@ class AlteraWriter(Writer):
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning lib stamp' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'namespace {libstamp} {{'
+
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning namespace end' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'}} // namespace {libstamp}\n\n'
+                    newline += f'using namespace {libstamp};\n'
+
                 # Declarations for the inputs. May need modification when io_stream is supported
                 elif '// hls-fpga-machine-learning insert inputs' in line:
                     newline = line
                     for inp in model_inputs:
-                        newline += inp.declare_cpp()
+                        newline += inp.declare_cpp(pipe_min_size=inp.pragma[1] if inp.pragma[0] == 'stream' else 16)
 
                 # and declareations for the outputs
                 elif '// hls-fpga-machine-learning insert outputs' in line:
                     newline = line
                     for out in model_outputs:
-                        newline += out.declare_cpp()
+                        newline += out.declare_cpp(pipe_min_size=out.pragma[1] if out.pragma[0] == 'stream' else 16)
 
                 # Simply copy line, if no inserts are required
                 else:
@@ -377,6 +402,8 @@ class AlteraWriter(Writer):
                     output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
                 )
 
+        libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+
         with (
             open(os.path.join(filedir, '../templates/altera/myproject_test.cpp')) as f,
             open(f'{model.config.get_output_dir()}/src/{project_name}_test.cpp', 'w') as fout,
@@ -400,7 +427,9 @@ class AlteraWriter(Writer):
                     newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
                     newline += indent + '    vals[j] = 0.0; \n'
                     newline += indent + '}\n'
-                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    newline += (
+                        indent + f'nnet::convert_data<float, {libstamp}::{inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    )
                 elif '// hls-fpga-machine-learning insert data' in line:
                     newline = line
                     inp = model_inputs[0]
@@ -408,12 +437,17 @@ class AlteraWriter(Writer):
                     newline += indent + f'for (int j = 0 ; j < {inp.size_cpp()} ; j++) {{\n'
                     newline += indent + '    vals[j] = in[j]; \n'
                     newline += indent + '}\n'
-                    newline += indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    newline += (
+                        indent + f'nnet::convert_data<float, {libstamp}::{inp.pipe_name}, {inp.size_cpp()}>(q, vals);\n'
+                    )
                 elif '// hls-fpga-machine-learning convert output' in line:
                     newline = line
                     out = model_outputs[0]
                     newline += indent + f'float outputs[{out.size_cpp()}];\n'
-                    newline += indent + f'nnet::convert_data_back<{out.pipe_name}, float, {out.size_cpp()}>(q, outputs);\n'
+                    newline += (
+                        indent
+                        + f'nnet::convert_data_back<{libstamp}::{out.pipe_name}, float, {out.size_cpp()}>(q, outputs);\n'
+                    )
                 else:
                     newline = line
 
@@ -469,10 +503,9 @@ class AlteraWriter(Writer):
                     newline += indent + outputs_str + '\n'
 
                 elif '// hls-fpga-machine-learning insert wrapper' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
                     dtype = line.split('#', 1)[1].strip()
                     newline = ''
-                    for i in model_inputs:
-                        newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
 
                     newline += (
                         indent
@@ -480,9 +513,16 @@ class AlteraWriter(Writer):
                         + f'({convert_to_pascal_case(project_name)}{{}});\n'
                     )
 
+                    for i in model_inputs:
+                        newline += (
+                            indent
+                            + f'nnet::convert_data<{dtype}, {libstamp}::{i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
+                        )
+
                     for o in model_outputs:
                         newline += (
-                            indent + f'nnet::convert_data_back<{o.pipe_name}, {dtype}, {o.size_cpp()}>(q, {o.name});\n'
+                            indent
+                            + f'nnet::convert_data_back<{libstamp}::{o.pipe_name}, {dtype}, {o.size_cpp()}>(q, {o.name});\n'
                         )
                     newline += '\n'
                     newline += indent + 'q.wait();\n'
