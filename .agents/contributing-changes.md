@@ -37,7 +37,7 @@ scope rules that decide how a feature is received:
   set that raises naming the conflict — as `VivadoBackend.init_dense` does when a strategy is combined with a
   reuse factor it cannot support.
 - **Every backend that shares the code path has to keep working.** Vitis inherits from Vivado, so a change in
-  `backends/vivado/` affects both. Changes to `model/` affect all backends including Quartus, oneAPI,
+  `backends/vivado/` affects both. Changes to `model/` affect all backends including Quartus, Altera,
   Catapult and Libero.
 
 ## Formatting: pre-commit is required

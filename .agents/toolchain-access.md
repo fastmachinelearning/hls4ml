@@ -1,7 +1,7 @@
 ---
 name: toolchain-access
 description: >-
-  Find, select and run the vendor toolchain an hls4ml backend needs (Vitis, Vivado, Quartus, oneAPI and
+  Find, select and run the vendor toolchain an hls4ml backend needs (Vitis, Vivado, Quartus, Altera and
   others), including when the tool is not installed on the host. Use whenever you need to synthesize or build
   an hls4ml project, choose a tool version, launch a long build, or when a build fails with "installation not
   found". Covers what each backend looks for, where a toolchain can come from, writing wrappers, version
@@ -23,7 +23,7 @@ installation, a module, or a wrapper script.
 | Vitis | `vitis-run` | `vitis-run --tcl build_prj.tcl --mode hls` |
 | Vivado | `vivado_hls` | `vivado_hls -f build_prj.tcl "reset=… csim=… …"` |
 | Quartus | `quartus_sh` | `make <project>-fpga` in the project directory |
-| oneAPI | the compiler toolchain used by the generated build files | `make <build_type>` in the build directory |
+| Altera | the compiler toolchain used by the generated build files | `make <build_type>` in the build directory |
 
 Check the backend's `build()` in `hls4ml/backends/<backend>/<backend>_backend.py` rather than assuming; the
 command and its arguments change between releases. When the command is missing, the backend raises an

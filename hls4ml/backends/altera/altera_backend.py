@@ -194,7 +194,7 @@ class AlteraBackend(FPGABackend):
 
     def build(self, model, build_type='fpga_emu', run=False):
         """
-        Builds the project using the Intel oneAPI DPC++ compiler.
+        Builds the project using the Altera DPC++ compiler toolchain.
 
         Args:
             model (ModelGraph): The model to build

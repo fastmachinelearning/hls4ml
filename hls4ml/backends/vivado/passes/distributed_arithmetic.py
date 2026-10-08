@@ -442,7 +442,7 @@ class DACombinationalTemplate(OptimizerPass):
         if backend in ('vitis', 'vivado'):
             flavor = 'vitis'
         elif backend == 'altera':
-            flavor = 'oneapi'
+            flavor = 'altera'
         else:
             raise ValueError(f'Unsupported backend {backend} for DACombinational layer.')
 

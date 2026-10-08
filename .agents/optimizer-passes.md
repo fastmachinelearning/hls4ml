@@ -65,7 +65,7 @@ self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, ba
 ```
 
 Backend flow names that appear in every FPGA backend, each under its own prefix: `init_layers`,
-`specific_types`, `apply_templates`, `write` and `ip`. Others are optional and vary — Vivado, Quartus, oneAPI
+`specific_types`, `apply_templates`, `write` and `ip`. Others are optional and vary — Vivado, Quartus, Altera
 and Catapult add `optimize`, `streaming` and `quantization`, while Libero registers only the five above and
 Vitis adds `validation` on top of the ones it inherits from Vivado. Libero is the useful minimal example.
 
@@ -137,7 +137,7 @@ The user writes the name in pascal case in the config (`RecurrentReuseFactor`); 
 
 A strategy implemented end to end as passes, useful as a template to copy. The machinery it uses is core to
 every backend; the vocabulary it manipulates — `strategy`, `reuse_factor`, a `kernel` typedef chosen by a
-config template — is a Vivado-family convention. Quartus and oneAPI have no `strategy` attribute at all, and
+config template — is a Vivado-family convention. Quartus and Altera have no `strategy` attribute at all, and
 a backend under development may share none of these names. Passes remain the right tool there; only the
 attribute names change.
 

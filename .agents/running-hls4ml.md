@@ -74,7 +74,7 @@ vendor toolchain. `build()` does that, and is a separate, much slower step.
 - **`default_precision`** accepts `'fixed<16,6>'` or a backend-specific spelling; `'auto'` is not allowed as
   the default, but individual layer types may be set to `'auto'` to be inferred.
 - Registered backends: `vivado`, `vivadoaccelerator`, `vitis`, `quartus`, `catapult`, `symbolicexpression`,
-  `oneapi`, `libero`. `hls4ml.backends.get_available_backends()` lists them.
+  `altera`, `libero`. `hls4ml.backends.get_available_backends()` lists them.
 
 ## What the numbers should look like
 
