@@ -148,3 +148,19 @@ def test_report(hls_model_setup, capsys):
     captured = capsys.readouterr()  # capture again to test
 
     assert captured.out == backend_config['expected_outcome']
+
+
+def test_altera_report_multiple_targets(tmp_path):
+    """Each build target found in the directory gets its own entry in the report."""
+    test_report_dir = test_root_path / 'test_report/Altera'
+    for target in ['report', 'fpga']:
+        json_dir = tmp_path / f'build/myproject.{target}.prj/reports/resources/json'
+        json_dir.mkdir(parents=True)
+        for json_file in ['quartus.ndjson', 'summary.ndjson', 'loop_attr.ndjson']:
+            shutil.copy(test_report_dir / json_file, json_dir / json_file)
+
+    report = hls4ml.report.parse_altera_report(str(tmp_path))
+
+    assert set(report.keys()) == {'report', 'fpga'}
+    assert 'Quartus' in report['fpga']
+    assert 'Quartus' not in report['report']
