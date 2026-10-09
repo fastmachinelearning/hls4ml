@@ -416,6 +416,36 @@ def test_card_memory_banks_assigned(request, test_case_id, model_name, expected_
     assert [line for line in cfg.splitlines() if line.startswith('slr=')] == [f'slr={instance}:SLR2']
 
 
+@pytest.mark.parametrize('kernel_slr, expected', [(None, ['SLR2']), ('SLR1', ['SLR1']), (False, [])])
+def test_card_kernel_slr(test_case_id, simple_unet, kernel_slr, expected):
+    """The board's SLR by default, overridden or left out with kernel_slr."""
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        kernel_slr=kernel_slr,
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board='alveo-u55c', driver='xrt'),
+    )
+    hls_model.write()
+
+    cfg = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.cfg').read_text()
+    assert [line.split(':')[-1] for line in cfg.splitlines() if line.startswith('slr=')] == expected
+
+
+def test_card_kernel_slr_rejects_bad_name(test_case_id, simple_unet):
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    with pytest.raises(Exception, match='kernel_slr'):
+        hls4ml.converters.convert_from_keras_model(
+            simple_unet,
+            hls_config=config,
+            output_dir=str(test_root_path / test_case_id),
+            kernel_slr='top',
+            **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board='alveo-u55c', driver='xrt'),
+        )
+
+
 @pytest.mark.parametrize('board', ['alveo-u50', 'alveo-u280'])
 def test_other_hbm_cards(test_case_id, simple_unet, board):
     """HBM bank map and platform, without an SLR assignment."""

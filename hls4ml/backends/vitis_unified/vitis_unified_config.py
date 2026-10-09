@@ -28,7 +28,12 @@ class VitisUnifiedConfig:
 
         # Platform is the user's own file, or resolved from supported_boards.json based on board + axi_mode
         board_info = self.supported_boards.get(self.board, {})
-        self.memory = memory_config(board_info)
+        self.memory = dict(memory_config(board_info))
+        kernel_slr = unified_config.get('KernelSLR')
+        if self.memory and kernel_slr is not None:
+            self.memory.pop('kernel_slr', None)
+            if kernel_slr:
+                self.memory['kernel_slr'] = kernel_slr
         platform = unified_config.get('Platform')
         tcl_rel = None if platform else platform_generator_tcl(board_info, self.axi_mode)
         if platform:

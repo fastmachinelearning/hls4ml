@@ -139,6 +139,7 @@ class VitisUnifiedBackend(VitisBackend):
         in_stream_buf_size=128,
         out_stream_buf_size=128,
         axi_mode='axi_master',
+        kernel_slr=None,
         **kwargs,
     ):
         supported_boards = load_supported_boards()
@@ -157,6 +158,9 @@ class VitisUnifiedBackend(VitisBackend):
         config['VitisUnifiedConfig']['axi_mode'] = axi_mode
         config['VitisUnifiedConfig']['in_stream_buf_size'] = in_stream_buf_size
         config['VitisUnifiedConfig']['out_stream_buf_size'] = out_stream_buf_size
+        if kernel_slr not in (None, False) and not re.fullmatch(r'SLR\d', str(kernel_slr)):
+            raise Exception(f'kernel_slr must be an SLR name such as "SLR1", or False, not {kernel_slr!r}')
+        config['VitisUnifiedConfig']['KernelSLR'] = kernel_slr
 
         config['VitisUnifiedConfig']['Driver'] = driver
         config['VitisUnifiedConfig']['InputDtype'] = input_type  # float, double or ap_fixed<a,b>

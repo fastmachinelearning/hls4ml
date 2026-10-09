@@ -72,7 +72,7 @@ A card is linked against an installed card platform instead of one built by Viva
 
 * The platform is looked up under ``PLATFORM_REPO_PATHS``, which has to be set when ``bitfile=True`` runs the link.
 * The kernel pointers are assigned to memory banks explicitly. The banks of the board entry are split evenly over the pointer arguments, one contiguous slice each, and the generated driver allocates every buffer in the banks of its own kernel argument. For one input and one output on a card with 32 HBM banks that gives ``HBM[0:15]`` and ``HBM[16:31]``.
-* The kernel is placed in the SLR given by ``kernel_slr`` in the board entry, so v++ pipelines the path to its memory banks.
+* The kernel is placed in the SLR given by ``kernel_slr`` (from the board entry, ``SLR2`` on the U55C), so v++ pipelines the path to its memory banks. Pass ``kernel_slr=False`` for a model that does not fit in one SLR.
 
 Only ``axi_master`` is supported on a card. Instead of the raw bitstream and hardware handoff file that PYNQ needs, the ``.xclbin`` is copied to ``export/``.
 
@@ -175,6 +175,10 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
      - ``128``
      - | Depth of the FIFO between the HLS model and the wrapper output (AXI master write or AXI-Stream). Used in both AXI modes.
        | The unit is one entry of the model output stream. One entry holds the last dimension of the output shape, and one sample takes ``N_OUT / channels`` entries, the same rule as for the input.
+   * - ``kernel_slr``
+     - from board
+     - | SLR the kernel is placed in on a data-center card, for example ``'SLR1'``.
+       | ``False`` leaves the placement to Vivado.
 
 Example:
 
