@@ -173,7 +173,7 @@ def get_backend(name):
     if name.lower() == 'oneapi':
         raise Exception(
             'The oneAPI backend has been replaced by the Altera backend. '
-            'Please switch to using the Altera HLS IP Gen compiler or use an older version of hls4ml.'
+            'Please switch to using the Altera HLS IP Gen compiler or use hls4ml version 1.3.0 or older.'
         )
     return backend_map[name.lower()]
 
