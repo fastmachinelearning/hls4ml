@@ -145,7 +145,14 @@ class AlteraBackend(FPGABackend):
         return self._writer_flow
 
     def create_initial_config(
-        self, part='Agilex7', clock_period=5, hyperopt_handshake=False, io_type='io_parallel', write_tar=False, **_
+        self,
+        part='Agilex7',
+        clock_period=5,
+        hyperopt_handshake=False,
+        io_type='io_parallel',
+        namespace=None,
+        write_tar=False,
+        **_,
     ):
         """Create initial configuration of the Altera backend.
 
@@ -155,6 +162,8 @@ class AlteraBackend(FPGABackend):
             hyperopt_handshake (bool, optional): Should hyper-optimized handshaking be used? Defaults to False
             io_type (str, optional): Type of implementation used. One of
                 'io_parallel' or 'io_stream'. Defaults to 'io_parallel'.
+            namespace (str, optional): Namespace for the kernel and pipe declarations. If None, the project name is
+                used, with the stamp appended if the project name is the default 'myproject'. Defaults to None.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
 
         Returns:
@@ -169,7 +178,7 @@ class AlteraBackend(FPGABackend):
         config['IOType'] = io_type
         config['HLSConfig'] = {}
         config['WriterConfig'] = {
-            # TODO:  add namespace
+            'Namespace': namespace,
             'WriteTar': write_tar,
         }
 

@@ -9,9 +9,9 @@
 
 using PipeProps = decltype(sycl::ext::oneapi::experimental::properties(sycl::ext::altera::experimental::ready_latency<0>));
 
-// Declarations are namespaced by the stamp so that pipe IDs do not collide between
-// libraries loaded into the same process
-namespace myproject_mystamp {
+// Pipe IDs are registered process-wide by name, so the declarations are namespaced
+// to avoid collisions between libraries loaded into the same process
+namespace mynamespace {
 
 // Need to declare the input and output pipes
 
@@ -31,8 +31,8 @@ struct MyProject {
     SYCL_EXTERNAL void operator()() const;
 };
 
-} // namespace myproject_mystamp
+} // namespace mynamespace
 
-using namespace myproject_mystamp;
+using namespace mynamespace;
 
 #endif

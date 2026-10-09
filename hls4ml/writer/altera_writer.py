@@ -83,6 +83,18 @@ class AlteraWriter(Writer):
             h_file.write('}};\n')
             h_file.write('\n#endif\n')
 
+    def _get_namespace(self, model):
+        """Namespace for the kernel and pipe declarations. Without an explicit namespace, the project name is used,
+        with the stamp appended for the default project name so that such models can be loaded into the same process.
+        """
+        namespace = model.config.get_writer_config().get('Namespace', None)
+        if namespace is not None:
+            return namespace
+        project_name = model.config.get_project_name()
+        if project_name == 'myproject':
+            return f'{project_name}_{model.config.get_config_value("Stamp")}'
+        return project_name
+
     def write_project_dir(self, model):
         """Write the base project directory
 
@@ -99,7 +111,7 @@ class AlteraWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
         project_name = model.config.get_project_name()
-        stamp = model.config.get_config_value('Stamp')
+        namespace = self._get_namespace(model)
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
@@ -117,9 +129,11 @@ class AlteraWriter(Writer):
             indent = '    '
 
             for line in f.readlines():
+                if 'mynamespace' in line:
+                    newline = line.replace('mynamespace', namespace)
                 # Add headers to weights and biases
-                if 'myproject' in line:
-                    newline = line.replace('myproject', project_name).replace('mystamp', stamp)
+                elif 'myproject' in line:
+                    newline = line.replace('myproject', project_name)
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
@@ -206,7 +220,7 @@ class AlteraWriter(Writer):
         """
 
         project_name = model.config.get_project_name()
-        stamp = model.config.get_config_value('Stamp')
+        namespace = self._get_namespace(model)
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
@@ -226,8 +240,11 @@ class AlteraWriter(Writer):
                 if 'MYPROJECT' in line:
                     newline = line.replace('MYPROJECT', format(project_name.upper()))
 
+                elif 'mynamespace' in line:
+                    newline = line.replace('mynamespace', namespace)
+
                 elif 'myproject' in line:
-                    newline = line.replace('myproject', project_name).replace('mystamp', stamp)
+                    newline = line.replace('myproject', project_name)
 
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))

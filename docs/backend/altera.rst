@@ -37,3 +37,14 @@ is similar in style to the ``dataflow`` implementation on Vitis HLS, but more ex
 relative to the Intel HLS-based ``Quartus`` backend. On the other hand, ``io_parallel`` always uses a single task,
 relying on pipelining within the task for good performance. In contrast, the Vitis backend sometimes uses dataflow
 with ``io_parallel``.
+
+Namespace
+=========
+
+SYCL registers pipe IDs process-wide by their type name, and the pipe names are derived from the layer names. To
+allow several compiled models to be loaded into the same Python process, the kernel and pipe declarations are placed
+in a namespace. If the ``namespace`` argument is passed to the converter, it is used as given. Otherwise the project
+name is used, except for the default project name ``myproject``, in which case a random stamp that changes on every
+``write()`` is appended. To get a deterministic IP, set either ``project_name`` or ``namespace``. Two models with the
+same layer names and the same explicit namespace (or the same non-default project name) cannot be loaded into the
+same process.
