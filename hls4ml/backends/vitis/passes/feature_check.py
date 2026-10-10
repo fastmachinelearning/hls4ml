@@ -1,3 +1,4 @@
+from hls4ml.model.layers import Dense
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import StandardFloatPrecisionType
 
@@ -87,6 +88,21 @@ class ValidateBidirectionalIoType(OptimizerPass):
         raise Exception(
             f'WARNING: "{node.model.config.config["IOType"]}" IO Type is not supported in Vitis backend '
             f'for "{node.name}" ({node.class_name}). Please use "io_parallel".'
+        )
+
+
+class ValidateFusedIoType(OptimizerPass):
+    def match(self, node):
+        return (
+            isinstance(node, Dense)
+            and str(node.model.config.get_strategy(node)).lower() == 'fused'
+            and node.model.config.get_config_value('IOType') != 'io_parallel'
+        )
+
+    def transform(self, model, node):
+        raise Exception(
+            f'Layer "{node.name}" ({node.class_name}) has strategy "fused", which needs io_type "io_parallel"; '
+            f'this model uses "{model.config.get_config_value("IOType")}".'
         )
 
 

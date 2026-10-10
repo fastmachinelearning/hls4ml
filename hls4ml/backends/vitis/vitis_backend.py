@@ -28,9 +28,19 @@ class VitisBackend(VivadoBackend):
             'vitis:validate_resource_unrolled_strategy',
             'vitis:validate_bidirectional_merge_mode',
             'vitis:validate_bidirectional_io_type',
+            'vitis:validate_fused_io_type',
             'vitis:validate_std_cpp_types',
         ]
         validation_flow = register_flow('validation', validation_passes, requires=['vivado:init_layers'], backend=self.name)
+
+        fusion_passes = [
+            'vitis:plan_dense_fusion',
+            'vitis:substitute_unfused_strategy',
+            'vitis:fold_activation_into_fused',
+            'vitis:layout_fused_dot_weights',
+            'vitis:validate_dense_fusion',
+        ]
+        fusion_flow = register_flow('fuse_dense', fusion_passes, requires=['vivado:init_layers'], backend=self.name)
 
         # Any potential templates registered specifically for Vitis backend
         template_flow = register_flow(
@@ -42,6 +52,7 @@ class VitisBackend(VivadoBackend):
 
         ip_flow_requirements = get_flow('vivado:ip').requires.copy()
         ip_flow_requirements.insert(ip_flow_requirements.index('vivado:init_layers'), validation_flow)
+        ip_flow_requirements.insert(ip_flow_requirements.index('vivado:specific_types'), fusion_flow)
         ip_flow_requirements.insert(ip_flow_requirements.index('vivado:apply_templates'), template_flow)
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
