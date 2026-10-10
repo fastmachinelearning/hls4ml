@@ -831,7 +831,7 @@ class ModelGraph(Serializable):
 
         for xi in xlist:
             if not isinstance(xi, np.ndarray):
-                raise Exception(f'Expected numpy.ndarray, but got {type(x)}')
+                raise Exception(f'Expected numpy.ndarray, but got {type(xi)}')
             if not xi.flags['C_CONTIGUOUS']:
                 raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
 
