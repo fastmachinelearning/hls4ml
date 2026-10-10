@@ -294,6 +294,10 @@ class PlanDenseFusion(ModelOptimizerPass):
             depth = 16 + math.ceil(math.log2(int(layer.get_attr('n_in'))))
         return depth + 4
 
+    def _cycles(self, layer, multipliers):
+        """The planner's estimate of the interval of the layer with this many multipliers."""
+        return self._work_cycles(layer, multipliers) + self._headroom_cycles(layer, multipliers)
+
     def _set_from_interval(self, layer):
         """Use the fewest multipliers that keep the layer within the requested interval, and fill the
         remaining cycles with wait states. If even all of them are not enough, record the smallest
@@ -305,7 +309,7 @@ class PlanDenseFusion(ModelOptimizerPass):
         target = max(1, int(layer.get_attr('reuse_factor', 1) or 1))
         cap = self._most_usable_multipliers(layer)
         for multipliers in (m for m in range(1, cap + 1) if cap % m == 0):
-            predicted = self._work_cycles(layer, multipliers) + self._headroom_cycles(layer, multipliers)
+            predicted = self._cycles(layer, multipliers)
             if predicted <= target:
                 layer.set_attr('fused_multipliers', multipliers)
                 layer.set_attr('fused_pad_cycles', target - predicted)
@@ -313,14 +317,15 @@ class PlanDenseFusion(ModelOptimizerPass):
                 # overhead measured
                 layer.set_attr('fused_interval_slack', self._headroom_cycles(layer, multipliers) - 3)
                 return
-        floor = self._work_cycles(layer, cap) + self._headroom_cycles(layer, cap)
+        floor = self._cycles(layer, cap)
         layer.set_attr('fused_multipliers', cap)
         layer.set_attr('fused_pad_cycles', 0)
         layer.set_attr('fused_interval_floor', floor)
 
     def _set_parallel_multipliers(self, chains):
         """Set the multiplier count from the reuse factor the way the other strategies do, so that a
-        reuse factor asks for the same hardware under every strategy."""
+        reuse factor asks for the same hardware under every strategy, then lower it where more would not
+        make the chain faster."""
         for layer in (layer for chain in chains for layer in chain):
             if _reads_interval(layer):
                 self._set_from_interval(layer)
@@ -331,21 +336,44 @@ class PlanDenseFusion(ModelOptimizerPass):
             wanted = max(1, (n_in * n_out) // reuse)
             layer.set_attr('fused_multipliers', min(wanted, self._most_usable_multipliers(layer)))
 
-        # A dot layer and the axpy layer after it run together, so extra multipliers in the faster one
-        # would be wasted. Layers with ReuseFactorAsInterval already have the fewest that meet it.
-        for dot, axpy in self._pairs(chains):
-            if _reads_interval(dot) and _reads_interval(axpy):
-                # The faster layer waits for the slower one before its wait states begin, so both
-                # wait only for the cycles the slower one leaves
-                pad = min(int(n.get_attr('fused_pad_cycles') or 0) for n in (dot, axpy))
-                for n in (dot, axpy):
-                    n.set_attr('fused_pad_cycles', pad)
-                continue
-            if _reads_interval(dot) or _reads_interval(axpy):
-                continue
-            shared = min(int(n.get_attr('fused_multipliers')) for n in (dot, axpy))
+        # A chain mixing the two readings of the reuse factor is an error, reported by ValidateDenseFusion
+        for chain in chains:
+            if all(_reads_interval(layer) for layer in chain):
+                self._share_interval(chain)
+            elif not any(_reads_interval(layer) for layer in chain):
+                self._balance(chain)
+
+    def _balance(self, chain):
+        """A chain runs only as fast as its slowest layer. Give every layer the fewest multipliers that
+        divide its width and keep it within the cycles of the slowest one, never more than its reuse
+        factor allows."""
+        allowed = {layer.name: int(layer.get_attr('fused_multipliers')) for layer in chain}
+        slowest = max(chain, key=lambda layer: self._cycles(layer, allowed[layer.name]))
+        limit = self._cycles(slowest, allowed[slowest.name])
+        for layer in chain:
+            width = self._most_usable_multipliers(layer)
+            fits = [m for m in range(1, allowed[layer.name]) if width % m == 0 and self._cycles(layer, m) <= limit]
+            if fits:
+                layer.set_attr('fused_multipliers', min(fits))
+                layer.set_attr('fused_multipliers_allowed', allowed[layer.name])
+                layer.set_attr('fused_slowest_layer', slowest.name)
+                layer.set_attr('fused_slowest_cycles', limit)
+
+    def _share_interval(self, chain):
+        """Set what the layers of a chain with ReuseFactorAsInterval must agree on, since the chain has a
+        single interval: the smallest interval it can reach, and the wait of each dot and axpy pair."""
+        if any(layer.get_attr('fused_interval_floor') is not None for layer in chain):
+            # The smallest interval the chain can reach, which every layer must then request
+            floor = max(self._cycles(layer, self._most_usable_multipliers(layer)) for layer in chain)
+            for layer in chain:
+                layer.set_attr('fused_region_floor', floor)
+
+        # The faster layer of a pair waits for the slower one before its wait states begin, so both wait
+        # only for the cycles the slower one leaves
+        for dot, axpy in self._pairs([chain]):
+            pad = min(int(n.get_attr('fused_pad_cycles') or 0) for n in (dot, axpy))
             for n in (dot, axpy):
-                n.set_attr('fused_multipliers', shared)
+                n.set_attr('fused_pad_cycles', pad)
 
     def _mark_streamed_outputs(self, chains):
         """Mark the outputs TransformTypes later turns into streams: those of dot layers read by an axpy
@@ -454,10 +482,15 @@ class ValidateDenseFusion(ModelOptimizerPass):
 
         floor = node.get_attr('fused_interval_floor')
         if floor is not None:
+            region = node.get_attr('fused_region_floor') or floor
+            needs = f'it still needs {floor} cycles'
+            if region > floor:
+                needs += f', and the region it is fused into needs {region}'
             raise Exception(
                 f'Layer "{node.name}" ({node.class_name}) cannot achieve an interval of {target}. With '
-                f'all of its multipliers in use it still needs {floor} cycles. Request {floor} or more, '
-                'or leave ReuseFactorAsInterval unset so the reuse factor keeps its usual meaning.'
+                f'all of its multipliers in use {needs}. The layers of a region request the same interval, '
+                f'so request {region} or more for each of them, or leave ReuseFactorAsInterval unset so the '
+                'reuse factor keeps its usual meaning.'
             )
 
         producer = node.get_input_node()
@@ -501,7 +534,7 @@ class ValidateDenseFusion(ModelOptimizerPass):
         """
 
         asked = max(1, int(node.get_attr('reuse_factor', 1) or 1))
-        built = node.get_attr('fused_multipliers')
+        built = node.get_attr('fused_multipliers_allowed') or node.get_attr('fused_multipliers')
         # The smallest reuse factor that still makes a difference: below it the layer already uses all
         # the multipliers it can. A layer outside a chain has neither number.
         lowest_usable = None
@@ -523,8 +556,8 @@ class ValidateDenseFusion(ModelOptimizerPass):
         print(
             f'WARNING: Layer "{node.name}" ({node.class_name}) asks for reuse factor {asked} with '
             f'strategy "fused", which cannot be built: the {node.get_attr("fused_form")} form uses at '
-            f'most {built} multipliers at a time. The layer is built with {built}, which is reuse '
-            f'factor {lowest_usable}.'
+            f'most {built} multipliers at a time, which is reuse factor {lowest_usable}. The layer is built '
+            f'with {node.get_attr("fused_multipliers")}.'
         )
 
     def _report(self, model, asked):
@@ -544,6 +577,15 @@ class ValidateDenseFusion(ModelOptimizerPass):
                     for layer in chain
                 )
                 print(f'Fused strategy: {layers} are computed as one region.')
+                for layer in chain:
+                    if layer.get_attr('fused_slowest_layer') is not None:
+                        print(
+                            f'Fused strategy: {layer.name} uses {layer.get_attr("fused_multipliers")} of the '
+                            f'{layer.get_attr("fused_multipliers_allowed")} multipliers its reuse factor allows, '
+                            'since more would not make its region faster: '
+                            f'{layer.get_attr("fused_slowest_layer")} needs about '
+                            f'{layer.get_attr("fused_slowest_cycles")} cycles.'
+                        )
 
         for layer in asked:
             if layer.get_attr('fused_form') is not None:

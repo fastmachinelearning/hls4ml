@@ -34,10 +34,11 @@ The connection between the two is an ``hls::stream`` of single values with the p
 need no extra configuration. Between an ``axpy`` layer and the next ``dot`` layer the connection stays an array, because ``dot`` needs its whole input. A
 chain therefore starts and ends with an array, and can sit between layers of any other type.
 
-The reuse factor sets the number of multipliers a layer uses at the same time, ``n_in * n_out / ReuseFactor``, as it does for the other strategies. A
-``dot`` layer can use at most ``n_in`` multipliers and the other forms at most ``n_out``, so every reuse factor below that point builds the same design,
-and the conversion reports the reuse factor that was built instead. The ``dot`` and ``axpy`` layers of a pair get the lower of their two multiplier counts,
-since the pair runs only as fast as the slower of the two.
+The reuse factor sets the number of multipliers a layer may use at the same time, ``n_in * n_out / ReuseFactor``, as it does for the other strategies.
+A ``dot`` layer can use at most ``n_in`` multipliers and the other forms at most ``n_out``, so every reuse factor below that point builds the same
+design, and the conversion reports the reuse factor that was built instead. A chain runs only as fast as its slowest layer, so each layer gets the
+fewest multipliers that keep it within the cycles of the slowest one, counting only numbers that divide the width the layer works through, and never
+more than its reuse factor allows. The conversion names the layers given fewer.
 
 Requirements
 ============
@@ -135,9 +136,9 @@ results do not change.
 A setting for a layer name takes precedence over one for a layer type, which takes precedence over one for the model. Note that ``granularity='name'``
 writes a ``ReuseFactor`` for every layer, which then overrides one set for the model.
 
-All layers of a chain must use ``ReuseFactorAsInterval`` the same way and request the same interval. If a layer cannot reach the requested interval even
-with all of its multipliers, the conversion stops and gives the smallest interval it can reach. For each layer the conversion prints the multipliers and
-wait cycles used, and the range the interval will fall in.
+All layers of a chain must use ``ReuseFactorAsInterval`` the same way and request the same interval. If a layer cannot reach the requested interval
+even with all of its multipliers, the conversion stops and gives the smallest interval the chain can reach. For each layer the conversion prints the
+multipliers and wait cycles used, and the range the interval will fall in.
 
 Estimating the interval
 -----------------------

@@ -5,6 +5,7 @@ latency strategy, rather than against Keras. The two differ only in the strategy
 the same for both and any difference comes from the fused kernels.
 """
 
+import re
 from pathlib import Path
 
 import numpy as np
@@ -283,9 +284,35 @@ def test_layers_of_different_sizes(test_case_id):
 
     assert forms(fused) == ['plain', 'dot', 'axpy']
     multipliers = [node.get_attr('fused_multipliers') for node in fused.get_layers() if node.name.startswith('fc')]
-    # The plain layer can use at most its 7 outputs; the dot and axpy pair after it gets the lower of
-    # their two counts, which is the 7 inputs of the dot.
-    assert multipliers == [7, 7, 7]
+    # Each layer can use at most its 7, 7 and 9 values: the outputs of the plain layer, the inputs of the
+    # dot layer and the outputs of the axpy layer. The plain layer is the slowest, and fewer multipliers
+    # would make either of the other two slower than it.
+    assert multipliers == [7, 7, 9]
+    np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
+
+
+BALANCE_CASES = [
+    # The dot layer keeps all 12 multipliers its reuse factor allows: with fewer it would be slower than
+    # the axpy layer, as it was when both layers of a pair got the lower of their two counts
+    ('shrinking_pair', dict(n_in=24, widths=[12, 6]), 24, [12, 3], []),
+    # The plain layer reads 64 inputs and sets the pace, so the two layers after it need only 2 of their 8
+    ('first_layer_slowest', dict(n_in=64, widths=[8, 8, 8]), 8, [8, 2, 2], ['fc1', 'fc2']),
+]
+
+
+@pytest.mark.parametrize('case', BALANCE_CASES, ids=[case[0] for case in BALANCE_CASES])
+def test_multipliers_balanced_by_cycles(test_case_id, capsys, case):
+    """Each layer gets the fewest multipliers that keep it as fast as the slowest layer of its chain,
+    never more than its reuse factor allows, and the conversion names the layers given fewer."""
+
+    _, shape, reuse_factor, expected, lowered = case
+    model = dense_chain(lambda n: Activation('relu', name=n), **shape)
+    fused, y_fused, y_latency = compare_with_latency(model, test_case_id, reuse_factor=reuse_factor)
+
+    multipliers = [node.get_attr('fused_multipliers') for node in fused.get_layers() if node.name.startswith('fc')]
+    assert multipliers == expected
+    printed = capsys.readouterr().out
+    assert [name for name in ('fc0', 'fc1', 'fc2') if f'Fused strategy: {name} uses' in printed] == lowered
     np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 
@@ -674,6 +701,19 @@ def test_strategy_set_for_more_than_one_layer(test_case_id, granularity):
     )
     assert forms(fused) == ['dot', 'axpy']
     assert pads(fused) == {'fc0': 60 - (36 + 20), 'fc1': 60 - (36 + 20)}
+
+
+def test_interval_below_the_region_floor(test_case_id):
+    """A layer that cannot reach the requested interval is told the smallest interval its whole region
+    can reach, since every layer of the region must request the same one."""
+
+    model = dense_chain(lambda n: Activation('relu', name=n), n_in=4, widths=[8, 32, 8])
+    with pytest.raises(Exception) as error:
+        convert_with_interval(model, str(test_root_path / test_case_id), target=10)
+
+    found = re.search(r'still needs (\d+) cycles, and the region it is fused into needs (\d+)', str(error.value))
+    assert found and int(found[2]) > int(found[1])
+    assert f'request {found[2]} or more' in str(error.value)
 
 
 CONFIGURATION_ERRORS = [
