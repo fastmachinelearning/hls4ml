@@ -57,27 +57,40 @@ def _read_flag(value, where, key):
     )
 
 
-def _find_chains(model, in_chain, between=None):
-    """Return lists of consecutive layers for which `in_chain` is true, each reading the one before it.
+def _readers(layer):
+    """How many times the output of the layer is read, counting a model output as one more reader."""
+    return len(layer.get_output_nodes()) + any(name in layer.model.outputs for name in layer.outputs)
 
-    One layer for which `between` is true may sit between two layers of a chain without ending it.
+
+def _find_chains(model, in_chain, between=None):
+    """Return lists of layers for which `in_chain` is true, each reading the one before it.
+
+    One layer for which `between` is true may sit between two layers of a chain without ending it. Each
+    chain is followed from a layer to the layer that reads it, so chains on parallel branches are found.
     """
 
-    chains, current, last = [], [], None
+    def next_in_chain(layer):
+        readers = layer.get_output_nodes()
+        if len(readers) != 1:
+            return None
+        if in_chain(readers[0]):
+            return readers[0]
+        if between is not None and between(readers[0]):
+            after = readers[0].get_output_nodes()
+            if len(after) == 1 and in_chain(after[0]):
+                return after[0]
+        return None
+
+    chains, seen = [], set()
+    # In graph order, so that each chain is reached through its first layer
     for layer in model.get_layers():
-        if in_chain(layer):
-            if current and layer.get_input_node() is not last:
-                chains.append(current)
-                current = []
-            current.append(layer)
-            last = layer
-        elif current and between is not None and between(layer) and layer.get_input_node() is current[-1]:
-            last = layer
-        elif current:
-            chains.append(current)
-            current = []
-    if current:
-        chains.append(current)
+        if layer.name in seen or not in_chain(layer):
+            continue
+        chain = [layer]
+        while (following := next_in_chain(chain[-1])) is not None:
+            chain.append(following)
+        seen.update(node.name for node in chain)
+        chains.append(chain)
     return chains
 
 
@@ -229,15 +242,15 @@ class PlanDenseFusion(ModelOptimizerPass):
         """Return the chains of two or more Dense layers that can be fused.
 
         Each layer of a chain uses the fused strategy, reads the layer before it, and has its output read
-        by at most one layer. An activation that FoldActivationIntoFused can move into the Dense layer may
-        sit between two of them.
+        by at most one layer, where a model output counts as a reader. An activation that
+        FoldActivationIntoFused can move into the Dense layer may sit between two of them.
         """
 
         def in_chain(layer):
-            return _is_fused(layer) and len(layer.get_output_nodes()) <= 1
+            return _is_fused(layer) and _readers(layer) <= 1
 
         def between(layer):
-            return _foldable_activation(layer) is not None and len(layer.get_output_nodes()) <= 1
+            return _foldable_activation(layer) is not None and _readers(layer) <= 1
 
         return [chain for chain in _find_chains(model, in_chain, between) if len(chain) > 1]
 

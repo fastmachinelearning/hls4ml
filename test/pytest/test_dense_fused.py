@@ -113,9 +113,14 @@ def compare_with_latency(model, test_case_id, reuse_factor=4, backend='Vitis'):
 
     rng = np.random.default_rng(1)
     X = rng.random((SAMPLES, *model.input_shape[1:])).astype('float32') * 2 - 1
-    y_fused = fused.predict(X).reshape(SAMPLES, -1)
-    y_latency = latency.predict(X).reshape(SAMPLES, -1)
-    return fused, y_fused, y_latency
+    return fused, side_by_side(fused.predict(X)), side_by_side(latency.predict(X))
+
+
+def side_by_side(outputs):
+    """One row per input, with the outputs of a model that has several placed side by side."""
+
+    outputs = outputs if isinstance(outputs, list) else [outputs]
+    return np.concatenate([output.reshape(SAMPLES, -1) for output in outputs], axis=1)
 
 
 def binary_tanh(x):
@@ -409,6 +414,60 @@ def test_chain_inside_a_larger_model(test_case_id):
     fused, y_fused, y_latency = compare_with_latency(model, test_case_id, reuse_factor=2)
 
     assert forms(fused) == ['plain', 'dot', 'axpy']
+    np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
+
+
+def output_read_again(through_activation):
+    """fc0 is a model output and is also read by the next Dense layer, directly or through an activation.
+    In a chain of all four layers it would be a dot layer, whose output is a stream."""
+
+    inputs = Input(shape=(N,))
+    first = Dense(N, name='fc0')(inputs)
+    if through_activation:
+        first = Activation('relu', name='act0')(first)
+    x = first
+    for i in range(1, 4):
+        x = Dense(N, name=f'fc{i}')(x)
+    return Model(inputs, [first, x])
+
+
+@pytest.mark.parametrize('through_activation', [False, True], ids=['dense', 'activation'])
+def test_model_output_ends_a_chain(test_case_id, through_activation):
+    """A model output cannot also be streamed to the next layer, so the chain starts after it."""
+
+    fused, y_fused, y_latency = compare_with_latency(output_read_again(through_activation), test_case_id)
+
+    assert forms(fused) == [None, 'plain', 'dot', 'axpy']
+    np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
+
+
+def parallel_branches(depths):
+    """Two branches of Dense layers on the same input, added at the end. `depths` is the number of
+    Dense layers in each branch."""
+
+    inputs = Input(shape=(N,))
+    outputs = []
+    for branch, depth in zip('ab', depths):
+        x = inputs
+        for i in range(depth):
+            x = Dense(N, name=f'fc_{branch}{i}')(x)
+            if i < depth - 1:
+                x = Activation('relu', name=f'act_{branch}{i}')(x)
+        outputs.append(x)
+    return Model(inputs, Add(name='add')(outputs))
+
+
+@pytest.mark.parametrize('depths', [(2, 2), (3, 2)], ids=['same_depth', 'different_depth'])
+def test_chains_on_parallel_branches(test_case_id, depths):
+    """Each branch is a chain of its own, although the layers of the two branches are interleaved in the graph."""
+
+    fused, y_fused, y_latency = compare_with_latency(parallel_branches(depths), test_case_id)
+
+    forms_by_depth = {2: ['dot', 'axpy'], 3: ['plain', 'dot', 'axpy']}
+    expected = {
+        f'fc_{branch}{i}': form for branch, depth in zip('ab', depths) for i, form in enumerate(forms_by_depth[depth])
+    }
+    assert {node.name: node.get_attr('fused_form') for node in fused.get_layers() if node.name.startswith('fc')} == expected
     np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 
