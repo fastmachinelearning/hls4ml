@@ -8,6 +8,7 @@ the same for both and any difference comes from the fused kernels.
 import re
 from pathlib import Path
 
+import keras
 import numpy as np
 import pytest
 import tensorflow as tf
@@ -58,6 +59,10 @@ def dense_chain(activation=None, n_layers=4, seed=0, n_in=N, widths=None):
     return model
 
 
+def dense_names(model):
+    return {layer.name for layer in model.layers if isinstance(layer, Dense)}
+
+
 def convert(
     model,
     strategy,
@@ -79,7 +84,7 @@ def convert(
         config['Model']['ReuseFactor'] = reuse_factor
     else:
         for name in config['LayerName']:
-            if name.startswith('fc'):
+            if name in dense_names(model):
                 config['LayerName'][name]['Strategy'] = strategy
                 config['LayerName'][name]['ReuseFactor'] = reuse_factor
 
@@ -142,7 +147,7 @@ FOLDED_ACTIVATIONS = [
     ('selu', lambda n: Activation('selu', name=n)),
     ('softplus', lambda n: Activation('softplus', name=n)),
     ('softsign', lambda n: Activation('softsign', name=n)),
-    ('leaky_relu', lambda n: LeakyReLU(negative_slope=0.125, name=n)),
+    ('leaky_relu', lambda n: LeakyReLU(0.125, name=n)),
     ('elu', lambda n: ELU(alpha=1.0, name=n)),
     ('hard_sigmoid', lambda n: Activation('hard_sigmoid', name=n)),
     ('binary_tanh', lambda n: Activation(binary_tanh, name=n)),
@@ -155,6 +160,8 @@ def test_folded_activations(test_case_id, activation):
     """Each activation is computed inside the Dense layer and gives the same results as its own layer."""
 
     name, layer = activation
+    if name == 'binary_tanh' and keras.__version__ < '3.0':
+        pytest.skip('Keras 3.0 or higher is required: the Keras 2 parser does not read an activation given as a function')
     model = dense_chain(layer)
     fused, y_fused, y_latency = compare_with_latency(model, test_case_id)
 
@@ -183,7 +190,7 @@ def test_activations_that_are_not_folded(test_case_id, activation):
 
 
 CARRIED_NUMBERS = [
-    ('leaky_relu', lambda n: LeakyReLU(negative_slope=0.375, name=n), 'fused_activation_param', 0.375),
+    ('leaky_relu', lambda n: LeakyReLU(0.375, name=n), 'fused_activation_param', 0.375),
     ('elu', lambda n: ELU(alpha=2.5, name=n), 'fused_activation_param', 2.5),
     ('hard_sigmoid', lambda n: Activation('hard_sigmoid', name=n), 'fused_activation_slope', None),
 ]
@@ -225,7 +232,7 @@ def test_folded_table_size(test_case_id, activation):
         model, granularity='name', backend='Vitis', default_precision='ap_fixed<16,6>'
     )
     for name in config['LayerName']:
-        if name.startswith('fc'):
+        if name in dense_names(model):
             config['LayerName'][name]['Strategy'] = 'Fused'
             config['LayerName'][name]['ReuseFactor'] = 4
         if name.startswith('act'):
@@ -556,7 +563,7 @@ def test_trace(test_case_id):
             model, granularity='name', backend='Vitis', default_precision='ap_fixed<16,6>'
         )
         for name in config['LayerName']:
-            if name.startswith('fc'):
+            if name in dense_names(model):
                 config['LayerName'][name].update({'Strategy': strategy, 'ReuseFactor': 4, 'Trace': True})
         hls_model = hls4ml.converters.convert_from_keras_model(
             model,
@@ -581,7 +588,7 @@ def convert_with_interval(model, output_dir, target, names=('fc0', 'fc1', 'fc2',
         model, granularity='name', backend='Vitis', default_precision='ap_fixed<16,6>'
     )
     for name in config['LayerName']:
-        if name.startswith('fc'):
+        if name in dense_names(model):
             config['LayerName'][name]['Strategy'] = 'Fused'
             config['LayerName'][name]['ReuseFactor'] = target[name] if isinstance(target, dict) else target
             if name in names:
