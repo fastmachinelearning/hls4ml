@@ -19,5 +19,26 @@
       "platform_generator_tcl": "kv260/tcl_scripts/create_xsa.tcl",
       "platform_output"       : "kv260/tcl_scripts/output/kv260_axi_all_platform.xsa"
     }
+  },
+  "alveo-u55c": {
+    "part": "xcu55c-fsvh2892-2L-e",
+    "memory": {"type": "HBM", "banks": 32, "kernel_slr": "SLR2"},
+    "axi_master": {
+      "platform_file": "${PLATFORM_REPO_PATHS}/xilinx_u55c_gen3x16_xdma_3_202210_1/xilinx_u55c_gen3x16_xdma_3_202210_1.xpfm"
+    }
+  },
+  "alveo-u50": {
+    "part": "xcu50-fsvh2104-2-e",
+    "memory": {"type": "HBM", "banks": 32},
+    "axi_master": {
+      "platform_file": "${PLATFORM_REPO_PATHS}/xilinx_u50_gen3x16_xdma_5_202210_1/xilinx_u50_gen3x16_xdma_5_202210_1.xpfm"
+    }
+  },
+  "alveo-u280": {
+    "part": "xcu280-fsvh2892-2L-e",
+    "memory": {"type": "HBM", "banks": 32},
+    "axi_master": {
+      "platform_file": "${PLATFORM_REPO_PATHS}/xilinx_u280_gen3x16_xdma_1_202211_1/xilinx_u280_gen3x16_xdma_1_202211_1.xpfm"
+    }
   }
 }

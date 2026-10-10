@@ -83,7 +83,13 @@ def vitis_reference(simple_unet):
     return hls_model
 
 
-part_map = {'zcu102': 'xczu9eg-ffvb1156-2-e', 'kv260': 'xck26-sfvc784-2LV-c'}
+part_map = {
+    'zcu102': 'xczu9eg-ffvb1156-2-e',
+    'kv260': 'xck26-sfvc784-2LV-c',
+    'alveo-u55c': 'xcu55c-fsvh2892-2L-e',
+    'alveo-u50': 'xcu50-fsvh2104-2-e',
+    'alveo-u280': 'xcu280-fsvh2892-2L-e',
+}
 
 
 def _vitis_unified_convert_kwargs(io_type, axi_mode, board='zcu102', **extra):
@@ -174,8 +180,23 @@ FAKE_COSIM_RPT = """+--------+--------+-----+-----+-----+-----+-----+-----+
         ('simple_unet', {'input_type': 'float', 'output_type': 'double'}, '(?i)type'),
         ('multi_io_net', {'axi_mode': 'axi_stream'}, '(?i)axi_stream'),
         ('simple_unet', {'axi_mode': 'axi_stream', 'input_type': 'double', 'output_type': 'double'}, '(?i)double'),
+        ('simple_unet', {'driver': 'opencl'}, '(?i)driver'),
+        ('simple_unet', {'board': 'alveo-u55c', 'driver': 'python'}, '(?i)data-center'),
+        ('simple_unet', {'driver': 'xrt', 'axi_mode': 'axi_stream'}, '(?i)axi_master'),
+        ('simple_unet', {'driver': 'xrt'}, '(?i)SoC'),
+        ('simple_unet', {'board': 'alveo-u55c', 'driver': 'python', 'platform': 'any.xpfm'}, '(?i)data-center'),
     ],
-    ids=['unknown_board', 'mismatched_types', 'multi_input_axi_stream', 'double_on_shipped_stream_platform'],
+    ids=[
+        'unknown_board',
+        'mismatched_types',
+        'multi_input_axi_stream',
+        'double_on_shipped_stream_platform',
+        'unknown_driver',
+        'pynq_driver_on_card',
+        'xrt_driver_on_axi_stream',
+        'xrt_driver_on_soc_board',
+        'pynq_driver_on_card_with_platform',
+    ],
 )
 def test_invalid_config_rejected_at_conversion(request, test_case_id, model_name, bad_kwargs, match):
     model = request.getfixturevalue(model_name)
@@ -362,6 +383,134 @@ def test_custom_platform(test_case_id, simple_unet):
     assert 'XILINX_VITIS' not in link
     cfg = (output_dir / 'vitis_workspace' / 'myproject' / 'hls_kernel_config_csim.cfg').read_text()
     assert 'part=xc7z020clg400-1' in cfg
+
+
+@pytest.mark.parametrize(
+    'model_name, expected_spans',
+    [
+        ('simple_unet', ['HBM[0:15]', 'HBM[16:31]']),
+        ('multi_io_net', ['HBM[0:7]', 'HBM[8:15]', 'HBM[16:23]', 'HBM[24:31]']),
+    ],
+)
+def test_card_memory_banks_assigned(request, test_case_id, model_name, expected_spans):
+    """A card board splits its banks evenly over the kernel pointers, one contiguous slice each."""
+    model = request.getfixturevalue(model_name)
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board='alveo-u55c', driver='xrt'),
+    )
+    hls_model.write()
+
+    cfg = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.cfg').read_text()
+    assert '[connectivity]' in cfg
+    sp_lines = [line for line in cfg.splitlines() if line.startswith('sp=')]
+    assert [line.split(':', 1)[1] for line in sp_lines] == expected_spans
+    # the host allocates by kernel argument index, so the sp= order must be inputs then outputs
+    ports = [line.split('=')[1].split(':')[0].split('.')[1] for line in sp_lines]
+    assert ports == sorted(ports, key=lambda name: (not name.startswith('gmem_in'), name))
+    instance = sp_lines[0].split('=')[1].split('.')[0]
+    assert [line for line in cfg.splitlines() if line.startswith('slr=')] == [f'slr={instance}:SLR2']
+
+
+@pytest.mark.parametrize('kernel_slr, expected', [(None, ['SLR2']), ('SLR1', ['SLR1']), (False, [])])
+def test_card_kernel_slr(test_case_id, simple_unet, kernel_slr, expected):
+    """The board's SLR by default, overridden or left out with kernel_slr."""
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        kernel_slr=kernel_slr,
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board='alveo-u55c', driver='xrt'),
+    )
+    hls_model.write()
+
+    cfg = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.cfg').read_text()
+    assert [line.split(':')[-1] for line in cfg.splitlines() if line.startswith('slr=')] == expected
+
+
+def test_card_kernel_slr_rejects_bad_name(test_case_id, simple_unet):
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    with pytest.raises(Exception, match='kernel_slr'):
+        hls4ml.converters.convert_from_keras_model(
+            simple_unet,
+            hls_config=config,
+            output_dir=str(test_root_path / test_case_id),
+            kernel_slr='top',
+            **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board='alveo-u55c', driver='xrt'),
+        )
+
+
+@pytest.mark.parametrize('board', ['alveo-u50', 'alveo-u280'])
+def test_other_hbm_cards(test_case_id, simple_unet, board):
+    """HBM bank map and platform, without an SLR assignment."""
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board=board, driver='xrt'),
+    )
+    hls_model.write()
+
+    cfg = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.cfg').read_text()
+    assert [line.split(':', 1)[1] for line in cfg.splitlines() if line.startswith('sp=')] == ['HBM[0:15]', 'HBM[16:31]']
+    assert not [line for line in cfg.splitlines() if line.startswith('slr=')]
+    link = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.sh').read_text()
+    assert board.replace('alveo-', 'xilinx_') + '_gen3x16_xdma_' in link
+
+
+def test_card_driver_and_link(test_case_id, simple_unet):
+    """The XRT driver replaces the PYNQ one, and the handoff steps it needs are not emitted."""
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board='alveo-u55c', driver='xrt'),
+    )
+    hls_model.write()
+
+    driver = (output_dir / 'export' / 'axi_master_driver.py').read_text()
+    assert 'import pyxrt' in driver and 'from pynq' not in driver
+    # pyxrt's bo.read() returns a zero-stride array under numpy 2, so outputs are read through map()
+    assert 'buffer.map()' in driver and 'buffer.read(' not in driver
+    assert '<TOP_' not in driver and '<IP_VERSION>' not in driver
+    assert _driver_port_counts(output_dir / 'export' / 'axi_master_driver.py') == {
+        'INP_PORT_NAMEs': 1,
+        'OUT_PORT_NAMEs': 1,
+    }
+
+    link = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.sh').read_text()
+    assert 'vitis_design.hwh' not in link and 'xclbinutil' not in link
+    # the card platform is found through PLATFORM_REPO_PATHS, not the Vitis install
+    assert 'PLATFORM_REPO_PATHS is not set' in link
+    assert '--platform ${PLATFORM_REPO_PATHS}/' in link
+    assert '.xclbin ../../export/' in link
+
+
+def test_soc_link_keeps_pynq_handoff(test_case_id, simple_unet):
+    """The PYNQ driver still gets its bitstream and hardware handoff, and no .xclbin copy."""
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master'),
+    )
+    hls_model.write()
+
+    link = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.sh').read_text()
+    assert 'xclbinutil' in link and 'vitis_design.hwh' in link
+    assert '.xclbin ../../export/' not in link
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])

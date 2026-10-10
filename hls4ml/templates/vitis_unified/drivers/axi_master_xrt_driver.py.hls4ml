@@ -1,0 +1,97 @@
+import time
+
+import numpy as np
+import pyxrt
+
+
+def _as_list(value):
+    """A single shape or a list of shapes, one per model input/output port."""
+    if isinstance(value, (list, tuple)) and len(value) > 0 and isinstance(value[0], (list, tuple)):
+        return list(value)
+    return [value]
+
+
+class NeuralNetworkAccelerator:
+    """XRT driver for the AXI-master wrapper on a data-center card.
+
+    The kernel takes the input pointers, then the output pointers, then the batch size, so kernel
+    argument i is port i. Each buffer is allocated in the memory bank that argument is connected to,
+    which is what the sp= lines of the link configuration assign.
+    """
+
+    def __init__(self, xclbin_name, x_shape, y_shape, input_dtype=np.float32, output_dtype=None, device_index=0):
+        self.INP_PORT_NAMEs = [
+            # hls-driver-input-names
+        ]
+        self.OUT_PORT_NAMEs = [
+            # hls-driver-output-names
+        ]
+        self.device = pyxrt.device(device_index)
+        uuid = self.device.load_xclbin(pyxrt.xclbin(xclbin_name))
+        self.kernel = pyxrt.kernel(self.device, uuid, '<TOP_NAME>')
+
+        x_shapes, y_shapes = _as_list(x_shape), _as_list(y_shape)
+        if len(x_shapes) != len(self.INP_PORT_NAMEs) or len(y_shapes) != len(self.OUT_PORT_NAMEs):
+            raise ValueError(
+                f'this accelerator has {len(self.INP_PORT_NAMEs)} input and {len(self.OUT_PORT_NAMEs)} output port(s), '
+                f'got {len(x_shapes)} input and {len(y_shapes)} output shape(s)'
+            )
+
+        self.input_dtype = np.dtype(input_dtype)
+        self.output_dtype = np.dtype(output_dtype or input_dtype)
+        self.input_buffers = [self._allocate(shape, self.input_dtype, i) for i, shape in enumerate(x_shapes)]
+        self.output_buffers = [
+            self._allocate(shape, self.output_dtype, len(x_shapes) + i) for i, shape in enumerate(y_shapes)
+        ]
+
+    def _allocate(self, shape, dtype, arg_index):
+        nbytes = int(np.prod(shape)) * dtype.itemsize
+        buffer = pyxrt.bo(self.device, nbytes, pyxrt.bo.normal, self.kernel.group_id(arg_index))
+        return buffer, tuple(shape), nbytes
+
+    def calculate_performance(self, N, execution_time):
+        rate = N / execution_time if execution_time > 0 else float('inf')
+        print(f'Processed elements: {N}, Execution time: {execution_time:.4f} seconds, Performance rate: {rate:.2f} inferences/second')
+        return rate
+
+    def predict(self, X, profile=False):
+        """
+        Obtain the predictions of the NN implemented in the FPGA.
+        Parameters:
+        - X : the input vector. Should be numpy ndarray, or a list of ndarrays for multi-input models
+              (one entry per input port, in port order). The first dimension is the batch.
+              Its dtype must match `input_dtype` given to the constructor, which in turn must match the
+              interface of the accelerator: 'np.float32' for a 'float' interface and 'np.float64' for 'double'.
+        - profile : boolean. Set it to `True` to print the performance of the algorithm in term of `inference/s`.
+        - return: an output array based on `np.ndarray` with a shape equal to `y_shape` and a `dtype` equal to
+                  `output_dtype`, or a list of such arrays for multi-output models. With `profile=True` it
+                  returns a tuple (output, execution time in seconds, inferences per second).
+        """
+        inputs = list(X) if isinstance(X, (list, tuple)) else [X]
+        if len(inputs) != len(self.input_buffers):
+            raise ValueError(f'expected {len(self.input_buffers)} input array(s) for this accelerator, got {len(inputs)}')
+
+        for (buffer, shape, _), x in zip(self.input_buffers, inputs):
+            if np.shape(x) != shape:
+                raise ValueError(f'expected an input of shape {shape}, got {np.shape(x)}')
+            buffer.write(np.ascontiguousarray(x, dtype=self.input_dtype).tobytes(), 0)
+            buffer.sync(pyxrt.xclBOSyncDirection.XCL_BO_SYNC_BO_TO_DEVICE)
+
+        batch_size = len(inputs[0])
+        args = [buffer for buffer, _, _ in self.input_buffers + self.output_buffers]
+        start = time.perf_counter()
+        run = self.kernel(*args, np.uint32(batch_size))
+        run.wait()
+        exec_time = time.perf_counter() - start
+
+        results = []
+        for buffer, shape, nbytes in self.output_buffers:
+            buffer.sync(pyxrt.xclBOSyncDirection.XCL_BO_SYNC_BO_FROM_DEVICE)
+            # bo.read() returns a zero-stride array under numpy 2, map() is the buffer's own host memory
+            data = np.frombuffer(buffer.map(), dtype=self.output_dtype, count=nbytes // self.output_dtype.itemsize)
+            results.append(data.reshape(shape).copy())
+
+        result = results[0] if len(results) == 1 else results
+        if profile:
+            return result, exec_time, self.calculate_performance(batch_size, exec_time)
+        return result
