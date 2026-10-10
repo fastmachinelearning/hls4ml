@@ -48,9 +48,9 @@ A chain is fused when all of the following hold:
 * **io_parallel.** A model using ``io_stream`` is rejected during conversion.
 * **Two or more** ``Dense`` **layers in sequence**, each using the strategy, where the output of each layer is read only by the next one.
 
-A layer that asks for the strategy but cannot be fused, such as a single ``Dense`` layer, a layer whose output is read by more than one layer, or a
-``Conv1D`` or ``Conv2D`` layer, is built with the ``Resource`` strategy instead and reported during conversion. Other layer types keep the strategy they
-would otherwise have.
+A layer that asks for the strategy but cannot be fused, such as a single ``Dense`` layer, a layer whose output is read by more than one layer or is
+also a model output, or a ``Conv1D`` or ``Conv2D`` layer, is built with the ``Resource`` strategy instead and reported during conversion. Depthwise
+convolutions and other layer types keep the strategy they would otherwise have.
 
 Two kinds of layer between ``Dense`` layers do not break a chain:
 

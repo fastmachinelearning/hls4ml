@@ -17,6 +17,8 @@ from tensorflow.keras.layers import (
     BatchNormalization,
     Conv1D,
     Dense,
+    DepthwiseConv1D,
+    DepthwiseConv2D,
     Flatten,
     Input,
     LeakyReLU,
@@ -100,14 +102,16 @@ def layer_names(hls_model):
     return [layer.name for layer in hls_model.get_layers()]
 
 
-def compare_with_latency(model, test_case_id, reuse_factor=4, backend='Vitis'):
+def compare_with_latency(model, test_case_id, reuse_factor=4, backend='Vitis', level='name'):
     """Build the model twice and run both on the same inputs. Returns the fused model and both outputs.
 
     The fused model is built with `backend`, the one it is compared against with Vitis.
     """
 
-    fused = convert(model, 'Fused', str(test_root_path / f'{test_case_id}_fused'), reuse_factor, backend=backend)
-    latency = convert(model, 'Latency', str(test_root_path / f'{test_case_id}_latency'), reuse_factor)
+    fused = convert(
+        model, 'Fused', str(test_root_path / f'{test_case_id}_fused'), reuse_factor, backend=backend, level=level
+    )
+    latency = convert(model, 'Latency', str(test_root_path / f'{test_case_id}_latency'), reuse_factor, level=level)
     fused.compile()
     latency.compile()
 
@@ -351,8 +355,9 @@ REPORT_CASES = [
 
 @pytest.mark.parametrize('case', REPORT_CASES, ids=[case[0] for case in REPORT_CASES])
 def test_fusion_report(test_case_id, capsys, case):
-    """The conversion prints what was built, and FusedReport turns that off. Replacing a PipelineStyle
-    from the configuration is a warning and is printed either way."""
+    """The conversion prints what was built, and FusedReport turns that off. The warnings are printed
+    either way: for a layer that asked for the strategy and was not fused, and for a PipelineStyle from
+    the configuration that is replaced."""
 
     name, model_config = case
     convert(chain_and_a_layer_on_its_own(), 'Fused', str(test_root_path / test_case_id), model_config=model_config)
@@ -360,7 +365,7 @@ def test_fusion_report(test_case_id, capsys, case):
     printed = capsys.readouterr().out
     reported = name == 'reported'
     assert ('fc0 (dot' in printed and 'fc1 (axpy' in printed) == reported
-    assert ('asked for strategy' in printed) == reported
+    assert 'WARNING: Layer "fc2" (Dense) asked for strategy "fused"' in printed
     assert ('pipeline style "dataflow"' in printed) == reported
     assert ('PipelineStyle "pipeline" replaced with "dataflow"' in printed) == (name == 'style_replaced')
 
@@ -388,6 +393,23 @@ def test_other_layer_type_ends_the_chain(test_case_id, capsys):
     assert 'conv' in reported and 'Dense layers only' in reported
     conv = [node for node in hls_model.get_layers() if node.name == 'conv'][0]
     assert conv.get_attr('strategy') != 'fused'
+
+
+@pytest.mark.parametrize('dimensions', [1, 2])
+def test_depthwise_convolution_keeps_latency(test_case_id, dimensions):
+    """With the strategy set for the whole model, a depthwise convolution keeps the latency strategy, since
+    it has no resource implementation to fall back to, while the Dense layers after it are fused."""
+
+    inputs = Input(shape=(N, 2) if dimensions == 1 else (N, N, 2))
+    x = (DepthwiseConv1D(3, name='dw') if dimensions == 1 else DepthwiseConv2D(3, name='dw'))(inputs)
+    x = Activation('relu', name='act0')(Dense(N, name='fc0')(Flatten(name='flat')(x)))
+    model = Model(inputs, Dense(N, name='fc1')(x))
+
+    fused, y_fused, y_latency = compare_with_latency(model, test_case_id, level='model')
+
+    assert [node.get_attr('strategy') for node in fused.get_layers() if node.name == 'dw'] == ['latency']
+    assert forms(fused) == ['dot', 'axpy']
+    np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 
 def test_coyote_backend(test_case_id):

@@ -3,7 +3,16 @@ from copy import copy
 
 import numpy as np
 
-from hls4ml.model.layers import Activation, Conv1D, Conv2D, Dense, HardActivation, ParametrizedActivation
+from hls4ml.model.layers import (
+    Activation,
+    Conv1D,
+    Conv2D,
+    Dense,
+    DepthwiseConv1D,
+    DepthwiseConv2D,
+    HardActivation,
+    ParametrizedActivation,
+)
 from hls4ml.model.optimizer import ModelOptimizerPass, OptimizerPass
 from hls4ml.model.types import NamedType
 
@@ -359,13 +368,14 @@ class SubstituteUnfusedStrategy(OptimizerPass):
     """Switch layers that asked for the fused strategy but could not be fused to the resource strategy.
 
     These are the layers the planner did not put in a chain: a Dense layer on its own, a Conv1D or a
-    Conv2D. Must run before LayoutFusedDotWeights, which would otherwise reorder the weights of a lone
-    Dense layer for a fused kernel.
+    Conv2D. Depthwise convolutions keep the latency strategy. Must run before LayoutFusedDotWeights,
+    which would otherwise reorder the weights of a lone Dense layer for a fused kernel.
     """
 
     def match(self, node):
         return (
             isinstance(node, (Dense, Conv1D, Conv2D))
+            and not isinstance(node, (DepthwiseConv1D, DepthwiseConv2D))
             and str(node.model.config.get_strategy(node)).lower() == FUSED
             and node.get_attr('fused_form') is None
             and str(node.get_attr('strategy', '')).lower() != 'resource'
@@ -518,28 +528,28 @@ class ValidateDenseFusion(ModelOptimizerPass):
         )
 
     def _report(self, model, asked):
-        """State what was built: each chain, and each layer that asked for the strategy and was not fused."""
+        """State what was built: each chain, and each layer that asked for the strategy and was not fused.
+        FusedReport turns off the first; the second is a warning and is always printed."""
 
         section = model.config.config['HLSConfig'].get('Model') or {}
         reported = True
         if 'FusedReport' in section:
             reported = _read_flag(section['FusedReport'], 'The Model section', 'FusedReport')
         self._report_style(model, section, reported)
-        if not reported:
-            return
 
-        for chain in _find_chains(model, lambda layer: layer.get_attr('fused_form') is not None):
-            layers = ', '.join(
-                f'{layer.name} ({layer.get_attr("fused_form")}, {layer.get_attr("fused_multipliers")} multipliers)'
-                for layer in chain
-            )
-            print(f'Fused strategy: {layers} are computed as one region.')
+        if reported:
+            for chain in _find_chains(model, lambda layer: layer.get_attr('fused_form') is not None):
+                layers = ', '.join(
+                    f'{layer.name} ({layer.get_attr("fused_form")}, {layer.get_attr("fused_multipliers")} multipliers)'
+                    for layer in chain
+                )
+                print(f'Fused strategy: {layers} are computed as one region.')
 
         for layer in asked:
             if layer.get_attr('fused_form') is not None:
                 continue
             reason = (
-                'which needs two or more Dense layers in sequence, each reading only the one before it'
+                'which needs two or more Dense layers in sequence, each read only by the layer after it'
                 if isinstance(layer, Dense)
                 else 'which is implemented for Dense layers only'
             )
