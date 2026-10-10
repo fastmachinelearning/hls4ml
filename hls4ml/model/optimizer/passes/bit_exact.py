@@ -701,7 +701,7 @@ def _(layer: Activation):
             i = np.minimum(i, 1)
             f = np.full_like(f, 126, dtype=np.int16)
         case _:
-            k = np.ones(k, dtype=np.int16)
+            k = np.ones_like(k, dtype=np.int16)
             i = np.full_like(i, 126, dtype=np.int16)
             f = np.full_like(f, 126, dtype=np.int16)
     return k, i, f
@@ -715,7 +715,7 @@ def _(layer: ParametrizedActivation):
     p = layer.attributes['activ_param']
     _k, _i, _f = minimal_kif(np.array(p))
     match fn_name:
-        case 'leakyrelu':
+        case 'leakyrelu' | 'leaky_relu':
             k = k & np.int16(p > 0)
             i += np.maximum(0, _i - 1)
             f += np.maximum(0, _f)
@@ -728,7 +728,7 @@ def _(layer: ParametrizedActivation):
             f = np.full_like(f, 126, dtype=np.int16)
             i = np.maximum(i, _i)
         case _:
-            k = np.ones(k, dtype=np.int16)
+            k = np.ones_like(k, dtype=np.int16)
             i = np.full_like(i, 126, dtype=np.int16)
             f = np.full_like(f, 126, dtype=np.int16)
     return k, i, f
