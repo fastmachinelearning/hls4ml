@@ -14,7 +14,7 @@
 //   dense_fused       array in, array out    weights w[i * n_out + j], first layer of an odd-length chain
 //
 // A dot layer and the axpy layer after it run at the same time. The activation that followed the layer
-// is computed here, with the same tables and arithmetic as the separate layer, so the results are equal.
+// is computed here, with the same tables and arithmetic as the separate layer, so it gives the same values.
 
 namespace nnet {
 

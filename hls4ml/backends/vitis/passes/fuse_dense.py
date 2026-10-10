@@ -25,7 +25,7 @@ INLINE_ACTIVATIONS = ('linear', 'relu', 'binary_tanh')
 # Read from a lookup table; the kernel also needs the table size
 TABLE_ACTIVATIONS = ('sigmoid', 'tanh', 'softplus', 'softsign', 'selu')
 
-# Need one parameter, such as the slope of leaky_relu
+# Need one parameter, such as the slope of leaky_relu. elu also reads a lookup table.
 SCALAR_PARAM_ACTIVATIONS = ('leaky_relu', 'thresholded_relu', 'elu')
 
 # Need two parameters, a slope and a shift
@@ -40,6 +40,7 @@ def _reads_interval(node):
     Not read with get_layer_config_value, which looks only in the first section it finds, and so misses
     a value set for the model when the layer has a section of its own.
     """
+
     sections = node.model.config.config['HLSConfig']
     value = False
     for section in (
@@ -113,6 +114,7 @@ def _graph_class(node):
     Each backend subclasses the layer classes (VitisActivation, for example), so comparing the type of a
     layer directly never matches.
     """
+
     for cls in type(node).__mro__:
         if cls.__module__ == Activation.__module__:
             return cls
@@ -125,6 +127,7 @@ def _foldable_activation(node):
     Classes are compared exactly, not with isinstance: they all inherit from Activation, and treating a
     ParametrizedActivation or a PReLU as a plain one would lose its parameters.
     """
+
     cls = _graph_class(node)
 
     if cls is Activation:
@@ -206,6 +209,10 @@ class PlanDenseFusion(ModelOptimizerPass):
     * ``fused_multipliers`` - how many multipliers the kernel uses at the same time
     * ``fused_stream_out``  - whether the output is written one value at a time, as a stream
 
+    A layer with ReuseFactorAsInterval also gets the wait cycles that bring it up to the requested
+    interval, and a layer given fewer multipliers than its reuse factor allows records why, for
+    ValidateDenseFusion to report.
+
     There are three kernels because a Dense layer needs all of its inputs before it can produce any
     output, so it can pass data one value at a time on one side only. ``dot`` reads an array and
     writes one value at a time; ``axpy`` reads one value at a time and writes an array; ``plain``
@@ -241,6 +248,7 @@ class PlanDenseFusion(ModelOptimizerPass):
 
     def _assign_forms(self, length):
         """Return the form of each layer of a chain of the given length."""
+
         if length < 2:
             return ['plain'] * length
         head = ['plain'] if length % 2 else []
@@ -271,6 +279,7 @@ class PlanDenseFusion(ModelOptimizerPass):
 
     def _work_cycles(self, layer, multipliers):
         """Cycles the layer spends computing one input, excluding the wait states."""
+
         n_in, n_out = int(layer.get_attr('n_in')), int(layer.get_attr('n_out'))
         trips = -(-self._most_usable_multipliers(layer) // multipliers)
         if layer.get_attr('fused_form') == 'dot':
@@ -281,6 +290,7 @@ class PlanDenseFusion(ModelOptimizerPass):
     def _headroom_cycles(self, layer, multipliers):
         """Cycles beyond the work: the depth of the kernel's pipelines, which are measured upper bounds, and 4
         for passing data between the layers of a region."""
+
         form = layer.get_attr('fused_form')
         trips = -(-self._most_usable_multipliers(layer) // multipliers)
         if form == 'dot':
@@ -306,6 +316,7 @@ class PlanDenseFusion(ModelOptimizerPass):
         Only numbers of multipliers that divide the dimension the kernel works through are considered, since
         any other number makes the pipelines deeper than _headroom_cycles allows for.
         """
+
         target = max(1, int(layer.get_attr('reuse_factor', 1) or 1))
         cap = self._most_usable_multipliers(layer)
         for multipliers in (m for m in range(1, cap + 1) if cap % m == 0):
@@ -325,7 +336,8 @@ class PlanDenseFusion(ModelOptimizerPass):
     def _set_parallel_multipliers(self, chains):
         """Set the multiplier count from the reuse factor the way the other strategies do, so that a
         reuse factor asks for the same hardware under every strategy, then lower it where more would not
-        make the chain faster."""
+        make the chain faster. A layer with ReuseFactorAsInterval takes its count from the interval."""
+
         for layer in (layer for chain in chains for layer in chain):
             if _reads_interval(layer):
                 self._set_from_interval(layer)
@@ -344,9 +356,10 @@ class PlanDenseFusion(ModelOptimizerPass):
                 self._balance(chain)
 
     def _balance(self, chain):
-        """A chain runs only as fast as its slowest layer. Give every layer the fewest multipliers that
-        divide its width and keep it within the cycles of the slowest one, never more than its reuse
-        factor allows."""
+        """A chain runs only as fast as its slowest layer. Lower every layer to the fewest multipliers that
+        keep it within the cycles of the slowest one, counting only numbers that divide its width. A layer
+        that no such number fits keeps the count its reuse factor allows."""
+
         allowed = {layer.name: int(layer.get_attr('fused_multipliers')) for layer in chain}
         slowest = max(chain, key=lambda layer: self._cycles(layer, allowed[layer.name]))
         limit = self._cycles(slowest, allowed[slowest.name])
@@ -362,6 +375,7 @@ class PlanDenseFusion(ModelOptimizerPass):
     def _share_interval(self, chain):
         """Set what the layers of a chain with ReuseFactorAsInterval must agree on, since the chain has a
         single interval: the smallest interval it can reach, and the wait of each dot and axpy pair."""
+
         if any(layer.get_attr('fused_interval_floor') is not None for layer in chain):
             # The smallest interval the chain can reach, which every layer must then request
             floor = max(self._cycles(layer, self._most_usable_multipliers(layer)) for layer in chain)
@@ -386,6 +400,7 @@ class PlanDenseFusion(ModelOptimizerPass):
     def _pairs(chains):
         """Each dot layer with the axpy layer after it in the same chain. An activation may still sit
         between the two at this point; FoldActivationIntoFused removes it later."""
+
         for chain in chains:
             for first, second in zip(chain, chain[1:]):
                 if first.get_attr('fused_form') == 'dot' and second.get_attr('fused_form') == 'axpy':
@@ -448,10 +463,10 @@ class ValidateDenseFusion(ModelOptimizerPass):
     interval can be reached and is the same for every layer of a region.
 
     The report comes after all checks, so nothing is reported for a conversion that stops with an error.
-    It lists each chain, each layer that asked for the strategy but was not fused, and the pipeline style
-    if the fusion passes changed it. FusedReport: false in the Model section turns it off; warnings and
-    errors are always printed. The backend and io_parallel are checked earlier, by ValidateFusedStrategy
-    and ValidateFusedIoType.
+    It lists each chain, the layers given fewer multipliers than their reuse factor allows, each layer
+    that asked for the strategy but was not fused, and the pipeline style if the fusion passes changed
+    it. FusedReport: false in the Model section turns it off; warnings and errors are always printed.
+    The backend and io_parallel are checked earlier, by ValidateFusedStrategy and ValidateFusedIoType.
     """
 
     def __init__(self):
@@ -561,8 +576,9 @@ class ValidateDenseFusion(ModelOptimizerPass):
         )
 
     def _report(self, model, asked):
-        """State what was built: each chain, and each layer that asked for the strategy and was not fused.
-        FusedReport turns off the first; the second is a warning and is always printed."""
+        """State what was built: each chain, the layers in it given fewer multipliers than their reuse
+        factor allows, and each layer that asked for the strategy and was not fused. FusedReport turns off
+        the first two; the last is a warning and is always printed."""
 
         section = model.config.config['HLSConfig'].get('Model') or {}
         reported = True

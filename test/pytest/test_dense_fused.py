@@ -277,7 +277,8 @@ def test_reuse_factor(test_case_id, reuse_factor):
 
 
 def test_layers_of_different_sizes(test_case_id):
-    """A chain whose layers differ in size, at a reuse factor that divides none of them."""
+    """A chain whose layers differ in size, at a reuse factor low enough for each layer to use all the
+    multipliers its form allows."""
 
     model = dense_chain(lambda n: Activation('relu', name=n), n_in=12, widths=[7, 5, 9])
     fused, y_fused, y_latency = compare_with_latency(model, test_case_id, reuse_factor=3)

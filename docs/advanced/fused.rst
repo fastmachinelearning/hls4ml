@@ -9,9 +9,10 @@ region, each starting as soon as the layer before it produces its first output, 
 When to use it
 ==============
 
-The strategy is meant for designs with a reuse factor greater than one, where each layer takes several cycles. Running the layers of a chain at the same
-time reduces the latency of the model, at a much lower resource cost than unrolling the layers. The gain comes from that overlap, so it is largest for long
-chains in which no single layer dominates the latency.
+The strategy is meant for designs with a reuse factor greater than one, where each layer takes several cycles. Running the layers of a chain at the
+same time reduces the latency of the model, at a much lower resource cost than unrolling the layers. The gain comes from that overlap, so it is
+largest for long chains in which no single layer dominates the latency. A chain runs at the pace of its slowest layer, so when one layer is much
+slower than the others, such as the first layer of a chain whose widths shrink, the latency can be higher than with the ``Resource`` strategy.
 
 A reuse factor of 1 is not supported and stops the conversion. For fully parallel layers use the ``Latency`` strategy or, more efficiently,
 ``Strategy: distributed_arithmetic`` (see :doc:`Distributed Arithmetic <da>`). A fused layer uses at most ``n_in`` or ``n_out`` multipliers,
@@ -36,16 +37,20 @@ chain therefore starts and ends with an array, and can sit between layers of any
 
 The reuse factor sets the number of multipliers a layer may use at the same time, ``n_in * n_out / ReuseFactor``, as it does for the other strategies.
 A ``dot`` layer can use at most ``n_in`` multipliers and the other forms at most ``n_out``, so every reuse factor below that point builds the same
-design, and the conversion reports the reuse factor that was built instead. A chain runs only as fast as its slowest layer, so each layer gets the
-fewest multipliers that keep it within the cycles of the slowest one, counting only numbers that divide the width the layer works through, and never
-more than its reuse factor allows. The conversion names the layers given fewer.
+design, and the conversion reports the reuse factor that was built instead. A chain runs only as fast as its slowest layer, so the other layers are
+lowered to the fewest multipliers that keep them within the cycles of the slowest one, never more than their reuse factor allows. A layer is lowered
+only to a number that divides the width it works through. The conversion names the layers given fewer.
+
+The results are the same as with the ``Latency`` strategy, except with an ``accum`` precision that rounds or saturates, such as one with
+``AP_RND_CONV`` or ``AP_SAT``: the fused kernels add the products in a different order, so the rounding or saturation can differ.
 
 Requirements
 ============
 
 A chain is fused when all of the following hold:
 
-* **The Vitis or Coyote backend.** Other backends report an error naming the layer and the backend.
+* **The Vitis or Coyote backend.** The Vivado and VivadoAccelerator backends report an error naming the layer and the backend. Quartus, oneAPI
+  and Catapult build the layer with a strategy of their own instead.
 * **io_parallel.** A model using ``io_stream`` is rejected during conversion.
 * **Two or more** ``Dense`` **layers in sequence**, each using the strategy, where the output of each layer is read only by the next one.
 
@@ -71,7 +76,8 @@ The following end a chain. The ``Dense`` layers on either side can still be fuse
 * ``ternary_tanh``, which is a layer type of its own with a threshold, not a plain activation.
 * ``BatchNormalization`` that is not merged: when it does not directly follow a ``Dense`` layer, when the output type of the ``Dense`` layer is set, or
   when the weights of both layers are quantized. The most common case is a scaling layer after the activation instead of before it.
-* Any other layer type, and any output read by more than one layer, since a value written to a stream can be read only once.
+* Any other layer type, and any output read by more than one layer or also used as a model output, since a value written to a stream can be
+  read only once.
 
 Configuration
 =============
@@ -85,8 +91,8 @@ Set the strategy on the ``Dense`` layers of a chain:
        config['LayerName'][layer]['Strategy'] = 'Fused'
        config['LayerName'][layer]['ReuseFactor'] = 4
 
-It can also be set for a layer type or for the whole model. Every chain that qualifies is then fused, and every other layer that asked for the strategy is
-built with the ``Resource`` strategy:
+It can also be set for a layer type or for the whole model. Every chain that qualifies is then fused, and the other layers are built as described
+under Requirements:
 
 .. code-block:: python
 
@@ -94,9 +100,10 @@ built with the ``Resource`` strategy:
    config['Model']['Strategy'] = 'Fused'
    config['Model']['ReuseFactor'] = 4
 
-During conversion the strategy lists the layers of each chain, and every layer that asked for it but was not fused, with the strategy used instead. It also
-reports when it sets the pipeline style of the model to ``dataflow``; if the configuration set a different ``PipelineStyle``, it is replaced with a
-warning. Set ``FusedReport`` to ``False`` in the ``Model`` section to turn the report off; warnings are still printed:
+During conversion the strategy lists the layers of each chain, the layers given fewer multipliers than their reuse factor allows, and every layer that
+asked for the strategy but was not fused, with the strategy used instead. It also reports when it sets the pipeline style of the model to
+``dataflow``; if the configuration set a different ``PipelineStyle``, it is replaced with a warning. Set ``FusedReport`` to ``False`` in the ``Model``
+section to turn the report off; warnings are still printed:
 
 .. code-block:: python
 
@@ -128,10 +135,10 @@ in cycles, instead of setting the number of multipliers:
        config['LayerName'][layer]['ReuseFactorAsInterval'] = True
 
 The strategy uses the fewest multipliers that keep the layer within that interval, counting only numbers that divide the width the layer works through
-(see below), and fills the remaining cycles with wait states. A ``dot`` layer and the ``axpy`` layer after it wait the same number of cycles, since the
-faster of the two waits for the slower one. The interval is then the requested one or a few cycles less, never more. The wait states add latency, so the
-layer is a little slower than it would be with the same number of multipliers and no wait states. They are added only in synthesis, so C simulation
-results do not change.
+(see below), and fills the remaining cycles with wait states. A ``dot`` layer and the ``axpy`` layer after it wait the same number of cycles, since
+the faster of the two waits for the slower one. The interval is then the requested one or a few cycles less, never more, with the versions of Vitis
+HLS listed below. The wait states add latency, so the layer is a little slower than it would be with the same number of multipliers and no wait
+states. They are added only in synthesis, so C simulation results do not change.
 
 A setting for a layer name takes precedence over one for a layer type, which takes precedence over one for the model. Note that ``granularity='name'``
 writes a ``ReuseFactor`` for every layer, which then overrides one set for the model.
@@ -154,4 +161,5 @@ where ``width`` is the number of values the kernel works through in each pass, `
 ``c`` is the time to fill the pipelines and pass data between layers. The strategy uses an overestimate of ``c``, which is why the interval can come
 out a few cycles below the requested one but never above it.
 
-This estimate of ``c`` was measured with Vitis HLS 2024.1. Vitis HLS 2025.1 is less predictable and is generally not supported.
+This estimate of ``c`` was measured with Vitis HLS 2024.1 and checked with 2023.2: with both, no layer came out above its requested interval. Vitis
+HLS 2025.1 is less predictable and is generally not supported.
