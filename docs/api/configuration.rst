@@ -19,7 +19,7 @@ The Python API approach is recommended for most users as there are more utilitie
 
 ..
   *
-  For developers, you might also want to checkout this section: `Detailed configuration in converted hls codes <#detailed-configuration-in-converted-hls-codes>`_.
+  For developers, you might also want to check out this section: `Detailed configuration in converted hls codes <#detailed-configuration-in-converted-hls-codes>`_.
   *Broken link*
 
 ----
@@ -68,7 +68,7 @@ or for PyTorch models:
         backend='Catapult')
 
 
-The ``name`` granularity includes per-layer configuration based on the model. A ``'name'`` granularity is generally recommended because it allows for more turning, and also because it allows
+The ``name`` granularity includes per-layer configuration based on the model. A ``'name'`` granularity is generally recommended because it allows for more tuning, and also because it allows
 for automatic setting of precisions.  The layer-level precisions with the ``'name'`` granularity default to ``'auto'``, which means that hls4ml will try to set it automatically
 (see :ref:`Automatic precision inference`). Note that layer-level settings take precedence over model-level settings. A ``'name'`` granularity is required for QKeras
 and QONNX model parsing. Passing the backend to these functions is recommended because some configuration options depend on the backend. See :py:class:`~hls4ml.utils.config.config_from_keras_model`
@@ -151,21 +151,21 @@ There are a number of configuration options that you have.  Let's go through the
 
 * **OutputDir**\ : the output directory where you want your HLS project to appear
 * **ProjectName**\ : the name of the HLS project IP that is produced
-* **KerasJson/KerasH5**\ : for Keras, the model architecture and weights are stored in a ``json`` and ``h5`` file.  The path to those files are required here.
+* **KerasJson/KerasH5**\ : for Keras, the model architecture and weights are stored in a ``json`` and ``h5`` file.  The path to those files is required here.
   We also support keras model's file obtained just from ``model.save()``. In this case you can just supply the ``h5`` file in ``KerasH5:`` field.
 * **InputData/OutputPredictions**\ : path to your input/predictions of the model. If none is supplied, then hls4ml will create artificial data for simulation. The data used above in the example can be found `here <https://cernbox.cern.ch/index.php/s/2LTJVVwCYFfkg59>`__. We also support ``npy`` data files. We welcome suggestions on more input data types to support.
 
-The backend-specific section of the configuration depends on the backend. You can get a starting point for the necessary settings using, for example `hls4ml.templates.get_backend('Vivado').create_initial_config()`.
-For Vivado backend the options are:
+The backend-specific section of the configuration depends on the backend. You can get a starting point for the necessary settings using, for example, ``hls4ml.backends.get_backend('Vivado').create_initial_config()``.
+For the Vivado backend, the options are:
 
 * **Part**\ : the particular FPGA part number that you are considering, here it's a Xilinx Virtex UltraScale+ VU13P FPGA
 * **ClockPeriod**\ : the clock period, in ns, at which your algorithm runs
   Then you have some optimization parameters for how your algorithm runs:
-* **IOType**\ : your options are ``io_parallel`` or ``io_stream`` which defines how data is transferred into and out of the HLS model IP, and how the data is transferred between layers. For ``io_parallel``, data are directly wired between layers fully in parallel. For ``io_stream``, HLS streams are used, which instantiates as stateful FIFO buffers, effectively decouples the producer and consumer (upstream and downstream in a neural network) and removing the need of a global state machine coordinating the exact timing for io operations. This is particular useful with the DATAFLOW pipeline style. For more information, see `here <https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream>`__.
+* **IOType**\ : your options are ``io_parallel`` or ``io_stream`` which defines how data is transferred into and out of the HLS model IP, and how the data is transferred between layers. For ``io_parallel``, data are directly wired between layers fully in parallel. For ``io_stream``, HLS streams are used, which are instantiated as stateful FIFO buffers, effectively decoupling the producer and consumer (upstream and downstream in a neural network) and removing the need for a global state machine coordinating the exact timing for io operations. This is particularly useful with the DATAFLOW pipeline style. For more information, see `here <https://docs.xilinx.com/r/en-US/ug1399-vitis-hls/pragma-HLS-stream>`__.
   * **HLSConfig**\: the detailed configuration of precision and parallelism, including:
 
   * **ReuseFactor**\ : in the case that you are pipelining, this defines the pipeline interval or initiation interval
-  * **ParallelizationFactor**\ : The number of output "pixels" to compute in parallel in convolutional layers. Increasing this parameter results in significant increase in resources required on the FPGA.
+  * **ParallelizationFactor**\ : The number of output "pixels" to compute in parallel in convolutional layers. Increasing this parameter results in a significant increase in resources required on the FPGA.
   * **Strategy**\ : Optimization strategy on FPGA, either "Latency", "Resource", "distributed_arithmetic" (or "da"), "Unrolled", or "Fused". If none is supplied then hls4ml uses "Latency" as default. Note that a reuse factor must be 1 if using "distributed_arithmetic", and should be larger than 1 when using "resource", "unrolled" or "fused" strategies.
   * **PipelineStyle**\ : Set the top level pipeline style. Valid options are "auto", "pipeline" and "dataflow". If unspecified, it defaults to "auto".
   * **PipelineInterval**\ : Optionally override the desired initiation interval of the design. Only valid in combination with "pipeline" style. If unspecified, it is left to the compiler to decide, ideally matching the largest reuse factor of the network.
@@ -185,7 +185,7 @@ Under the ``HLSConfig`` heading, these can be set for the ``Model``\ , per ``Lay
        Precision: fixed<16,6>
        ReuseFactor: 1
 
-This configuration use ``fixed<16,6>`` for every variable and a ReuseFactor of 1 throughout.
+This configuration uses ``fixed<16,6>`` for every variable and a ReuseFactor of 1 throughout.
 
 Specify all ``Dense`` layers to use a different precision like this:
 
@@ -264,10 +264,10 @@ In your project, the file ``<OutputDir>/firmware/<ProjectName>.cpp`` is your top
 
    nnet::sigmoid<layer4_t, result_t, sigmoid_config5>(layer4_out, layer5_out);
 
-You can see, for the simple 1-layer DNN, the computation (\ ``nnet::dense_latency``\ ) and activation (\ ``nnet::relu``\ /\ ``nnet::sigmoid``\ ) calculation for each layer.  For each layer, it has its own additional configuration parameters, e.g. ``config2``.
+You can see, for the simple 1-layer DNN, the computation (\ ``nnet::dense_latency``\ ) and activation (\ ``nnet::relu``\ /\ ``nnet::sigmoid``\ ) calculation for each layer.  Each layer has its own additional configuration parameters, e.g. ``config2``.
 
 In your project, the file ``<OutputDir>/firmware/parameters.h`` stores all the configuration options for each neural network library.
-An example is `here <https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/parameters.h>`__. So for example, the detailed configuration options for an example DNN layer is:
+An example is `here <https://github.com/hls-fpga-machine-learning/models/blob/master/HLS_projects/KERAS-1layer-hls/firmware/parameters.h>`__. So for example, the detailed configuration options for an example DNN layer are:
 
 .. code-block:: cpp
 

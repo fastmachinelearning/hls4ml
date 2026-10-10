@@ -111,7 +111,7 @@ void gru_cell(const data_T &x, h_T &h, const typename CONFIG_T::weight_t &weight
     [[intel::fpga_register]] accum_array_T mat_mul_x_w;
     nnet::dense_resource<data_T, accum_array_T, typename CONFIG_T::mult_config_x>(x, mat_mul_x_w, weights, bias);
 
-    // A matrix containing the values of matrix product between previou state (h) and recurrent weights (recurrent_weights),
+    // A matrix containing the values of matrix product between previous state (h) and recurrent weights (recurrent_weights),
     // for update, reset and candidate state gates, for each of the units
     [[intel::fpga_register]] accum_array_T mat_mul_h_wr;
     nnet::dense_resource<h_T, accum_array_T, typename CONFIG_T::mult_config_h>(h, mat_mul_h_wr, recurrent_weights,
@@ -182,7 +182,7 @@ void gru(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weig
         h[i] = 0;
     }
 
-    // Loop depedency - cannot pipeline
+    // Loop dependency - cannot pipeline
     [[intel::disable_loop_pipelining]] for (int t = 0; t < CONFIG_T::n_timesteps; t++) {
         // Get data at current time step
         #pragma unroll
@@ -217,7 +217,7 @@ void gru_init_state(const data_T &data, const h_T &hin, res_T &res, const typena
 
     [[intel::fpga_register]] h_T h = hin;
 
-    // Loop depedency - cannot pipeline
+    // Loop dependency - cannot pipeline
     [[intel::disable_loop_pipelining]] for (int t = 0; t < CONFIG_T::n_timesteps; t++) {
         // Get data at current time step
         #pragma unroll
@@ -782,7 +782,7 @@ void lstm_init_state(const data_T &data, const h_T &hidden_state_initial, const 
     [[intel::fpga_register]] h_T hidden_state[CONFIG_T::n_timesteps + 1];
     [[intel::fpga_register]] h_T hidden_state_temp;
     [[intel::fpga_register]] hc_T cell_state[CONFIG_T::n_timesteps + 1];
-    [[intel::fpga_register]] hc_T cell_state_temp; // should this be updated to a differnt type
+    [[intel::fpga_register]] hc_T cell_state_temp; // should this be updated to a different type
     [[intel::fpga_register]] h_T h;
     [[intel::fpga_register]] hc_T c;
     [[intel::fpga_register]] in_T in;

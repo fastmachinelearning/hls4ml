@@ -321,13 +321,40 @@ keras_process_layer_map = defaultdict(
 )
 
 
+def _hlsmodel_inputs(model, X):
+    """Arrange test data the way ``ModelGraph.trace`` expects it.
+
+    Args:
+        model (ModelGraph): The model the data is for.
+        X (ndarray, list of ndarray or dict): A single array, a list or tuple holding one array per model
+            input, ordered as ``model.get_input_variables()``, or a dict mapping input names to arrays.
+
+    Returns:
+        ndarray or list of ndarray: A C-contiguous array for a single-input model, a list of them otherwise.
+    """
+    if isinstance(X, dict):
+        input_names = [var.name for var in model.get_input_variables()]
+        missing = [name for name in input_names if name not in X]
+        if missing:
+            raise ValueError(f'No test data for model input(s) {missing}, expected the keys {input_names}')
+        X = [X[name] for name in input_names]
+
+    if isinstance(X, (list, tuple)):
+        X = [np.ascontiguousarray(x) for x in X]
+        if len(X) == 1 and len(model.get_input_variables()) == 1:
+            X = X[0]
+        return X
+
+    return np.ascontiguousarray(X)
+
+
 def activations_hlsmodel(model, X, fmt='summary', plot='boxplot'):
     if fmt == 'longform':
         raise NotImplementedError
     elif fmt == 'summary':
         data = []
 
-    _, trace = model.trace(np.ascontiguousarray(X))
+    _, trace = model.trace(_hlsmodel_inputs(model, X))
 
     if len(trace) == 0:
         raise RuntimeError('ModelGraph must have tracing on for at least 1 layer (this can be set in its config)')
@@ -457,8 +484,11 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
     Args:
         model (optional): Keras of PyTorch model. Defaults to None.
         hls_model (ModelGraph, optional): The ModelGraph to profile. Defaults to None.
-        X (ndarray, optional): Test data on which to evaluate the model to profile activations.
-            Must be formatted suitably for the ``model.predict(X)``. Defaults to None.
+        X (ndarray, list of ndarray or dict, optional): Test data on which to evaluate the model to profile
+            activations. Must be formatted suitably for the ``model.predict(X)``. For models with
+            multiple inputs, pass a list holding one array per model input, ordered as
+            ``hls_model.get_input_variables()`` (i.e. the order of the inputs of the original model),
+            or a dict mapping input names to arrays. Defaults to None.
         plot (str, optional): The type of plot to produce. Options are: 'boxplot' (default), 'violinplot', 'histogram',
             'FacetGrid'. Defaults to 'boxplot'.
 
@@ -562,21 +592,24 @@ def numerical(model=None, hls_model=None, X=None, plot='boxplot'):
 # COMPARE OUTPUT IMPLEMENTATION
 #########
 def _is_ignored_layer(layer):
-    """Some layers need to be ingored during inference"""
+    """Some layers need to be ignored during inference"""
     if isinstance(layer, (keras.layers.InputLayer, keras.layers.Dropout)):
         return True
     return False
 
 
 def _get_outputs(layers, X, model_input):
-    """Get outputs of intermediate layers"""
+    """Get outputs of intermediate layers, as a list with one array per layer"""
     partial_models = keras.models.Model(inputs=model_input, outputs=[layer.output for layer in layers])
     y = partial_models.predict(X)
+    # Keras returns a bare array instead of a list when there is only one output
+    if not isinstance(y, (list, tuple)):
+        y = [y]
     return y
 
 
 def get_ymodel_keras(keras_model, X):
-    """Calculate each layer's ouput and put them into a dictionary.
+    """Calculate each layer's output and put them into a dictionary.
 
     Args:
         keras_model (_type_): A keras Model
@@ -584,7 +617,7 @@ def get_ymodel_keras(keras_model, X):
             Must be formatted suitably for the ``model.predict(X)``.
 
     Returns:
-        dict: A dictionary in the form {"layer_name": ouput array of layer}.
+        dict: A dictionary in the form {"layer_name": output array of layer}.
     """
     ymodel = {}
     traced_layers = []
@@ -603,7 +636,7 @@ def get_ymodel_keras(keras_model, X):
         ):
             tmp_activation = layer.activation
             layer.activation = None
-            ymodel.update({layer.name: _get_outputs([layer], X, keras_model.input)})
+            ymodel.update({layer.name: _get_outputs([layer], X, keras_model.input)[0]})
             layer.activation = tmp_activation
             name = layer.name + f'_{tmp_activation.__name__}'
         traced_layers.append(layer)
@@ -682,7 +715,10 @@ def compare(keras_model, hls_model, X, plot_type='dist_diff'):
     Args:
         keras_model: Original keras model.
         hls_model (ModelGraph): Converted ModelGraph, with "Trace:True" in the configuration file.
-        X (ndarray): Input tensor for the model.
+        X (ndarray, list of ndarray or dict): Input tensor for the model. For models with multiple inputs,
+            pass a list holding one array per model input, ordered as
+            ``hls_model.get_input_variables()`` (i.e. the order of the inputs of the original model),
+            or a dict mapping input names to arrays.
         plot_type (str, optional): Different methods to visualize the y_model and y_sim differences.
             Possible options include:
             - 'norm_diff':: square root of the sum of the squares of the differences between each output vectors.
@@ -694,9 +730,9 @@ def compare(keras_model, hls_model, X, plot_type='dist_diff'):
     """
 
     # Take in output from both models
-    # Note that each y is a dictionary with structure {"layer_name": flattened ouput array}
+    # Note that each y is a dictionary with structure {"layer_name": flattened output array}
     ymodel = get_ymodel_keras(keras_model, X)
-    _, ysim = hls_model.trace(X)
+    _, ysim = hls_model.trace(_hlsmodel_inputs(hls_model, X))
 
     print('Plotting difference...')
     f = plt.figure()

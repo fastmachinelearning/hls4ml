@@ -50,7 +50,7 @@ First, we generate the bitfile from a Keras model ``model`` and a config.
                                                            output_dir='hls4ml_prj_pynq',
                                                            backend='VivadoAccelerator',
                                                            board='pynq-z2')
-    hls4ml.build(bitfile=True)
+    hls_model.build(bitfile=True)
 
 
 After this command completes, we will need to package up the bitfile, hardware handoff, and Python driver to copy to the PS of the board.
@@ -84,6 +84,7 @@ Coyote
 The **Coyote** backend of ``hls4ml`` leverages the `Coyote shell <https://github.com/fpgasystems/Coyote>`_ to easily deploy models on PCIe-attached Alveo FPGAs.
 Coyote is an open-source, research shell that facilitates the deployment of applications on FPGAs, as well as the integration of FPGAs into larger computer systems.
 Some of its features include:
+
 - Multi-tenancy
 - Virtualized memory
 - Optimized data movement
@@ -91,8 +92,8 @@ Some of its features include:
 - Automatic work scheduling and memory striping
 - Networking for distributed applications
 
-The list of supported boards is available in the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html>`_
-The current Coyote backend can be used to deploy hls4ml models from both Python and C++. While the focus of the current backend is on the inference,
+The list of supported boards is available in the `Coyote documentation <https://fpgasystems.github.io/Coyote/intro/quick-start.html>`_.
+The current Coyote backend can be used to deploy hls4ml models from both Python and C++. While the focus of the current backend is on inference,
 it can easily be extended to support dynamic reconfiguration of models, as well as distributed inference across multiple FPGAs.
 
 CoyoteOverlay
@@ -101,7 +102,7 @@ CoyoteOverlay
 Similar to the VivadoAccelerator backend, the Coyote backend creates a custom **neural network overlay** that interacts with the FPGA.
 This overlay can be used to provide inputs, run inference and retrieve the predictions. Additionally, the overlay provides a utility
 function to load the model bitstream and driver for some clusters. On others, the users need to manually load the bitstream and driver.
-For guidance, see the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
+For guidance, see the `Coyote documentation <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
 
 .. note:: To use the Coyote backend, hls4ml must be cloned with submodules using ``git clone --recurse-submodules``.
    Additionally, a full Vivado/Vitis installation is required to synthesize the hardware and compile the host software.
@@ -131,7 +132,7 @@ Similar to the ``VivadoAccelerator`` backend, we first generate a bitstream from
 
 After this command completes, the FPGA must be programmed with the bitstream. Additionally, the Coyote driver must be loaded.
 For some platforms, Coyote provides utility functions to load the bitstream and driver. For others, this can be achieved using
-the Vivado hardware manager and Linux commands. More detail can be found in the `Coyote documentation. <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
+the Vivado hardware manager and Linux commands. More detail can be found in the `Coyote documentation <https://fpgasystems.github.io/Coyote/intro/quick-start.html#deploying-coyote>`_.
 
 Finally, we can create a ``CoyoteOverlay`` object, which can be used to run inference on the FPGA. Additionally, the overlay provides a utility
 function to load the model bitstream and driver for some clusters.

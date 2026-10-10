@@ -49,7 +49,7 @@ reviewer will read it.
 If you use an AI agent to work on hls4ml, point it at [`AGENTS.md`](https://github.com/fastmachinelearning/hls4ml/blob/main/AGENTS.md) in the repository root. It
 states the same expectations in a form agents read, and it will save you review comments.
 
-Submissions that appear unreviewed or copied directly from an AI tool without proper understanding may be requested to be revised or declined.
+Submissions that appear unreviewed or copied directly from an AI tool without proper understanding may be returned for revision or declined.
 
 ## Code of Conduct
 
