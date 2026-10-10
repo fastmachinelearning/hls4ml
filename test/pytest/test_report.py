@@ -128,7 +128,7 @@ def hls_model_setup(request, test_case_id, backend_configs, tmp_path):
     )
     hls_model.write()
 
-    # to actually generate the reports (using Vivado 2020.1 or Altera 2025.0)
+    # to actually generate the reports (using Vivado, Vitis, or Altera HLS IP Gen)
     # hls_model.build(**(backend_config['build']))
 
     backend_config['copy_func'](output_dir, test_report_dir)
