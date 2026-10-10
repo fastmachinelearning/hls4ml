@@ -208,10 +208,18 @@ def test_carried_numbers_reach_the_kernel(test_case_id, case):
     np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 
-def test_folded_table_size(test_case_id):
+# The activations the kernel reads from a lookup table
+TABLE_READERS = [
+    case for case in FOLDED_ACTIVATIONS if case[0] in ('sigmoid', 'tanh', 'selu', 'softplus', 'softsign', 'elu')
+]
+
+
+@pytest.mark.parametrize('activation', TABLE_READERS, ids=[case[0] for case in TABLE_READERS])
+def test_folded_table_size(test_case_id, activation):
     """The size of the table an activation reads is taken from the activation layer, not from a default."""
 
-    model = dense_chain(lambda n: Activation('tanh', name=n))
+    _, layer = activation
+    model = dense_chain(layer)
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', backend='Vitis', default_precision='ap_fixed<16,6>'
     )

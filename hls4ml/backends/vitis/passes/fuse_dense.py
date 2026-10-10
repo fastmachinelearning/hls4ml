@@ -171,7 +171,7 @@ class FoldActivationIntoFused(OptimizerPass):
         prev.set_attr('fused_preact_t', NamedType(f'{prev.name}_preact_t', copy(out_var.type.precision)))
         out_var.type.precision = copy(node.get_output_variable().type.precision)
 
-        if activation in TABLE_ACTIVATIONS:
+        if activation in TABLE_ACTIVATIONS or activation == 'elu':
             if node.get_attr('table_size') is not None:
                 prev.set_attr('fused_table_size', node.get_attr('table_size'))
             # Storing the type as an attribute of the Dense layer is enough for it to be declared
