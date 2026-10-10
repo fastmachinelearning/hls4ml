@@ -94,12 +94,12 @@ Both format a Python string against `node.attributes` plus a few extras (`_defau
 
 Types and variables are converted from the backend-independent form into backend code form by that backend's
 own `passes/transform_types.py`, using converters built on `backends/fpga/fpga_types.py`. Vivado, Quartus,
-oneAPI, Catapult and Libero each have their own copy; Vitis has none and uses Vivado's through inheritance.
+Altera, Catapult and Libero each have their own copy; Vitis has none and uses Vivado's through inheritance.
 This pass is where the backend decides what a tensor becomes — an array with a partition pragma, an
 `hls::stream`, or a pipe. io_type behaviour is decided there, not in the writer.
 
 A backend may add template kinds of its own by subclassing `Template` with a different `attribute_name`; see
-`backends/oneapi/oneapi_template.py`. The writer then reads those extra attributes.
+`backends/altera/altera_template.py`. The writer then reads those extra attributes.
 
 ## What is universal and what is only a convention
 
@@ -114,10 +114,10 @@ backend. From stage 4 onward, backends diverge, and how much they follow the Viv
 | a registered `Writer` subclass that emits the project | the file names and directory layout listed below |
 | variable and type converters applied by a `transform_types` pass | `hls::stream<nnet::array<T,N>>` for io_stream, arrays plus partition pragmas for io_parallel |
 
-Concrete counter-examples in this tree: oneAPI defines two extra template kinds
-(`StreamFunctionCallTemplate`, `TaskSequenceTemplate` in `backends/oneapi/oneapi_template.py`), carries data
+Concrete counter-examples in this tree: Altera defines two extra template kinds
+(`StreamFunctionCallTemplate`, `TaskSequenceTemplate` in `backends/altera/altera_template.py`), carries data
 in pipes with `pipe_name` rather than `hls::stream`, and keeps its headers under
-`templates/oneapi/firmware/nnet_utils/`. Quartus and oneAPI have no `strategy` field and no kernel typedef.
+`templates/altera/firmware/nnet_utils/`. Quartus and Altera have no `strategy` field and no kernel typedef.
 The symbolic backend has no `nnet_utils` at all.
 
 Read as: the Python machinery is a contract, the C++ shape is a precedent. A backend may define its own
