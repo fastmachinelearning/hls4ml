@@ -95,6 +95,15 @@ class AlteraWriter(Writer):
             return f'{project_name}_{model.config.get_config_value("Stamp")}'
         return project_name
 
+    @staticmethod
+    def _get_interface_pipe_size(var):
+        """Minimum capacity of an interface pipe. In io_stream, the host writes a whole input before reading any
+        output, so the pipes must be able to buffer the full stream. In io_parallel, no buffering is needed.
+        """
+        if isinstance(var.pragma, tuple) and var.pragma[0] == 'stream':
+            return var.pragma[1]
+        return 0
+
     def write_project_dir(self, model):
         """Write the base project directory
 
@@ -253,13 +262,13 @@ class AlteraWriter(Writer):
                 elif '// hls-fpga-machine-learning insert inputs' in line:
                     newline = line
                     for inp in model_inputs:
-                        newline += inp.declare_cpp(pipe_min_size=inp.pragma[1] if inp.pragma[0] == 'stream' else 16)
+                        newline += inp.declare_cpp(pipe_min_size=self._get_interface_pipe_size(inp))
 
                 # and declareations for the outputs
                 elif '// hls-fpga-machine-learning insert outputs' in line:
                     newline = line
                     for out in model_outputs:
-                        newline += out.declare_cpp(pipe_min_size=out.pragma[1] if out.pragma[0] == 'stream' else 16)
+                        newline += out.declare_cpp(pipe_min_size=self._get_interface_pipe_size(out))
 
                 # Simply copy line, if no inserts are required
                 else:

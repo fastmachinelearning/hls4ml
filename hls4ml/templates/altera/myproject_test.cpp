@@ -52,7 +52,6 @@ int main(int argc, char **argv) {
     std::string pline;
 
     if (fin.is_open() && fpr.is_open()) {
-        std::vector<std::vector<float>> predictions;
         unsigned int iteration = 0;
         for (; std::getline(fin, iline) && std::getline(fpr, pline); iteration++) {
             if (iteration % CHECKPOINT == 0) {
@@ -73,13 +72,11 @@ int main(int argc, char **argv) {
                 pr.push_back(current);
             }
 
-            // hls-fpga-machine-learning insert data
-
             q.single_task(MyProject{});
 
-            // hls-fpga-machine-learning convert output
+            // hls-fpga-machine-learning insert data
 
-            std::copy(pr.cbegin(), pr.cend(), predictions.back().begin());
+            // hls-fpga-machine-learning convert output
 
             for (auto outval : outputs) {
                 fout << outval << " ";
@@ -109,8 +106,8 @@ int main(int argc, char **argv) {
 
         // hls-fpga-machine-learning insert top-level-function
         for (int i = 0; i < num_iterations; i++) {
-            // hls-fpga-machine-learning insert zero
             q.single_task(MyProject{});
+            // hls-fpga-machine-learning insert zero
             // hls-fpga-machine-learning convert output
             for (auto outval : outputs) {
                 std::cout << outval << " ";

@@ -2,11 +2,11 @@
     "report": {
         "HLS": {
             "total": {
-                "alut": 16968,
-                "reg": 49317,
+                "alut": 16950,
+                "reg": 16475,
                 "ram": 0,
                 "dsp": 0,
-                "mlab": 1686
+                "mlab": 865
             },
             "available": {
                 "alut": "974400",

@@ -3,10 +3,10 @@
         "HLS": {
             "total": {
                 "alut": 369,
-                "reg": 308,
+                "reg": 202,
                 "ram": 4,
                 "dsp": 0,
-                "mlab": 5
+                "mlab": 2
             },
             "available": {
                 "alut": "974400",
