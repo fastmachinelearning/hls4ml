@@ -501,6 +501,36 @@ def test_chains_on_parallel_branches(test_case_id, depths):
     np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 
+def test_trace(test_case_id):
+    """Tracing reads the output of every fused layer, including the stream from a dot layer to the axpy
+    layer after it, and finds the same values as in the latency build."""
+
+    model = dense_chain(n_layers=4)
+    X = np.random.default_rng(1).random((SAMPLES, N)).astype('float32') * 2 - 1
+    traces = {}
+    for strategy in ('Fused', 'Latency'):
+        config = hls4ml.utils.config_from_keras_model(
+            model, granularity='name', backend='Vitis', default_precision='ap_fixed<16,6>'
+        )
+        for name in config['LayerName']:
+            if name.startswith('fc'):
+                config['LayerName'][name].update({'Strategy': strategy, 'ReuseFactor': 4, 'Trace': True})
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model,
+            hls_config=config,
+            backend='Vitis',
+            io_type='io_parallel',
+            output_dir=str(test_root_path / f'{test_case_id}_{strategy.lower()}'),
+        )
+        hls_model.compile()
+        _, traces[strategy] = hls_model.trace(X)
+        if strategy == 'Fused':
+            assert forms(hls_model) == ['dot', 'axpy', 'dot', 'axpy']
+
+    for name in ('fc0', 'fc1', 'fc2', 'fc3'):
+        np.testing.assert_allclose(traces['Fused'][name], traces['Latency'][name], rtol=0, atol=1e-6)
+
+
 def convert_with_interval(model, output_dir, target, names=('fc0', 'fc1', 'fc2', 'fc3'), readings=None):
     """Convert with the reuse factor read as an interval. `readings` sets the flag per layer."""
 

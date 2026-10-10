@@ -101,6 +101,14 @@ warning. Set ``FusedReport`` to ``False`` in the ``Model`` section to turn the r
 
    config['Model']['FusedReport'] = False
 
+Tracing and profiling
+=====================
+
+A fused layer computes the activation folded into it, so when it is traced with ``Trace: True``, its traced output is the output of that activation,
+and the activation layer itself is not traced. Tools that compare the trace with the Keras model layer by layer, such as
+``hls4ml.model.profiling.compare``, therefore show a difference at each fused layer that has a folded activation. To profile a model layer by layer,
+convert it with another strategy.
+
 The reuse factor and the interval
 =================================
 
