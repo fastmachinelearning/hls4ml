@@ -169,10 +169,9 @@ void dense_fused(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
     typename CONFIG_T::table_t table[CONFIG_T::table_size];
     fused_init_table<CONFIG_T>(table);
 
-    // Static so that no loop is needed to clear the sums before each run: they start at zero, and the
-    // result loop adds the bias and sets them back to zero for the next run.
     static typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=PAR
+    #pragma HLS RESET variable=acc
 
 FusedAccum:
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
@@ -255,9 +254,9 @@ void dense_fused_axpy(hls::stream<data_T> &data, res_T res[CONFIG_T::n_out],
                       typename CONFIG_T::bias_t biases[CONFIG_T::n_out]) {
     const unsigned PAR = CONFIG_T::multiplier_limit;
 
-    // Static, and set back to zero by the result loop
     static typename CONFIG_T::accum_t acc[CONFIG_T::n_out];
     #pragma HLS ARRAY_PARTITION variable=acc cyclic factor=PAR
+    #pragma HLS RESET variable=acc
     #pragma HLS ARRAY_RESHAPE variable=weights cyclic factor=PAR dim=1
 
     typename CONFIG_T::table_t table[CONFIG_T::table_size];

@@ -17,7 +17,7 @@
 #ifdef __SYNTHESIS__
 #include "etc/autopilot_ssdm_op.h"
 #define FUSED_PAD(cycles)                                                                                                   \
-    if (cycles > 0) {                                                                                                       \
+    if ((cycles) > 0) {                                                                                                     \
         ap_wait_n(cycles);                                                                                                  \
     }
 #else
