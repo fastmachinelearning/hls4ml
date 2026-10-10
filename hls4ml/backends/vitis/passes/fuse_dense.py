@@ -368,8 +368,7 @@ class SubstituteUnfusedStrategy(OptimizerPass):
     """Switch layers that asked for the fused strategy but could not be fused to the resource strategy.
 
     These are the layers the planner did not put in a chain: a Dense layer on its own, a Conv1D or a
-    Conv2D. Depthwise convolutions keep the latency strategy. Must run before LayoutFusedDotWeights,
-    which would otherwise reorder the weights of a lone Dense layer for a fused kernel.
+    Conv2D. Depthwise convolutions keep the latency strategy.
     """
 
     def match(self, node):
@@ -395,14 +394,15 @@ class SubstituteUnfusedStrategy(OptimizerPass):
 
 
 class LayoutFusedDotWeights(OptimizerPass):
-    """Transpose the weights of dot and plain layers into the order their kernels read them.
+    """Transpose the weights of dot layers into the order their kernel reads them.
 
-    hls4ml stores the weight for input i and output j at i * n_out + j, which is what the axpy kernel
-    reads. The dot and plain kernels read it at j * n_in + i.
+    hls4ml stores the weight for input i and output j at i * n_out + j, which is what the axpy and plain
+    kernels read: all outputs for one input at a time. The dot kernel reads one output at a time, at
+    j * n_in + i.
     """
 
     def match(self, node):
-        return _is_fused(node) and node.get_attr('fused_form') != 'axpy' and not node.get_attr('fused_weights_transposed')
+        return _is_fused(node) and node.get_attr('fused_form') == 'dot' and not node.get_attr('fused_weights_transposed')
 
     def transform(self, model, node):
         weight = node.weights['weight']

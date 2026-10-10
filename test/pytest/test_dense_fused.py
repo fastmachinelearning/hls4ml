@@ -289,6 +289,21 @@ def test_layers_of_different_sizes(test_case_id):
     np.testing.assert_allclose(y_fused, y_latency, rtol=0, atol=1e-6)
 
 
+def test_weight_order(test_case_id):
+    """The weights keep the order hls4ml stores them in, all outputs for one input at a time, except in a
+    dot layer, whose kernel reads one output at a time."""
+
+    model = dense_chain(n_in=12, widths=[7, 5, 9])
+    fused = convert(model, 'Fused', str(test_root_path / test_case_id))
+
+    assert forms(fused) == ['plain', 'dot', 'axpy']
+    for node in fused.get_layers():
+        if node.name.startswith('fc'):
+            kernel = model.get_layer(node.name).get_weights()[0]
+            expected = kernel.T if node.get_attr('fused_form') == 'dot' else kernel
+            np.testing.assert_array_equal(node.weights['weight'].data, expected)
+
+
 def one_layer():
     return dense_chain(n_layers=1)
 

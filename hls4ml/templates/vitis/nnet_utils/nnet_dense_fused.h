@@ -11,7 +11,7 @@
 //
 //   dense_fused_dot   array in, stream out   weights w[j * n_in + i], transposed by the fusion pass
 //   dense_fused_axpy  stream in, array out   weights w[i * n_out + j], as hls4ml stores them
-//   dense_fused       array in, array out    weights w[j * n_in + i], first layer of an odd-length chain
+//   dense_fused       array in, array out    weights w[i * n_out + j], first layer of an odd-length chain
 //
 // A dot layer and the axpy layer after it run at the same time. The activation that followed the layer
 // is computed here, with the same tables and arithmetic as the separate layer, so the results are equal.
@@ -184,7 +184,7 @@ FusedAccum:
                 unsigned j = jb + p;
                 if (j < CONFIG_T::n_out) {
                     acc[j] += CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
-                        data[i], weights[j * CONFIG_T::n_in + i]);
+                        data[i], weights[i * CONFIG_T::n_out + j]);
                 }
             }
         }
