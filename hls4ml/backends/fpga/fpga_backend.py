@@ -241,8 +241,9 @@ class FPGABackend(Backend):
         if 'Bidirectional' in layer.class_name:
             result = []
             for d in ['forward', 'backward']:
+                n_gates = 4 if 'LSTM' in layer.get_attr(f'{d}_class_name') else 3
                 n_in = layer.get_attr('n_in')
-                n_out = layer.get_attr(f'{d}_n_states') * 3
+                n_out = layer.get_attr(f'{d}_n_states') * n_gates
                 n_in_recr = layer.get_attr(f'{d}_n_states')
                 n_out_recr = n_out
                 result.append((n_in, n_out, n_in_recr, n_out_recr))

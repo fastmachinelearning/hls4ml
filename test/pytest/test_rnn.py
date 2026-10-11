@@ -320,6 +320,26 @@ def test_rnn_resource_reuse_factor(test_case_id, rnn_layer, reuse_factor, backen
     np.testing.assert_allclose(predictions[1].flatten(), model.predict(X).flatten(), rtol=0.0, atol=5e-2)
 
 
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_bidirectional_reuse_factor_gates(test_case_id, backend):
+    """Each direction's reuse factors are adjusted for its own number of gates: four for the LSTM, three for the GRU."""
+
+    model = create_model_reuse(Bidirectional)
+    hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    hls_config['LayerName']['rnn']['Strategy'] = 'Resource'
+    hls_config['LayerName']['rnn']['ReuseFactor'] = 18
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=hls_config, output_dir=output_dir, backend=backend
+    )
+
+    layer = hls_model.graph['rnn']
+    valid_reuse_factors = hls4ml.backends.get_backend(backend).get_valid_reuse_factors
+    for d, n_gates in (('forward', 4), ('backward', 3)):
+        assert layer.get_attr(f'{d}_reuse_factor') in valid_reuse_factors(6, 8 * n_gates)
+        assert layer.get_attr(f'{d}_recurrent_reuse_factor') in valid_reuse_factors(8, 8 * n_gates)
+
+
 @pytest.mark.parametrize('rnn_layer', [LSTM, GRU], ids=['LSTM', 'GRU'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('static', [True, False])
