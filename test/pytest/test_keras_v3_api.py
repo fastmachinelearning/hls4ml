@@ -646,17 +646,16 @@ def test_rnn_no_bias_parsed(test_case_id):
     assert bias.shape == (16,) and not bias.any()
 
 
-def test_bidirectional_merge_mode_parsed(test_case_id):
+def test_bidirectional_merge_mode_parsed():
     # Non-concat merge modes keep the sub-layer width; no kernel merges yet and the
-    # backends are responsible for rejecting non-concat modes
+    # backends reject non-concat modes, so only the parser is run here
     model = keras.Sequential(
         [keras.layers.Input((5, 8)), keras.layers.Bidirectional(keras.layers.LSTM(4), merge_mode='sum')]
     )
-    hls_model = _convert_parse_only(model, test_case_id)
-    bidir_layer = [layer for layer in hls_model.get_layers() if layer.class_name == 'Bidirectional'][0]
-    assert bidir_layer.get_attr('merge_mode') == 'sum'
-    assert bidir_layer.get_attr('n_out') == 4
-    assert list(hls_model.get_output_variables()[0].shape) == [4]
+    layer_list, *_ = hls4ml.converters.parse_keras_v3_model(model)
+    bidir_layer = [layer for layer in layer_list if layer['class_name'] == 'Bidirectional'][0]
+    assert bidir_layer['merge_mode'] == 'sum'
+    assert bidir_layer['n_out'] == 4
 
 
 def test_bidirectional_rejects_simple_rnn(test_case_id):

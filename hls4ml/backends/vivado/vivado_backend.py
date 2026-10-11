@@ -718,41 +718,37 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Bidirectional)
     def init_bidirectional(self, layer):
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            raise NotImplementedError(
+                f'Layer "{layer.name}" (Bidirectional) is not supported with "io_stream". Use "io_parallel".'
+            )
+        merge_mode = layer.get_attr('merge_mode', 'concat')
+        if merge_mode != 'concat':
+            raise NotImplementedError(
+                f'Merge mode "{merge_mode}" of layer "{layer.name}" (Bidirectional) is not supported. Use "concat".'
+            )
+
+        if layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
+            warn(
+                f'Unrolled resource strategy is not supported in layer "{layer.name}" (Bidirectional). '
+                'Using "resource" strategy instead.'
+            )
+            use_resource = True
+        else:
+            use_resource = layer.model.config.is_resource_strategy(layer)
+
         reuse_factor = layer.model.config.get_reuse_factor(layer)
 
         for i, d in enumerate(['forward', 'backward']):
             layer.set_attr(f'{d}_reuse_factor', reuse_factor)
             layer.set_attr(f'{d}_recurrent_reuse_factor', reuse_factor)
 
-            if layer.model.config.is_resource_strategy(layer):
+            if use_resource:
                 n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)[i]
                 self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor')
                 self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor')
-                layer.set_attr('strategy', 'resource')
 
-            elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
-                use_resource_instead = False
-                if layer.get_attr('reuse_factor', 1) == 1:
-                    print(
-                        f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name} ({d})". '
-                        'Using "resource" strategy instead.'
-                    )
-                use_resource_instead = True
-
-                n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)[i]
-                if use_resource_instead:
-                    self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor')
-                    self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor')
-                    layer.set_attr('strategy', 'resource')
-                else:
-                    self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor', include_max_rf=False)
-                    self.set_closest_reuse_factor(
-                        layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor', include_max_rf=False
-                    )
-                    layer.set_attr('strategy', 'resource_unrolled')
-            else:
-                layer.set_attr('strategy', 'latency')
-
+        layer.set_attr('strategy', 'resource' if use_resource else 'latency')
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
 
     @layer_optimizer(GarNet)

@@ -420,6 +420,47 @@ def test_bidirectional_no_bias(test_case_id, cell_type):
     np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
 
 
+@pytest.mark.parametrize(
+    'io_type, merge_mode',
+    [('io_stream', 'concat'), ('io_parallel', 'sum'), ('io_parallel', 'mul'), ('io_parallel', 'ave')],
+    ids=['io_stream', 'sum', 'mul', 'ave'],
+)
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_bidirectional_unsupported(test_case_id, io_type, merge_mode, backend):
+    """Bidirectional layers stop the conversion with io_stream and with merge modes other than concat."""
+
+    model = Sequential()
+    model.add(Input(shape=(5, 8)))
+    model.add(Bidirectional(LSTM(4), merge_mode=merge_mode, name='rnn'))
+
+    hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.raises(NotImplementedError, match=io_type if io_type == 'io_stream' else merge_mode):
+        hls4ml.converters.convert_from_keras_model(
+            model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
+        )
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_bidirectional_resource_unrolled(test_case_id, backend):
+    """Bidirectional layers have no unrolled implementation, so they use the resource strategy and give a warning."""
+
+    model = Sequential()
+    model.add(Input(shape=(5, 8)))
+    model.add(Bidirectional(LSTM(4), name='rnn'))
+
+    hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    hls_config['LayerName']['rnn']['Strategy'] = 'ResourceUnrolled'
+    hls_config['LayerName']['rnn']['ReuseFactor'] = 4
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.warns(UserWarning, match='Unrolled resource strategy is not supported'):
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=hls_config, output_dir=output_dir, backend=backend
+        )
+
+    assert hls_model.graph['rnn'].get_attr('strategy') == 'resource'
+
+
 def create_gru_reset_model(reset_after, bidirectional=False):
     """Small GRU with fixed non-zero weights and biases."""
     n_steps, n_features, n_units = 5, 3, 4
