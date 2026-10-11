@@ -46,12 +46,11 @@ class VivadoBackend(FPGABackend):
         self._register_flows()
 
     def _register_layer_attributes(self):
-        # Add RNN-specific attributes, recurrent_reuse_factor and static implementation
+        # Add RNN-specific attributes, static implementation
         rnn_layers = [SimpleRNN, LSTM, GRU]
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
             attrs.append(
                 ConfigurableAttribute('static', value_type=bool, default=True, description=descriptions.recurrent_static)
             )
@@ -62,14 +61,6 @@ class VivadoBackend(FPGABackend):
         bidir_rnn_layers = [Bidirectional]
         for layer in bidir_rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('forward_reuse_factor', default=1, description=descriptions.reuse_factor))
-            attrs.append(ConfigurableAttribute('backward_reuse_factor', default=1, description=descriptions.reuse_factor))
-            attrs.append(
-                ConfigurableAttribute('forward_recurrent_reuse_factor', default=1, description=descriptions.reuse_factor)
-            )
-            attrs.append(
-                ConfigurableAttribute('backward_recurrent_reuse_factor', default=1, description=descriptions.reuse_factor)
-            )
             attrs.append(
                 ConfigurableAttribute('static', value_type=bool, default=True, description=descriptions.recurrent_static)
             )
@@ -635,7 +626,6 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
-        # TODO Allow getting recurrent reuse factor from the config
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 

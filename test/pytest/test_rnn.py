@@ -459,7 +459,6 @@ def test_gru_reset_after_accuracy(test_case_id, reset_after, backend, io_type, s
     hls_config['LayerName']['gru']['static'] = static
     hls_config['LayerName']['gru']['Strategy'] = strategy
     hls_config['LayerName']['gru']['ReuseFactor'] = reuse_factor
-    hls_config['LayerName']['gru']['RecurrentReuseFactor'] = reuse_factor
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
