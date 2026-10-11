@@ -341,12 +341,9 @@ DataPropagation:
             #pragma HLS UNROLL
             data_in[i_pack] = data_pack[i_pack];
         }
-        if (CONFIG_T::use_static)
-            nnet::lstm_static<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
-                reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
-        else
-            nnet::lstm<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
-                reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
+        // The time steps run one after another, so one cell is shared whether or not it is static.
+        nnet::lstm<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
+            reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1) {
             res_T res_pack;
             PRAGMA_DATA_PACK(res_pack)
@@ -713,12 +710,10 @@ DataPropagation:
             #pragma HLS UNROLL
             data_in[i_pack] = data_pack[i_pack];
         }
-        if (CONFIG_T::use_static)
-            nnet::gru_static<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
-                reset_state, data_in, h_newstate, param, param_zr, param_b, param_br);
-        else
-            nnet::gru<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(reset_state, data_in, h_newstate,
-                                                                                         param, param_zr, param_b, param_br);
+        // The time steps run one after another, so one cell is shared whether or not it is static. The static
+        // cell is not used here: with it, Vivado HLS outputs zeros when only the last time step is returned.
+        nnet::gru<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(reset_state, data_in, h_newstate, param,
+                                                                                     param_zr, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1) {
             res_T res_pack;
             PRAGMA_DATA_PACK(res_pack)

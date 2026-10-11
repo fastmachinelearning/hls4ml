@@ -656,6 +656,14 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
+        # In io_stream the time steps run one after another, so one cell is always shared
+        if layer.model.config.get_config_value('IOType') == 'io_stream' and not layer.get_attr('static'):
+            warn(
+                f'Static set to False in layer "{layer.name}" has no effect with "io_stream", where one cell is always '
+                'shared across time steps. Use "io_parallel" for one cell per time step.'
+            )
+            layer.set_attr('static', True)
+
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
 
     @layer_optimizer(GRU)
@@ -689,6 +697,14 @@ class VivadoBackend(FPGABackend):
                 layer.set_attr('strategy', 'resource_unrolled')
         else:
             layer.set_attr('strategy', 'latency')
+
+        # In io_stream the time steps run one after another, so one cell is always shared
+        if layer.model.config.get_config_value('IOType') == 'io_stream' and not layer.get_attr('static'):
+            warn(
+                f'Static set to False in layer "{layer.name}" has no effect with "io_stream", where one cell is always '
+                'shared across time steps. Use "io_parallel" for one cell per time step.'
+            )
+            layer.set_attr('static', True)
 
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
 

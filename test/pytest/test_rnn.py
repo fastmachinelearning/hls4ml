@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -317,6 +318,31 @@ def test_rnn_resource_reuse_factor(test_case_id, rnn_layer, reuse_factor, backen
 
     np.testing.assert_array_equal(predictions[1], predictions[0])
     np.testing.assert_allclose(predictions[1].flatten(), model.predict(X).flatten(), rtol=0.0, atol=5e-2)
+
+
+@pytest.mark.parametrize('rnn_layer', [LSTM, GRU], ids=['LSTM', 'GRU'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('static', [True, False])
+def test_rnn_static_io_stream(test_case_id, rnn_layer, backend, static):
+    """With io_stream one cell is always shared across time steps, so only Static set to False gives a warning."""
+
+    model = Sequential()
+    model.add(Input(shape=(8, 6)))
+    model.add(rnn_layer(16, name='rnn'))
+
+    hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    hls_config['LayerName']['rnn']['Static'] = static
+    output_dir = str(test_root_path / test_case_id)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always')
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type='io_stream'
+        )
+
+    warned = any('Static set to False' in str(w.message) for w in caught)
+    assert warned != static
+    assert hls_model.graph['rnn'].get_attr('static')
 
 
 @pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
