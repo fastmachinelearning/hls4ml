@@ -8,7 +8,7 @@ recr_mult_config_template_1 = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned strategy = nnet::{strategy};
-    static const unsigned reuse_factor = {reuse};
+    static const unsigned reuse_factor = {reuse_factor};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
     static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
@@ -26,7 +26,7 @@ recr_mult_config_template_2 = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned strategy = nnet::{strategy};
-    static const unsigned reuse_factor = {reuse};
+    static const unsigned reuse_factor = {reuse_factor};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
     static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
@@ -205,7 +205,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params1['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
-        mult_params1['reuse'] = params['reuse']
+        mult_params1['reuse_factor'] = node.attributes['reuse_factor']
         mult_params1['index'] = str(node.index) + '_1'
         mult_params1['nzeros'] = node.get_weights('weight').nzeros
         mult_params1['nonzeros'] = node.get_weights('weight').nonzeros
@@ -232,7 +232,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params2['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision
         )
-        mult_params2['reuse'] = node.attributes['recurrent_reuse_factor']
+        mult_params2['reuse_factor'] = node.attributes['recurrent_reuse_factor']
         mult_params2['index'] = str(node.index) + '_2'
         mult_params2['nzeros'] = node.get_weights('recurrent_weight').nzeros
         mult_params2['nonzeros'] = node.get_weights('recurrent_weight').nonzeros
@@ -347,7 +347,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             mult_params1['product_type'] = get_backend('vivado').product_type(
                 node.get_input_variable().type.precision, node.get_weights(f'{d}_weight').type.precision
             )
-            mult_params1['reuse'] = params['reuse']
+            mult_params1['reuse_factor'] = node.attributes[f'{d}_reuse_factor']
             mult_params1['index'] = str(node.index) + f'_1_{d[0]}'
             mult_params1['nzeros'] = node.get_weights(f'{d}_weight').nzeros
             mult_params1['nonzeros'] = node.get_weights(f'{d}_weight').nonzeros
@@ -362,7 +362,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             if node.get_attr('strategy').lower() == 'latency':
                 mult_params1['dense_function'] = 'nnet::DenseLatency'
             elif node.get_attr('strategy').lower() == 'resource':
-                if int(mult_params1[f'{d}_reuse_factor']) <= int(mult_params1['n_in']):
+                if int(mult_params1['reuse_factor']) <= int(mult_params1['n_in']):
                     mult_params1['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
                 else:
                     mult_params1['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
@@ -375,7 +375,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             mult_params2['product_type'] = get_backend('vivado').product_type(
                 node.get_input_variable().type.precision, node.get_weights(f'{d}_recurrent_weight').type.precision
             )
-            mult_params2['reuse'] = node.attributes[f'{d}_recurrent_reuse_factor']
+            mult_params2['reuse_factor'] = node.attributes[f'{d}_recurrent_reuse_factor']
             mult_params2['index'] = str(node.index) + f'_2_{d[0]}'
             mult_params2['nzeros'] = node.get_weights(f'{d}_recurrent_weight').nzeros
             mult_params2['nonzeros'] = node.get_weights(f'{d}_recurrent_weight').nonzeros
@@ -383,7 +383,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             if node.get_attr('strategy').lower() == 'latency':
                 mult_params2['dense_function'] = 'nnet::DenseLatency'
             elif node.get_attr('strategy').lower() == 'resource':
-                if int(mult_params2[f'{d}_reuse_factor']) <= int(mult_params2['n_in']):
+                if int(mult_params2['reuse_factor']) <= int(mult_params2['n_in']):
                     mult_params2['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
                 else:
                     mult_params2['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'

@@ -271,6 +271,54 @@ def test_rnn_mixed_precision(test_case_id, rnn_layer, backend, io_type, static):
     np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
 
 
+def create_model_reuse(rnn_layer):
+    """A small model for which hls4ml adjusts a requested reuse factor differently for the input and the recurrent
+    multiplication."""
+
+    model = Sequential()
+    model.add(Input(shape=(8, 6)))
+    if rnn_layer.__name__ != 'Bidirectional':
+        model.add(rnn_layer(16, name='rnn'))
+    else:
+        model.add(Bidirectional(LSTM(8), backward_layer=GRU(8, go_backwards=True), name='rnn'))
+    return model
+
+
+@pytest.mark.parametrize(
+    'rnn_layer, reuse_factor',
+    [(LSTM, 20), (GRU, 20), (Bidirectional, 4), (Bidirectional, 12)],
+    ids=['LSTM-20', 'GRU-20', 'Bidirectional-4', 'Bidirectional-12'],
+)
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_rnn_resource_reuse_factor(test_case_id, rnn_layer, reuse_factor, backend):
+    """The resource strategy gives the same results as the latency strategy when the reuse factor has to be adjusted.
+
+    At 20, the input multiplication of the LSTM and GRU gets a reuse factor above the number of states and the
+    recurrent one gets 16, so each needs a different kernel. At 4, the Bidirectional input multiplications need an
+    adjusted reuse factor; at 12, its recurrent ones get 8, which is the number of states.
+    """
+
+    model = create_model_reuse(rnn_layer)
+    X = np.random.default_rng(0).uniform(-0.5, 0.5, (20, 8, 6))
+
+    predictions = []
+    for strategy in ('Latency', 'Resource'):
+        hls_config = hls4ml.utils.config_from_keras_model(
+            model, granularity='name', default_precision='ap_fixed<16, 6>', backend=backend
+        )
+        hls_config['LayerName']['rnn']['Strategy'] = strategy
+        hls_config['LayerName']['rnn']['ReuseFactor'] = reuse_factor
+        output_dir = str(test_root_path / f'{test_case_id}_{strategy.lower()}')
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=hls_config, output_dir=output_dir, backend=backend
+        )
+        hls_model.compile()
+        predictions.append(hls_model.predict(X))
+
+    np.testing.assert_array_equal(predictions[1], predictions[0])
+    np.testing.assert_allclose(predictions[1].flatten(), model.predict(X).flatten(), rtol=0.0, atol=5e-2)
+
+
 @pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
 def test_rnn_no_bias(test_case_id, rnn_layer):
     """use_bias=False previously crashed the parser instead of substituting zero biases."""
