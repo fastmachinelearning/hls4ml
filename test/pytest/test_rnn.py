@@ -243,6 +243,34 @@ def test_rnn_accuracy(test_case_id, rnn_layer, return_sequences, backend, io_typ
     np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
 
 
+@pytest.mark.parametrize('rnn_layer', [LSTM, GRU], ids=['LSTM', 'GRU'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('static', [True, False])
+def test_rnn_mixed_precision(test_case_id, rnn_layer, backend, io_type, static):
+    """A layer whose accumulator and result types differ from its input type builds and matches Keras."""
+
+    layer_name = rnn_layer.__name__
+    model, X = create_model_accuracy(rnn_layer, return_sequences=False)
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<16, 6>', backend=backend
+    )
+    hls_config['LayerName'][layer_name]['Precision']['accum'] = 'ap_fixed<24, 10>'
+    hls_config['LayerName'][layer_name]['Precision']['result'] = 'ap_fixed<18, 8>'
+    hls_config['LayerName'][layer_name]['static'] = static
+    output_dir = str(test_root_path / test_case_id)
+
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    keras_prediction = model.predict(X)
+    hls_prediction = hls_model.predict(X)
+    np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
+
+
 @pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
 def test_rnn_no_bias(test_case_id, rnn_layer):
     """use_bias=False previously crashed the parser instead of substituting zero biases."""
