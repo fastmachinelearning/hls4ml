@@ -31,7 +31,7 @@
     - chmod +x cmd_vitis_${VITIS_VERSION}/v++
     - export PATH=$PWD/cmd_vitis_${VITIS_VERSION}:$PATH
 
-    # setup ahls for the Altera backenc
+    # setup ahls for the Altera backend
     - source /home/hls4ml/ahls/altera_hls/EAP/aclsycl/fpgavars.sh
   script:
     - cd test/pytest
