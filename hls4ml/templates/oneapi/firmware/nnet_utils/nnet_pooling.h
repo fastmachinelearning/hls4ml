@@ -10,7 +10,7 @@ template <typename T, int N, typename accum_t> accum_t max(T x[N]) {
     [[intel::fpga_register]] T y = x[0];
 
     // Due to loop dependencies, pipelining & unrolling is not possible
-    // Explictily disabling pipeline significantly reduces resource usage
+    // Explicitly disabling pipeline significantly reduces resource usage
     [[intel::disable_loop_pipelining]] for (int i = 1; i < N; i++) {
         if (x[i] > y)
             y = x[i];
@@ -24,7 +24,7 @@ template <typename T, int N, typename accum_t> accum_t avg(T x[N], unsigned leng
     [[intel::fpga_register]] accum_t y = 0;
 
     // Due to loop dependencies, pipelining & unrolling is not possible
-    // Explictily disabling pipeline significantly reduces resource usage
+    // Explicitly disabling pipeline significantly reduces resource usage
     [[intel::disable_loop_pipelining]] for (int i = 0; i < N; i++) { y += x[i]; }
 
     y /= length;
@@ -48,7 +48,7 @@ template <typename T, int N, Pool_Op op, typename accum_t> accum_t pool_op(T (&x
 
 /*
  * In Tensorflow, pooling ignores the value in the padded cells
- * For Avg pooling, return 0 (the divisior is modified to the area overlapping the unpadded image.)
+ * For Avg pooling, return 0 (the divisor is modified to the area overlapping the unpadded image.)
  * For ax pooling, return the most negative value for the type.
  */
 template <typename T, Pool_Op op> inline T pad_val() {
@@ -64,7 +64,7 @@ template <typename T, Pool_Op op> inline T pad_val() {
 }
 
 struct pooling1d_config {
-    // Pooling paramaters
+    // Pooling parameters
     static const unsigned pool_width = 2;
     static const unsigned stride_width = 2;
 

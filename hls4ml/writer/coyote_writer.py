@@ -539,7 +539,7 @@ class CoyoteWriter(VitisWriter):
         if os.path.exists(model.config.get_output_dir() + '/src'):
             rmtree(model.config.get_output_dir() + '/src')
 
-        # General hls4ml write proces, inherited from Vitis Writer
+        # General hls4ml write process, inherited from Vitis Writer
         self.write_project_dir(model)
         self.write_project_cpp(model)
         self.write_project_header(model)

@@ -77,7 +77,7 @@ hardware — and leave it blank if you ran nothing, rather than implying a run.
 | before |  |  |  |  |  |  |  |  |
 | after  |  |  |  |  |  |  |  |  |
 
-<!-- Csim-only is fine for many PRs — if you did not run synthesis, say so here
+<!-- Csim-only is fine for some PRs — However, if your PR changes existing or introduces new HLS code, verifying that it can be synthesized and reporting resource usage and latency for example models is required. If you did not run synthesis, say so here
      explicitly rather than leaving the table empty. -->
 
 ## Tests

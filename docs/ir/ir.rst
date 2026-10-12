@@ -3,18 +3,18 @@ Internal representation
 =======================
 
 The ``hls4ml`` library will parse models from Keras, PyTorch or ONNX into an internal execution graph. This model graph is represented with the
-:py:class:`~hls4ml.model.graph.ModelGraph` class. The nodes in this graph, loosely corresponding to the layers and operations of the input model are represented
+:py:class:`~hls4ml.model.graph.ModelGraph` class. The nodes in this graph, loosely corresponding to the layers and operations of the input model, are represented
 by classes derived from the :py:class:`~hls4ml.model.layers.Layer` base class.
 
-Layers are required to have defined inputs and outputs that define how they are connected in the graph and what is the shape of their output. All information
+Layers are required to have defined inputs and outputs that define how they are connected in the graph and what the shape of their output is. All information
 about the layer's state and configuration is stored in its attributes. All weights, variables and data types are attributes and there are mapping views to sort through them.
-Layers can define expected attributes and can be verified for correctness, or to produce a list of configurable attributes that user can tweak. The complete list of attributes can be found in the :doc:`Attributes <attributes>` page.
+Layers can define expected attributes and can be verified for correctness, or to produce a list of configurable attributes that the user can tweak. The complete list of attributes can be found in the :doc:`Attributes <attributes>` page.
 
 
 Layers
 ======
 
-The backends of ``hls4ml`` are independent from each other and free to implement features in any suitable way, most implementations share common concepts which we will mention here.
+The backends of ``hls4ml`` are independent from each other and free to implement features in any suitable way; however, most implementations share common concepts which we will mention here.
 
 Dense Layers
 ------------
@@ -22,7 +22,7 @@ Dense Layers
 One-dimensional Dense Layers
 ****************************
 
-Dense layers over one-dimensional data perform a matrix-vector multiplication followed by elementwise addition of bias tensor. This routine is the underlying computation of many other layers as well and is reused as much as possible. It exists in several implementations across different backends, for different `io_type`'s and strategies.
+Dense layers over one-dimensional data perform a matrix-vector multiplication followed by elementwise addition of a bias tensor. This routine is the underlying computation of many other layers as well and is reused as much as possible. It exists in several implementations across different backends, for different ``io_type`` values and strategies.
 
 io_parallel
 ^^^^^^^^^^^
@@ -51,20 +51,20 @@ By *standard* convolution we refer to the operation represented by the ``Conv1D/
 io_parallel
 ^^^^^^^^^^^
 
-Parallel IO is applicable to small models that require low latency implementation. Larger models face synthesizability limits very quickly.
+Parallel IO is applicable to small models that require a low-latency implementation. Larger models face synthesizability limits very quickly.
 
-In Vivado/Vitis backends, parallel convolution relies on the *im2col* transformation of the input, which turns convolution into a matrix-multiplication task. This task is then implemented as a sequence of matrix-vector multiplications using the routine mentioned above. The ``Latency`` and ``Resource`` strategies refer to the function used for matrix-vector multiplication routine, with ``Resource`` allowing for a slightly larger models to be synthesized. Parallelism can be further controlled via the ``ParallelizationFactor``. Catapult backend in turn uses a direct implementation of convolution via nested loops. The ``Quartus``, ``oneAPI``, and ``Catapult`` backends also implement a ``Winograd`` algorithm choosable by setting the ``implementation`` to ``Winograd`` or ``combination``. Winograd implementation is available for only a handful of filter size configurations, and it is less concerned about bit accuracy and overflow. In certain conditions it can be faster.
+In Vivado/Vitis backends, parallel convolution relies on the *im2col* transformation of the input, which turns convolution into a matrix-multiplication task. This task is then implemented as a sequence of matrix-vector multiplications using the routine mentioned above. The ``Latency`` and ``Resource`` strategies refer to the function used for the matrix-vector multiplication routine, with ``Resource`` allowing slightly larger models to be synthesized. Parallelism can be further controlled via the ``ParallelizationFactor``. The Catapult backend in turn uses a direct implementation of convolution via nested loops. The ``Quartus``, ``oneAPI``, and ``Catapult`` backends also implement a ``Winograd`` algorithm choosable by setting the ``implementation`` to ``Winograd`` or ``combination``. Winograd implementation is available for only a handful of filter size configurations, and it is less concerned about bit accuracy and overflow. In certain conditions it can be faster.
 
 io_stream
 ^^^^^^^^^
 
-There are two main classes of io_stream implementations, ``LineBuffer`` and  ``Encoded``. ``LineBuffer`` is the default, and generally produces marginally better results,
+There are two main classes of io_stream implementations, ``LineBuffer`` and ``Encoded``. ``LineBuffer`` is the default, and generally produces marginally better results,
 while ``Catapult`` and ``Vivado`` also implement ``Encoded``, choosable with the ``ConvImplementation`` configuration option. In all cases, the data is processed serially, one pixel at a time, with a pixel containing an array of all the channel values for the pixel.
 
 Depthwise convolution
 *********************
 
-Depthwise implementation substitutes the matrix-vector multiplication in the kernel to the elementwise multiplication. The only implementation available is based on ``Latency`` strategy, used by both ``io_parallel`` and ``io_stream``.
+Depthwise implementation substitutes the matrix-vector multiplication in the kernel with elementwise multiplication. The only implementation available is based on the ``Latency`` strategy, used by both ``io_parallel`` and ``io_stream``.
 
 Pointwise convolution
 *********************
@@ -78,7 +78,7 @@ The initiation interval scales as the RF. One limitation is that it assumes ``in
 Activations
 -----------
 
-Most activations without extra parameters are represented with the ``Activation`` layer, and those with single parameters (leaky ReLU, thresholded ReLU, ELU) as ``ParametrizedActivation``. ``PReLU`` has its own class because it has a parameter matrix (stored as a weight). The hard (piecewise linear) sigmoid and tanh functions are implemented in a ``HardActivation`` layer, and ``Softmax`` has its own layer class.
+Most activations without extra parameters are represented with the ``Activation`` layer, and those with a single parameter (leaky ReLU, thresholded ReLU, ELU) as ``ParametrizedActivation``. ``PReLU`` has its own class because it has a parameter matrix (stored as a weight). The hard (piecewise linear) sigmoid and tanh functions are implemented in a ``HardActivation`` layer, and ``Softmax`` has its own layer class.
 
 Backends have four softmax implementations that the user can choose from by setting the ``implementation`` parameter:
 
@@ -87,4 +87,4 @@ Backends have four softmax implementations that the user can choose from by sett
 * **legacy**:  An older implementation with poor accuracy, but good performance. Usually the latency implementation is preferred.
 * **argmax**:  If you don't care about normalized outputs and only care about which one has the highest value, using argmax saves a lot of resources. This sets the highest value to 1, the others to 0.
 
-Vivado/Vitis backend additionally support completely skipping softmax activation and returning raw outputs.
+Vivado/Vitis backends additionally support completely skipping softmax activation and returning raw outputs.

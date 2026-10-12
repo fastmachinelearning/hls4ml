@@ -119,7 +119,7 @@ class MergeToApplyAlpha(OptimizerPass):
                     and isinstance(bias_quantizer.hls_type, (IntegerPrecisionType, FixedPrecisionType))
                     and not bias_quantizer.hls_type.signed
                 ):
-                    # need to make signed and increas the bit, if unsigned
+                    # need to make signed and increase the bit, if unsigned
                     bias_precision = FixedPrecisionType(
                         bias_quantizer.hls_type.width + 1,
                         bias_quantizer.hls_type.integer + 1,

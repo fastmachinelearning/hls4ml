@@ -12,7 +12,7 @@ def reduce_model(model):
     Keras Surgeon is no longer under active development and does not work for TensorFlow 2.3+ and QKeras
     The baseline version was forked and updated, available at: https://github.com/fastmachinelearning/keras-surgeon
 
-    IMPORTANT: To use this funcionality please install separately from the above GitHub.
+    IMPORTANT: To use this functionality please install separately from the above GitHub.
 
     Args:
         model (keras.model): Input model
@@ -26,7 +26,7 @@ def reduce_model(model):
     except ModuleNotFoundError:
         raise Exception(
             'Keras Surgeon not installed. Unable to reduce model footprint '
-            'Please install up-to-date Keras Surgeon compatible wit TensorFlow 2.3+ and QKeras '
+            'Please install up-to-date Keras Surgeon compatible with TensorFlow 2.3+ and QKeras '
             'Installation from git: https://github.com/fastmachinelearning/keras-surgeon'
         )
 

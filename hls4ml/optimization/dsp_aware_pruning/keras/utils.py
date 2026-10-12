@@ -33,7 +33,7 @@ def get_model_gradients(model, loss_fn, X, y):
 @tf.function
 def get_model_hessians(model, loss_fn, X, y):
     """
-    Calculate the second derivatives of the loss with repsect to model weights.
+    Calculate the second derivatives of the loss with respect to model weights.
 
     Note, only diagonal elements of the Hessian are computed.
 

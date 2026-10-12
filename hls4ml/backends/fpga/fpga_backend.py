@@ -325,7 +325,7 @@ class FPGABackend(Backend):
 
             if targ_cycles < shuffle_cycles * kernel_multiplies:  # 6 clock min (6 * out_height * out_width)
                 print(
-                    'Latency can not be achieved with current target {}. Mininum {}.'.format(
+                    'Latency cannot be achieved with current target {}. Minimum {}.'.format(
                         targ_cycles, shuffle_cycles * kernel_multiplies + 1
                     )
                 )

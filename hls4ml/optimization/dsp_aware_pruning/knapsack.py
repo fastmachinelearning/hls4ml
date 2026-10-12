@@ -186,7 +186,7 @@ def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.
     """
     Helper function to solve Knapsack problem using Branch and Bound;
     Implemented using Google OR-Tools [weights & capacities need to be integers]
-    The algorithm explores the search space (a tree of all the posible combinations, 2^N nodes),
+    The algorithm explores the search space (a tree of all the possible combinations, 2^N nodes),
     But discards infeasible & sub-optimal solutions
 
     Additional args:

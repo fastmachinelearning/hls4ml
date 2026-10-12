@@ -76,7 +76,7 @@ class NeuralNetworkOverlay(Overlay):
             print("Kernel call OK")
         self.output_buffer.sync_from_device()
         if debug:
-            print("Recieve OK")
+            print("Receive OK")
         result = self.output_buffer.copy()
         if profile:
             timeb = datetime.now()

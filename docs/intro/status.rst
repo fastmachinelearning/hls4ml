@@ -50,7 +50,7 @@ HLS backends:
 * oneAPI (experimental)
 * XLS (experimental)
 
-A summary of the on-going status of the ``hls4ml`` tool is in the table below.
+A summary of the ongoing status of the ``hls4ml`` tool is in the table below.
 
 .. table:: hls4ml Supported Features
 
@@ -92,14 +92,14 @@ Other feature notes:
   - Intel HLS versions 20.1 to 21.4, versions > 21.4 have not been tested.
   - Vitis HLS versions 2022.2 to 2024.1. Versions > 2024.1 are less tested.
   - Catapult HLS versions 2024.1_1 to 2024.2
-  - oneAPI versions 2024.1 to 2025.0. Any future versions are known to not work.
+  - oneAPI versions 2024.1 to 2025.0. Later versions are known not to work.
 
 * ``hls4ml`` supports Linux [*]_ and requires python >=3.10. hls4ml does not require a specific Linux distribution version and we recommend following the requirements of the HLS tool you are using.
 * Windows and macOS are not supported. Setting up ``hls4ml`` on these platforms, for example using the Windows Subsystem for Linux (WSL), should be possible, but we do not provide support for such use cases.
 * BDT support has moved to the `Conifer <https://github.com/thesps/conifer>`__ package
 * ``*`` indicates that the support is through symbolic tracing fallback with `Alkaid <https://github.com/calad0i/alkaid>`__, which is available only when using ``io_parallel`` mode and implements the layer fully unrolled.
 
-.. [*] For compiling the projects for simulation or actual HLS. Otherwise, the code **may** be used on other platforms and it will likely to work. However, please note that Windows or other platforms are **not supported** in general and are not tested.
+.. [*] For compiling the projects for simulation or actual HLS. Otherwise, the code **may** be used on other platforms and it will likely work. However, please note that Windows or other platforms are **not supported** in general and are not tested.
 
 Example Models
 ==============

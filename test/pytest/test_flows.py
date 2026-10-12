@@ -86,10 +86,10 @@ flow_tests = [
     FlowTester(['CReqBReqA'], ['A', 'B', 'C'], 'single'),  # one flow with dependency chain
     FlowTester(['CReqBReqA', 'A'], ['A', 'B', 'C', 'A'], 'single'),  # one flow with dependency chain, repeat dependency
     FlowTester(['CReqBReqA', 'A'], ['A', 'B', 'C', 'A'], 'all'),  # one flow with dependency chain, repeat dependency
-    FlowTester(['CReqBReqA', 'A'], ['A', 'B', 'C'], 'none'),  # one flow with dependency chain, repeat depencency
-    FlowTester(['A', 'CReqBReqA'], ['A', 'B', 'C'], 'single'),  # one flow with dependency chain, repeat depencency
-    FlowTester(['A', 'CReqBReqA'], ['A', 'A', 'B', 'C'], 'all'),  # one flow with dependency chain, repeat depencency
-    FlowTester(['A', 'CReqBReqA'], ['A', 'B', 'C'], 'none'),  # one flow with dependency chain, repeat depencency
+    FlowTester(['CReqBReqA', 'A'], ['A', 'B', 'C'], 'none'),  # one flow with dependency chain, repeat dependency
+    FlowTester(['A', 'CReqBReqA'], ['A', 'B', 'C'], 'single'),  # one flow with dependency chain, repeat dependency
+    FlowTester(['A', 'CReqBReqA'], ['A', 'A', 'B', 'C'], 'all'),  # one flow with dependency chain, repeat dependency
+    FlowTester(['A', 'CReqBReqA'], ['A', 'B', 'C'], 'none'),  # one flow with dependency chain, repeat dependency
     FlowTester(['A', 'BReqA'], ['A', 'B'], 'single'),  # second flow dependency already run
     FlowTester(['A', 'BReqA'], ['A', 'A', 'B'], 'all'),  # second flow dependency reapply
     FlowTester(['A', 'BReqA'], ['A', 'B'], 'none'),  # second flow dependency no reapply

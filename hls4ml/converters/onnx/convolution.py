@@ -33,7 +33,7 @@ def parse_conv_layer(node, input_names, input_shapes, graph):
         else:
             layer['depth_multiplier'] = int(layer['depth_multiplier'])
 
-    layer['n_dim'] = len(input_shapes[0]) - 2  # 2 comes from channels and batch dimentions
+    layer['n_dim'] = len(input_shapes[0]) - 2  # 2 comes from channels and batch dimensions
     if layer['n_dim'] not in (1, 2):
         raise ValueError('Only 1D and 2D convolutions are supported')
     layer['class_name'] = 'Conv'

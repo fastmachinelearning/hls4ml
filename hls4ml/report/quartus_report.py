@@ -95,7 +95,7 @@ def _find_project_dir(hls_dir):
 @requires('quartus-report')
 def read_js_object(js_script):
     """
-    Reads the JavaScript file and return a dictionary of variables definded in the script.
+    Reads the JavaScript file and return a dictionary of variables defined in the script.
 
     Args:
         js_script (string) - path to JavaScript File

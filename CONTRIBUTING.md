@@ -17,7 +17,7 @@ Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for
 
 1. In the pull request description, clearly document all changes made and the expected behavior.
 1. If you are introducing new functionality, add at least one unit test under the `test` folder and make sure it passes before you submit the pull request.
-1. Similarly, if you are fixing a bug, add at least one unit test under the `test` folder such that the master branch fails the test and your branch passes the test.
+1. Similarly, if you are fixing a bug, add at least one unit test under the `test` folder such that the main branch fails the test and your branch passes the test.
 1. Install and run `pre-commit` on the files that you have edited.
 1. Submit the pull request to the [main](https://github.com/fastmachinelearning/hls4ml) branch.
 
@@ -49,7 +49,7 @@ reviewer will read it.
 If you use an AI agent to work on hls4ml, point it at [`AGENTS.md`](https://github.com/fastmachinelearning/hls4ml/blob/main/AGENTS.md) in the repository root. It
 states the same expectations in a form agents read, and it will save you review comments.
 
-Submissions that appear unreviewed or copied directly from an AI tool without proper understanding may be requested to be revised or declined.
+Submissions that appear unreviewed or copied directly from an AI tool without proper understanding may be returned for revision or declined.
 
 ## Code of Conduct
 

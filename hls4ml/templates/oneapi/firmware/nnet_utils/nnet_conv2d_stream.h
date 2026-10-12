@@ -11,7 +11,7 @@ namespace nnet {
  *
  * Args:
  *   shift_buffer - array elements popped from the line the buffer during the shift line buffer operation
- *   kernel_window - array of values from the input curently being convolved with the kernel
+ *   kernel_window - array of values from the input currently being convolved with the kernel
  *
  * Values from shift_buffer are inserted into kernel_window, updating the values to be convolved
  */
@@ -100,13 +100,13 @@ LineBufferDataIn:
  * Args:
  *   in_element - current elements from input image, data_T type is usually nnet::array, size of array corresponds to number
  * of channels res_stream - output stream, passed by reference to allow direct writing line_buffer - chained array of shift
- * registers, one for each row of the kernel and channel kernel_window - array of values from the input curently convolved
+ * registers, one for each row of the kernel and channel kernel_window - array of values from the input currently convolved
  * with the kernel weights - Conv1D/Conv2D layer weights biases - Conv1D/Conv2D layer biases
  *
  * Function executes 4 steps:
  *   (1) Shift line buffer - updates the contents of the chained shift registers, inserting the new inputs and removing last
  * elements (2) Kernel shift - updates the elements of the kernel window, by storing the new inputs and popped elements from
- * the line buffer (3) Matrix mulitplication - performs dense matrix multiplication between the current input window and
+ * the line buffer (3) Matrix multiplication - performs dense matrix multiplication between the current input window and
  * kernel weights (4) Counter housekeeping - keeps track of current pixel and stride
  */
 template <class data_T, class data_window_T, class res_pipe, typename CONFIG_T>
@@ -159,7 +159,7 @@ void compute_output_buffer_2d(
         sX = 0;
         pY++;
         sY = ((sY - lShiftY) == 0) ? (sY - CONFIG_T::stride_height + 1) : (sY + 1);
-        // Same row, same colum, therefore, move to the right
+        // Same row, same column, therefore, move to the right
     } else {
         pX++;
         sX = ((sX - lShiftX) == 0) ? (sX - CONFIG_T::stride_width + 1) : (sX + 1);
