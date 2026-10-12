@@ -224,6 +224,13 @@ class FPGABackend(Backend):
             n_out = layer.get_attr('n_filt')
             return n_in, n_out
 
+        if 'SimpleRNN' in layer.class_name:
+            n_in = layer.get_attr('n_in')
+            n_out = layer.get_attr('n_out')
+            n_in_recr = layer.get_attr('n_out')
+            n_out_recr = n_out
+            return n_in, n_out, n_in_recr, n_out_recr
+
         if 'LSTM' in layer.class_name:
             n_in = layer.get_attr('n_in')
             n_out = layer.get_attr('n_out') * 4

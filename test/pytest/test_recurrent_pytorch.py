@@ -180,7 +180,17 @@ def test_lstm_stream(test_case_id, backend, io_type):
         np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=1e-1)
 
 
-@pytest.mark.parametrize('model_cls, n_states', [(GRUNet, 1), (LSTM, 2)], ids=['gru', 'lstm'])
+class RNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.rnn = nn.RNN(10, 20, num_layers=1, batch_first=True, bias=True)
+
+    def forward(self, x, h0):
+        output, _ = self.rnn(x, h0)
+        return output
+
+
+@pytest.mark.parametrize('model_cls, n_states', [(RNN, 1), (GRUNet, 1), (LSTM, 2)], ids=['rnn', 'gru', 'lstm'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_initial_states_mixed_precision(test_case_id, model_cls, n_states, backend):
     """Initial states, recurrent weights and the accumulator can each have a type of their own."""
@@ -214,17 +224,7 @@ def test_initial_states_mixed_precision(test_case_id, model_cls, n_states, backe
     np.testing.assert_allclose(np.reshape(hls_prediction, pytorch_prediction.shape), pytorch_prediction, rtol=0, atol=5e-2)
 
 
-class RNN(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.rnn = nn.RNN(10, 20, num_layers=1, batch_first=True, bias=True)
-
-    def forward(self, x, h0):
-        output, _ = self.rnn(x, h0)
-        return output
-
-
-@pytest.mark.parametrize('backend', ['Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_rnn(test_case_id, backend, io_type):
     if not (backend in ('Quartus', 'oneAPI') and io_type == 'io_stream'):
@@ -342,8 +342,8 @@ def _convert(model, test_case_id, backend, input_shape=(None, n_timesteps, n_in)
 
 @pytest.mark.parametrize(
     'rnn_cls,backend',
-    [(nn.GRU, 'Vivado'), (nn.LSTM, 'Vivado'), (nn.RNN, 'Quartus')],
-    ids=['gru', 'lstm', 'rnn'],
+    [(nn.GRU, 'Vivado'), (nn.LSTM, 'Vivado'), (nn.RNN, 'Vivado'), (nn.RNN, 'Quartus')],
+    ids=['gru', 'lstm', 'rnn', 'rnn-quartus'],
 )
 def test_rnn_sequence_output(test_case_id, rnn_cls, backend):
     model = SequenceModel(rnn_cls)
@@ -475,8 +475,7 @@ def test_rnn_no_bias(test_case_id, rnn_cls):
     X_input = _quantized_random((5, n_timesteps, n_in))
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
 
-    backend = 'Quartus' if rnn_cls is nn.RNN else 'Vivado'
-    hls_model = _convert(model, test_case_id, backend)
+    hls_model = _convert(model, test_case_id, 'Vivado')
     hls_model.compile()
 
     hls_prediction = np.reshape(hls_model.predict(X_input), pytorch_prediction.shape)

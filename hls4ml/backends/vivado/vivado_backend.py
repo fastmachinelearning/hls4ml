@@ -624,8 +624,9 @@ class VivadoBackend(FPGABackend):
         if layer.attributes['n_in'] is None:
             raise Exception('Input length of Embedding layer must be specified.')
 
-    @layer_optimizer(LSTM)
-    def init_lstm(self, layer):
+    def _init_recurrent(self, layer):
+        """Setup shared by SimpleRNN, LSTM and GRU layers."""
+
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
@@ -665,48 +666,20 @@ class VivadoBackend(FPGABackend):
             layer.set_attr('static', True)
 
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
+
+    @layer_optimizer(SimpleRNN)
+    def init_simple_rnn(self, layer):
+        if 'recurrent_bias' not in layer.weights:
+            layer.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=np.zeros(layer.get_attr('n_out')))
+        self._init_recurrent(layer)
+
+    @layer_optimizer(LSTM)
+    def init_lstm(self, layer):
+        self._init_recurrent(layer)
 
     @layer_optimizer(GRU)
     def init_gru(self, layer):
-        reuse_factor = layer.model.config.get_reuse_factor(layer)
-        layer.set_attr('recurrent_reuse_factor', reuse_factor)
-
-        if layer.model.config.is_resource_strategy(layer):
-            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
-            self.set_closest_reuse_factor(layer, n_in, n_out)
-            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-            layer.set_attr('strategy', 'resource')
-        elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
-            use_resource_instead = False
-            if layer.get_attr('reuse_factor', 1) == 1:
-                print(
-                    f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}". '
-                    'Using "resource" strategy instead.'
-                )
-                use_resource_instead = True
-            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
-            if use_resource_instead:
-                self.set_closest_reuse_factor(layer, n_in, n_out)
-                self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-                layer.set_attr('strategy', 'resource')
-            else:
-                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
-                self.set_closest_reuse_factor(
-                    layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor', include_max_rf=False
-                )
-                layer.set_attr('strategy', 'resource_unrolled')
-        else:
-            layer.set_attr('strategy', 'latency')
-
-        # In io_stream the time steps run one after another, so one cell is always shared
-        if layer.model.config.get_config_value('IOType') == 'io_stream' and not layer.get_attr('static'):
-            warn(
-                f'Static set to False in layer "{layer.name}" has no effect with "io_stream", where one cell is always '
-                'shared across time steps. Use "io_parallel" for one cell per time step.'
-            )
-            layer.set_attr('static', True)
-
-        layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
+        self._init_recurrent(layer)
 
     @layer_optimizer(TimeDistributed)
     def init_time_distributed(self, layer):

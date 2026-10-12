@@ -37,7 +37,7 @@ class ValidateResourceStrategy(OptimizerPass):
 
 
 class ValidateResourceUnrolledStrategy(OptimizerPass):
-    _unrolled_layer_cls = ['Conv1D', 'Conv2D', 'Dense', 'GRU', 'LSTM']
+    _unrolled_layer_cls = ['Conv1D', 'Conv2D', 'Dense', 'GRU', 'LSTM', 'SimpleRNN']
 
     def match(self, node):
         is_unrolled_layer = len([layer_cls for layer_cls in self._unrolled_layer_cls if layer_cls in node.class_name]) > 0

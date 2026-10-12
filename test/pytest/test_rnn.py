@@ -161,6 +161,14 @@ def create_model_accuracy(rnn_layer, return_sequences):
     [
         (SimpleRNN, 'Quartus', 'io_parallel', 'resource'),
         (SimpleRNN, 'oneAPI', 'io_parallel', 'resource'),
+        (SimpleRNN, 'Vivado', 'io_parallel', 'resource'),
+        (SimpleRNN, 'Vivado', 'io_parallel', 'latency'),
+        (SimpleRNN, 'Vitis', 'io_parallel', 'resource'),
+        (SimpleRNN, 'Vitis', 'io_parallel', 'latency'),
+        (SimpleRNN, 'Vivado', 'io_stream', 'resource'),
+        (SimpleRNN, 'Vivado', 'io_stream', 'latency'),
+        (SimpleRNN, 'Vitis', 'io_stream', 'resource'),
+        (SimpleRNN, 'Vitis', 'io_stream', 'latency'),
         (LSTM, 'Vivado', 'io_parallel', 'resource'),
         (LSTM, 'Vivado', 'io_parallel', 'latency'),
         (LSTM, 'Vitis', 'io_parallel', 'resource'),
@@ -191,6 +199,14 @@ def create_model_accuracy(rnn_layer, return_sequences):
     ids=[
         'SimpleRNN-Quartus-io_parallel-resource',
         'SimpleRNN-oneAPI-io_parallel-resource',
+        'SimpleRNN-Vivado-io_parallel-resource',
+        'SimpleRNN-Vivado-io_parallel-latency',
+        'SimpleRNN-Vitis-io_parallel-resource',
+        'SimpleRNN-Vitis-io_parallel-latency',
+        'SimpleRNN-Vivado-io_stream-resource',
+        'SimpleRNN-Vivado-io_stream-latency',
+        'SimpleRNN-Vitis-io_stream-resource',
+        'SimpleRNN-Vitis-io_stream-latency',
         'LSTM-Vivado-io_parallel-resource',
         'LSTM-Vivado-io_parallel-latency',
         'LSTM-Vitis-io_parallel-resource',
@@ -232,6 +248,9 @@ def test_rnn_accuracy(test_case_id, rnn_layer, return_sequences, backend, io_typ
     )
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = strategy
+    if rnn_layer is SimpleRNN and backend in ['Vivado', 'Vitis']:
+        # The SimpleRNN state is the output of the tanh lookup table, so the table's error adds up over the time steps
+        hls_config['LayerName'][layer_name]['TableSize'] = 4096
     output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
@@ -244,7 +263,7 @@ def test_rnn_accuracy(test_case_id, rnn_layer, return_sequences, backend, io_typ
     np.testing.assert_allclose(hls_prediction.flatten(), keras_prediction.flatten(), rtol=0.0, atol=5e-2)
 
 
-@pytest.mark.parametrize('rnn_layer', [LSTM, GRU], ids=['LSTM', 'GRU'])
+@pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('static', [True, False])
@@ -260,6 +279,9 @@ def test_rnn_mixed_precision(test_case_id, rnn_layer, backend, io_type, static):
     hls_config['LayerName'][layer_name]['Precision']['accum'] = 'ap_fixed<24, 10>'
     hls_config['LayerName'][layer_name]['Precision']['result'] = 'ap_fixed<18, 8>'
     hls_config['LayerName'][layer_name]['static'] = static
+    if rnn_layer is SimpleRNN:
+        # The SimpleRNN state is the output of the tanh lookup table, so the table's error adds up over the time steps
+        hls_config['LayerName'][layer_name]['TableSize'] = 4096
     output_dir = str(test_root_path / test_case_id)
 
     hls_model = hls4ml.converters.convert_from_keras_model(
@@ -287,26 +309,28 @@ def create_model_reuse(rnn_layer):
 
 @pytest.mark.parametrize(
     'rnn_layer, reuse_factor',
-    [(LSTM, 20), (GRU, 20), (Bidirectional, 4), (Bidirectional, 12)],
-    ids=['LSTM-20', 'GRU-20', 'Bidirectional-4', 'Bidirectional-12'],
+    [(SimpleRNN, 20), (LSTM, 20), (GRU, 20), (Bidirectional, 4), (Bidirectional, 12)],
+    ids=['SimpleRNN-20', 'LSTM-20', 'GRU-20', 'Bidirectional-4', 'Bidirectional-12'],
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_rnn_resource_reuse_factor(test_case_id, rnn_layer, reuse_factor, backend):
     """The resource strategy gives the same results as the latency strategy when the reuse factor has to be adjusted.
 
-    At 20, the input multiplication of the LSTM and GRU gets a reuse factor above the number of states and the
+    At 20, the input multiplication of the SimpleRNN, LSTM and GRU gets a reuse factor above the number of states and the
     recurrent one gets 16, so each needs a different kernel. At 4, the Bidirectional input multiplications need an
     adjusted reuse factor; at 12, its recurrent ones get 8, which is the number of states.
     """
 
     model = create_model_reuse(rnn_layer)
     X = np.random.default_rng(0).uniform(-0.5, 0.5, (20, 8, 6))
+    precision, table_size = ('ap_fixed<24, 10>', 4096) if rnn_layer is SimpleRNN else ('ap_fixed<16, 6>', 1024)
 
     predictions = []
     for strategy in ('Latency', 'Resource'):
         hls_config = hls4ml.utils.config_from_keras_model(
-            model, granularity='name', default_precision='ap_fixed<16, 6>', backend=backend
+            model, granularity='name', default_precision=precision, backend=backend
         )
+        hls_config['LayerName']['rnn']['TableSize'] = table_size
         hls_config['LayerName']['rnn']['Strategy'] = strategy
         hls_config['LayerName']['rnn']['ReuseFactor'] = reuse_factor
         output_dir = str(test_root_path / f'{test_case_id}_{strategy.lower()}')
@@ -340,7 +364,7 @@ def test_bidirectional_reuse_factor_gates(test_case_id, backend):
         assert layer.get_attr(f'{d}_recurrent_reuse_factor') in valid_reuse_factors(8, 8 * n_gates)
 
 
-@pytest.mark.parametrize('rnn_layer', [LSTM, GRU], ids=['LSTM', 'GRU'])
+@pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('static', [True, False])
 def test_rnn_static_io_stream(test_case_id, rnn_layer, backend, static):
@@ -372,19 +396,12 @@ def test_rnn_no_bias(test_case_id, rnn_layer):
     model.add(Input(shape=(5, 8)))
     model.add(rnn_layer(4, use_bias=False))
 
-    # The Vivado SimpleRNN kernel produces wrong results (untested upstream); use Quartus for it
-    if rnn_layer is SimpleRNN:
-        backend, default_precision, strategy = 'Quartus', 'ac_fixed<32, 16, true>', 'Resource'
-    else:
-        backend, default_precision, strategy = 'Vivado', 'ap_fixed<32, 16>', 'Latency'
-
     hls_config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision=default_precision, backend=backend
+        model, granularity='name', default_precision='ap_fixed<32, 16>', backend='Vivado'
     )
-    hls_config['Model']['Strategy'] = strategy
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=hls_config, output_dir=output_dir, backend=backend
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
     )
     hls_model.compile()
 

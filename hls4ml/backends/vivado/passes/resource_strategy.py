@@ -9,6 +9,7 @@ from hls4ml.model.layers import (
     Dense,
     SeparableConv1D,
     SeparableConv2D,
+    SimpleRNN,
 )
 from hls4ml.model.optimizer import OptimizerPass
 
@@ -17,7 +18,9 @@ class ApplyResourceStrategy(OptimizerPass):
     """Transposes the weights to use the dense_resource matrix multiply routine"""
 
     def match(self, node):
-        node_matches = isinstance(node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, LSTM, GRU, Bidirectional))
+        node_matches = isinstance(
+            node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, SimpleRNN, LSTM, GRU, Bidirectional)
+        )
         is_resource_strategy = node.get_attr('strategy', '').lower() in ['resource', 'resource_unrolled']
         already_transformed = node.get_attr('_weights_transposed', False) is True
         return node_matches and is_resource_strategy and not already_transformed
@@ -49,7 +52,7 @@ class ApplyResourceStrategy(OptimizerPass):
             for d in ['forward', 'backward']:
                 node.weights[f'{d}_weight'].data = np.transpose(node.weights[f'{d}_weight'].data)
                 node.weights[f'{d}_recurrent_weight'].data = np.transpose(node.weights[f'{d}_recurrent_weight'].data)
-        elif isinstance(node, (LSTM, GRU)):
+        elif isinstance(node, (SimpleRNN, LSTM, GRU)):
             node.weights['weight'].data = np.transpose(node.weights['weight'].data)
             node.weights['recurrent_weight'].data = np.transpose(node.weights['recurrent_weight'].data)
         else:
