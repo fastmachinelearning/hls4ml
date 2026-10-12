@@ -40,6 +40,7 @@
     backend/oneapi
     backend/catapult
     backend/quartus
+    backend/libero
     backend/sr
     backend/xls
 
