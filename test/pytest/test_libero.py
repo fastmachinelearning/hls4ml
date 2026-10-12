@@ -1,3 +1,4 @@
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -76,6 +77,22 @@ def test_write(test_case_id, strategy, tmp_path):
     )
     for filename in expected_files:
         assert (output_dir / filename).is_file(), filename
+
+    for filename in ('Makefile', 'Makefile.compile'):
+        makefile = (output_dir / filename).read_text()
+        assert 'LOCAL_CONFIG = -shls-config=config.tcl' in makefile
+        assert 'USER_CXX_FLAG =' in makefile
+        assert not re.search(r'^\s*(?:include|LEVEL\s*=)', makefile, re.MULTILINE)
+
+    for header in (output_dir / 'firmware/nnet_utils').glob('*.h'):
+        assert not re.search(r'\b(?:uint|ulong|ushort)\b', header.read_text()), header
+
+    testbench = (output_dir / 'myproject_test.cpp').read_text()
+    data_path, fallback_path = testbench.split('    } else {', maxsplit=1)
+    data_path = data_path.split('if (fin.is_open() && fpr.is_open()) {', maxsplit=1)[1]
+    assert data_path.count('_fifo.read();') == 1
+    assert fallback_path.count('_fifo.read();') == 1
+    assert data_path.index('_fifo.read();') < data_path.index('if (e % CHECKPOINT == 0) {')
 
     parameters = (output_dir / 'firmware/parameters.h').read_text()
     for n_in, n_out in ((4, 3), (3, 1)):

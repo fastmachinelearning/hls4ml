@@ -32,6 +32,15 @@ stages. These stages require a working Libero SoC and SmartHLS installation.
 The generated C++ includes SmartHLS ``hls/ap_fixpt.hpp``, ``hls/ap_int.hpp``,
 and ``hls/streaming.hpp`` headers, which hls4ml does not bundle for Libero.
 
+Validated on SmartHLS 2025.2 (Windows)
+=======================================
+
+A 4-3-1 PyTorch Dense/ReLU model with ``io_parallel`` and ``ap_fixed<16,6>``
+was run through the ``shls sw`` software testbench. That run exposed the
+Makefile, ``uint``, and FIFO-read defects addressed here. Completion of the
+testbench with these fixes remains unverified in this checkout. ``shls hw``
+synthesis and co-simulation were not run.
+
 Example: a residual-correction model for a control loop
 =========================================================
 

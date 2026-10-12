@@ -66,17 +66,15 @@ int main(int argc, char **argv) {
 
             // hls-fpga-machine-learning insert top-level-function
 
+            // hls-fpga-machine-learning unpack-struct
+
             if (e % CHECKPOINT == 0) {
                 std::cout << "Predictions" << std::endl;
                 // hls-fpga-machine-learning insert predictions
                 std::cout << "Quantized predictions" << std::endl;
-                // hls-fpga-machine-learning unpack-struct
-
                 // hls-fpga-machine-learning insert quantized
             }
             e++;
-
-            // hls-fpga-machine-learning unpack-struct
 
             // hls-fpga-machine-learning insert tb-output
         }

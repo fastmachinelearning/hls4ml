@@ -762,15 +762,10 @@ class LiberoWriter(Writer):
             f.write(f'set_parameter CLOCK_PERIOD {clock}\n')
 
         # Makefile
+        filedir = Path(__file__).parent
+        makefile_src = (filedir / '../templates/libero/Makefile').resolve()
         makefile_dst = Path(f'{prj_dir}/Makefile')
-        with open(makefile_dst, 'w') as f:
-            f.write(f'NAME = {prj_name}\n')
-            f.write('LOCAL_CONFIG = -legup-config=config.tcl\n')
-            f.write(f'SRCS = firmware/{prj_name}.cpp {prj_name}_test.cpp \n')
-            # Not sure if this is required, it is present in both GUI- and CLI-generated projects
-            f.write('LEVEL = $(SHLS_ROOT_DIR)/examples\n')
-            # This must be the last line
-            f.write('include $(LEVEL)/Makefile.common\n')
+        makefile_dst.write_text(makefile_src.read_text().replace('myproject', prj_name))
 
         # Makefile.compile
         makefile_dst = Path(f'{prj_dir}/Makefile.compile')
@@ -779,16 +774,14 @@ class LiberoWriter(Writer):
             shls_lib_path = str(model.config.get_config_value('SmartHLSPath') / 'smarthls-library/hls')
 
             f.write(f'NAME = {prj_name}\n')
-            f.write('LOCAL_CONFIG = -legup-config=config.tcl\n')
+            f.write('LOCAL_CONFIG = -shls-config=config.tcl\n')
             f.write(f'SRCS = firmware/{prj_name}.cpp {prj_name}_bridge.cpp \n')
-            f.write('LEVEL = $(SHLS_ROOT_DIR)/examples\n')
             f.write(f'WEIGHTS_DIR="\\"{prj_path}/firmware/weights\\""\n')
             f.write('USER_CXX_FLAG = -fPIC -D WEIGHTS_DIR="${WEIGHTS_DIR}"\n')
             f.write(
                 'USER_LINK_FLAG = -shared -D WEIGHTS_DIR="${WEIGHTS_DIR}"'
                 + f' -L{shls_lib_path} -lhls_x86 -Wl,-rpath,{shls_lib_path}\n'
             )
-            f.write('include $(LEVEL)/Makefile.common\n')
 
     def write_nnet_utils(self, model):
         """Copy the nnet_utils, AP types headers and any custom source to the project output directory
