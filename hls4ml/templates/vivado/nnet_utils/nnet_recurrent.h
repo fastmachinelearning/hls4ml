@@ -213,10 +213,17 @@ template <class data_T, class res_T, typename CONFIG_T, bool backward = false> c
                       typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
                       typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
                       typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
-        res_T *h_newstate = h_total;
-        res_T *s_newstate = h_newstate + CONFIG_T::n_state;
+        res_T h_newstate[CONFIG_T::n_state];
+        res_T s_newstate[CONFIG_T::n_state];
+        #pragma HLS ARRAY_PARTITION variable=h_newstate complete
+        #pragma HLS ARRAY_PARTITION variable=s_newstate complete
         nnet::lstm_static<data_T, res_T, CONFIG_T, backward>(reset_state, data, h_newstate, s_newstate, param, param_r,
                                                              param_b, param_br);
+        for (int i_state = 0; i_state < CONFIG_T::n_state; i_state++) {
+            #pragma HLS UNROLL
+            h_total[i_state] = h_newstate[i_state];
+            h_total[i_state + CONFIG_T::n_state] = s_newstate[i_state];
+        }
     };
 };
 
