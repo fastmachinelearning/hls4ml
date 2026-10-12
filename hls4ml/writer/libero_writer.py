@@ -1,5 +1,4 @@
 import glob
-import stat
 import tarfile
 from collections import OrderedDict
 from pathlib import Path
@@ -247,7 +246,7 @@ class LiberoWriter(Writer):
                     for o in model_outputs:
                         tmp_struct_var_name = f'{o.name}_struct'
                         newline += f'    {o.struct_name} {tmp_struct_var_name};\n'
-                        newline += f'    for (unsigned i = 0; i < {i.size_cpp()}; i++) {{\n'
+                        newline += f'    for (unsigned i = 0; i < {o.size_cpp()}; i++) {{\n'
                         newline += f'        {tmp_struct_var_name}.data[i] = {o.name}[i];\n'
                         newline += '    }\n'
                         newline += f'    {o.name}_fifo.write({tmp_struct_var_name});\n'
@@ -742,13 +741,12 @@ class LiberoWriter(Writer):
                 dst.write(newline)
 
     def write_build_script(self, model):
-        """Write the TCL/Shell build scripts (config.tcl, Makefile, build_lib.sh)
+        """Write the TCL and Makefile build scripts.
 
         Args:
             model (ModelGraph): the hls4ml model.
         """
 
-        filedir = Path(__file__).parent
         prj_name = model.config.get_project_name()
         prj_dir = model.config.get_output_dir()
 
@@ -791,17 +789,6 @@ class LiberoWriter(Writer):
                 + f' -L{shls_lib_path} -lhls_x86 -Wl,-rpath,{shls_lib_path}\n'
             )
             f.write('include $(LEVEL)/Makefile.common\n')
-
-        # build_lib.sh
-        build_lib_src = (filedir / '../templates/libero/build_lib.sh').resolve()
-        build_lib_dst = Path(f'{prj_dir}/build_lib.sh').resolve()
-        with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', prj_name)
-                line = line.replace('mystamp', model.config.get_config_value('Stamp'))
-
-                dst.write(line)
-        build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     def write_nnet_utils(self, model):
         """Copy the nnet_utils, AP types headers and any custom source to the project output directory
