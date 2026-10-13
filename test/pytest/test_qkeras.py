@@ -136,7 +136,7 @@ def randX_100_16():
 # https://github.com/fastmachinelearning/hls4ml/issues/381
 # @pytest.mark.parametrize('bits', [4, 6, 8])
 @pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_single_dense_activation_exact(test_case_id, randX_100_16, bits, alpha, backend, io_type):
     """
@@ -201,7 +201,7 @@ def randX_100_10():
 @pytest.mark.parametrize(
     'quantizer', [(quantized_tanh(8)), (quantized_sigmoid(5)), (quantized_sigmoid(7, use_real_sigmoid=True))]
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer_special(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -240,7 +240,7 @@ def test_quantizer_special(test_case_id, randX_1000_1, quantizer, backend, io_ty
         (7, 10, binary(), quantized_bits(5, 2), binary(), False, True),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_btnn(test_case_id, make_btnn, randX_100_10, backend, io_type):
     model, is_xnor, test_no = make_btnn
@@ -283,7 +283,7 @@ def randX_1000_1():
         (quantized_relu(10, 5)),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -318,7 +318,7 @@ def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
         (quantized_relu(10, 2, negative_slope=0.25)),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_relu_negative_slope(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -399,7 +399,7 @@ def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, wei
         assert sum(wrong) / len(wrong) <= 0.005
 
 
-ALL_BACKENDS = ['Vivado', 'Vitis', 'Quartus', 'oneAPI']
+ALL_BACKENDS = ['Vivado', 'Vitis', 'Quartus', 'Altera']
 RNN_LAYERS = ('QSimpleRNN', 'QLSTM', 'QGRU')
 
 # Q layers built without quantizers: name -> (input shape, layer factory, supported backends)
@@ -414,11 +414,11 @@ NO_QUANT_LAYERS = {
     'QDepthwiseConv2D': ((8, 8, 3), lambda: QDepthwiseConv2D((3, 3)), ['Vivado', 'Vitis']),
     'QSeparableConv1D': ((8, 3), lambda: QSeparableConv1D(4, 3), ['Vivado', 'Vitis']),
     'QSeparableConv2D': ((8, 8, 3), lambda: QSeparableConv2D(4, (3, 3)), ['Vivado', 'Vitis']),
-    'QSimpleRNN': ((5, 3), lambda: QSimpleRNN(4, activation='relu'), ['Quartus', 'oneAPI']),
+    'QSimpleRNN': ((5, 3), lambda: QSimpleRNN(4, activation='relu'), ['Quartus', 'Altera']),
     'QLSTM': (
         (5, 3),
         lambda: QLSTM(4, activation='tanh', recurrent_activation='sigmoid'),
-        ['Vivado', 'Quartus', 'oneAPI'],
+        ['Vivado', 'Quartus', 'Altera'],
     ),
     'QGRU': (
         (5, 3),
@@ -431,7 +431,7 @@ NO_QUANT_LAYERS = {
             reset_after=True,
             recurrent_quantizer='quantized_bits(24, 7, alpha=1)',
         ),
-        ['Vivado', 'Quartus', 'oneAPI'],
+        ['Vivado', 'Quartus', 'Altera'],
     ),
     'QBatchNormalization': (
         (10,),
@@ -482,7 +482,7 @@ def randX_100_8_8_1():
     return np.random.rand(100, 8, 8, 1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     """
@@ -520,7 +520,7 @@ def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_qconv2dbn_no_quantizer(test_case_id, randX_100_8_8_1, backend, io_type):
     """
@@ -607,7 +607,7 @@ def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
 def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
@@ -645,7 +645,7 @@ def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
     np.testing.assert_allclose(y_hls.flatten(), y_keras.flatten(), rtol=2e-2)
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Altera'])
 def test_qsimplernn(test_case_id, backend):
     """
     Test proper handling of QSimpleRNN.
@@ -680,7 +680,7 @@ def test_qsimplernn(test_case_id, backend):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
 def test_qlstm(test_case_id, backend):
     """
     Test proper handling of QLSTM.
@@ -716,7 +716,7 @@ def test_qlstm(test_case_id, backend):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
 def test_qgru(test_case_id, backend):
     """
     Test proper handling of QGRU.

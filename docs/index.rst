@@ -36,8 +36,8 @@
 
     backend/vitis
     backend/accelerator
+    backend/altera
     backend/vitis_unified
-    backend/oneapi
     backend/catapult
     backend/quartus
     backend/sr
