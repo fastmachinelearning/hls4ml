@@ -1,8 +1,11 @@
 import ast
+import importlib.util
 import json
 import os
 import shutil
+import sys
 import tarfile
+import types
 from pathlib import Path
 
 import numpy as np
@@ -494,6 +497,8 @@ def test_card_driver_and_link(test_case_id, simple_unet):
     assert 'PLATFORM_REPO_PATHS is not set' in link
     assert '--platform ${PLATFORM_REPO_PATHS}/' in link
     assert '.xclbin ../../export/' in link
+    cfg = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.cfg').read_text()
+    assert '[clock]' not in cfg
 
 
 def test_soc_link_keeps_pynq_handoff(test_case_id, simple_unet):
@@ -511,6 +516,96 @@ def test_soc_link_keeps_pynq_handoff(test_case_id, simple_unet):
     link = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.sh').read_text()
     assert 'xclbinutil' in link and 'vitis_design.hwh' in link
     assert '.xclbin ../../export/' not in link
+    cfg = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.cfg').read_text()
+    assert 'freqHz=100000000:max_length_project_axi_master_1.ap_clk' in cfg
+
+
+def _fake_pyxrt():
+    """Enough of pyxrt for the driver constructor, without a card."""
+    module = types.ModuleType('pyxrt')
+    module.device = type('device', (), {'__init__': lambda self, index: None, 'load_xclbin': lambda self, x: 'uuid'})
+    module.xclbin = lambda name: name
+    module.kernel = type('kernel', (), {'__init__': lambda self, *a: None, 'group_id': lambda self, i: i})
+    module.bo = type('bo', (), {'normal': 0, '__init__': lambda self, *a: None})
+    return module
+
+
+@pytest.mark.parametrize('interface_type, np_dtype', [('float', np.float32), ('double', np.float64)])
+def test_xrt_driver_checks(test_case_id, simple_unet, monkeypatch, interface_type, np_dtype):
+    """The XRT driver knows each port's size and the interface type, and rejects shapes and types that differ."""
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    kwargs = _vitis_unified_convert_kwargs('io_stream', 'axi_master', board='alveo-u55c', driver='xrt')
+    kwargs.update(input_type=interface_type, output_type=interface_type)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet, hls_config=config, output_dir=str(output_dir), **kwargs
+    )
+    hls_model.write()
+    n_in = hls_model.get_input_variables()[0].size()
+    n_out = hls_model.get_output_variables()[0].size()
+
+    monkeypatch.setitem(sys.modules, 'pyxrt', _fake_pyxrt())
+    spec = importlib.util.spec_from_file_location(f'driver_{interface_type}', output_dir / 'export' / 'axi_master_driver.py')
+    driver = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(driver)
+    accel = driver.NeuralNetworkAccelerator
+
+    ok = accel('x.xclbin', (8, n_in), (8, n_out))
+    assert ok.input_dtype == np_dtype and ok.output_dtype == np_dtype
+    with pytest.raises(ValueError, match='batch size'):
+        accel('x.xclbin', (8, n_in), (4, n_out))
+    with pytest.raises(ValueError, match='values per sample'):
+        accel('x.xclbin', (8, n_in + 1), (8, n_out))
+    with pytest.raises(ValueError, match='values per sample'):
+        accel('x.xclbin', (8, n_in), (8, n_out - 1))
+    other = np.float64 if np_dtype == np.float32 else np.float32
+    with pytest.raises(ValueError, match='interface'):
+        accel('x.xclbin', (8, n_in), (8, n_out), input_dtype=other)
+
+
+def test_xrt_driver_on_soc_board_with_own_platform(test_case_id, simple_unet):
+    """A listed SoC board name with driver xrt is accepted when the platform and part are the user's own."""
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        simple_unet,
+        hls_config=config,
+        output_dir=str(output_dir),
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master', driver='xrt', platform='/opt/pf/mycard.xpfm'),
+    )
+    hls_model.write()
+    assert 'import pyxrt' in (output_dir / 'export' / 'axi_master_driver.py').read_text()
+
+
+def test_card_rejects_more_ports_than_banks():
+    from hls4ml.backends.vitis_unified.vitis_unified_validation import validate_config
+
+    validate_config('alveo-u55c', 'axi_master', 'xrt', 'float', 'float', n_ports=32)
+    with pytest.raises(Exception, match='32 HBM bank'):
+        validate_config('alveo-u55c', 'axi_master', 'xrt', 'float', 'float', n_ports=33)
+
+
+def test_kernel_clock_read_from_xclbin(tmp_path, monkeypatch):
+    from hls4ml.report import vitis_unified_report
+
+    xclbin = tmp_path / 'myproject.xclbin'
+    xclbin.write_bytes(b'')
+    topology = {
+        'clock_freq_topology': {
+            'm_clock_freq': [{'m_name': 'DATA_CLK', 'm_freq_Mhz': '237'}, {'m_name': 'KERNEL_CLK', 'm_freq_Mhz': '500'}]
+        }
+    }
+
+    def fake_run(cmd, **kwargs):
+        path = cmd[-1].split(':', 2)[-1]
+        with open(path, 'w') as f:
+            json.dump(topology, f)
+        return types.SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(vitis_unified_report.shutil, 'which', lambda name: '/usr/bin/xclbinutil')
+    monkeypatch.setattr(vitis_unified_report.subprocess, 'run', fake_run)
+    assert vitis_unified_report.read_kernel_clock(str(xclbin)) == 237
+    assert vitis_unified_report.read_kernel_clock(str(tmp_path / 'missing.xclbin')) is None
 
 
 @pytest.mark.parametrize('io_type', ['io_stream'])

@@ -123,7 +123,11 @@ class VitisUnifiedBackend(VitisBackend):
                     stdout_target.close()
                     stderr_target.close()
 
-        return parse_vitis_unified_report(output_dir)
+        report = parse_vitis_unified_report(output_dir)
+        if bitfile and report and 'KernelClockMHz' in report:
+            requested = 1000 / writer._get_clock_period_ns(model)
+            print(f'Kernel clock in the .xclbin: {report["KernelClockMHz"]} MHz (clock_period asks for {requested:.0f} MHz)')
+        return report
 
     def create_initial_config(
         self,

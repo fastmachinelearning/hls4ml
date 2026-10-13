@@ -28,12 +28,9 @@ class VitisUnifiedConfig:
 
         # Platform is the user's own file, or resolved from supported_boards.json based on board + axi_mode
         board_info = self.supported_boards.get(self.board, {})
-        self.memory = dict(memory_config(board_info))
+        self.memory = memory_config(board_info)
         kernel_slr = unified_config.get('KernelSLR')
-        if self.memory and kernel_slr is not None:
-            self.memory.pop('kernel_slr', None)
-            if kernel_slr:
-                self.memory['kernel_slr'] = kernel_slr
+        self.kernel_slr = board_info.get('kernel_slr') if kernel_slr is None else (kernel_slr or None)
         platform = unified_config.get('Platform')
         tcl_rel = None if platform else platform_generator_tcl(board_info, self.axi_mode)
         if platform:
@@ -104,6 +101,10 @@ class VitisUnifiedConfig:
     def get_memory(self):
         """Empty for boards whose platform maps the kernel pointers by itself."""
         return self.memory
+
+    def get_kernel_slr(self):
+        """SLR the kernel is assigned to on a card, or None to leave placement to Vivado."""
+        return self.kernel_slr if self.memory else None
 
     def get_input_type(self):
         return self.input_type

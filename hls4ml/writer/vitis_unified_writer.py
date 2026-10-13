@@ -330,15 +330,21 @@ fi
                 model, memory
             )
 
+        def clock(indent):
+            # a card's kernel clock is set by the platform and scaled by Vitis, so [clock] would not take effect
+            if self.vitis_unified_config.get_memory():
+                return ''
+            kernel = self._get_top_wrap_func_name(model, self._is_axi_master())
+            return f'[clock]\nfreqHz={round(1_000_000_000 / self._get_clock_period_ns(model))}:{kernel}_1.ap_clk\n'
+
         self._fill_template(
             'vitis_workspace/system_link/link_system.cfg',
             f'{self.get_vitis_linker_dir(model)}/link_system.cfg',
-            replacements={
-                '{CLK}': str(round(1_000_000_000 / self._get_clock_period_ns(model))),
-                '{KERNEL_NAME}': self._get_top_wrap_func_name(model, self._is_axi_master()),
-                '{GUI_STATUS}': 'true',
+            replacements={'{GUI_STATUS}': 'true'},
+            blocks={
+                '# hls-fpga-machine-learning insert clock': clock,
+                '# hls-fpga-machine-learning insert custom connection': connectivity,
             },
-            blocks={'# hls-fpga-machine-learning insert custom connection': connectivity},
         )
 
     def _get_memory_assignment(self, model, memory):
@@ -351,19 +357,15 @@ fi
         ports = [self._get_io_port_name(var, True, idx) for idx, var in enumerate(model.get_input_variables())]
         ports += [self._get_io_port_name(var, False, idx) for idx, var in enumerate(model.get_output_variables())]
         kind, banks = memory['type'], memory['banks']
-        if banks < len(ports):
-            raise ValueError(
-                f'the board has {banks} {kind} bank(s) but the kernel has {len(ports)} pointer arguments; '
-                'pass your own platform and connectivity for this model'
-            )
         per_port = banks // len(ports)
         lines = ''
         for idx, port in enumerate(ports):
             first = idx * per_port
             span = f'{kind}[{first}]' if per_port == 1 else f'{kind}[{first}:{first + per_port - 1}]'
             lines += f'sp={instance}.{port}:{span}\n'
-        if memory.get('kernel_slr'):
-            lines += f'slr={instance}:{memory["kernel_slr"]}\n'
+        kernel_slr = self.vitis_unified_config.get_kernel_slr()
+        if kernel_slr:
+            lines += f'slr={instance}:{kernel_slr}\n'
         return lines
 
     # ===== Bridge generation =====
@@ -634,6 +636,11 @@ fi
                 f"{indent}'{self._get_io_port_name(var, is_input, idx)}',\n" for idx, var in enumerate(variables)
             )
 
+        def port_sizes(variables):
+            return lambda indent: ''.join(f'{indent}{var.size()},\n' for var in variables)
+
+        numpy_type = {'float': 'float32', 'double': 'float64'}
+
         self._fill_template(
             self.vitis_unified_config.get_driver_template_path(),
             f'{model.config.get_output_dir()}/export/{self.vitis_unified_config.get_driver_file()}',
@@ -641,10 +648,14 @@ fi
                 '<TOP_WRAPPER_NAME>': self._get_wrap_ip_name(model, is_axi_master),
                 '<TOP_NAME>': self._get_top_wrap_func_name(model, is_axi_master),
                 '<IP_VERSION>': self._get_ip_vlnv_version(model),
+                '<INPUT_DTYPE>': numpy_type.get(self.vitis_unified_config.get_input_type(), 'float32'),
+                '<OUTPUT_DTYPE>': numpy_type.get(self.vitis_unified_config.get_output_type(), 'float32'),
             },
             blocks={
                 '# hls-driver-input-names': port_names(inputs, True),
                 '# hls-driver-output-names': port_names(outputs, False),
+                '# hls-driver-input-sizes': port_sizes(inputs),
+                '# hls-driver-output-sizes': port_sizes(outputs),
             },
         )
 

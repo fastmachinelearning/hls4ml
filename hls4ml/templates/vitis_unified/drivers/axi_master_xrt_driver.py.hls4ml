@@ -19,16 +19,21 @@ class NeuralNetworkAccelerator:
     which is what the sp= lines of the link configuration assign.
     """
 
-    def __init__(self, xclbin_name, x_shape, y_shape, input_dtype=np.float32, output_dtype=None, device_index=0):
+    def __init__(self, xclbin_name, x_shape, y_shape, input_dtype=None, output_dtype=None, device_index=0):
         self.INP_PORT_NAMEs = [
             # hls-driver-input-names
         ]
         self.OUT_PORT_NAMEs = [
             # hls-driver-output-names
         ]
-        self.device = pyxrt.device(device_index)
-        uuid = self.device.load_xclbin(pyxrt.xclbin(xclbin_name))
-        self.kernel = pyxrt.kernel(self.device, uuid, '<TOP_NAME>')
+        # values per sample on each port
+        self.INP_SIZEs = [
+            # hls-driver-input-sizes
+        ]
+        self.OUT_SIZEs = [
+            # hls-driver-output-sizes
+        ]
+        interface_in, interface_out = np.dtype('<INPUT_DTYPE>'), np.dtype('<OUTPUT_DTYPE>')
 
         x_shapes, y_shapes = _as_list(x_shape), _as_list(y_shape)
         if len(x_shapes) != len(self.INP_PORT_NAMEs) or len(y_shapes) != len(self.OUT_PORT_NAMEs):
@@ -36,9 +41,25 @@ class NeuralNetworkAccelerator:
                 f'this accelerator has {len(self.INP_PORT_NAMEs)} input and {len(self.OUT_PORT_NAMEs)} output port(s), '
                 f'got {len(x_shapes)} input and {len(y_shapes)} output shape(s)'
             )
+        batches = {int(shape[0]) for shape in x_shapes + y_shapes}
+        if len(batches) != 1:
+            raise ValueError(f'all input and output shapes must have the same batch size, got {x_shapes} and {y_shapes}')
+        for kind, shapes, sizes in [('input', x_shapes, self.INP_SIZEs), ('output', y_shapes, self.OUT_SIZEs)]:
+            for i, (shape, size) in enumerate(zip(shapes, sizes)):
+                if int(np.prod(shape[1:])) != size:
+                    raise ValueError(f'{kind} {i} carries {size} values per sample, got shape {tuple(shape)}')
 
-        self.input_dtype = np.dtype(input_dtype)
-        self.output_dtype = np.dtype(output_dtype or input_dtype)
+        self.input_dtype = np.dtype(input_dtype or interface_in)
+        self.output_dtype = np.dtype(output_dtype or interface_out)
+        if self.input_dtype != interface_in or self.output_dtype != interface_out:
+            raise ValueError(
+                f'this accelerator has a {interface_in} input and {interface_out} output interface, '
+                f'got input_dtype={self.input_dtype} and output_dtype={self.output_dtype}'
+            )
+
+        self.device = pyxrt.device(device_index)
+        uuid = self.device.load_xclbin(pyxrt.xclbin(xclbin_name))
+        self.kernel = pyxrt.kernel(self.device, uuid, '<TOP_NAME>')
         self.input_buffers = [self._allocate(shape, self.input_dtype, i) for i, shape in enumerate(x_shapes)]
         self.output_buffers = [
             self._allocate(shape, self.output_dtype, len(x_shapes) + i) for i, shape in enumerate(y_shapes)
@@ -60,8 +81,8 @@ class NeuralNetworkAccelerator:
         Parameters:
         - X : the input vector. Should be numpy ndarray, or a list of ndarrays for multi-input models
               (one entry per input port, in port order). The first dimension is the batch.
-              Its dtype must match `input_dtype` given to the constructor, which in turn must match the
-              interface of the accelerator: 'np.float32' for a 'float' interface and 'np.float64' for 'double'.
+              It is converted to the interface type of the accelerator, np.float32 for 'float' and np.float64
+              for 'double'.
         - profile : boolean. Set it to `True` to print the performance of the algorithm in term of `inference/s`.
         - return: an output array based on `np.ndarray` with a shape equal to `y_shape` and a `dtype` equal to
                   `output_dtype`, or a list of such arrays for multi-output models. With `profile=True` it
