@@ -51,6 +51,7 @@
     advanced/auto
     advanced/hgq
     advanced/da
+    advanced/fused
     advanced/precision
     advanced/fifo_depth
     advanced/extension
