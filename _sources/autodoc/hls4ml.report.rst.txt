@@ -4,6 +4,14 @@ hls4ml.report package
 Submodules
 ----------
 
+hls4ml.report.altera\_report module
+-----------------------------------
+
+.. automodule:: hls4ml.report.altera_report
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 hls4ml.report.catapult\_report module
 -------------------------------------
 
@@ -16,14 +24,6 @@ hls4ml.report.libero\_report module
 -----------------------------------
 
 .. automodule:: hls4ml.report.libero_report
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-hls4ml.report.oneapi\_report module
------------------------------------
-
-.. automodule:: hls4ml.report.oneapi_report
    :members:
    :show-inheritance:
    :undoc-members:

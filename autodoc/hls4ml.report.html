@@ -73,8 +73,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/altera.html">Altera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
@@ -111,9 +111,9 @@
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.optimization.html">hls4ml.optimization package</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">hls4ml.report package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.altera_report">hls4ml.report.altera_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.catapult_report">hls4ml.report.catapult_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.libero_report">hls4ml.report.libero_report module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.oneapi_report">hls4ml.report.oneapi_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.quartus_report">hls4ml.report.quartus_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.vitis_unified_report">hls4ml.report.vitis_unified_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.vivado_report">hls4ml.report.vivado_report module</a></li>
@@ -152,6 +152,40 @@
 <h1>hls4ml.report package<a class="headerlink" href="#hls4ml-report-package" title="Link to this heading"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.report.altera_report">
+<span id="hls4ml-report-altera-report-module"></span><h2>hls4ml.report.altera_report module<a class="headerlink" href="#module-hls4ml.report.altera_report" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.report.altera_report.parse_altera_report">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.report.altera_report.</span></span><span class="sig-name descname"><span class="pre">parse_altera_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hls_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.altera_report.parse_altera_report" title="Link to this definition"></a></dt>
+<dd><p>Parse a report from a given Altera project as a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>hls_dir</strong> (<em>string</em>) – The directory where the project is found</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The report dictionary, containing latency, resource usage etc.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>results (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.report.altera_report.print_altera_report">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.report.altera_report.</span></span><span class="sig-name descname"><span class="pre">print_altera_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.altera_report.print_altera_report" title="Link to this definition"></a></dt>
+<dd><p>Prints the Altera report dictionary as a table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>report_dict</strong> (<em>dictionary</em>) – The report dictionary, containing latency, resource usage etc.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-hls4ml.report.catapult_report">
 <span id="hls4ml-report-catapult-report-module"></span><h2>hls4ml.report.catapult_report module<a class="headerlink" href="#module-hls4ml.report.catapult_report" title="Link to this heading"></a></h2>
@@ -193,40 +227,6 @@
 <dt class="sig sig-object py" id="hls4ml.report.libero_report.parse_utilization_data">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.report.libero_report.</span></span><span class="sig-name descname"><span class="pre">parse_utilization_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.libero_report.parse_utilization_data" title="Link to this definition"></a></dt>
 <dd><p>Parses ‘Resource Usage’ section.</p>
-</dd></dl>
-
-</section>
-<section id="module-hls4ml.report.oneapi_report">
-<span id="hls4ml-report-oneapi-report-module"></span><h2>hls4ml.report.oneapi_report module<a class="headerlink" href="#module-hls4ml.report.oneapi_report" title="Link to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.report.oneapi_report.parse_oneapi_report">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.report.oneapi_report.</span></span><span class="sig-name descname"><span class="pre">parse_oneapi_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hls_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.oneapi_report.parse_oneapi_report" title="Link to this definition"></a></dt>
-<dd><p>Parse a report from a given oneAPI project as a dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>hls_dir</strong> (<em>string</em>) – The directory where the project is found</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The report dictionary, containing latency, resource usage etc.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>results (dict)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.report.oneapi_report.print_oneapi_report">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.report.oneapi_report.</span></span><span class="sig-name descname"><span class="pre">print_oneapi_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.oneapi_report.print_oneapi_report" title="Link to this definition"></a></dt>
-<dd><p>Prints the oneAPI report dictionary as a table.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>report_dict</strong> (<em>dictionary</em>) – The report dictionary, containing latency, resource usage etc.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
 </dd></dl>
 
 </section>

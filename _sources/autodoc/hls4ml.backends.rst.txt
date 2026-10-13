@@ -7,11 +7,11 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   hls4ml.backends.altera
    hls4ml.backends.catapult
    hls4ml.backends.coyote
    hls4ml.backends.fpga
    hls4ml.backends.libero
-   hls4ml.backends.oneapi
    hls4ml.backends.quartus
    hls4ml.backends.symbolic
    hls4ml.backends.vitis

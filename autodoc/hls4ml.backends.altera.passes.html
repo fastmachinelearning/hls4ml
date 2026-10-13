@@ -1,0 +1,1371 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hls4ml.backends.altera.passes package &mdash; hls4ml 1.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hls4ml.backends.catapult package" href="hls4ml.backends.catapult.html" />
+    <link rel="prev" title="hls4ml.backends.altera package" href="hls4ml.backends.altera.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/contributing.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/altera.html">Altera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fused.html">Fused Strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/snn.html">Spiking Neural Networks (PyTorch/SNN)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/plugins.html">External Backend and Writer Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/multimodelgraph.html">MultiModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="hls4ml.backends.html">hls4ml.backends package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hls4ml.backends.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends.backend">hls4ml.backends.backend module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends.plugin_loader">hls4ml.backends.plugin_loader module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends.template">hls4ml.backends.template module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#module-hls4ml.backends">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="hls4ml.backends.html">hls4ml.backends package</a></li>
+          <li class="breadcrumb-item"><a href="hls4ml.backends.altera.html">hls4ml.backends.altera package</a></li>
+      <li class="breadcrumb-item active">hls4ml.backends.altera.passes package</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/autodoc/hls4ml.backends.altera.passes.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="hls4ml-backends-altera-passes-package">
+<h1>hls4ml.backends.altera.passes package<a class="headerlink" href="#hls4ml-backends-altera-passes-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-hls4ml.backends.altera.passes.bn_quant">
+<span id="hls4ml-backends-altera-passes-bn-quant-module"></span><h2>hls4ml.backends.altera.passes.bn_quant module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.bn_quant" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationQuantizedTanhTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.BatchNormalizationQuantizedTanhTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.MergeBatchNormAndQuantizedTanh">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">MergeBatchNormAndQuantizedTanh</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.MergeBatchNormAndQuantizedTanh" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.QuantizeDenseOutput">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">QuantizeDenseOutput</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.QuantizeDenseOutput" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.QuantizeDenseOutput.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.QuantizeDenseOutput.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.QuantizeDenseOutput.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.QuantizeDenseOutput.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.bn_quant.register_bn_quant">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.bn_quant.</span></span><span class="sig-name descname"><span class="pre">register_bn_quant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.bn_quant.register_bn_quant" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.clone_templates">
+<span id="hls4ml-backends-altera-passes-clone-templates-module"></span><h2>hls4ml.backends.altera.passes.clone_templates module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.clone_templates" title="Link to this heading"></a></h2>
+<p>The clone templates in the fpga backend are not enough for Altera, so this adds the missing parts</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.clone_templates.CloneStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.clone_templates.</span></span><span class="sig-name descname"><span class="pre">CloneStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.clone_templates.CloneStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.clone_templates.CloneStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.clone_templates.CloneStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.clone_templates.CloneTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.clone_templates.</span></span><span class="sig-name descname"><span class="pre">CloneTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.clone_templates.CloneTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.clone_templates.CloneTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.clone_templates.CloneTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.convolution_templates">
+<span id="hls4ml-backends-altera-passes-convolution-templates-module"></span><h2>hls4ml.backends.altera.passes.convolution_templates module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.convolution_templates" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv1DConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv1DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv1DConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv1DConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv1DConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv1DFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv1DFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv1DFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv1DFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv1DTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv1DTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv1DTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv1DTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv1DTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv2DConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv2DConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv2DConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv2DConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv2DFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv2DFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv2DFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv2DFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv2DTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">Conv2DTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv2DTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.Conv2DTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.Conv2DTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.ConvStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">ConvStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.ConvStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.ConvStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.ConvStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.DepthwiseConv1DFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">DepthwiseConv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.DepthwiseConv1DFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.altera.passes.convolution_templates.Conv1DFunctionTemplate" title="hls4ml.backends.altera.passes.convolution_templates.Conv1DFunctionTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv1DFunctionTemplate</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.DepthwiseConv2DFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">DepthwiseConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.DepthwiseConv2DFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.altera.passes.convolution_templates.Conv2DFunctionTemplate" title="hls4ml.backends.altera.passes.convolution_templates.Conv2DFunctionTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv2DFunctionTemplate</span></code></a></p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_templates.conv_mult_config_template">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_templates.</span></span><span class="sig-name descname"><span class="pre">conv_mult_config_template</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'struct</span> <span class="pre">config{index}_mult</span> <span class="pre">:</span> <span class="pre">nnet::dense_config</span> <span class="pre">{{\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">n_in</span> <span class="pre">=</span> <span class="pre">{n_in};\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">n_out</span> <span class="pre">=</span> <span class="pre">{n_out};\n\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">rf_pad</span> <span class="pre">=</span> <span class="pre">{rfpad};\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">bf_pad</span> <span class="pre">=</span> <span class="pre">{bfpad};\n\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">reuse_factor</span> <span class="pre">=</span> <span class="pre">{reuse};\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">reuse_factor_rounded</span> <span class="pre">=</span> <span class="pre">reuse_factor</span> <span class="pre">+</span> <span class="pre">rf_pad;\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">block_factor</span> <span class="pre">=</span> <span class="pre">DIV_ROUNDUP(n_in*n_out,</span> <span class="pre">reuse_factor);\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">block_factor_rounded</span> <span class="pre">=</span> <span class="pre">block_factor</span> <span class="pre">+</span> <span class="pre">bf_pad;\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">multiplier_factor</span> <span class="pre">=</span> <span class="pre">MIN(n_in,</span> <span class="pre">reuse_factor);\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">multiplier_limit</span> <span class="pre">=</span> <span class="pre">DIV_ROUNDUP(n_in*n_out,</span> <span class="pre">multiplier_factor);\n</span>&#160;&#160;&#160; <span class="pre">static</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">multiplier_scale</span> <span class="pre">=</span> <span class="pre">multiplier_limit/n_out;\n\n</span>&#160;&#160;&#160; <span class="pre">typedef</span> <span class="pre">{accum_t.name}</span> <span class="pre">accum_t;\n</span>&#160;&#160;&#160; <span class="pre">typedef</span> <span class="pre">{bias_t.name}</span> <span class="pre">bias_t;\n</span>&#160;&#160;&#160; <span class="pre">typedef</span> <span class="pre">{weight_t.name}</span> <span class="pre">weight_t;\n\n</span>&#160;&#160;&#160; <span class="pre">template&lt;class</span> <span class="pre">x_T,</span> <span class="pre">class</span> <span class="pre">y_T&gt;\n</span>&#160;&#160;&#160; <span class="pre">using</span> <span class="pre">product</span> <span class="pre">=</span> <span class="pre">nnet::product::{product_type}&lt;x_T,</span> <span class="pre">y_T&gt;;\n}};\n'</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_templates.conv_mult_config_template" title="Link to this definition"></a></dt>
+<dd><p>1D Conv</p>
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.convolution_winograd">
+<span id="hls4ml-backends-altera-passes-convolution-winograd-module"></span><h2>hls4ml.backends.altera.passes.convolution_winograd module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.convolution_winograd" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_winograd.ApplyWinogradKernelTransformation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.convolution_winograd.</span></span><span class="sig-name descname"><span class="pre">ApplyWinogradKernelTransformation</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_winograd.ApplyWinogradKernelTransformation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Transforms the weights of a Conv2D kernel to a format suitable for Wingorad convolution
+For further information, refer to Lavin &amp; Gray, 2015 - Fast Algorithms for Convolutional Neural Networks</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_winograd.ApplyWinogradKernelTransformation.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_winograd.ApplyWinogradKernelTransformation.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.convolution_winograd.ApplyWinogradKernelTransformation.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.convolution_winograd.ApplyWinogradKernelTransformation.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.core_templates">
+<span id="hls4ml-backends-altera-passes-core-templates-module"></span><h2>hls4ml.backends.altera.passes.core_templates module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.core_templates" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ActivationConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ActivationConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ActivationConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ActivationConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ActivationFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ActivationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ActivationFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ActivationFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ActivationFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ActivationStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ActivationStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ActivationStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ActivationStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ActivationStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ActivationTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ActivationTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ActivationTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ActivationTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ActivationTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.BatchNormalizationConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.BatchNormalizationConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.BatchNormalizationConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.BatchNormalizationConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.BatchNormalizationFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.BatchNormalizationFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.BatchNormalizationFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.BatchNormalizationFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.BatchNormalizationStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.BatchNormalizationStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.BatchNormalizationStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.BatchNormalizationStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.BatchNormalizationTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">BatchNormalizationTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.BatchNormalizationTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.BatchNormalizationTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.BatchNormalizationTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.DenseConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">DenseConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.DenseConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.DenseConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.DenseConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.DenseFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">DenseFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.DenseFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.DenseFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.DenseFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.DenseStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">DenseStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.DenseStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.DenseStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.DenseStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.DenseTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">DenseTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.DenseTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.DenseTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.DenseTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.HardActivationConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">HardActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.HardActivationConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.HardActivationConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.HardActivationConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.PReLUActivationStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">PReLUActivationStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.PReLUActivationStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.PReLUActivationStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.PReLUActivationStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.PReLUFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">PReLUFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.PReLUFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.PReLUFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.PReLUFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ParamActivationConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ParamActivationConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ParamActivationConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ParamActivationConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ParamActivationConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ParametrizedActivationFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ParametrizedActivationFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ParametrizedActivationFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ParametrizedActivationFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ParametrizedActivationFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ParametrizedActivationStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ParametrizedActivationStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ParametrizedActivationStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ParametrizedActivationStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ParametrizedActivationStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ParametrizedActivationTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">ParametrizedActivationTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ParametrizedActivationTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.ParametrizedActivationTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.ParametrizedActivationTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.core_templates.SoftmaxConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.core_templates.</span></span><span class="sig-name descname"><span class="pre">SoftmaxConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.core_templates.SoftmaxConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.altera.passes.core_templates.ActivationConfigTemplate" title="hls4ml.backends.altera.passes.core_templates.ActivationConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActivationConfigTemplate</span></code></a></p>
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.einsum">
+<span id="hls4ml-backends-altera-passes-einsum-module"></span><h2>hls4ml.backends.altera.passes.einsum module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.einsum" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.einsum.EinsumConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.einsum.</span></span><span class="sig-name descname"><span class="pre">EinsumConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.einsum.EinsumConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.einsum.EinsumConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Einsum" title="hls4ml.model.layers.Einsum"><span class="pre">Einsum</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.einsum.EinsumConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.einsum.EinsumFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.einsum.</span></span><span class="sig-name descname"><span class="pre">EinsumFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.einsum.EinsumFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.einsum.EinsumFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Einsum" title="hls4ml.model.layers.Einsum"><span class="pre">Einsum</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.einsum.EinsumFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.einsum_dense">
+<span id="hls4ml-backends-altera-passes-einsum-dense-module"></span><h2>hls4ml.backends.altera.passes.einsum_dense module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.einsum_dense" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.einsum_dense.EinsumDenseConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.einsum_dense.EinsumDenseConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.einsum_dense.EinsumDenseConfigTemplate.dense_config">
+<span class="sig-name descname"><span class="pre">dense_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.EinsumDense" title="hls4ml.model.layers.EinsumDense"><span class="pre">EinsumDense</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.einsum_dense.EinsumDenseConfigTemplate.dense_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.einsum_dense.EinsumDenseConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.EinsumDense" title="hls4ml.model.layers.EinsumDense"><span class="pre">EinsumDense</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.einsum_dense.EinsumDenseConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.einsum_dense.EinsumDenseFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.einsum_dense.</span></span><span class="sig-name descname"><span class="pre">EinsumDenseFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.einsum_dense.EinsumDenseFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.einsum_dense.EinsumDenseFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.einsum_dense.EinsumDenseFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.embedding_templates">
+<span id="hls4ml-backends-altera-passes-embedding-templates-module"></span><h2>hls4ml.backends.altera.passes.embedding_templates module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.embedding_templates" title="Link to this heading"></a></h2>
+<p>These are the stream Altera templates for embedding layers. The io_parallel ones are in backends/fpga/passes/embedding.py.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.embedding_templates.EmbeddingStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.embedding_templates.</span></span><span class="sig-name descname"><span class="pre">EmbeddingStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.embedding_templates.EmbeddingStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.embedding_templates.EmbeddingStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.embedding_templates.EmbeddingStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.embedding_templates.EmbeddingTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.embedding_templates.</span></span><span class="sig-name descname"><span class="pre">EmbeddingTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.embedding_templates.EmbeddingTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.embedding_templates.EmbeddingTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.embedding_templates.EmbeddingTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.feature_check">
+<span id="hls4ml-backends-altera-passes-feature-check-module"></span><h2>hls4ml.backends.altera.passes.feature_check module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.feature_check" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.feature_check.ValidateAcTypes">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.feature_check.</span></span><span class="sig-name descname"><span class="pre">ValidateAcTypes</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.feature_check.ValidateAcTypes" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.feature_check.ValidateAcTypes.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.feature_check.ValidateAcTypes.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.feature_check.ValidateAcTypes.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.feature_check.ValidateAcTypes.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.merge_templates">
+<span id="hls4ml-backends-altera-passes-merge-templates-module"></span><h2>hls4ml.backends.altera.passes.merge_templates module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.merge_templates" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.ConcatenateConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">ConcatenateConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.ConcatenateConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.ConcatenateConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.ConcatenateConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.DotConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">DotConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.DotConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.DotConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.DotConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.MergeConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">MergeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.MergeConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.MergeConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.MergeConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.MergeFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">MergeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.MergeFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.MergeFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.MergeFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.MergeStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">MergeStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.MergeStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.MergeStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.MergeStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.MergeTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.merge_templates.</span></span><span class="sig-name descname"><span class="pre">MergeTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.MergeTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.merge_templates.MergeTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.merge_templates.MergeTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.pointwise">
+<span id="hls4ml-backends-altera-passes-pointwise-module"></span><h2>hls4ml.backends.altera.passes.pointwise module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.pointwise" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.OptimizePointwiseConv">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">OptimizePointwiseConv</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.OptimizePointwiseConv" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.OptimizePointwiseConv.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.OptimizePointwiseConv.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.OptimizePointwiseConv.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.OptimizePointwiseConv.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv1DConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv1DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv1DConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.altera.passes.convolution_templates.Conv1DConfigTemplate" title="hls4ml.backends.altera.passes.convolution_templates.Conv1DConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv1DConfigTemplate</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv1DFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv1DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv1DFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv1DFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv1DFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv1DTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv1DTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv1DTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv1DTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv1DTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv2DConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv2DConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv2DConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hls4ml.backends.altera.passes.convolution_templates.Conv2DConfigTemplate" title="hls4ml.backends.altera.passes.convolution_templates.Conv2DConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conv2DConfigTemplate</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv2DFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv2DFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv2DFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv2DFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv2DFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv2DTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConv2DTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv2DTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConv2DTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConv2DTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConvStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">PointwiseConvStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConvStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.PointwiseConvStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.PointwiseConvStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pointwise.register_pointwise">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pointwise.</span></span><span class="sig-name descname"><span class="pre">register_pointwise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pointwise.register_pointwise" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.pooling_templates">
+<span id="hls4ml-backends-altera-passes-pooling-templates-module"></span><h2>hls4ml.backends.altera.passes.pooling_templates module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.pooling_templates" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pooling_templates.PoolingConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pooling_templates.</span></span><span class="sig-name descname"><span class="pre">PoolingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pooling_templates.PoolingConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pooling_templates.PoolingConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pooling_templates.PoolingConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pooling_templates.PoolingFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pooling_templates.</span></span><span class="sig-name descname"><span class="pre">PoolingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pooling_templates.PoolingFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pooling_templates.PoolingFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pooling_templates.PoolingFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pooling_templates.PoolingStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pooling_templates.</span></span><span class="sig-name descname"><span class="pre">PoolingStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pooling_templates.PoolingStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pooling_templates.PoolingStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pooling_templates.PoolingStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pooling_templates.PoolingTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.pooling_templates.</span></span><span class="sig-name descname"><span class="pre">PoolingTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.pooling_templates.PoolingTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.pooling_templates.PoolingTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.pooling_templates.PoolingTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.quantization_templates">
+<span id="hls4ml-backends-altera-passes-quantization-templates-module"></span><h2>hls4ml.backends.altera.passes.quantization_templates module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.quantization_templates" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.quantization_templates.</span></span><span class="sig-name descname"><span class="pre">ApplyAlphaConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.quantization_templates.</span></span><span class="sig-name descname"><span class="pre">ApplyAlphaFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.quantization_templates.</span></span><span class="sig-name descname"><span class="pre">ApplyAlphaStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.quantization_templates.</span></span><span class="sig-name descname"><span class="pre">ApplyAlphaTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.quantization_templates.ApplyAlphaTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.recurrent_templates">
+<span id="hls4ml-backends-altera-passes-recurrent-templates-module"></span><h2>hls4ml.backends.altera.passes.recurrent_templates module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.recurrent_templates" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.GRUConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">GRUConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.GRUConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.GRUConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.GRUConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.GRUFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">GRUFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.GRUFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.GRUFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.GRUFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.GRUStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">GRUStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.GRUStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.GRUStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.GRUStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.GRUTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">GRUTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.GRUTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.GRUTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.GRUTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.LSTMConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">LSTMConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.LSTMConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.LSTMConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.LSTMConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.LSTMFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">LSTMFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.LSTMFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.LSTMFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.LSTMFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.SimpleRNNConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">SimpleRNNConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.SimpleRNNConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.SimpleRNNConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.SimpleRNNConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.SimpleRNNFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.recurrent_templates.</span></span><span class="sig-name descname"><span class="pre">SimpleRNNFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.SimpleRNNFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.recurrent_templates.SimpleRNNFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.recurrent_templates.SimpleRNNFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.reshaping_templates">
+<span id="hls4ml-backends-altera-passes-reshaping-templates-module"></span><h2>hls4ml.backends.altera.passes.reshaping_templates module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.reshaping_templates" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ReshapeConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ReshapeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ReshapeConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ReshapeConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ReshapeConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ReshapeFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ReshapeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ReshapeFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<p>Only used to add the include list</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ReshapeFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ReshapeFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ReshapeTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ReshapeTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ReshapeTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ReshapeTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ReshapeTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ReshapingStreamFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ReshapingStreamFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ReshapingStreamFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate" title="hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamFunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ReshapingStreamFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ReshapingStreamFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ResizeConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ResizeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ResizeConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ResizeConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ResizeConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ResizeFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ResizeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ResizeFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ResizeFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ResizeFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ResizeTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ResizeTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ResizeTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ResizeTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ResizeTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.TransposeConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">TransposeConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.TransposeConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.TransposeConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.TransposeConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.TransposeFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">TransposeFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.TransposeFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.TransposeFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.TransposeFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.TransposeTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">TransposeTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.TransposeTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.TransposeTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.TransposeTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ZeroPaddingConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ZeroPaddingFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingTaskSequenceTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.reshaping_templates.</span></span><span class="sig-name descname"><span class="pre">ZeroPaddingTaskSequenceTemplate</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingTaskSequenceTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.TaskSequenceTemplate" title="hls4ml.backends.altera.altera_template.TaskSequenceTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskSequenceTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingTaskSequenceTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.reshaping_templates.ZeroPaddingTaskSequenceTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.resource_strategy">
+<span id="hls4ml-backends-altera-passes-resource-strategy-module"></span><h2>hls4ml.backends.altera.passes.resource_strategy module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.resource_strategy" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.resource_strategy.ApplyResourceStrategy">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.resource_strategy.</span></span><span class="sig-name descname"><span class="pre">ApplyResourceStrategy</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.resource_strategy.ApplyResourceStrategy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Transposes the weights to use the dense_resource matrix multiply routine</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.resource_strategy.ApplyResourceStrategy.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.resource_strategy.ApplyResourceStrategy.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.resource_strategy.ApplyResourceStrategy.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.resource_strategy.ApplyResourceStrategy.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes.transform_types">
+<span id="hls4ml-backends-altera-passes-transform-types-module"></span><h2>hls4ml.backends.altera.passes.transform_types module<a class="headerlink" href="#module-hls4ml.backends.altera.passes.transform_types" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.transform_types.TransformTypes">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.altera.passes.transform_types.</span></span><span class="sig-name descname"><span class="pre">TransformTypes</span></span><a class="headerlink" href="#hls4ml.backends.altera.passes.transform_types.TransformTypes" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.GlobalOptimizerPass" title="hls4ml.model.optimizer.optimizer.GlobalOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">GlobalOptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.altera.passes.transform_types.TransformTypes.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.altera.passes.transform_types.TransformTypes.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.altera.passes">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hls4ml.backends.altera.passes" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hls4ml.backends.altera.html" class="btn btn-neutral float-left" title="hls4ml.backends.altera package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hls4ml.backends.catapult.html" class="btn btn-neutral float-right" title="hls4ml.backends.catapult package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

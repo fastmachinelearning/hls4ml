@@ -1,0 +1,219 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Altera &mdash; hls4ml 1.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="VitisUnified" href="vitis_unified.html" />
+    <link rel="prev" title="VivadoAccelerator" href="accelerator.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/contributing.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Altera</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#io-parallel-and-io-stream">io_parallel and io_stream</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#namespace">Namespace</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="vitis_unified.html">VitisUnified</a></li>
+<li class="toctree-l1"><a class="reference internal" href="catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xls.html">XLS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fused.html">Fused Strategy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/snn.html">Spiking Neural Networks (PyTorch/SNN)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/bramfactor.html">Loading weights from external BRAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/plugins.html">External Backend and Writer Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/multimodelgraph.html">MultiModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Altera</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/backend/altera.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="altera">
+<h1>Altera<a class="headerlink" href="#altera" title="Link to this heading"></a></h1>
+<p>The <strong>Altera</strong> backend of hls4ml is designed for deploying neural networks on Intel/Altera FPGAs.
+It is based on the SYCL FPGA flow that was previously provided through the <strong>Intel oneAPI</strong> toolchain and is now
+continued by the <strong>Altera HLS IP Gen</strong> toolchain. The functionality and terminology used by hls4ml remain largely unchanged.</p>
+<p>The <strong>Altera</strong> backend is intended to supersede the <strong>Quartus</strong> backend, which targets the discontinued
+Intel HLS Compiler. Quartus Prime continues to be used to integrate the IP generated by the Altera HLS IP Gen flow
+into FPGA designs.</p>
+<p>The <strong>Altera</strong> backend uses SYCL kernels to implement the logic that is deployed on FPGAs. It naturally leads to the
+accelerator style of programming. In the SYCL HLS (IP Component) flow, which is currently the only flow supported, the
+kernel becomes the IP, and the “host code” becomes the testbench. An accelerator flow, with easier deployment on
+PCIe accelerator boards, is planned to be added in the future.</p>
+<p>The produced work areas use cmake to build the projects in a style based on
+<a class="reference external" href="https://github.com/altera-fpga/hls-samples">Altera HLS IP Gen hls-samples</a>
+The standard <code class="docutils literal notranslate"><span class="pre">fpga_emu</span></code>, <code class="docutils literal notranslate"><span class="pre">report</span></code>, <code class="docutils literal notranslate"><span class="pre">fpga_sim</span></code>, and <code class="docutils literal notranslate"><span class="pre">fpga</span></code> make targets are supported. Additionally, <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">lib</span></code>
+produces the library used for calling the <code class="docutils literal notranslate"><span class="pre">predict</span></code> function from hls4ml. The <code class="docutils literal notranslate"><span class="pre">compile</span></code> and <code class="docutils literal notranslate"><span class="pre">build</span></code> commands
+in hls4ml interact with the cmake system, so one does not need to manually use the build system, but it is there
+if desired.</p>
+<p>The <strong>Altera</strong> backend, like the <strong>Quartus</strong> backend, only implements the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy for the layers. There
+is no <code class="docutils literal notranslate"><span class="pre">Latency</span></code> implementation of any of the layers.</p>
+<p>Note: currently tracing and external weights (i.e. setting BramFactor) are not supported.</p>
+<section id="io-parallel-and-io-stream">
+<h2>io_parallel and io_stream<a class="headerlink" href="#io-parallel-and-io-stream" title="Link to this heading"></a></h2>
+<p>As mentioned in the <a class="reference internal" href="../api/concepts.html#i-o-types"><span class="std std-ref">I/O Types</span></a> section, <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> is for small models, while <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> is for
+larger models. In <code class="docutils literal notranslate"><span class="pre">Altera</span></code>, there is an additional difference: <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> implements each layer on its
+own <code class="docutils literal notranslate"><span class="pre">task_sequence</span></code>. Thus, the layers run in parallel, with pipes connecting the inputs and outputs. This
+is similar in style to the <code class="docutils literal notranslate"><span class="pre">dataflow</span></code> implementation on Vitis HLS, but more explicit. It is also a change
+relative to the Intel HLS-based <code class="docutils literal notranslate"><span class="pre">Quartus</span></code> backend. On the other hand, <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> always uses a single task,
+relying on pipelining within the task for good performance. In contrast, the Vitis backend sometimes uses dataflow
+with <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code>.</p>
+</section>
+<section id="namespace">
+<h2>Namespace<a class="headerlink" href="#namespace" title="Link to this heading"></a></h2>
+<p>SYCL registers pipe IDs process-wide by their type name, and the pipe names are derived from the layer names. To
+allow several compiled models to be loaded into the same Python process, the kernel and pipe declarations are placed
+in a namespace. If the <code class="docutils literal notranslate"><span class="pre">namespace</span></code> argument is passed to the converter, it is used as given. Otherwise the project
+name is used, except for the default project name <code class="docutils literal notranslate"><span class="pre">myproject</span></code>, in which case a random stamp that changes on every
+<code class="docutils literal notranslate"><span class="pre">write()</span></code> is appended. To get a deterministic IP, set either <code class="docutils literal notranslate"><span class="pre">project_name</span></code> or <code class="docutils literal notranslate"><span class="pre">namespace</span></code>. Two models with the
+same layer names and the same explicit namespace (or the same non-default project name) cannot be loaded into the
+same process.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="accelerator.html" class="btn btn-neutral float-left" title="VivadoAccelerator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="vitis_unified.html" class="btn btn-neutral float-right" title="VitisUnified" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

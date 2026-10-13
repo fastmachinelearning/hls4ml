@@ -4,6 +4,14 @@ hls4ml.writer package
 Submodules
 ----------
 
+hls4ml.writer.altera\_writer module
+-----------------------------------
+
+.. automodule:: hls4ml.writer.altera_writer
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 hls4ml.writer.catapult\_writer module
 -------------------------------------
 
@@ -24,14 +32,6 @@ hls4ml.writer.libero\_writer module
 -----------------------------------
 
 .. automodule:: hls4ml.writer.libero_writer
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-hls4ml.writer.oneapi\_writer module
------------------------------------
-
-.. automodule:: hls4ml.writer.oneapi_writer
    :members:
    :show-inheritance:
    :undoc-members:

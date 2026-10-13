@@ -1,0 +1,149 @@
+hls4ml.backends.altera.passes package
+=====================================
+
+Submodules
+----------
+
+hls4ml.backends.altera.passes.bn\_quant module
+----------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.bn_quant
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.clone\_templates module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.clone_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.convolution\_templates module
+-----------------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.convolution_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.convolution\_winograd module
+----------------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.convolution_winograd
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.core\_templates module
+----------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.core_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.einsum module
+-------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.einsum
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.einsum\_dense module
+--------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.einsum_dense
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.embedding\_templates module
+---------------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.embedding_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.feature\_check module
+---------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.feature_check
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.merge\_templates module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.merge_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.pointwise module
+----------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.pointwise
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.pooling\_templates module
+-------------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.pooling_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.quantization\_templates module
+------------------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.quantization_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.recurrent\_templates module
+---------------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.recurrent_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.reshaping\_templates module
+---------------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.reshaping_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.resource\_strategy module
+-------------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.resource_strategy
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.altera.passes.transform\_types module
+-----------------------------------------------------
+
+.. automodule:: hls4ml.backends.altera.passes.transform_types
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: hls4ml.backends.altera.passes
+   :members:
+   :show-inheritance:
+   :undoc-members:

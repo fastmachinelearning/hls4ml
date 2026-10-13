@@ -71,8 +71,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/altera.html">Altera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
@@ -144,6 +144,15 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.backends.html">hls4ml.backends package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.altera.html">hls4ml.backends.altera package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.altera.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.altera.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.altera.html#module-hls4ml.backends.altera.altera_backend">hls4ml.backends.altera.altera_backend module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.altera.html#module-hls4ml.backends.altera.altera_template">hls4ml.backends.altera.altera_template module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.altera.html#module-hls4ml.backends.altera.altera_types">hls4ml.backends.altera.altera_types module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.altera.html#module-hls4ml.backends.altera">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.catapult.html">hls4ml.backends.catapult package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#subpackages">Subpackages</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.catapult.html#submodules">Submodules</a></li>
@@ -174,15 +183,6 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.libero.html#module-hls4ml.backends.libero.libero_backend">hls4ml.backends.libero.libero_backend module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.libero.html#module-hls4ml.backends.libero.libero_types">hls4ml.backends.libero.libero_types module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.libero.html#module-hls4ml.backends.libero">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.oneapi.html">hls4ml.backends.oneapi package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#subpackages">Subpackages</a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi.oneapi_backend">hls4ml.backends.oneapi.oneapi_backend module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi.oneapi_template">hls4ml.backends.oneapi.oneapi_template module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi.oneapi_types">hls4ml.backends.oneapi.oneapi_types module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.oneapi.html#module-hls4ml.backends.oneapi">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.quartus.html">hls4ml.backends.quartus package</a><ul>
@@ -995,6 +995,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.report.html">hls4ml.report package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.report.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.report.html#module-hls4ml.report.altera_report">hls4ml.report.altera_report module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.altera_report.parse_altera_report"><code class="docutils literal notranslate"><span class="pre">parse_altera_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.altera_report.print_altera_report"><code class="docutils literal notranslate"><span class="pre">print_altera_report()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.report.html#module-hls4ml.report.catapult_report">hls4ml.report.catapult_report module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.catapult_report.get_latest_project_prj_directory"><code class="docutils literal notranslate"><span class="pre">get_latest_project_prj_directory()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.catapult_report.get_latest_project_version_directory"><code class="docutils literal notranslate"><span class="pre">get_latest_project_version_directory()</span></code></a></li>
@@ -1006,11 +1011,6 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.report.html#module-hls4ml.report.libero_report">hls4ml.report.libero_report module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.libero_report.parse_libero_report"><code class="docutils literal notranslate"><span class="pre">parse_libero_report()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.libero_report.parse_utilization_data"><code class="docutils literal notranslate"><span class="pre">parse_utilization_data()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.report.html#module-hls4ml.report.oneapi_report">hls4ml.report.oneapi_report module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.oneapi_report.parse_oneapi_report"><code class="docutils literal notranslate"><span class="pre">parse_oneapi_report()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.report.html#hls4ml.report.oneapi_report.print_oneapi_report"><code class="docutils literal notranslate"><span class="pre">print_oneapi_report()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.report.html#module-hls4ml.report.quartus_report">hls4ml.report.quartus_report module</a><ul>
@@ -1154,6 +1154,29 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hls4ml.writer.html">hls4ml.writer package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.writer.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.writer.html#module-hls4ml.writer.altera_writer">hls4ml.writer.altera_writer module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter"><code class="docutils literal notranslate"><span class="pre">AlteraWriter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.get_max_reuse_factor"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.get_max_reuse_factor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.print_array_to_cpp"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.print_array_to_cpp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_activation_tables"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_activation_tables()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_bridge"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_bridge()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_build_script"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_build_script()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_defines"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_defines()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_generated_code"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_generated_code()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_hls"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_hls()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_nnet_utils"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_nnet_utils()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_parameters"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_project_cpp"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_project_cpp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_project_dir"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_project_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_project_header"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_project_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_tar"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_tar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_test_bench"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_test_bench()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_weights"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.altera_writer.AlteraWriter.write_yml"><code class="docutils literal notranslate"><span class="pre">AlteraWriter.write_yml()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.writer.html#module-hls4ml.writer.catapult_writer">hls4ml.writer.catapult_writer module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter"><code class="docutils literal notranslate"><span class="pre">CatapultWriter</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.catapult_writer.CatapultWriter.print_array_to_cpp"><code class="docutils literal notranslate"><span class="pre">CatapultWriter.print_array_to_cpp()</span></code></a></li>
@@ -1207,29 +1230,6 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.libero_writer.LiberoWriter.write_test_bench"><code class="docutils literal notranslate"><span class="pre">LiberoWriter.write_test_bench()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.libero_writer.LiberoWriter.write_weights"><code class="docutils literal notranslate"><span class="pre">LiberoWriter.write_weights()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.libero_writer.LiberoWriter.write_yml"><code class="docutils literal notranslate"><span class="pre">LiberoWriter.write_yml()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="hls4ml.writer.html#module-hls4ml.writer.oneapi_writer">hls4ml.writer.oneapi_writer module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.get_max_reuse_factor"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.get_max_reuse_factor()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.print_array_to_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.print_array_to_cpp()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_activation_tables"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_activation_tables()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_bridge"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_bridge()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_build_script"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_build_script()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_defines"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_defines()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_generated_code"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_generated_code()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_hls"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_hls()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_nnet_utils"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_nnet_utils()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_parameters"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_parameters()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_project_cpp"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_project_cpp()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_project_dir"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_project_dir()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_project_header"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_project_header()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_tar"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_tar()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_test_bench"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_test_bench()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_weights"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_weights()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="hls4ml.writer.html#hls4ml.writer.oneapi_writer.OneAPIWriter.write_yml"><code class="docutils literal notranslate"><span class="pre">OneAPIWriter.write_yml()</span></code></a></li>
 </ul>
 </li>
 </ul>
