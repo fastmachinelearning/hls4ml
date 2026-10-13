@@ -27,7 +27,7 @@ Fixes #  <!-- or: Relates to # -->
 
 <!-- Tick everything this PR touches. This tells reviewers which parts of the CI matter. -->
 
-**Backends:** <!-- e.g. Vitis, Vivado, VivadoAccelerator, Quartus, oneAPI, Catapult, Libero, SymbolicExpression -->
+**Backends:** <!-- e.g. Vitis, Vivado, VivadoAccelerator, Quartus, Altera, Catapult, Libero, SymbolicExpression -->
 - [ ]
 - [ ] Backend-independent (core IR, optimizer, `hls4ml.model`)
 

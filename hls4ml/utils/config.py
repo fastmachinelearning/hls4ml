@@ -27,7 +27,7 @@ def create_config(output_dir='my-hls-test', project_name='myproject', backend='V
         dict: The conversion configuration.
     """
     backend_list = hls4ml.backends.get_available_backends()
-    if backend.lower() not in backend_list:
+    if backend.lower() not in backend_list and backend.lower() != 'oneapi':
         raise Exception(f'Unknown backend: {backend}')
 
     backend = hls4ml.backends.get_backend(backend)
