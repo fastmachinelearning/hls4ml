@@ -390,6 +390,52 @@ def test_rnn_static_io_stream(test_case_id, rnn_layer, backend, static):
 
 
 @pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_rnn_linear_activation(test_case_id, rnn_layer, backend):
+    """A recurrent layer with the linear activation builds and matches Keras."""
+
+    model = Sequential()
+    model.add(Input(shape=(8, 6)))
+    model.add(rnn_layer(16, activation='linear', name='rnn'))
+    X = np.random.default_rng(0).uniform(-0.5, 0.5, (20, 8, 6))
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<24, 10>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=hls_config, output_dir=output_dir, backend=backend
+    )
+    hls_model.compile()
+
+    np.testing.assert_allclose(hls_model.predict(X).flatten(), model.predict(X).flatten(), rtol=0.0, atol=5e-2)
+
+
+@pytest.mark.parametrize(
+    'make_layer, attribute, activation',
+    [
+        (lambda: SimpleRNN(4, activation='elu', name='rnn'), 'Activation', 'elu'),
+        (lambda: LSTM(4, recurrent_activation='hard_sigmoid', name='rnn'), 'Recurrent activation', 'hard_sigmoid'),
+        (lambda: GRU(4, activation='softsign', name='rnn'), 'Activation', 'softsign'),
+        (lambda: Bidirectional(LSTM(4, activation='elu'), name='rnn'), 'Forward activation', 'elu'),
+    ],
+    ids=['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'],
+)
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_rnn_unsupported_activation(test_case_id, make_layer, attribute, activation, backend):
+    """Recurrent layers stop the conversion for an activation they do not implement."""
+
+    model = Sequential()
+    model.add(Input(shape=(5, 8)))
+    model.add(make_layer())
+
+    hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.raises(NotImplementedError, match=f'{attribute} "{activation}"'):
+        hls4ml.converters.convert_from_keras_model(model, hls_config=hls_config, output_dir=output_dir, backend=backend)
+
+
+@pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
 def test_rnn_no_bias(test_case_id, rnn_layer):
     """use_bias=False previously crashed the parser instead of substituting zero biases."""
     model = Sequential()

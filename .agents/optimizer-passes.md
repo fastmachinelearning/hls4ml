@@ -130,8 +130,8 @@ layer construction, which breaks every existing model.
 default rule, which converts but gives types nobody chose. Adding a layer type means adding its branch there
 too — a quiet omission, not a loud one.
 
-The user writes the name in pascal case in the config (`RecurrentReuseFactor`); it arrives as snake case
-(`recurrent_reuse_factor`) in `layer.attributes`, and templates read it from there by the same name.
+The user writes the name in pascal case in the config (`ParallelizationFactor`); it arrives as snake case
+(`parallelization_factor`) in `layer.attributes`, and templates read it from there by the same name.
 
 ## Worked example in the tree: the distributed arithmetic strategy
 
