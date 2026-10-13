@@ -22,11 +22,11 @@ Libero follows closely and Catapult partly. Check the backend you are actually w
 | --- | --- | --- | --- | --- |
 | Vivado, Vitis, Libero | yes | yes | `templates/<b>/nnet_utils/` | native `weights[i*n_out+j]` |
 | Catapult | yes | no (branches inside the header) | `templates/<b>/nnet_utils/` | native |
-| Quartus, oneAPI | no | no (`dense_rf_gt` / `dense_rf_lt` chosen by reuse factor) | `templates/<b>/firmware/nnet_utils/` | padded and rounded, `reuse_factor_rounded * block_factor_rounded` |
+| Quartus, Altera | no | no (`dense_rf_gt` / `dense_rf_lt` chosen by reuse factor) | `templates/<b>/firmware/nnet_utils/` | padded and rounded, `reuse_factor_rounded * block_factor_rounded` |
 | symbolic | no nnet_utils at all | | | |
 
-oneAPI further replaces `hls::stream` with pipes (variables carry `pipe_name`) and adds its own template
-kinds in `backends/oneapi/oneapi_template.py`. A backend under development may share none of this.
+Altera further replaces `hls::stream` with pipes (variables carry `pipe_name`) and adds its own template
+kinds in `backends/altera/altera_template.py`. A backend under development may share none of this.
 
 So: read the target backend's own `nnet_common.h` and `nnet_dense.h` before assuming any of the sections
 below. If the backend has no such files, skip to "If your backend does not look like this" at the end.
@@ -61,7 +61,7 @@ nnet::dense<input_t, layer2_t, config2>(input, layer2_out, w2, b2);
 - A new kernel is therefore three things: the class in a header, a `dense_function` branch in the config
   template (`backends/vivado/passes/core_templates.py`), and an `init_dense` branch that sets `strategy`.
 - Dense weight layout in this family is `weights[i * n_out + j]` (input-major), exactly as the frontend
-  produced it. This is a per-backend decision, not a global one — Quartus and oneAPI pass a padded, rounded
+  produced it. This is a per-backend decision, not a global one — Quartus and Altera pass a padded, rounded
   layout instead. If your kernel wants a different layout, rearrange it in a pass, not at runtime.
 - Never hardcode `ap_fixed` inside a kernel. Use `typename CONFIG_T::accum_t` for accumulators,
   `CONFIG_T::template product<data_T, weight_t>::product(x, w)` for the multiply (this is what makes binary
@@ -73,7 +73,7 @@ nnet::dense<input_t, layer2_t, config2>(input, layer2_out, w2, b2);
 
 ## io_parallel and io_stream
 
-Two io types with these two representations is a Vivado-family arrangement. oneAPI carries data in pipes
+Two io types with these two representations is a Vivado-family arrangement. Altera carries data in pipes
 instead, and a new backend may define something else entirely.
 
 - **io_parallel:** tensors are plain C arrays, partitioned by a pragma chosen in `transform_types.py`. The
@@ -143,12 +143,12 @@ For a backend under development, or one of the non-Vivado backends, treat everyt
 example rather than a specification. Only the Python-side contract is fixed, and it is short:
 
 - Each node must end up with the attributes the backend's own writer reads. For the Vivado family those are
-  `config_cpp` and `function_cpp`; oneAPI adds `stream_function_cpp` and `task_sequence_cpp` through its own
-  `Template` subclasses in `backends/oneapi/oneapi_template.py`. **Defining new template kinds is a supported
+  `config_cpp` and `function_cpp`; Altera adds `stream_function_cpp` and `task_sequence_cpp` through its own
+  `Template` subclasses in `backends/altera/altera_template.py`. **Defining new template kinds is a supported
   extension point**, not a workaround — subclass `Template` with your own `attribute_name`.
 - The backend must supply variable and type converters that turn `TensorVariable` and `NamedType` into
   whatever its language needs, applied by its own `transform_types` pass. Arrays and `hls::stream` are the
-  Vivado answer; pipes are the oneAPI answer; a new backend may have a third.
+  Vivado answer; pipes are the Altera answer; a new backend may have a third.
 - The writer is registered per backend and may emit any layout it wants. There is no required project
   structure, only the one each writer creates.
 - Everything else — the `nnet::` namespace, `nnet_common.h`, the strategy enum, the `kernel` typedef, the

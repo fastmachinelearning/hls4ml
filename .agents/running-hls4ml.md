@@ -37,19 +37,18 @@ This runs as written:
 
 ```python
 import os
+
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 import numpy as np, hls4ml
 from tensorflow import keras
 
-model = keras.Sequential([keras.layers.Input((8,)),
-                          keras.layers.Dense(6, activation='relu'),
-                          keras.layers.Dense(3)])
+model = keras.Sequential([keras.layers.Input((8,)), keras.layers.Dense(6, activation='relu'), keras.layers.Dense(3)])
 
-cfg = hls4ml.utils.config_from_keras_model(
-    model, granularity='name', backend='Vitis', default_precision='fixed<16,6>')
+cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vitis', default_precision='fixed<16,6>')
 
 hmodel = hls4ml.converters.convert_from_keras_model(
-    model, hls_config=cfg, backend='Vitis', io_type='io_stream', output_dir='/tmp/prj')
+    model, hls_config=cfg, backend='Vitis', io_type='io_stream', output_dir='/tmp/prj'
+)
 
 hmodel.compile()
 X = np.random.rand(20, 8).astype('float32')
@@ -74,7 +73,7 @@ vendor toolchain. `build()` does that, and is a separate, much slower step.
 - **`default_precision`** accepts `'fixed<16,6>'` or a backend-specific spelling; `'auto'` is not allowed as
   the default, but individual layer types may be set to `'auto'` to be inferred.
 - Registered backends: `vivado`, `vivadoaccelerator`, `vitis`, `quartus`, `catapult`, `symbolicexpression`,
-  `oneapi`, `libero`. `hls4ml.backends.get_available_backends()` lists them.
+  `altera`, `libero`. `hls4ml.backends.get_available_backends()` lists them.
 
 ## What the numbers should look like
 

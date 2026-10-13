@@ -40,7 +40,7 @@ Paths are relative to the package directory `hls4ml/hls4ml/`. For the kernels th
 
 ## Reading a generated project
 
-File names below are the Vivado-family writer's. Other writers differ — Quartus and oneAPI put the headers
+File names below are the Vivado-family writer's. Other writers differ — Quartus and Altera put the headers
 under `firmware/`, ship a Makefile or CMakeLists instead of tcl scripts, and Quartus writes separate parallel
 and stream testbenches. The working method underneath the table holds regardless.
 

@@ -36,8 +36,8 @@
 
     backend/vitis
     backend/accelerator
+    backend/altera
     backend/vitis_unified
-    backend/oneapi
     backend/catapult
     backend/sr
     backend/xls
@@ -50,6 +50,7 @@
     advanced/auto
     advanced/hgq
     advanced/da
+    advanced/fused
     advanced/precision
     advanced/fifo_depth
     advanced/extension
