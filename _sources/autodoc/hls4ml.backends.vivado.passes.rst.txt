@@ -76,6 +76,14 @@ hls4ml.backends.vivado.passes.einsum\_dense module
    :show-inheritance:
    :undoc-members:
 
+hls4ml.backends.vivado.passes.feature\_check module
+---------------------------------------------------
+
+.. automodule:: hls4ml.backends.vivado.passes.feature_check
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 hls4ml.backends.vivado.passes.fifo\_depth\_optimization module
 --------------------------------------------------------------
 

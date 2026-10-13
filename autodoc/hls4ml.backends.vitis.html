@@ -86,6 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fused.html">Fused Strategy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
@@ -170,6 +171,11 @@
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation.transform"><code class="docutils literal notranslate"><span class="pre">ValidateConvImplementation.transform()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateFusedIoType"><code class="docutils literal notranslate"><span class="pre">ValidateFusedIoType</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateFusedIoType.match"><code class="docutils literal notranslate"><span class="pre">ValidateFusedIoType.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateFusedIoType.transform"><code class="docutils literal notranslate"><span class="pre">ValidateFusedIoType.transform()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy"><code class="docutils literal notranslate"><span class="pre">ValidateResourceStrategy</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy.match"><code class="docutils literal notranslate"><span class="pre">ValidateResourceStrategy.match()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy.transform"><code class="docutils literal notranslate"><span class="pre">ValidateResourceStrategy.transform()</span></code></a></li>
@@ -205,6 +211,45 @@
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.get_vitis_optimized_fifo_depths"><code class="docutils literal notranslate"><span class="pre">get_vitis_optimized_fifo_depths()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.initialize_large_fifos"><code class="docutils literal notranslate"><span class="pre">initialize_large_fifos()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.set_optimized_fifo_depths"><code class="docutils literal notranslate"><span class="pre">set_optimized_fifo_depths()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.fuse_dense">hls4ml.backends.vitis.passes.fuse_dense module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.FoldActivationIntoFused"><code class="docutils literal notranslate"><span class="pre">FoldActivationIntoFused</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.FoldActivationIntoFused.match"><code class="docutils literal notranslate"><span class="pre">FoldActivationIntoFused.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.FoldActivationIntoFused.transform"><code class="docutils literal notranslate"><span class="pre">FoldActivationIntoFused.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.LayoutFusedDotWeights"><code class="docutils literal notranslate"><span class="pre">LayoutFusedDotWeights</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.LayoutFusedDotWeights.match"><code class="docutils literal notranslate"><span class="pre">LayoutFusedDotWeights.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.LayoutFusedDotWeights.transform"><code class="docutils literal notranslate"><span class="pre">LayoutFusedDotWeights.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.PlanDenseFusion"><code class="docutils literal notranslate"><span class="pre">PlanDenseFusion</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.PlanDenseFusion.transform"><code class="docutils literal notranslate"><span class="pre">PlanDenseFusion.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy"><code class="docutils literal notranslate"><span class="pre">SubstituteUnfusedStrategy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy.match"><code class="docutils literal notranslate"><span class="pre">SubstituteUnfusedStrategy.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy.transform"><code class="docutils literal notranslate"><span class="pre">SubstituteUnfusedStrategy.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.ValidateDenseFusion"><code class="docutils literal notranslate"><span class="pre">ValidateDenseFusion</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.ValidateDenseFusion.transform"><code class="docutils literal notranslate"><span class="pre">ValidateDenseFusion.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.fused_templates">hls4ml.backends.vitis.passes.fused_templates module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate"><code class="docutils literal notranslate"><span class="pre">DenseFusedConfigTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate.format"><code class="docutils literal notranslate"><span class="pre">DenseFusedConfigTemplate.format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate.match"><code class="docutils literal notranslate"><span class="pre">DenseFusedConfigTemplate.match()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">DenseFusedFunctionTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">DenseFusedFunctionTemplate.format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate.match"><code class="docutils literal notranslate"><span class="pre">DenseFusedFunctionTemplate.match()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes">Module contents</a></li>

@@ -20,6 +20,22 @@ hls4ml.backends.vitis.passes.fifo\_depth\_optimization module
    :show-inheritance:
    :undoc-members:
 
+hls4ml.backends.vitis.passes.fuse\_dense module
+-----------------------------------------------
+
+.. automodule:: hls4ml.backends.vitis.passes.fuse_dense
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+hls4ml.backends.vitis.passes.fused\_templates module
+----------------------------------------------------
+
+.. automodule:: hls4ml.backends.vitis.passes.fused_templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Module contents
 ---------------
 

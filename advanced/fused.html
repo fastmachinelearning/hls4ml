@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fused Strategy &mdash; hls4ml 1.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
+
+  
+    <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Model-wise Precision Inference" href="precision.html" />
+    <link rel="prev" title="Distributed Arithmetic" href="da.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/hls4ml_logo_navbar.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/status.html">Status and Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/setup.html">Setup and Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/contributing.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/reference.html">Citation, Acknowledgments, and Contributors</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/command.html">Command Line Interface (deprecated)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/serialization.html">Saving/Loading hls4ml models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Frontends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/keras.html">Keras and its quantized variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/pytorch.html">PyTorch and Brevitas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frontend/qonnx.html">ONNX and QONNX</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Backends</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis.html">Vivado/Vitis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html">VivadoAccelerator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/accelerator.html#coyote">Coyote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/oneapi.html">oneAPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Features</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="profiling.html">Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto.html">Automatic precision inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hgq.html">High Granularity Quantization (HGQ2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Fused Strategy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#when-to-use-it">When to use it</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-it-works">How it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#limitations">Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tracing-and-profiling">Tracing and profiling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-reuse-factor-and-the-interval">The reuse factor and the interval</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="precision.html">Model-wise Precision Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="snn.html">Spiking Neural Networks (PyTorch/SNN)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_optimization.html">Hardware-aware Optimization API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bramfactor.html">Loading weights from external BRAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugins.html">External Backend and Writer Plugins</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ir/ir.html">Internal representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/modelgraph.html">ModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/multimodelgraph.html">MultiModelGraph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/flows.html">Optimizer Passes and Flows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/attributes.html">Layer attributes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Autogenerated API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.backends.html">hls4ml.backends package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.converters.html">hls4ml.converters package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.model.html">hls4ml.model package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.optimization.html">hls4ml.optimization package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.report.html">hls4ml.report package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.utils.html">hls4ml.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../autodoc/hls4ml.writer.html">hls4ml.writer package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">hls4ml</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Fused Strategy</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/fastmachinelearning/hls4ml/blob/main/docs/advanced/fused.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fused-strategy">
+<h1>Fused Strategy<a class="headerlink" href="#fused-strategy" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">Strategy:</span> <span class="pre">Fused</span></code> is available in the <strong>Vitis</strong> backend, and in <strong>Coyote</strong>, which builds on it. The other strategies decide how each layer is computed on
+its own; the fused strategy decides how a chain of <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers is computed together. The layers of a chain run at the same time in a <code class="docutils literal notranslate"><span class="pre">DATAFLOW</span></code>
+region, each starting as soon as the layer before it produces its first output, instead of one after another.</p>
+<section id="when-to-use-it">
+<h2>When to use it<a class="headerlink" href="#when-to-use-it" title="Link to this heading"></a></h2>
+<p>The strategy is meant for designs with a reuse factor greater than one, where each layer takes several cycles. Running the layers of a chain at the
+same time reduces the latency of the model, at a much lower resource cost than unrolling the layers. The gain comes from that overlap, so it is
+largest for long chains in which no single layer dominates the latency. A chain runs at the pace of its slowest layer, so when one layer is much
+slower than the others, such as the first layer of a chain whose widths shrink, the latency can be higher than with the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy.</p>
+<p>A reuse factor of 1 is not supported and stops the conversion. For fully parallel layers use the <code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy or, more efficiently,
+<code class="docutils literal notranslate"><span class="pre">Strategy:</span> <span class="pre">distributed_arithmetic</span></code> (see <a class="reference internal" href="da.html"><span class="doc">Distributed Arithmetic</span></a>). A fused layer uses at most <code class="docutils literal notranslate"><span class="pre">n_in</span></code> or <code class="docutils literal notranslate"><span class="pre">n_out</span></code> multipliers,
+far fewer than a fully parallel layer.</p>
+<p>The strategy requires <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code>.</p>
+</section>
+<section id="how-it-works">
+<h2>How it works<a class="headerlink" href="#how-it-works" title="Link to this heading"></a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layer needs all of its inputs before it can produce any output, so it can pass data one value at a time on one side only. Each layer of a chain
+is therefore computed in one of three forms:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dot</span></code> reads the whole input array and writes its outputs one value at a time;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">axpy</span></code> reads its input one value at a time and writes the whole output array;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">plain</span></code> reads and writes whole arrays. It is used only for the first layer of a chain with an odd number of layers.</p></li>
+</ul>
+<p>The layers of a chain alternate between <code class="docutils literal notranslate"><span class="pre">dot</span></code> and <code class="docutils literal notranslate"><span class="pre">axpy</span></code>. Each <code class="docutils literal notranslate"><span class="pre">axpy</span></code> layer starts as soon as the <code class="docutils literal notranslate"><span class="pre">dot</span></code> layer before it writes its first output.
+The connection between the two is an <code class="docutils literal notranslate"><span class="pre">hls::stream</span></code> of single values with the precision of the layer that writes it, so layers with different precisions
+need no extra configuration. Between an <code class="docutils literal notranslate"><span class="pre">axpy</span></code> layer and the next <code class="docutils literal notranslate"><span class="pre">dot</span></code> layer the connection stays an array, because <code class="docutils literal notranslate"><span class="pre">dot</span></code> needs its whole input. A
+chain therefore starts and ends with an array, and can sit between layers of any other type.</p>
+<p>The reuse factor sets the number of multipliers a layer may use at the same time, <code class="docutils literal notranslate"><span class="pre">n_in</span> <span class="pre">*</span> <span class="pre">n_out</span> <span class="pre">/</span> <span class="pre">ReuseFactor</span></code>, as it does for the other strategies.
+A <code class="docutils literal notranslate"><span class="pre">dot</span></code> layer can use at most <code class="docutils literal notranslate"><span class="pre">n_in</span></code> multipliers and the other forms at most <code class="docutils literal notranslate"><span class="pre">n_out</span></code>, so every reuse factor below that point builds the same
+design, and the conversion reports the reuse factor that was built instead. A chain runs only as fast as its slowest layer, so the other layers are
+lowered to the fewest multipliers that keep them within the cycles of the slowest one, never more than their reuse factor allows. A layer is lowered
+only to a number that divides the width it works through. The conversion names the layers given fewer.</p>
+<p>The results are the same as with the <code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy, except with an <code class="docutils literal notranslate"><span class="pre">accum</span></code> precision that rounds or saturates, such as one with
+<code class="docutils literal notranslate"><span class="pre">AP_RND_CONV</span></code> or <code class="docutils literal notranslate"><span class="pre">AP_SAT</span></code>: the fused kernels add the products in a different order, so the rounding or saturation can differ.</p>
+</section>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<p>A chain is fused when all of the following hold:</p>
+<ul class="simple">
+<li><p><strong>The Vitis or Coyote backend.</strong> The Vivado and VivadoAccelerator backends report an error naming the layer and the backend. Quartus, oneAPI
+and Catapult build the layer with a strategy of their own instead.</p></li>
+<li><p><strong>io_parallel.</strong> A model using <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> is rejected during conversion.</p></li>
+<li><p><strong>Two or more</strong> <code class="docutils literal notranslate"><span class="pre">Dense</span></code> <strong>layers in sequence</strong>, each using the strategy, where the output of each layer is read only by the next one.</p></li>
+</ul>
+<p>A layer that asks for the strategy but cannot be fused, such as a single <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layer, a layer whose output is read by more than one layer or is
+also a model output, or a <code class="docutils literal notranslate"><span class="pre">Conv1D</span></code> or <code class="docutils literal notranslate"><span class="pre">Conv2D</span></code> layer, is built with the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy instead and reported during conversion. Depthwise
+convolutions and other layer types keep the strategy they would otherwise have.</p>
+<p>Two kinds of layer between <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers do not break a chain:</p>
+<ul class="simple">
+<li><p><strong>Elementwise activations</strong>, which are computed at the end of the <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layer before them, after which the activation layer is removed. Supported are
+<code class="docutils literal notranslate"><span class="pre">relu</span></code>, <code class="docutils literal notranslate"><span class="pre">sigmoid</span></code>, <code class="docutils literal notranslate"><span class="pre">tanh</span></code>, <code class="docutils literal notranslate"><span class="pre">selu</span></code>, <code class="docutils literal notranslate"><span class="pre">softplus</span></code>, <code class="docutils literal notranslate"><span class="pre">softsign</span></code>, <code class="docutils literal notranslate"><span class="pre">binary_tanh</span></code>, <code class="docutils literal notranslate"><span class="pre">leaky_relu</span></code>, <code class="docutils literal notranslate"><span class="pre">thresholded_relu</span></code>, <code class="docutils literal notranslate"><span class="pre">elu</span></code>, <code class="docutils literal notranslate"><span class="pre">hard_sigmoid</span></code>
+and <code class="docutils literal notranslate"><span class="pre">hard_tanh</span></code>. A <code class="docutils literal notranslate"><span class="pre">linear</span></code> activation is removed by <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> earlier.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BatchNormalization</span></code> <strong>directly after a</strong> <code class="docutils literal notranslate"><span class="pre">Dense</span></code> <strong>layer</strong>, which <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> merges into the weights and bias of that layer. This includes
+<code class="docutils literal notranslate"><span class="pre">ApplyAlpha</span></code>, the scaling layer QKeras adds, when the merge applies.</p></li>
+</ul>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading"></a></h2>
+<p>The following end a chain. The <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers on either side can still be fused as separate chains if they meet the requirements above.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Softmax</span></code>, which needs every output of a layer before it can produce any.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PReLU</span></code>, whose parameters are stored as weights of the activation layer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ternary_tanh</span></code>, which is a layer type of its own with a threshold, not a plain activation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BatchNormalization</span></code> that is not merged: when it does not directly follow a <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layer, when the output type of the <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layer is set, or
+when the weights of both layers are quantized. The most common case is a scaling layer after the activation instead of before it.</p></li>
+<li><p>Any other layer type, and any output read by more than one layer or also used as a model output, since a value written to a stream can be
+read only once.</p></li>
+</ul>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
+<p>Set the strategy on the <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers of a chain:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">'Vitis'</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'fc1'</span><span class="p">,</span> <span class="s1">'fc2'</span><span class="p">,</span> <span class="s1">'fc3'</span><span class="p">]:</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">'LayerName'</span><span class="p">][</span><span class="n">layer</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Fused'</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">'LayerName'</span><span class="p">][</span><span class="n">layer</span><span class="p">][</span><span class="s1">'ReuseFactor'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+</pre></div>
+</div>
+<p>It can also be set for a layer type or for the whole model. Every chain that qualifies is then fused, and the other layers are built as described
+under Requirements:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">'model'</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s1">'Vitis'</span><span class="p">)</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Fused'</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'ReuseFactor'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+</pre></div>
+</div>
+<p>During conversion the strategy lists the layers of each chain, the layers given fewer multipliers than their reuse factor allows, and every layer that
+asked for the strategy but was not fused, with the strategy used instead. It also reports when it sets the pipeline style of the model to
+<code class="docutils literal notranslate"><span class="pre">dataflow</span></code>; if the configuration set a different <code class="docutils literal notranslate"><span class="pre">PipelineStyle</span></code>, it is replaced with a warning. Set <code class="docutils literal notranslate"><span class="pre">FusedReport</span></code> to <code class="docutils literal notranslate"><span class="pre">False</span></code> in the <code class="docutils literal notranslate"><span class="pre">Model</span></code>
+section to turn the report off; warnings are still printed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'FusedReport'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+</section>
+<section id="tracing-and-profiling">
+<h2>Tracing and profiling<a class="headerlink" href="#tracing-and-profiling" title="Link to this heading"></a></h2>
+<p>A fused layer computes the activation folded into it, so when it is traced with <code class="docutils literal notranslate"><span class="pre">Trace:</span> <span class="pre">True</span></code>, its traced output is the output of that activation,
+and the activation layer itself is not traced. Tools that compare the trace with the Keras model layer by layer, such as
+<code class="docutils literal notranslate"><span class="pre">hls4ml.model.profiling.compare</span></code>, therefore show a difference at each fused layer that has a folded activation. To profile a model layer by layer,
+convert it with another strategy.</p>
+</section>
+<section id="the-reuse-factor-and-the-interval">
+<h2>The reuse factor and the interval<a class="headerlink" href="#the-reuse-factor-and-the-interval" title="Link to this heading"></a></h2>
+<p>With the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy the initiation interval of a layer equals its reuse factor: a reuse factor of 128 gives an interval of 128 cycles. A fused
+layer needs several cycles more, to fill its pipeline and to pass data to the other layers of its chain. How many more depends on the layer and on the
+version of Vitis HLS.</p>
+<p>If a design has to accept a new input at a fixed rate, set <code class="docutils literal notranslate"><span class="pre">ReuseFactorAsInterval</span></code>. The reuse factor then gives the largest interval the layer may have,
+in cycles, instead of setting the number of multipliers:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'fc1'</span><span class="p">,</span> <span class="s1">'fc2'</span><span class="p">,</span> <span class="s1">'fc3'</span><span class="p">]:</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">'LayerName'</span><span class="p">][</span><span class="n">layer</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Fused'</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">'LayerName'</span><span class="p">][</span><span class="n">layer</span><span class="p">][</span><span class="s1">'ReuseFactor'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">128</span>          <span class="c1"># the interval, in cycles</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">'LayerName'</span><span class="p">][</span><span class="n">layer</span><span class="p">][</span><span class="s1">'ReuseFactorAsInterval'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>The strategy uses the fewest multipliers that keep the layer within that interval, counting only numbers that divide the width the layer works through
+(see below), and fills the remaining cycles with wait states. A <code class="docutils literal notranslate"><span class="pre">dot</span></code> layer and the <code class="docutils literal notranslate"><span class="pre">axpy</span></code> layer after it wait the same number of cycles, since
+the faster of the two waits for the slower one. The interval is then the requested one or a few cycles less, never more, with the versions of Vitis
+HLS listed below. The wait states add latency, so the layer is a little slower than it would be with the same number of multipliers and no wait
+states. They are added only in synthesis, so C simulation results do not change.</p>
+<p>A setting for a layer name takes precedence over one for a layer type, which takes precedence over one for the model. Note that <code class="docutils literal notranslate"><span class="pre">granularity='name'</span></code>
+writes a <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> for every layer, which then overrides one set for the model.</p>
+<p>All layers of a chain must use <code class="docutils literal notranslate"><span class="pre">ReuseFactorAsInterval</span></code> the same way and request the same interval. If a layer cannot reach the requested interval
+even with all of its multipliers, the conversion stops and gives the smallest interval the chain can reach. For each layer the conversion prints the
+multipliers and wait cycles used, and the range the interval will fall in.</p>
+<section id="estimating-the-interval">
+<h3>Estimating the interval<a class="headerlink" href="#estimating-the-interval" title="Link to this heading"></a></h3>
+<p>A chain is as slow as its slowest layer. A layer with <code class="docutils literal notranslate"><span class="pre">m</span></code> multipliers has an interval of</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">interval</span>  <span class="o">=</span>  <span class="n">passes</span> <span class="o">*</span> <span class="n">width</span> <span class="o">/</span> <span class="n">m</span>  <span class="o">+</span>  <span class="n">c</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">width</span></code> is the number of values the kernel works through in each pass, <code class="docutils literal notranslate"><span class="pre">n_in</span></code> for <code class="docutils literal notranslate"><span class="pre">dot</span></code> and <code class="docutils literal notranslate"><span class="pre">n_out</span></code> for the other forms, <code class="docutils literal notranslate"><span class="pre">m</span></code> divides
+<code class="docutils literal notranslate"><span class="pre">width</span></code>, and <code class="docutils literal notranslate"><span class="pre">passes</span></code> is <code class="docutils literal notranslate"><span class="pre">n_out</span></code> for <code class="docutils literal notranslate"><span class="pre">dot</span></code> and <code class="docutils literal notranslate"><span class="pre">n_in</span> <span class="pre">+</span> <span class="pre">1</span></code> for the other forms, the extra pass adding the bias and applying the activation.
+<code class="docutils literal notranslate"><span class="pre">c</span></code> is the time to fill the pipelines and pass data between layers. The strategy uses an overestimate of <code class="docutils literal notranslate"><span class="pre">c</span></code>, which is why the interval can come
+out a few cycles below the requested one but never above it.</p>
+<p>This estimate of <code class="docutils literal notranslate"><span class="pre">c</span></code> was measured with Vitis HLS 2024.1 and checked with 2023.2: with both, no layer came out above its requested interval. Vitis
+HLS 2025.1 is less predictable and is generally not supported.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="da.html" class="btn btn-neutral float-left" title="Distributed Arithmetic" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="precision.html" class="btn btn-neutral float-right" title="Model-wise Precision Inference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Fast Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

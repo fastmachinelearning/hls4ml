@@ -9,3 +9,9 @@ backend can be easily incorporated into a Vitis kernel.
 
 Users should generally use the **Vitis** backend for new designs that target AMD/Xilinx FPGAs; new ``hls4ml`` developments will not necessarily be backported to
 the **Vivado** backend.
+
+Fused strategy
+==============
+
+The **Vitis** backend also provides ``Strategy: Fused``, which computes a chain of ``Dense`` layers together so that consecutive layers run at the same
+time. See :doc:`Fused Strategy <../advanced/fused>`.

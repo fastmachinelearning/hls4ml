@@ -86,6 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fused.html">Fused Strategy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
@@ -376,6 +377,14 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseFunctionTemplate"><code class="docutils literal notranslate"><span class="pre">EinsumDenseFunctionTemplate</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.einsum_dense.EinsumDenseFunctionTemplate.format"><code class="docutils literal notranslate"><span class="pre">EinsumDenseFunctionTemplate.format()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.feature_check">hls4ml.backends.vivado.passes.feature_check module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.feature_check.ValidateFusedStrategy"><code class="docutils literal notranslate"><span class="pre">ValidateFusedStrategy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.feature_check.ValidateFusedStrategy.match"><code class="docutils literal notranslate"><span class="pre">ValidateFusedStrategy.match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.feature_check.ValidateFusedStrategy.transform"><code class="docutils literal notranslate"><span class="pre">ValidateFusedStrategy.transform()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -855,6 +864,12 @@ Defaults to ‘both’.</p></li>
 <span class="sig-name descname"><span class="pre">definition_cpp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.vivado_types.VivadoInplaceStreamVariableDefinition.definition_cpp" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vivado.vivado_types.VivadoScalarStreamVariableConverter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.vivado_types.</span></span><span class="sig-name descname"><span class="pre">VivadoScalarStreamVariableConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_converter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.vivado_types.VivadoScalarStreamVariableConverter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ScalarStreamVariableConverter" title="hls4ml.backends.fpga.fpga_types.ScalarStreamVariableConverter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScalarStreamVariableConverter</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">

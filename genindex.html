@@ -83,6 +83,7 @@
 <li class="toctree-l1"><a class="reference internal" href="advanced/auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced/fused.html">Fused Strategy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced/extension.html">Extension API</a></li>
@@ -664,6 +665,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.PrecisionConverter.convert">(hls4ml.backends.fpga.fpga_types.PrecisionConverter method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ScalarStreamVariableConverter.convert">(hls4ml.backends.fpga.fpga_types.ScalarStreamVariableConverter method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StaticWeightVariableConverter.convert">(hls4ml.backends.fpga.fpga_types.StaticWeightVariableConverter method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StreamVariableConverter.convert">(hls4ml.backends.fpga.fpga_types.StreamVariableConverter method)</a>
@@ -917,6 +920,10 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.core_templates.DenseFunctionTemplate">(class in hls4ml.backends.vivado.passes.core_templates)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate">DenseFusedConfigTemplate (class in hls4ml.backends.vitis.passes.fused_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate">DenseFusedFunctionTemplate (class in hls4ml.backends.vitis.passes.fused_templates)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.DenseHandler">DenseHandler (class in hls4ml.converters.keras_v3.core)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.oneapi.passes.html#hls4ml.backends.oneapi.passes.core_templates.DenseStreamFunctionTemplate">DenseStreamFunctionTemplate (class in hls4ml.backends.oneapi.passes.core_templates)</a>
@@ -1128,6 +1135,8 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.FloatPrecisionType">FloatPrecisionType (class in hls4ml.model.types)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.flow.html#hls4ml.model.flow.flow.Flow">Flow (class in hls4ml.model.flow.flow)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.FoldActivationIntoFused">FoldActivationIntoFused (class in hls4ml.backends.vitis.passes.fuse_dense)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format">format() (hls4ml.backends.catapult.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate method)</a>
 
@@ -1455,6 +1464,10 @@
         <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#hls4ml.backends.symbolic.passes.expr_templates.ExpressionFunctionTemplate.format">(hls4ml.backends.symbolic.passes.expr_templates.ExpressionFunctionTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.html#hls4ml.backends.template.Template.format">(hls4ml.backends.template.Template method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate.format">(hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate.format">(hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format">(hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate method)</a>
 </li>
@@ -2846,6 +2859,20 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.backends.vitis.passes.fuse_dense
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.fuse_dense">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.vitis.passes.fused_templates
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.fused_templates">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.backends.vitis.vitis_backend
 
       <ul>
@@ -2930,6 +2957,13 @@
 </li>
       </ul></li>
       <li>
+    hls4ml.backends.vivado.passes.feature_check
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.feature_check">module</a>
+</li>
+      </ul></li>
+      <li>
     hls4ml.backends.vivado.passes.fifo_depth_optimization
 
       <ul>
@@ -2978,6 +3012,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.pooling_templates">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.quantization_templates
 
@@ -2985,8 +3021,6 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.quantization_templates">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hls4ml.backends.vivado.passes.recurrent_templates
 
@@ -4455,6 +4489,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.LayerOptimizerPass">LayerOptimizerPass (class in hls4ml.model.optimizer.optimizer)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.LayoutFusedDotWeights">LayoutFusedDotWeights (class in hls4ml.backends.vitis.passes.fuse_dense)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.libero.html#hls4ml.backends.libero.libero_types.LiberoArrayVariableConverter">LiberoArrayVariableConverter (class in hls4ml.backends.libero.libero_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.libero.html#hls4ml.backends.libero.libero_types.LiberoArrayVariableDefinition">LiberoArrayVariableDefinition (class in hls4ml.backends.libero.libero_types)</a>
@@ -4598,11 +4634,23 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation.match">(hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateFusedIoType.match">(hls4ml.backends.vitis.passes.feature_check.ValidateFusedIoType method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy.match">(hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy.match">(hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateStdCppTypes.match">(hls4ml.backends.vitis.passes.feature_check.ValidateStdCppTypes method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.FoldActivationIntoFused.match">(hls4ml.backends.vitis.passes.fuse_dense.FoldActivationIntoFused method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.LayoutFusedDotWeights.match">(hls4ml.backends.vitis.passes.fuse_dense.LayoutFusedDotWeights method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy.match">(hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate.match">(hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate.match">(hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match">(hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh method)</a>
 </li>
@@ -4639,6 +4687,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticEinsumCodegen.match">(hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticEinsumCodegen method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers.match">(hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.feature_check.ValidateFusedStrategy.match">(hls4ml.backends.vivado.passes.feature_check.ValidateFusedStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col.match">(hls4ml.backends.vivado.passes.im2col_codegen.GenerateConvIm2col method)</a>
 </li>
@@ -5027,6 +5077,10 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.fifo_depth_optimization">hls4ml.backends.vitis.passes.fifo_depth_optimization</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.fuse_dense">hls4ml.backends.vitis.passes.fuse_dense</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.fused_templates">hls4ml.backends.vitis.passes.fused_templates</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vitis.html#module-hls4ml.backends.vitis.vitis_backend">hls4ml.backends.vitis.vitis_backend</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.html#module-hls4ml.backends.vivado">hls4ml.backends.vivado</a>
@@ -5050,6 +5104,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.einsum">hls4ml.backends.vivado.passes.einsum</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.einsum_dense">hls4ml.backends.vivado.passes.einsum_dense</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.feature_check">hls4ml.backends.vivado.passes.feature_check</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes.fifo_depth_optimization">hls4ml.backends.vivado.passes.fifo_depth_optimization</a>
 </li>
@@ -5752,6 +5808,8 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.PermuteHandler">PermuteHandler (class in hls4ml.converters.keras_v3.core)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.PlanDenseFusion">PlanDenseFusion (class in hls4ml.backends.vitis.passes.fuse_dense)</a>
+</li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.plot.plot_model">plot_model() (in module hls4ml.utils.plot)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.PointwiseConv1D">PointwiseConv1D (class in hls4ml.backends.fpga.fpga_layers)</a>
@@ -6260,6 +6318,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.save">save() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.ScalarStreamVariableConverter">ScalarStreamVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownAdd">ScaleDownAdd (class in hls4ml.model.optimizer.passes.move_scales)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.move_scales.ScaleDownConv">ScaleDownConv (class in hls4ml.model.optimizer.passes.move_scales)</a>
@@ -6502,6 +6562,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.StructWrapperVariable">StructWrapperVariable (class in hls4ml.model.types)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy">SubstituteUnfusedStrategy (class in hls4ml.backends.vitis.passes.fuse_dense)</a>
+</li>
       <li><a href="autodoc/hls4ml.optimization.dsp_aware_pruning.html#hls4ml.optimization.dsp_aware_pruning.config.SUPPORTED_STRUCTURES">SUPPORTED_STRUCTURES (class in hls4ml.optimization.dsp_aware_pruning.config)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SymbolicExpression">SymbolicExpression (class in hls4ml.model.layers)</a>
@@ -6641,6 +6703,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateFusedIoType.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateFusedIoType method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy.transform">(hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy method)</a>
@@ -6652,6 +6716,16 @@
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost.transform">(hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationPost method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationProfile.transform">(hls4ml.backends.vitis.passes.fifo_depth_optimization.FifoDepthOptimizationProfile method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.FoldActivationIntoFused.transform">(hls4ml.backends.vitis.passes.fuse_dense.FoldActivationIntoFused method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.LayoutFusedDotWeights.transform">(hls4ml.backends.vitis.passes.fuse_dense.LayoutFusedDotWeights method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.PlanDenseFusion.transform">(hls4ml.backends.vitis.passes.fuse_dense.PlanDenseFusion method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy.transform">(hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.ValidateDenseFusion.transform">(hls4ml.backends.vitis.passes.fuse_dense.ValidateDenseFusion method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform">(hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh method)</a>
 </li>
@@ -6676,6 +6750,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticEinsumCodegen.transform">(hls4ml.backends.vivado.passes.distributed_arithmetic.DistributedArithmeticEinsumCodegen method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers.transform">(hls4ml.backends.vivado.passes.distributed_arithmetic.FuseQuantizerIntoDALayers method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.feature_check.ValidateFusedStrategy.transform">(hls4ml.backends.vivado.passes.feature_check.ValidateFusedStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization.transform">(hls4ml.backends.vivado.passes.fifo_depth_optimization.FifoDepthOptimization method)</a>
 </li>
@@ -6908,6 +6984,12 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateConvImplementation">ValidateConvImplementation (class in hls4ml.backends.vitis.passes.feature_check)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.ValidateDenseFusion">ValidateDenseFusion (class in hls4ml.backends.vitis.passes.fuse_dense)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateFusedIoType">ValidateFusedIoType (class in hls4ml.backends.vitis.passes.feature_check)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.feature_check.ValidateFusedStrategy">ValidateFusedStrategy (class in hls4ml.backends.vivado.passes.feature_check)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceStrategy">ValidateResourceStrategy (class in hls4ml.backends.vitis.passes.feature_check)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy">ValidateResourceUnrolledStrategy (class in hls4ml.backends.vitis.passes.feature_check)</a>
@@ -6920,10 +7002,10 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition">VariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.attributes.VariableMapping">VariableMapping (class in hls4ml.model.attributes)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.attributes.VariableMapping">VariableMapping (class in hls4ml.model.attributes)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vitis.html#hls4ml.backends.vitis.vitis_backend.VitisBackend">VitisBackend (class in hls4ml.backends.vitis.vitis_backend)</a>
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter">VitisUnifiedWriter (class in hls4ml.writer.vitis_unified_writer)</a>
@@ -6949,6 +7031,8 @@
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceStreamVariableConverter">VivadoInplaceStreamVariableConverter (class in hls4ml.backends.vivado.vivado_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoInplaceStreamVariableDefinition">VivadoInplaceStreamVariableDefinition (class in hls4ml.backends.vivado.vivado_types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoScalarStreamVariableConverter">VivadoScalarStreamVariableConverter (class in hls4ml.backends.vivado.vivado_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_types.VivadoStreamVariableConverter">VivadoStreamVariableConverter (class in hls4ml.backends.vivado.vivado_types)</a>
 </li>

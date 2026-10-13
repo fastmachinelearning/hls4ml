@@ -70,7 +70,10 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Backends</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Vivado/Vitis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Vivado/Vitis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#fused-strategy">Fused strategy</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="accelerator.html">VivadoAccelerator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="accelerator.html#coyote">Coyote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vitis_unified.html">VitisUnified</a></li>
@@ -86,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../advanced/auto.html">Automatic precision inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/hgq.html">High Granularity Quantization (HGQ2)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/da.html">Distributed Arithmetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/fused.html">Fused Strategy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/precision.html">Model-wise Precision Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/fifo_depth.html">FIFO Buffer Depth Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced/extension.html">Extension API</a></li>
@@ -145,6 +149,11 @@ for generating easily-deployable models with <code class="docutils literal notra
 backend can be easily incorporated into a Vitis kernel.</p>
 <p>Users should generally use the <strong>Vitis</strong> backend for new designs that target AMD/Xilinx FPGAs; new <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> developments will not necessarily be backported to
 the <strong>Vivado</strong> backend.</p>
+<section id="fused-strategy">
+<h2>Fused strategy<a class="headerlink" href="#fused-strategy" title="Link to this heading"></a></h2>
+<p>The <strong>Vitis</strong> backend also provides <code class="docutils literal notranslate"><span class="pre">Strategy:</span> <span class="pre">Fused</span></code>, which computes a chain of <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers together so that consecutive layers run at the same
+time. See <a class="reference internal" href="../advanced/fused.html"><span class="doc">Fused Strategy</span></a>.</p>
+</section>
 </section>
 
 
