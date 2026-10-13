@@ -1,0 +1,1108 @@
+"""Tests for parameter-bank packing, wrapper generation, and RTL behaviour.
+
+Synthesis-backed tests are gated by ``RUN_SYNTHESIS`` and skip when the required
+FPGA tools are unavailable.
+"""
+
+import json
+import re
+from pathlib import Path
+
+import numpy as np
+import pytest
+from tensorflow.keras.layers import Conv2D, Dense, Input
+from tensorflow.keras.models import Model
+
+import hls4ml
+from hls4ml.contrib.parameter_banks import pack
+from hls4ml.contrib.parameter_banks.pack import BankImage, PackingUnsupported
+from hls4ml.model.external_parameters import ExternalParameterError, ExternalParameterManifest, quantize_fixed
+
+PROJECT = 'pb_prj'
+N_IN = 8
+PRECISION = 'ap_fixed<16,6>'
+
+# One model covers every synthesized case: three external weight memories with
+# different widths and depths, three bias bundles of different sizes, both
+# verified Dense kernel variants, and two output heads of different sizes.
+#                  n_in, n_out, reuse_factor
+LAYERS = {
+    'trunk': (N_IN, 8, 2),  # rf < n_in        -> dense_resource_rf_leq_nin
+    'head_a': (N_IN, 4, 16),  # rf > n_in, rem 0 -> dense_resource_rf_gt_nin_rem0
+    'head_b': (N_IN, 6, 8),  # rf == n_in       -> dense_resource_rf_leq_nin
+}
+HEADS = ('head_a', 'head_b')
+
+
+def _bank_tensors(n_banks):
+    """Per-bank weights and biases for every layer, on the ap_fixed<16,6> grid.
+
+    Kept small enough that no accumulator wraps, so a bank selected wrongly shows
+    up as a wrong value rather than as an aliased one.
+    """
+    banks = []
+    for k in range(n_banks):
+        entry = {}
+        for li, (layer, (n_in, n_out, _)) in enumerate(LAYERS.items()):
+            w = np.zeros((n_in, n_out))
+            for i in range(n_in):
+                for o in range(n_out):
+                    w[i, o] = (-1) ** (k + o) * (((i * n_out + o + 17 * k + 5 * li) % 23) + 1) / 128.0
+            b = np.array([(-1) ** (o + k) * (o + 1 + 3 * k + li) / 64.0 for o in range(n_out)])
+            entry[layer] = (w, b)
+        banks.append(entry)
+    return banks
+
+
+def _convert_model(out_dir, tensors=None, external=None):
+    """The single model builder. Part and clock period are hls4ml defaults.
+
+    ``external`` maps layer -> parameter roles to expose; default: every parameter.
+    """
+    inp = Input(shape=(N_IN,), name='input_1')
+    trunk = Dense(LAYERS['trunk'][1], activation='linear', name='trunk')(inp)
+    outs = [Dense(LAYERS[h][1], activation='linear', name=h)(trunk) for h in HEADS]
+    model = Model(inp, outs)
+    for layer, (n_in, n_out, _) in LAYERS.items():
+        w, b = tensors[layer] if tensors else (np.zeros((n_in, n_out)), np.zeros(n_out))
+        model.get_layer(layer).set_weights([np.asarray(w, np.float32), np.asarray(b, np.float32)])
+
+    cfg = hls4ml.utils.config_from_keras_model(
+        model,
+        granularity='name',
+        backend='Vitis',
+        default_precision='ap_fixed<16,6>',
+        default_reuse_factor=2,
+    )
+    cfg['Model']['Strategy'] = 'Resource'
+    if external is None:
+        external = {layer: ['weight', 'bias'] for layer in LAYERS}
+    for layer, (_, _, reuse) in LAYERS.items():
+        cfg['LayerName'][layer]['Strategy'] = 'Resource'
+        cfg['LayerName'][layer]['ReuseFactor'] = reuse
+        if layer in external:
+            cfg['LayerName'][layer]['ExternalParameters'] = external[layer]
+    # Name granularity defaults every precision to 'auto', which widens each
+    # layer's accumulator and result (ap_fixed<36,16>, <56,26>, ...). Pin them so
+    # the arithmetic stays the single type _reference and the testbench model.
+    for entry in cfg['LayerName'].values():
+        for key, value in entry.get('Precision', {}).items():
+            if value == 'auto':
+                entry['Precision'][key] = PRECISION
+    return hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=cfg,
+        output_dir=str(out_dir),
+        project_name=PROJECT,
+        backend='Vitis',
+        io_type='io_parallel',
+    )
+
+
+def _manifest(tmp_path):
+    hls_model = _convert_model(tmp_path)
+    hls_model.write()
+    return ExternalParameterManifest.load(str(tmp_path))
+
+
+def _port(manifest, layer, role):
+    return manifest.get(layer, role)
+
+
+def _unpack(port, words, n_in, n_out):
+    """Invert the packing using only the manifest."""
+    width = port.precision.width
+    block_size = port.layout.block_size
+    out = np.zeros((n_in, n_out), dtype=np.int64)
+    for i in range(n_in):
+        for o in range(n_out):
+            f = o * n_in + i
+            code = (words[f % block_size] >> (width * (f // block_size))) & ((1 << width) - 1)
+            out[i, o] = code
+    return out
+
+
+def _reference(x, tensors):
+    """Fixed-point forward pass, heads in model-output order."""
+    import parameter_banks_sim as sim
+
+    trunk = sim.dense_reference(x, tensors['trunk'][0].tolist(), tensors['trunk'][1].tolist())
+    return [sim.dense_reference(trunk, tensors[h][0].tolist(), tensors[h][1].tolist()) for h in HEADS]
+
+
+@pytest.fixture(scope='module')
+def written_project(tmp_path_factory):
+    """Written once (no synthesis): the pure-Python tests read it."""
+    path = tmp_path_factory.mktemp('pb_manifest')
+    hls_model = _convert_model(path)
+    hls_model.write()
+    return hls_model
+
+
+@pytest.fixture(scope='module')
+def partial_project(tmp_path_factory):
+    """Only one parameter exposed, so fixed ones exist to disagree about."""
+    hls_model = _convert_model(tmp_path_factory.mktemp('pb_partial'), external={'trunk': ['weight']})
+    hls_model.write()
+    return hls_model
+
+
+@pytest.fixture(scope='module')
+def manifest(written_project):
+    return ExternalParameterManifest.load(written_project.config.get_output_dir())
+
+
+@pytest.fixture(scope='module')
+def synthesized_project(tmp_path_factory, synthesis_config):
+    """One Vitis synthesis, shared by every test that needs real RTL."""
+    if not synthesis_config['run_synthesis']:
+        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
+
+    path = tmp_path_factory.mktemp('pb_synth')
+    hls_model = _convert_model(path, tensors=_bank_tensors(1)[0])
+    hls_model.write()
+    hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
+    outputs = [(v.name, v.size()) for v in hls_model.get_output_variables()]
+    return path, PROJECT, outputs
+
+
+# --- packing -----------------------------------------------------------------
+
+
+@pytest.mark.parametrize('layer', list(LAYERS))
+def test_packing_places_each_scalar_at_the_declared_word_and_lane(manifest, layer):
+    """Scalar f lands at (word f % block_size, lane f // block_size)."""
+    n_in, n_out, _ = LAYERS[layer]
+    port = _port(manifest, layer, 'weight')
+    width = port.precision.width
+    block_size = port.layout.block_size
+
+    # round trip, and two banks must not collapse to one image
+    banks = [t[layer][0] for t in _bank_tensors(2)]
+    images = [port.pack(b) for b in banks]
+    assert images[0] != images[1], 'banks must not produce identical images'
+    for bank, words in zip(banks, images):
+        assert len(words) == port.depth
+        expected = np.vectorize(lambda v: quantize_fixed(v, width, port.precision.integer))(bank)
+        np.testing.assert_array_equal(_unpack(port, words, n_in, n_out), expected)
+
+    # one scalar changed -> one lane of one word
+    mutated = banks[0].copy()
+    mutated[3, 2] += 0.125
+    words_a, words_b = images[0], port.pack(mutated)
+    differing = [i for i, (a, b) in enumerate(zip(words_a, words_b)) if a != b]
+    assert len(differing) == 1
+
+    f = 2 * n_in + 3  # index(out=2, in=3)
+    assert differing[0] == f % block_size
+    delta = words_a[differing[0]] ^ words_b[differing[0]]
+    assert delta >> (width * (f // block_size)) < (1 << width)
+    assert delta & ((1 << (width * (f // block_size))) - 1) == 0
+
+    # walking bit: every scalar lands where declared
+    unique = np.zeros((n_in, n_out))
+    for i in range(n_in):
+        for o in range(n_out):
+            unique[i, o] = (o * n_in + i + 1) / 1024.0
+    words = port.pack(unique)
+    seen = {}
+    for wi, word in enumerate(words):
+        for lane in range(port.layout.lanes):
+            code = (word >> (width * lane)) & ((1 << width) - 1)
+            assert code != 0, f'lane {lane} of word {wi} is empty'
+            seen[(wi, lane)] = code - 1
+    assert len(seen) == n_in * n_out
+    for (wi, lane), flat in seen.items():
+        assert (wi, lane) == (flat % block_size, flat // block_size)
+
+
+def test_both_verified_kernel_variants_are_covered(manifest):
+    """The fixture must keep exercising each variant the manifest claims."""
+    variants = {_port(manifest, layer, 'weight').kernel_variant for layer in LAYERS}
+    assert variants == {'dense_resource_rf_leq_nin', 'dense_resource_rf_gt_nin_rem0'}
+
+    geometries = {(_port(manifest, la, 'weight').data_width, _port(manifest, la, 'weight').depth) for la in LAYERS}
+    assert len(geometries) == len(LAYERS), 'layers should not share a geometry'
+
+
+def test_bank_image_is_depth_stacked_and_padded(written_project, manifest):
+    port = _port(manifest, 'trunk', 'weight')
+    entry = pack.pack_banks(written_project, _bank_sets(2))[port.name]
+
+    stride, image = entry.bank_stride_words, entry.image
+    assert stride >= port.depth
+    assert stride & (stride - 1) == 0, 'stride should be a power of two'
+    assert len(image) == 2 * stride
+    for bank_index in range(2):
+        for pad in range(port.depth, stride):
+            assert image[bank_index * stride + pad] == 0
+
+
+def test_bias_scalar_bank(manifest):
+    port = _port(manifest, 'head_a', 'bias')
+
+    codes = port.pack_flat([0.5, -0.25, 1.0, -2.0])
+    assert len(codes) == LAYERS['head_a'][1]
+    assert codes[0] == quantize_fixed(0.5, 16, 6)
+    assert all(0 <= c < (1 << 16) for c in codes)
+
+
+def test_dense_bias_walking_bit(manifest):
+    n_out = LAYERS['trunk'][1]
+    port = _port(manifest, 'trunk', 'bias')
+
+    codes = port.pack_flat([(i + 1) / 1024.0 for i in range(n_out)])
+
+    assert port.layout.mode == 'complete'
+    assert codes == [i + 1 for i in range(n_out)], 'bias order must be b[i] = bias[i]'
+
+
+def test_flatten_follows_declared_axis_order(manifest):
+    """flatten is a transpose+ravel driven by flat_order."""
+    n_in, n_out, _ = LAYERS['trunk']
+    port = _port(manifest, 'trunk', 'weight')
+
+    tensor = np.arange(n_in * n_out).reshape(n_in, n_out)
+    flat = port.flat_order.flatten(tensor)
+
+    assert port.flat_order.tensor_axes == ['n_in', 'n_out']
+    assert port.flat_order.axes == ['n_out', 'n_in']
+    assert flat == tensor.T.ravel().tolist()
+    assert flat[:n_in] == tensor[:, 0].tolist(), 'first n_in scalars are output 0'
+
+
+def test_write_mem_format(written_project, manifest, tmp_path):
+    port = _port(manifest, 'trunk', 'weight')
+    entry = pack.pack_banks(written_project, _bank_sets(2))[port.name]
+
+    out = tmp_path / 'bank.mem'
+    assert entry.write_mem(out) == out
+    lines = out.read_text().split()
+    assert len(lines) == len(entry.image) == 2 * entry.bank_stride_words
+    assert all(len(line) == port.data_width // 4 for line in lines)
+    assert int(lines[0], 16) == entry.image[0] == port.pack(_bank_tensors(2)[0]['trunk'][0])[0]
+
+
+def _bank_sets(n_banks, fixed=None):
+    """Per-bank {(layer, role): tensor} covering every parameter of the model."""
+    sets = []
+    for tensors in _bank_tensors(n_banks):
+        entry = {}
+        for layer, (w, b) in tensors.items():
+            entry[(layer, 'weight')] = w
+            entry[(layer, 'bias')] = b
+        if fixed is not None:
+            entry.update(fixed)
+        sets.append(entry)
+    return sets
+
+
+def test_pack_banks_packs_every_external_parameter(written_project, manifest):
+    packed = pack.pack_banks(written_project, _bank_sets(2))
+
+    assert set(packed) == {p.name for p in manifest}
+    for port in manifest:
+        entry = packed[port.name]
+        assert isinstance(entry, BankImage)
+        if port.interface_kind == 'bram':
+            assert len(entry.image) == 2 * entry.bank_stride_words
+        else:
+            assert [len(c) for c in entry.per_bank] == [port.n_scalars] * 2
+            with pytest.raises(PackingUnsupported, match='loader'):
+                entry.image
+
+    # and it agrees with the primitive it is built on
+    weight = _port(manifest, 'trunk', 'weight')
+    assert packed['w2'].image[: weight.depth] == weight.pack(_bank_tensors(2)[0]['trunk'][0])
+
+
+def test_pack_banks_checks_scalar_bundle_shapes(written_project):
+    """A bias goes through the same exact-shape check as a weight."""
+    sets = _bank_sets(2)
+    n_out = LAYERS['head_a'][1]
+    for bank in sets:
+        bank[('head_a', 'bias')] = np.zeros((1, n_out))  # manifest declares (n_out,)
+
+    with pytest.raises(PackingUnsupported, match='shape'):
+        pack.pack_banks(written_project, sets)
+
+
+def test_pack_banks_requires_every_bank_to_supply_each_external_parameter(written_project):
+    sets = _bank_sets(2)
+    del sets[1][('head_a', 'weight')]
+
+    with pytest.raises(PackingUnsupported, match='bank 1 is not a complete parameter set'):
+        pack.pack_banks(written_project, sets)
+
+
+def test_pack_banks_rejects_banks_that_disagree_on_a_fixed_parameter(partial_project):
+    """Only exposed parameters can vary; the rest are compiled into the IP."""
+    sets = _bank_sets(2)
+    for key in sets[0]:  # only the trunk kernel is exposed
+        if key != ('trunk', 'weight'):
+            sets[1][key] = sets[0][key]
+    pack.pack_banks(partial_project, sets)  # banks differ only where they may
+
+    # head_a's kernel is not exposed, so it is compiled in and fixed
+    sets[1][('head_a', 'weight')] = sets[0][('head_a', 'weight')] + 1.0
+    with pytest.raises(PackingUnsupported, match='compiled into the compute IP'):
+        pack.pack_banks(partial_project, sets)
+
+
+def test_pack_banks_needs_the_complete_parameter_set(partial_project):
+    """A fixed parameter that is absent cannot be told from one that agrees."""
+    sets = _bank_sets(2)
+    for bank in sets:
+        bank.pop(('head_b', 'bias'))
+
+    with pytest.raises(PackingUnsupported, match='bank 0 is not a complete parameter set'):
+        pack.pack_banks(partial_project, sets)
+
+
+def test_pack_banks_rejects_keys_that_are_not_parameters(written_project):
+    sets = _bank_sets(2, fixed={('typo', 'weight'): np.zeros((2, 2))})
+
+    with pytest.raises(PackingUnsupported, match='not parameters of this model'):
+        pack.pack_banks(written_project, sets)
+
+
+# --- real RTL ----------------------------------------------------------------
+
+
+def _run_bank_simulation(synthesized_project, tmp_path, n_banks):
+    """Package the shared IP for n_banks, load every bank, check every output."""
+    import parameter_banks_sim as sim
+
+    from hls4ml.contrib.parameter_banks import interface, package
+    from hls4ml.contrib.parameter_banks.package import fingerprint_ip
+
+    if not sim.have_xsim():
+        pytest.skip('requires xvlog/xelab/xsim')
+
+    project_path, project, outputs = synthesized_project
+    assert [size for _, size in outputs] == [LAYERS[h][1] for h in HEADS], 'output order is assumed below'
+
+    # The IP is synthesized once with bank 0 baked in; the wrapper must override
+    # whatever is baked in, so the shared project is reused as-is.
+    before = fingerprint_ip(str(project_path), project)
+    summary = package(str(project_path), n_banks=n_banks)
+
+    # take the verified interfaces, whose geometry comes from synthesis, rather
+    # than assuming actual == expected
+    manifest = ExternalParameterManifest.load(str(project_path))
+    verified, _ = interface.verify(manifest, str(project_path))
+    bram = [i for i in verified if i.kind == 'bram']
+    scalar = [i for i in verified if i.kind == 'scalar_bundle']
+    assert len(bram) == len(scalar) == len(LAYERS), 'every layer should reach the wrapper'
+
+    # the testbench models one output type; an auto-widened result would silently
+    # truncate against a 16-bit wire rather than fail here
+    rtl = {p['name']: p for p in interface.parse_rtl_ports(str(project_path), project)}
+    for name, size in outputs:
+        for o in range(size):
+            assert rtl[f'{name}_{o}']['width'] == sim.WIDTH, f'{name}_{o} is not {sim.WIDTH} bits'
+
+    x = [0.5, -1.25, 0.75, 2.0, -0.5, 1.5, -2.0, 0.25]
+    payloads, expected = [], []
+    for tensors in _bank_tensors(n_banks):
+        payload = {i.name: i.parameter.pack(tensors[i.parameter.layer][0]) for i in bram}
+        payload.update({i.name: i.parameter.pack_flat(tensors[i.parameter.layer][1].tolist()) for i in scalar})
+        payloads.append(payload)
+        heads = _reference(x, tensors)
+        expected.append({name: [sim.code_of(v) for v in head] for (name, _), head in zip(outputs, heads)})
+
+    for a in range(n_banks):
+        for b in range(a + 1, n_banks):
+            assert expected[a] != expected[b], f'banks {a} and {b} are not discriminating'
+
+    tb = sim.write_testbench(
+        str(tmp_path / 'tb_parameter_banks.sv'),
+        PROJECT,
+        [sim.code_of(v) for v in x],
+        outputs,
+        summary,
+        payloads,
+        expected,
+    )
+    passed, log = sim.run_xsim(
+        str(tmp_path / 'xsim_work'),
+        [
+            str(project_path / 'parameter_banks' / 'rtl'),
+            str(project_path / f'{project}_prj' / 'solution1' / 'syn' / 'verilog'),
+        ],
+        tb,
+    )
+    assert passed, f'{n_banks}-bank RTL simulation failed:\n{log[-6000:]}'
+    # comparing before and after is what shows the IP was left alone
+    assert fingerprint_ip(str(project_path), project)['combined'] == before['combined']
+
+
+@pytest.mark.parametrize('n_banks', [2, 4])
+def test_banks_rtl_simulation(synthesized_project, tmp_path, n_banks):
+    """Same input to every bank: any output difference is bank selection.
+
+    Four banks re-bank the same IP, so this also covers multi-bit bank ids and the
+    wider bank stride without a second synthesis.
+    """
+    _run_bank_simulation(synthesized_project, tmp_path, n_banks)
+
+
+# --- pointwise: a Dense over a 2-D or 3-D input ------------------------------
+
+PW_POSITIONS, PW_CHAN, PW_FILT = 3, 8, 4
+
+
+def _convert_pointwise(out_dir, weights, bias, rank):
+    """A Dense over a 2-D/3-D input, which hls4ml lowers to a pointwise conv."""
+    shape = (PW_POSITIONS, PW_CHAN) if rank == 2 else (2, PW_POSITIONS, PW_CHAN)
+    inp = Input(shape=shape, name='input_1')
+    model = Model(inp, Dense(PW_FILT, activation='linear', name='pw')(inp))
+    model.get_layer('pw').set_weights([np.asarray(weights, np.float32), np.asarray(bias, np.float32)])
+    cfg = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', backend='Vitis', default_precision=PRECISION, default_reuse_factor=2
+    )
+    cfg['Model']['Strategy'] = 'Resource'
+    cfg['LayerName']['pw']['Strategy'] = 'Resource'
+    cfg['LayerName']['pw']['ExternalParameters'] = ['weight', 'bias']
+    for entry in cfg['LayerName'].values():
+        for key, value in entry.get('Precision', {}).items():
+            if value == 'auto':
+                entry['Precision'][key] = PRECISION
+    return hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=cfg,
+        output_dir=str(out_dir),
+        project_name=PROJECT,
+        backend='Vitis',
+        io_type='io_parallel',
+    )
+
+
+def _pointwise_banks(n_banks):
+    banks = []
+    for k in range(n_banks):
+        w = np.zeros((PW_CHAN, PW_FILT))
+        for i in range(PW_CHAN):
+            for o in range(PW_FILT):
+                w[i, o] = (-1) ** (k + o) * (((i * PW_FILT + o + 13 * k) % 19) + 1) / 256.0
+        b = np.array([(-1) ** (o + k) * (o + 1 + 2 * k) / 128.0 for o in range(PW_FILT)])
+        banks.append((w, b))
+    return banks
+
+
+@pytest.mark.parametrize('rank', [2, 3])
+def test_pointwise_two_banks_rtl_simulation(tmp_path, synthesis_config, rank):
+    """The pointwise IP reads its weights through BOTH BRAM ports.
+
+    The bank lends port B to the loader only while quiescent, so this is the test
+    that the sharing works: same input to both banks, and any output difference is
+    bank selection. Matching the reference also proves the unreshaped
+    scalar-per-word layout the adapter claims is the real one.
+    """
+    import parameter_banks_sim as sim
+
+    from hls4ml.contrib.parameter_banks import interface, package
+
+    if not synthesis_config['run_synthesis']:
+        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
+    if not sim.have_xsim():
+        pytest.skip('requires xvlog/xelab/xsim')
+
+    banks = _pointwise_banks(2)
+    hls_model = _convert_pointwise(tmp_path, *banks[0], rank=rank)
+    hls_model.write()
+    hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
+    outputs = [(v.name, v.size()) for v in hls_model.get_output_variables()]
+
+    summary = package(str(tmp_path), n_banks=2)
+    verified, _ = interface.verify(ExternalParameterManifest.load(str(tmp_path)), str(tmp_path))
+    w_iface = next(i for i in verified if i.parameter.role == 'weight')
+    w_port = w_iface.parameter
+    b_port = next(i for i in verified if i.parameter.role == 'bias').parameter
+
+    # the claim under test: one scalar per word, as deep as there are scalars
+    assert w_port.kernel_variant == 'pointwise_unreshaped'
+    assert w_iface.data_width == w_port.precision.width
+    assert w_iface.depth == w_port.depth == PW_CHAN * PW_FILT
+
+    n_pos = PW_POSITIONS * (1 if rank == 2 else 2)
+    x = [[(i + 1) / 8.0 - (p + 1) / 4.0 for i in range(PW_CHAN)] for p in range(n_pos)]
+    payloads, expected = [], []
+    for w, b in banks:
+        tensor = w.reshape(*w_port.flat_order.shape)
+        payloads.append({w_port.name: w_port.pack(tensor), b_port.name: b_port.pack_flat(b.tolist())})
+        # a pointwise conv is the same dense applied at every position
+        flat = []
+        for pos in range(n_pos):
+            flat += [sim.code_of(v) for v in sim.dense_reference(x[pos], w.tolist(), b.tolist())]
+        expected.append({outputs[0][0]: flat})
+
+    assert expected[0] != expected[1], 'banks must produce different outputs to be discriminating'
+
+    tb = sim.write_testbench(
+        str(tmp_path / 'tb_pointwise.sv'),
+        PROJECT,
+        [sim.code_of(v) for row in x for v in row],
+        outputs,
+        summary,
+        payloads,
+        expected,
+    )
+    passed, log = sim.run_xsim(
+        str(tmp_path / 'xsim_pw'),
+        [
+            str(tmp_path / 'parameter_banks' / 'rtl'),
+            str(tmp_path / f'{PROJECT}_prj' / 'solution1' / 'syn' / 'verilog'),
+        ],
+        tb,
+    )
+    assert passed, f'pointwise ({rank}-D) two-bank RTL simulation failed:\n{log[-6000:]}'
+
+
+def test_latch_rejects_out_of_range_bank(tmp_path, synthesis_config):
+    """Needs three banks: two cannot express an invalid id."""
+    import parameter_banks_sim as sim
+
+    if not synthesis_config['run_synthesis']:
+        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
+    if not sim.have_xsim():
+        pytest.skip('requires xvlog/xelab/xsim')
+
+    rtl = Path(__file__).parent.parent.parent / 'hls4ml' / 'contrib' / 'parameter_banks' / 'templates'
+    tb = sim.write_latch_testbench(str(tmp_path / 'tb_latch.sv'))
+    passed, log = sim.run_xsim(str(tmp_path / 'xsim_latch'), [str(rtl)], tb)
+    assert passed, f'latch bench failed:\n{log[-4000:]}'
+
+
+def test_vivado_synthesizes_the_wrapper(synthesized_project):
+    """The only check that exercises the generated Tcl and synthesizability.
+
+    Packages IP from the hls4ml Vitis backend; Vivado is the implementation tool,
+    not a supported HLS backend.
+    """
+    import parameter_banks_sim as sim
+
+    from hls4ml.contrib.parameter_banks import package
+
+    if not sim.have_vivado():
+        pytest.skip('requires vivado')
+
+    project_path, _, _ = synthesized_project
+    summary = package(str(project_path), n_banks=2)
+
+    rw = Path(project_path) / 'parameter_banks'
+    # Generated ROM data is read by $readmemh from this directory at elaboration,
+    # so it has to be packaged next to the Tcl.
+    assert summary['rom_data_files'], 'this fixture should produce an out_index ROM'
+    for name in summary['rom_data_files']:
+        assert (rw / name).exists(), f'{name} was not packaged'
+
+    ok, log = sim.run_vivado_batch('create_parameter_banks.tcl', rw, 'parameter-banks wrapper synthesized')
+    assert ok, f'vivado synthesis did not complete:\n{log[-4000:]}'
+    # the sanity synthesis goes through the IP Integrator shim, so a shim that
+    # disagrees with the wrapper's ports fails here
+    assert (rw / 'rtl' / f'{summary["bd_module"]}.v').exists()
+    assert f'bd_module={summary["bd_module"]}' in log
+
+    # Vivado deletes a data file that is added as a source; it must still be here
+    for name in summary['rom_data_files']:
+        assert (rw / name).exists(), f'{name} did not survive synthesis'
+    assert 'is read successfully' in log, 'ROM data was not read during synthesis'
+    for report in ('utilization.rpt', 'timing.rpt', 'drc.rpt'):
+        assert (rw / report).exists(), f'missing {report}'
+
+    # the clock must have reached synthesis, not just been written to a file
+    timing = (rw / 'timing.rpt').read_text()
+    assert 'ap_clk' in timing, 'clock constraint did not reach synthesis'
+
+
+def test_vivado_ip_integrator_accepts_the_shim(synthesized_project, tmp_path):
+    """The Verilog shim is accepted as a Module Reference, with every port and
+    its INIT_HEX parameter exposed."""
+    import parameter_banks_sim as sim
+
+    from hls4ml.contrib.parameter_banks import package
+
+    if not sim.have_vivado():
+        pytest.skip('requires vivado')
+
+    project_path, project, _ = synthesized_project
+    summary = package(str(project_path), n_banks=2)
+    rw = Path(project_path) / 'parameter_banks'
+    hls_rtl = Path(project_path) / f'{project}_prj' / 'solution1' / 'syn' / 'verilog'
+    shim = rw / 'rtl' / f'{summary["bd_module"]}.v'
+    _, ports = _module_header(shim.read_text(), summary['bd_module'])
+    part = ExternalParameterManifest.load(str(project_path)).part
+    bram = next(p for p in summary['banked_ports'] if p['kind'] == 'bram')
+    init_param = f'{bram["name"].upper()}_INIT_HEX'
+
+    (tmp_path / 'ipi.tcl').write_text(
+        f'create_project ipi {tmp_path / "prj"} -part {part} -force\n'
+        f'add_files -norecurse [glob {hls_rtl}/*.v]\n'
+        f'add_files -norecurse [glob {rw}/rtl/*.sv]\n'
+        f'set_property file_type SystemVerilog [get_files {rw}/rtl/*.sv]\n'
+        f'add_files -norecurse {shim}\n'
+        'update_compile_order -fileset sources_1\n'
+        'create_bd_design system\n'
+        f'set c [create_bd_cell -type module -reference {summary["bd_module"]} pb_0]\n'
+        'puts "PINS=[llength [get_bd_pins $c/*]]"\n'
+        f'puts "INIT=[get_property CONFIG.{init_param} $c]"\n'
+        'puts "IPI_SHIM_OK"\n'
+    )
+    ok, log = sim.run_vivado_batch('ipi.tcl', tmp_path, 'IPI_SHIM_OK')
+    assert ok, f'IP Integrator did not accept the shim:\n{log[-4000:]}'
+    assert f'PINS={len(ports)}' in log, 'not every shim port became a block-design pin'
+    assert 'INIT=' in log, f'{init_param} is not a parameter of the module reference'
+
+
+# --- fail-closed behaviour ---------------------------------------------------
+
+
+def _convert_conv(model, out_dir):
+    cfg = hls4ml.utils.config_from_keras_model(
+        model, granularity='model', backend='Vitis', default_precision='ap_fixed<16,6>', default_reuse_factor=2
+    )
+    cfg['Model']['Strategy'] = 'Resource'
+    cfg['LayerName'] = {'conv2d_1': {'ExternalParameters': ['weight', 'bias']}}
+    return hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=cfg,
+        output_dir=str(out_dir),
+        project_name='conv_prj',
+        backend='Vitis',
+        io_type='io_parallel',
+    )
+
+
+def test_unregistered_layer_cannot_be_packed(tmp_path):
+    inp = Input(shape=(4, 4, 2), name='input_1')
+    model = Model(inp, Conv2D(3, (2, 2), padding='valid', activation='linear', name='conv2d_1')(inp))
+    hls_model = _convert_conv(model, tmp_path / 'conv')
+
+    from hls4ml.writer.external_parameters import build_manifest
+
+    manifest = build_manifest(hls_model)
+    assert manifest.parameters and not manifest.described
+    for port in manifest:
+        assert port.layout is None
+        with pytest.raises(ExternalParameterError):
+            port.pack_flat([0.0] * port.n_scalars)
+
+
+def test_unsupported_backend_claims_nothing(tmp_path):
+    """The Vivado backend emits the same HLS source, but its RTL ABI is unverified.
+
+    The adapter registry is keyed on backend, so this refuses at the manifest
+    rather than reusing the Vitis layout.
+    """
+    from hls4ml.contrib.parameter_banks import package
+    from hls4ml.writer.external_parameters import build_manifest
+
+    inp = Input(shape=(N_IN,), name='input_1')
+    model = Model(inp, Dense(4, activation='linear', name='dense_1')(inp))
+    cfg = hls4ml.utils.config_from_keras_model(
+        model, granularity='model', backend='Vivado', default_precision='ap_fixed<16,6>', default_reuse_factor=2
+    )
+    cfg['Model']['Strategy'] = 'Resource'
+    cfg['LayerName'] = {'dense_1': {'ExternalParameters': ['weight', 'bias']}}
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=cfg,
+        output_dir=str(tmp_path / 'vivado'),
+        project_name='vivado_prj',
+        backend='Vivado',
+        io_type='io_parallel',
+    )
+    hls_model.write()
+
+    ports = build_manifest(hls_model).parameters
+    assert ports
+    for port in ports:
+        assert port.interface_kind is None
+        assert port.layout is None
+        assert 'no adapter for' in port.note
+        assert "backend='Vivado'" in port.note
+
+    with pytest.raises(ValueError, match='backend'):
+        package(str(tmp_path / 'vivado'), n_banks=2)
+
+
+def _verilog(tmp_path, **files):
+    path = tmp_path / f'{PROJECT}_prj' / 'solution1' / 'syn' / 'verilog'
+    path.mkdir(parents=True)
+    for name, body in files.items():
+        (path / f'{name}.v').write_text(body)
+    return str(tmp_path)
+
+
+@pytest.mark.parametrize(
+    'rtl,expected',
+    [
+        # The shift's spelling and the signal it lands on both vary by build; the
+        # top may also pass an unshifted address through from the submodule that
+        # shifts it, so the first assignment seen is not the answer.
+        ("assign w2_Addr_A = w2_Addr_A_local;\nassign w2_Addr_A_local = w2_Addr_A_orig << 32'd4;", 4),
+        ("assign w2_Addr_A = w2_Addr_A_orig << 32'd4;", 4),
+        ('assign w2_Addr_A = zext_ln46_fu_330_p1 << 4;', 4),
+        ("assign w2_Addr_A = {zext_ln46_fu_330_p1[27:0], 4'd0};", 4),
+        # A one-byte word needs no shift, and HLS emits none.
+        ('assign w2_Addr_A = w2_Addr_A_orig;', 0),
+    ],
+)
+def test_addr_shift_is_read_from_any_assignment_form(tmp_path, rtl, expected):
+    from hls4ml.contrib.parameter_banks.interface import parse_addr_shift
+
+    # 'myproject.v' sorts before 'myproject_dense.v', so the top is read first.
+    project = _verilog(tmp_path, myproject='assign w2_Addr_A = dense_U0_w2_Addr_A;', myproject_dense=rtl)
+
+    assert parse_addr_shift(project, PROJECT, 'w2')[0] == expected
+
+
+def test_addr_shift_rejects_disagreeing_drivers(tmp_path):
+    from hls4ml.contrib.parameter_banks.interface import parse_addr_shift
+
+    project = _verilog(
+        tmp_path,
+        myproject='assign w2_Addr_A = x << 4;',
+        myproject_dense="assign w2_Addr_A_local = {y, 3'd0};",
+    )
+    shift, evidence = parse_addr_shift(project, PROJECT, 'w2')
+
+    assert shift is None
+    assert 'conflicting' in evidence and '<< 4' in evidence and "3'd0" in evidence
+
+
+def test_addr_shift_is_unknown_only_when_nothing_drives_the_port(tmp_path):
+    from hls4ml.contrib.parameter_banks.interface import parse_addr_shift
+
+    project = _verilog(tmp_path, top='assign w5_Addr_A = w5_Addr_A_local;')
+    shift, evidence = parse_addr_shift(project, PROJECT, 'w2')
+
+    assert shift is None
+    assert 'w2_Addr_A' in evidence
+
+
+def test_refusal_explains_every_unbankable_port(tmp_path):
+    """The refusal must carry the manifest's reasons, not just the port names.
+
+    Without this the user has only a list of names and must open the JSON.
+    """
+    from hls4ml.contrib.parameter_banks import InterfaceUnsupported, package
+
+    manifest = _manifest(tmp_path)
+    w2, w5 = manifest.get('trunk', 'weight'), manifest.get('head_b', 'weight')
+    for p in (w2, w5):  # undescribed, as the writer leaves a parameter it cannot claim
+        p.interface_kind = p.flat_order = p.layout = p.data_width = p.depth = None
+    w2.note = 'reuse_factor=1 reshapes all 64 scalars into a single word'
+    w5.note = None
+    manifest.save(str(tmp_path))
+
+    with pytest.raises(InterfaceUnsupported) as exc:
+        package(str(tmp_path), n_banks=2)
+    message = str(exc.value)
+    assert "['w2', 'w6']" in message
+    assert 'reuse_factor=1 reshapes all 64 scalars into a single word' in message
+    assert 'w6: no reason recorded' in message
+
+
+def test_packer_refuses_unclaimed_ordering(tmp_path):
+    port = _port(_manifest(tmp_path), 'trunk', 'weight')
+    port.layout = None
+
+    with pytest.raises(ExternalParameterError):
+        port.pack(_bank_tensors(1)[0]['trunk'][0])
+
+
+def test_flatten_rejects_wrong_shape(manifest):
+    """A transposed tensor would silently mis-pack."""
+    n_in, n_out, _ = LAYERS['trunk']
+    port = _port(manifest, 'trunk', 'weight')
+
+    for bad in (np.zeros((n_out, n_in + 1)), np.zeros((n_in, n_out, 2)), np.zeros((n_in, n_out + 1))):
+        with pytest.raises(ExternalParameterError, match='shape'):
+            port.flat_order.flatten(bad)
+
+
+def test_pack_flat_rejects_wrong_scalar_count(manifest):
+    for port in (_port(manifest, 'trunk', 'weight'), _port(manifest, 'trunk', 'bias')):
+        n = port.n_scalars
+        for bad in ([0.0] * (n - 1), [0.0] * (n + 1)):
+            with pytest.raises(ExternalParameterError, match='scalars'):
+                port.pack_flat(bad)
+
+
+@pytest.mark.parametrize(
+    'field,value,exc,match',
+    [
+        ('backend', 'Vivado', ValueError, 'backend'),
+        ('project_name', '', ExternalParameterError, 'project_name'),
+        ('schema', 'someone.else/v1', ExternalParameterError, 'schema'),
+        ('schema_version', 99, ExternalParameterError, 'version'),
+    ],
+)
+def test_package_enforces_manifest_contract(tmp_path, field, value, exc, match):
+    from hls4ml.contrib.parameter_banks import package
+
+    _manifest(tmp_path)
+    path = tmp_path / 'firmware' / 'weights' / 'external_parameters.json'
+    good = json.loads(path.read_text())
+    path.write_text(json.dumps({**good, field: value}))
+
+    with pytest.raises(exc, match=match):
+        package(str(tmp_path), n_banks=2)
+
+
+def test_package_rejects_non_integer_bank_count(tmp_path):
+    from hls4ml.contrib.parameter_banks import package
+
+    _manifest(tmp_path)
+    for bad in (1, 2.0, '3', True):
+        with pytest.raises(ValueError, match='n_banks'):
+            package(str(tmp_path), n_banks=bad)
+
+
+def test_pack_banks_rejects_a_manifest_from_another_model(tmp_path, written_project):
+    """A ModelGraph that does not own the written project's manifest is refused
+    up front rather than failing on a missing key later."""
+    inp = Input(shape=(N_IN,), name='input_1')
+    other = Model(inp, Dense(4, activation='linear', name='other')(inp))
+    other_model = hls4ml.converters.convert_from_keras_model(
+        other, output_dir=written_project.config.get_output_dir(), project_name=PROJECT, backend='Vitis'
+    )
+    with pytest.raises(PackingUnsupported, match='not parameters of this model'):
+        pack.pack_banks(other_model, _bank_sets(2))
+
+
+def test_manifest_rejects_duplicate_parameters(tmp_path):
+    _manifest(tmp_path)
+    path = tmp_path / 'firmware' / 'weights' / 'external_parameters.json'
+    good = json.loads(path.read_text())
+    path.write_text(json.dumps({**good, 'ports': good['ports'] + good['ports'][:1]}))
+
+    with pytest.raises(ExternalParameterError, match='duplicate'):
+        ExternalParameterManifest.load(str(tmp_path))
+
+
+def test_bram_signal_names_come_from_the_rtl(tmp_path):
+    """The wrapper connects these names, so a renamed RTL port must fail here."""
+    from hls4ml.contrib.parameter_banks import interface
+    from hls4ml.report.vivado_report import BramGeometry, InterfaceSummary
+
+    port = _port(_manifest(tmp_path), 'trunk', 'weight')
+    summary = InterfaceSummary([], 'ap_ctrl_hs', {'w2_PORTA': BramGeometry(port.data_width, 8)})
+    rtl = {f'w2_{s}': {'name': f'w2_{s}', 'width': 8, 'dir': d} for s, d in interface.BRAM_SIGNALS.values()}
+    del rtl['w2_Addr_A']
+    rtl['w2_address0'] = {'name': 'w2_address0', 'width': 8, 'dir': 'output'}
+
+    with pytest.raises(interface.InterfaceMismatch, match='naming has changed'):
+        interface._verify_bram(port, summary, rtl, str(tmp_path), PROJECT)
+
+
+def test_read_only_proof_rejects_a_live_write_enable(tmp_path):
+    """The loader shares port B with the IP, so the IP must never write the memory.
+
+    Whether the IP *reads* port B is deliberately not checked -- Dense leaves it
+    idle and a pointwise convolution uses it, and both are supported.
+    """
+    from hls4ml.contrib.parameter_banks import interface
+
+    syn = tmp_path / 'p_prj' / 'solution1' / 'syn' / 'verilog'
+    syn.mkdir(parents=True)
+    signals = {role: f'w2_{suffix}' for role, (suffix, _) in interface.BRAM_SIGNALS.items()}
+
+    tied = "assign w2_WEN_A = 1'b0;\nassign w2_WEN_B = 1'b0;\n"
+
+    # neither a live port-B read nor a driven Din disqualifies the memory: the write
+    # enables are what make it read-only
+    (syn / 'p.v').write_text(tied + 'assign w2_EN_B = kernel_EN_B;\nassign w2_Din_A = kernel_din;\n')
+    read_only, evidence = interface.bram_is_read_only(str(tmp_path), 'p', signals)
+    assert read_only, evidence
+
+    for live in ('w2_WEN_A', 'w2_WEN_B'):
+        (syn / 'p.v').write_text(tied.replace(f'assign {live} =', f'assign {live} = drive; //'))
+        read_only, evidence = interface.bram_is_read_only(str(tmp_path), 'p', signals)
+        assert not read_only, f'{live} driven but still called read-only: {evidence}'
+
+
+def _module_header(text, name):
+    """(parameters, [(dir, width, port)]) of a module, parsed from its header."""
+    m = re.search(rf'module\s+{name}\s*#\((.*?)\)\s*\((.*?)\);', text, re.S)
+    assert m, f'no header for {name}'
+    params = re.findall(r'parameter\s+(\w+)\s*=\s*("[^"]*"|\S+)', m.group(1))
+    ports = re.findall(r'(input|output)\s+wire\s+(\[\d+:\d+\]\s+)?(\w+)', m.group(2))
+    return params, [(d, (w or '').strip(), n) for d, w, n in ports]
+
+
+def _fabricated_wrapper(n_banks=3, with_bram=True):
+    """A Wrapper over made-up interfaces: checks the generator, not the HLS flow."""
+    from hls4ml.contrib.parameter_banks.interface import BRAM_SIGNALS, BramInterface, ScalarBundleInterface
+    from hls4ml.contrib.parameter_banks.package import CONTROL_PORTS, Wrapper
+    from hls4ml.model.external_parameters import BlockLayout, CompleteLayout, ExternalParameter, FlatOrder
+    from hls4ml.model.types import FixedPrecisionType
+
+    prec = FixedPrecisionType(16, 6)
+    w2 = ExternalParameter(
+        'w2',
+        'l',
+        'Dense',
+        'weight',
+        [6, 3],
+        18,
+        prec,
+        interface_kind='bram',
+        data_width=96,
+        depth=3,
+        flat_order=FlatOrder(['n_in', 'n_out'], ['n_out', 'n_in'], [6, 3]),
+        layout=BlockLayout(3, 6),
+    )
+    b2 = ExternalParameter(
+        'b2',
+        'l',
+        'Dense',
+        'bias',
+        [5],
+        5,
+        prec,
+        interface_kind='scalar_bundle',
+        data_width=16,
+        flat_order=FlatOrder(['n_out'], ['n_out'], [5]),
+        layout=CompleteLayout(),
+    )
+    sig = {role: f'w2_{suffix}' for role, (suffix, _) in BRAM_SIGNALS.items()}
+    bram = BramInterface(w2, sig, data_width=96, addr_width=32)
+    scalar = ScalarBundleInterface(b2, [f'b2_{i}' for i in range(5)], 16)
+
+    rtl_ports = [{'name': n, 'dir': 'input', 'width': 1} for n in CONTROL_PORTS]
+    rtl_ports += [
+        {'name': 'x', 'dir': 'input', 'width': 64},
+        {'name': 'x_ap_vld', 'dir': 'input', 'width': 1},
+        {'name': 'y_0', 'dir': 'output', 'width': 16},
+        {'name': 'y_0_ap_vld', 'dir': 'output', 'width': 1},
+    ]
+    rtl_ports += [{'name': n, 'dir': 'input', 'width': 1} for n in sig.values()]
+    rtl_ports += [{'name': n, 'dir': 'input', 'width': 16} for n in scalar.ports]
+    interfaces = [bram, scalar] if with_bram else [scalar]
+    return Wrapper('p', interfaces, rtl_ports, n_banks, 'ap_ctrl_hs')
+
+
+def test_bd_shim_mirrors_the_top():
+    """The Verilog shim declares exactly the top's ports and parameters and forwards
+    each by name."""
+    import io
+
+    wrapper = _fabricated_wrapper()
+    top, shim = io.StringIO(), io.StringIO()
+    wrapper.write_top(top)
+    wrapper.write_bd_shim(shim)
+
+    top_params, top_ports = _module_header(top.getvalue(), 'p_parameter_banks')
+    shim_params, shim_ports = _module_header(shim.getvalue(), 'p_parameter_banks_bd')
+    assert top_params == shim_params == [('W2_INIT_HEX', '""')]
+    assert top_ports == shim_ports
+    names = [n for _, _, n in top_ports]
+    for expected in ('x', 'y_0_ap_vld', 'ld_param_id', 'ld_addr', 'ld_data', 'quiescent'):
+        assert expected in names
+    assert len(names) == len(set(names)) and names == wrapper.port_names()
+
+    # the shim is Verilog-2001: no SystemVerilog-only syntax
+    body = shim.getvalue()
+    assert 'localparam int' not in body and 'logic' not in body
+    # and every port and parameter is forwarded by name
+    inst = re.search(r'p_parameter_banks\s*#\((.*?)\)\s*u_parameter_banks\s*\((.*?)\);', body, re.S)
+    assert inst
+    assert re.findall(r'\.(\w+)\(\1\)', inst.group(1)) == ['W2_INIT_HEX']
+    assert re.findall(r'\.(\w+)\(\1\)', inst.group(2)) == names
+    # a comment line must not pick up the list separator
+    assert not re.search(r'//[^\n]*,\s*$', body, re.M)
+
+
+def test_scalar_only_wrapper_has_no_parameter_block():
+    """With no memory interface there is no INIT_HEX: top and shim are plain
+    modules, and the shim instantiates the top without a parameter list."""
+    import io
+
+    wrapper = _fabricated_wrapper(with_bram=False)
+    assert wrapper.init_params == [] and [s.name for s in wrapper.loader] == ['b2']
+    top, shim = io.StringIO(), io.StringIO()
+    wrapper.write_top(top)
+    wrapper.write_bd_shim(shim)
+
+    for text, module in ((top.getvalue(), 'p_parameter_banks'), (shim.getvalue(), 'p_parameter_banks_bd')):
+        assert f'module {module} #(' not in text and 'UNUSED' not in text
+        assert re.search(rf'module {module} \(\n', text)
+    assert re.search(r'p_parameter_banks u_parameter_banks \(', shim.getvalue())
+    _, top_ports = _module_header_plain(top.getvalue(), 'p_parameter_banks')
+    _, shim_ports = _module_header_plain(shim.getvalue(), 'p_parameter_banks_bd')
+    assert top_ports == shim_ports and 'ld_data' in [n for _, _, n in top_ports]
+
+
+def _module_header_plain(text, name):
+    m = re.search(rf'module\s+{name}\s*\((.*?)\);', text, re.S)
+    assert m, f'no header for {name}'
+    ports = re.findall(r'(input|output)\s+wire\s+(\[\d+:\d+\]\s+)?(\w+)', m.group(1))
+    return [], [(d, (w or '').strip(), n) for d, w, n in ports]
+
+
+def test_generic_loader_is_range_checked_before_narrowing():
+    """The widest parameter sets the shared widths; each parameter's id and
+    full-width address are checked before the address is narrowed to its port."""
+    import io
+
+    wrapper = _fabricated_wrapper()
+    g = wrapper.loader
+    assert (g.param_id_width, g.addr_width, g.data_width) == (1, 3, 96)
+    assert [(s.name, s.param_id, s.depth, s.data_width, s.addr_width) for s in g] == [
+        ('w2', 0, 3, 96, 2),
+        ('b2', 1, 5, 16, 3),
+    ]
+
+    top = io.StringIO()
+    wrapper.write_top(top)
+    _, ports = _module_header(top.getvalue(), 'p_parameter_banks')
+    widths = {n: w for _, w, n in ports}
+    assert widths['ld_data'] == '[95:0]' and widths['ld_addr'] == '[2:0]' and widths['ld_param_id'] == '[0:0]'
+    body = top.getvalue()
+    assert "assign ld_hit[0] = ld_req & (ld_param_id == 1'd0) & (ld_addr < 4'd3);" in body
+    assert "assign ld_hit[1] = ld_req & (ld_param_id == 1'd1) & (ld_addr < 4'd5);" in body
+    assert '.ld_word(ld_addr[1:0])' in body and '.ld_idx(ld_addr[2:0])' in body
+    assert '.ld_wdata(ld_data[95:0])' in body and '.ld_data(ld_data[15:0])' in body
+
+    described = wrapper.describe([], {})
+    assert described['loader'] == {'n_params': 2, 'param_id_width': 1, 'addr_width': 3, 'data_width': 96}
+    assert [(p['name'], p['param_id'], p['ld_depth'], p['ld_data_width']) for p in described['banked_ports']] == [
+        ('w2', 0, 3, 96),
+        ('b2', 1, 5, 16),
+    ]
+
+
+def test_rtl_port_parsing_is_exhaustive(tmp_path):
+    """Synthetic Verilog: this checks the parser, not the HLS flow."""
+    from hls4ml.contrib.parameter_banks import interface
+
+    syn = tmp_path / 'p_prj' / 'solution1' / 'syn' / 'verilog'
+    syn.mkdir(parents=True)
+    rtl = syn / 'p.v'
+
+    rtl.write_text(
+        'module p (ap_clk, ap_rst, ap_start, din, dout);\n'
+        'input   ap_clk;\n'
+        'input   ap_rst;\n'
+        'input   ap_start;\n'
+        'input  [15:0] din;\n'
+        'output [7:0] dout;\n'
+        'endmodule\n'
+    )
+    ports = interface.parse_rtl_ports(str(tmp_path), 'p')
+    assert [p['name'] for p in ports] == ['ap_clk', 'ap_rst', 'ap_start', 'din', 'dout']
+    assert next(p for p in ports if p['name'] == 'din')['width'] == 16
+    assert next(p for p in ports if p['name'] == 'dout')['dir'] == 'output'
+
+    # a header port with no declaration
+    rtl.write_text('module p (ap_clk, missing);\ninput ap_clk;\nendmodule\n')
+    with pytest.raises(ValueError, match='no declaration found'):
+        interface.parse_rtl_ports(str(tmp_path), 'p')
+
+    # inout is not supported by the wrapper
+    rtl.write_text('module p (ap_clk, bidir);\ninput ap_clk;\ninout [3:0] bidir;\nendmodule\n')
+    with pytest.raises(ValueError, match='inout'):
+        interface.parse_rtl_ports(str(tmp_path), 'p')
