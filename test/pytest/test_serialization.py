@@ -32,7 +32,7 @@ def qkeras_model(input_shape):
     return model
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_save_load__model(test_case_id, io_type, backend):
     input_shape = (8, 8, 3)
@@ -155,7 +155,7 @@ def test_save_load_testbench_data(test_case_id, backend, input_configured, outpu
         assert hls_model_clone.config.config.get('OutputPredictions') is None
 
 
-@pytest.mark.parametrize('backend', ['Vitis'])  # Disabling OneAPI for now excessive run time
+@pytest.mark.parametrize('backend', ['Vitis'])  # Disabling Altera for now due to excessive run time
 def test_save_load_qonnx_model(test_case_id, backend):
     dl_file = str(example_model_path / 'onnx/branched_model_ch_last.onnx')
 
@@ -194,7 +194,7 @@ def test_save_load_qonnx_model(test_case_id, backend):
     np.testing.assert_equal(y_original, y_clone)
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_linking_project(test_case_id, io_type, backend):
     input_shape = (8, 8, 3)

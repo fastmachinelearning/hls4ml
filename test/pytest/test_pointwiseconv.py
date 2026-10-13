@@ -23,8 +23,8 @@ strides2d_options = [(1, 1), (2, 2)]
     [
         ('Quartus', 'io_parallel', 'resource', 1),
         ('Quartus', 'io_stream', 'resource', 1),
-        ('oneAPI', 'io_parallel', 'resource', 1),
-        ('oneAPI', 'io_stream', 'resource', 1),
+        ('Altera', 'io_parallel', 'resource', 1),
+        ('Altera', 'io_stream', 'resource', 1),
         ('Vivado', 'io_parallel', 'resource', 1),
         ('Vitis', 'io_parallel', 'resource', 1),
         ('Vivado', 'io_parallel', 'latency', 1),
@@ -79,7 +79,7 @@ def test_pointwiseconv1d(test_case_id, chans, padds, strides, backend, io_type, 
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
-    if backend != 'XLS' and not (backend in ['Quartus', 'oneAPI'] and io_type == 'io_stream'):
+    if backend != 'XLS' and not (backend in ['Quartus', 'Altera'] and io_type == 'io_stream'):
         # Quartus io_stream does not currently have a special pointwise implementation
         assert 'Pointwise' in list(hls_model.graph.values())[1].class_name
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
@@ -93,8 +93,8 @@ def test_pointwiseconv1d(test_case_id, chans, padds, strides, backend, io_type, 
     [
         ('Quartus', 'io_parallel', 'resource'),
         ('Quartus', 'io_stream', 'resource'),
-        ('oneAPI', 'io_parallel', 'resource'),
-        ('oneAPI', 'io_stream', 'resource'),
+        ('Altera', 'io_parallel', 'resource'),
+        ('Altera', 'io_stream', 'resource'),
         ('Vivado', 'io_parallel', 'resource'),
         ('Vivado', 'io_parallel', 'latency'),
         ('Vivado', 'io_stream', 'latency'),
@@ -144,7 +144,7 @@ def test_pointwiseconv2d(test_case_id, chans, padds, strides, backend, io_type, 
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
-    if backend != 'XLS' and not (backend in ['Quartus', 'oneAPI'] and io_type == 'io_stream'):
+    if backend != 'XLS' and not (backend in ['Quartus', 'Altera'] and io_type == 'io_stream'):
         # Quartus io_stream does not currently have a special pointwise implementation
         assert 'Pointwise' in list(hls_model.graph.values())[1].class_name
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)

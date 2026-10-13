@@ -9,7 +9,7 @@ from hls4ml.converters import convert_from_keras_model
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'Altera'])
 def test_repack_precision(test_case_id, backend: str):
     inp = keras.Input(shape=(3, 3), name='inp')
     out = keras.layers.Reshape((3, 3), name='reshape')(inp)
@@ -34,7 +34,7 @@ def test_repack_precision(test_case_id, backend: str):
     )
     model_hls.write()  # Not needed for this test, but useful for debugging
 
-    reshape_name = 'reshape' if backend == 'oneAPI' else 'repack_reshape'
+    reshape_name = 'reshape' if backend == 'Altera' else 'repack_reshape'
     assert reshape_name in model_hls.graph, f'{reshape_name} not found in graph'
     repack_precision = model_hls.graph[reshape_name].attributes['result_t'].precision
     assert repack_precision.integer == 10, 'Precision mismatch'
@@ -47,7 +47,7 @@ def test_repack_precision(test_case_id, backend: str):
     'backend, strategy',
     [
         ('Quartus', 'Resource'),
-        ('oneAPI', 'Resource'),
+        ('Altera', 'Resource'),
         ('Vivado', 'Resource'),
         ('Vitis', 'Resource'),
         ('Vivado', 'Latency'),
