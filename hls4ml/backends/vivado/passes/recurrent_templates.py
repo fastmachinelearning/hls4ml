@@ -259,7 +259,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
             mult_params2['n_in'] = node.get_output_variable().shape[0]
             mult_params2['n_out'] = node.get_output_variable().shape[0] * n_recr_mult
         mult_params2['product_type'] = get_backend('vivado').product_type(
-            node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision
+            node.get_output_variable().type.precision, node.get_weights('recurrent_weight').type.precision
         )
         mult_params2['reuse_factor'] = node.attributes['recurrent_reuse_factor']
         mult_params2['index'] = str(node.index) + '_2'
@@ -402,7 +402,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             mult_params2['n_in'] = node.get_attr(f'{d}_n_states')
             mult_params2['n_out'] = node.get_attr(f'{d}_n_states') * n_recr_mult
             mult_params2['product_type'] = get_backend('vivado').product_type(
-                node.get_input_variable().type.precision, node.get_weights(f'{d}_recurrent_weight').type.precision
+                node.get_output_variable().type.precision, node.get_weights(f'{d}_recurrent_weight').type.precision
             )
             mult_params2['reuse_factor'] = node.attributes[f'{d}_recurrent_reuse_factor']
             mult_params2['index'] = str(node.index) + f'_2_{d[0]}'
