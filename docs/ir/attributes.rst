@@ -2965,6 +2965,60 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, Coyote
 
+InstanceNormalization
+=====================
+Base attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* scale_t: NamedType
+
+* bias_t: NamedType
+
+Type attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* n_in: int
+
+* n_filt: int
+
+* n_spatial: int
+
+* epsilon: float (Default: 0.001)
+
+Weight attributes
+-----------------
+* scale: WeightVariable
+
+* bias: WeightVariable
+
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* scale_t: NamedType
+
+* bias_t: NamedType
+
+Backend-specific attributes
+---------------------------
+* reuse_factor: int (Default: 1)
+
+  * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. Lower number results in more parallelism and lower latency at the expense of the resources used.Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, SymbolicExpression, oneAPI, Coyote, Libero, XLS
+
 EinsumDense
 ===========
 Base attributes
