@@ -77,6 +77,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">VitisUnified</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#system-flow">System Flow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#axi-interface-modes">AXI interface modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-center-cards">Data-center cards</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#configuration-options">Configuration options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#build-options">Build options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#limitations">Limitations</a></li>
@@ -148,12 +149,14 @@
              
   <section id="vitisunified">
 <h1>VitisUnified<a class="headerlink" href="#vitisunified" title="Link to this heading"></a></h1>
-<p>The <strong>VitisUnified</strong> backend provides an end-to-end workflow for AMD SoC boards, from an ML model to a design that is ready to deploy on <a class="reference external" href="http://pynq.io/">PYNQ</a>. It is inherited from the <a class="reference internal" href="vitis.html"><span class="doc">Vitis</span></a> backend. We use the new Vitis Unified software, which can automatically link the HLS kernel to the system hardware. The current version supports only SoC boards with a PYNQ Python driver.</p>
+<p>The <strong>VitisUnified</strong> backend provides an end-to-end workflow for AMD SoC boards and data-center cards, from an ML model to a design that is ready to deploy. It is inherited from the <a class="reference internal" href="vitis.html"><span class="doc">Vitis</span></a> backend. We use the new Vitis Unified software, which can automatically link the HLS kernel to the system hardware. SoC boards are deployed with a <a class="reference external" href="http://pynq.io/">PYNQ</a> Python driver, data-center cards with an XRT one.</p>
 <p>It is the recommended flow for AMD SoC boards with Vitis 2023.2 or newer. Models with <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> or with <code class="docutils literal notranslate"><span class="pre">ap_fixed</span></code> interface types stay with the <a class="reference internal" href="accelerator.html"><span class="doc">VivadoAccelerator</span></a> backend.</p>
 <p>Currently <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> officially supports the following boards and tool versions:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.xilinx.com/products/boards-and-kits/ek-u1-zcu102-g.html">zcu102</a> (Vitis and Vivado 2023.2)</p></li>
 <li><p><a class="reference external" href="https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html">kv260</a> (Vitis and Vivado 2023.2 and 2025.2)</p></li>
+<li><p><a class="reference external" href="https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html">alveo-u55c</a> (Vitis and Vivado 2024.2 with the <code class="docutils literal notranslate"><span class="pre">xilinx_u55c_gen3x16_xdma_3_202210_1</span></code> platform, <code class="docutils literal notranslate"><span class="pre">axi_master</span></code> with <code class="docutils literal notranslate"><span class="pre">driver='xrt'</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alveo-u50</span></code> and <code class="docutils literal notranslate"><span class="pre">alveo-u280</span></code> (not tested on hardware, no <code class="docutils literal notranslate"><span class="pre">kernel_slr</span></code>)</p></li>
 </ul>
 <p>If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. The steps are covered in the platform setup tutorial in the accelerator backend section of the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">hls4ml-tutorial</a> repository.</p>
 <section id="system-flow">
@@ -189,6 +192,40 @@ The platforms built by the shipped Tcl scripts have a 32-bit DMA, so <code class
 </dd>
 </dl>
 </section>
+<section id="data-center-cards">
+<span id="vitis-unified-cards"></span><h2>Data-center cards<a class="headerlink" href="#data-center-cards" title="Link to this heading"></a></h2>
+<p>A card is linked against an installed card platform instead of one built by Vivado, and it is driven by XRT over PCIe instead of by PYNQ. Three things follow from that, and all are handled by the <code class="docutils literal notranslate"><span class="pre">board</span></code> and <code class="docutils literal notranslate"><span class="pre">driver</span></code> options:</p>
+<ul class="simple">
+<li><p>The platform is looked up under <code class="docutils literal notranslate"><span class="pre">PLATFORM_REPO_PATHS</span></code>, which has to be set when <code class="docutils literal notranslate"><span class="pre">bitfile=True</span></code> runs the link.</p></li>
+<li><p>The kernel pointers are assigned to memory banks explicitly. The banks of the board entry are split evenly over the pointer arguments, one contiguous slice each, and the generated driver allocates every buffer in the banks of its own kernel argument. For one input and one output on a card with 32 HBM banks that gives <code class="docutils literal notranslate"><span class="pre">HBM[0:15]</span></code> and <code class="docutils literal notranslate"><span class="pre">HBM[16:31]</span></code>.</p></li>
+<li><p>The kernel is placed in the SLR given by <code class="docutils literal notranslate"><span class="pre">kernel_slr</span></code> (from the board entry, <code class="docutils literal notranslate"><span class="pre">SLR2</span></code> on the U55C), so v++ pipelines the path to its memory banks. Pass <code class="docutils literal notranslate"><span class="pre">kernel_slr=False</span></code> for a model that does not fit in one SLR.</p></li>
+</ul>
+<p>Only <code class="docutils literal notranslate"><span class="pre">axi_master</span></code> is supported on a card. Instead of the raw bitstream and hardware handoff file that PYNQ needs, the <code class="docutils literal notranslate"><span class="pre">.xclbin</span></code> is copied to <code class="docutils literal notranslate"><span class="pre">export/</span></code>.</p>
+<p>The kernel runs on the card’s scalable clock. Vitis implements it against the platform’s default kernel frequency, 300 MHz on the U55C, and when routing misses that it lowers the clock in the <code class="docutils literal notranslate"><span class="pre">.xclbin</span></code> to the highest frequency that meets timing. A <code class="docutils literal notranslate"><span class="pre">[clock]</span></code> entry would not change this, so a card’s <code class="docutils literal notranslate"><span class="pre">link_system.cfg</span></code> has none. <code class="docutils literal notranslate"><span class="pre">build(bitfile=True)</span></code> prints the kernel clock read from the <code class="docutils literal notranslate"><span class="pre">.xclbin</span></code> and returns it as <code class="docutils literal notranslate"><span class="pre">KernelClockMHz</span></code> in its report. <code class="docutils literal notranslate"><span class="pre">clock_period</span></code> still sets the HLS schedule, and since the HLS estimate leaves out routing, a short period pays off. A 16-64-32-32-5 jet tagger at <code class="docutils literal notranslate"><span class="pre">ReuseFactor</span></code> 1 ships at 112 MHz with <code class="docutils literal notranslate"><span class="pre">clock_period=6.66</span></code> and at 237 MHz with <code class="docutils literal notranslate"><span class="pre">clock_period=3.333</span></code>. Adding <code class="docutils literal notranslate"><span class="pre">in_stream_buf_size=2</span></code> and the options below to <code class="docutils literal notranslate"><span class="pre">link_system.cfg</span></code> after <code class="docutils literal notranslate"><span class="pre">write()</span></code> gives 256 MHz:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[vivado]</span>
+<span class="na">prop</span><span class="o">=</span><span class="s">run.impl_1.STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE=AggressiveFanoutOpt</span>
+<span class="na">prop</span><span class="o">=</span><span class="s">run.impl_1.STEPS.POST_ROUTE_PHYS_OPT_DESIGN.IS_ENABLED=true</span>
+<span class="na">prop</span><span class="o">=</span><span class="s">run.impl_1.STEPS.POST_ROUTE_PHYS_OPT_DESIGN.ARGS.DIRECTIVE=AggressiveExplore</span>
+</pre></div>
+</div>
+<p>With Vivado 2024.2, <code class="docutils literal notranslate"><span class="pre">run.impl_1.strategy=Performance_Explore</span></code> crashes the placer when <code class="docutils literal notranslate"><span class="pre">kernel_slr</span></code> is set.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">hls_model</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                                                       <span class="n">hls_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                                                       <span class="n">output_dir</span><span class="o">=</span><span class="s1">'hls4ml_prj_u55c'</span><span class="p">,</span>
+                                                       <span class="n">backend</span><span class="o">=</span><span class="s1">'VitisUnified'</span><span class="p">,</span>
+                                                       <span class="n">board</span><span class="o">=</span><span class="s1">'alveo-u55c'</span><span class="p">,</span>
+                                                       <span class="n">driver</span><span class="o">=</span><span class="s1">'xrt'</span><span class="p">,</span>
+                                                       <span class="n">clock_period</span><span class="o">=</span><span class="mf">3.333</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The generated <code class="docutils literal notranslate"><span class="pre">export/axi_master_driver.py</span></code> loads the <code class="docutils literal notranslate"><span class="pre">.xclbin</span></code> from the path it is given, relative to the working directory. The shapes it is constructed with must share one batch size and match the number of values per sample of each model input and output, and the data type defaults to the interface type (<code class="docutils literal notranslate"><span class="pre">np.float32</span></code> for <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">np.float64</span></code> for <code class="docutils literal notranslate"><span class="pre">double</span></code>). <code class="docutils literal notranslate"><span class="pre">predict</span></code> takes an input of exactly that shape:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">axi_master_driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">NeuralNetworkAccelerator</span>
+
+<span class="n">accel</span> <span class="o">=</span> <span class="n">NeuralNetworkAccelerator</span><span class="p">(</span><span class="s1">'myproject.xclbin'</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">n_out</span><span class="p">))</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">accel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 <section id="configuration-options">
 <h2>Configuration options<a class="headerlink" href="#configuration-options" title="Link to this heading"></a></h2>
 <p>The options below are passed as keyword arguments to the converter (for example <code class="docutils literal notranslate"><span class="pre">convert_from_keras_model</span></code>).
@@ -211,7 +248,7 @@ They are stored under <code class="docutils literal notranslate"><span class="pr
 <td><div class="line-block">
 <div class="line">Target board.</div>
 <div class="line">It selects the FPGA part, the platform, and the Python driver template.</div>
-<div class="line">The current version only supports the boards in <code class="docutils literal notranslate"><span class="pre">supported_boards.json</span></code> (<code class="docutils literal notranslate"><span class="pre">zcu102</span></code> and <code class="docutils literal notranslate"><span class="pre">kv260</span></code>).</div>
+<div class="line">The current version only supports the boards in <code class="docutils literal notranslate"><span class="pre">supported_boards.json</span></code> (<code class="docutils literal notranslate"><span class="pre">zcu102</span></code>, <code class="docutils literal notranslate"><span class="pre">kv260</span></code>, <code class="docutils literal notranslate"><span class="pre">alveo-u55c</span></code>, <code class="docutils literal notranslate"><span class="pre">alveo-u50</span></code> and <code class="docutils literal notranslate"><span class="pre">alveo-u280</span></code>).</div>
 <div class="line">Any other board name is rejected with an error, unless <code class="docutils literal notranslate"><span class="pre">platform</span></code> and <code class="docutils literal notranslate"><span class="pre">part</span></code> are given.</div>
 <div class="line">You can use your own board: build its platform by following the platform setup tutorial in the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml-tutorial">hls4ml-tutorial</a> repository and pass it with <code class="docutils literal notranslate"><span class="pre">platform</span></code>.</div>
 </div>
@@ -270,7 +307,8 @@ They are stored under <code class="docutils literal notranslate"><span class="pr
 <td><p><code class="docutils literal notranslate"><span class="pre">python</span></code></p></td>
 <td><div class="line-block">
 <div class="line">Type of driver generated for the board.</div>
-<div class="line">The current version only supports <code class="docutils literal notranslate"><span class="pre">python</span></code> (PYNQ).</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">python</span></code> is the PYNQ driver for SoC boards, <code class="docutils literal notranslate"><span class="pre">xrt</span></code> the PCIe driver for data-center cards.</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">xrt</span></code> requires <code class="docutils literal notranslate"><span class="pre">axi_mode='axi_master'</span></code>. See <a class="reference internal" href="#vitis-unified-cards"><span class="std std-ref">Data-center cards</span></a>.</div>
 </div>
 </td>
 </tr>
@@ -306,6 +344,14 @@ They are stored under <code class="docutils literal notranslate"><span class="pr
 <td><div class="line-block">
 <div class="line">Depth of the FIFO between the HLS model and the wrapper output (AXI master write or AXI-Stream). Used in both AXI modes.</div>
 <div class="line">The unit is one entry of the model output stream. One entry holds the last dimension of the output shape, and one sample takes <code class="docutils literal notranslate"><span class="pre">N_OUT</span> <span class="pre">/</span> <span class="pre">channels</span></code> entries, the same rule as for the input.</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kernel_slr</span></code></p></td>
+<td><p>from board</p></td>
+<td><div class="line-block">
+<div class="line">SLR the kernel is placed in on a data-center card, for example <code class="docutils literal notranslate"><span class="pre">'SLR1'</span></code>.</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">False</span></code> leaves the placement to Vivado.</div>
 </div>
 </td>
 </tr>
@@ -350,8 +396,9 @@ They are stored under <code class="docutils literal notranslate"><span class="pr
 │   └── &lt;board&gt;/
 │       └── tcl_scripts/               create_xsa.tcl, platform tcl, output/&lt;board&gt;_*.xsa
 ├── export/
-│   ├── system.bit                     bitstream (bitfile=True)
-│   ├── system.hwh                     hardware handoff (bitfile=True)
+│   ├── system.bit                     bitstream (bitfile=True, PYNQ driver only)
+│   ├── system.hwh                     hardware handoff (bitfile=True, PYNQ driver only)
+│   ├── &lt;project_name&gt;.xclbin          linked design (bitfile=True, XRT driver only)
 │   └── axi_master_driver.py or axi_stream_driver.py
 └── final_reports/                     timing, utilization, power, link summary, hls_compile.rpt
 </pre></div>
@@ -388,7 +435,7 @@ They are stored under <code class="docutils literal notranslate"><span class="pr
 <td><p>Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on <code class="docutils literal notranslate"><span class="pre">cosim</span></code> by itself.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bitfile=True</span></code></p></td>
-<td><p>Links the packaged kernel to the board platform and writes the bitstream and the hardware handoff file to <code class="docutils literal notranslate"><span class="pre">export/</span></code>. It needs the <code class="docutils literal notranslate"><span class="pre">.xo</span></code> file from <code class="docutils literal notranslate"><span class="pre">synth=True</span></code>, <code class="docutils literal notranslate"><span class="pre">xclbinutil</span></code> and <code class="docutils literal notranslate"><span class="pre">vivado</span></code> on the PATH, and <code class="docutils literal notranslate"><span class="pre">XILINX_VITIS</span></code> set, which sourcing the Vitis <code class="docutils literal notranslate"><span class="pre">settings64.sh</span></code> does.</p></td>
+<td><p>Links the packaged kernel to the board platform and writes the <code class="docutils literal notranslate"><span class="pre">.xclbin</span></code> to <code class="docutils literal notranslate"><span class="pre">vitis_workspace/system_link/</span></code>. With the PYNQ driver it also writes the bitstream and the hardware handoff file to <code class="docutils literal notranslate"><span class="pre">export/</span></code>, with the XRT driver it copies the <code class="docutils literal notranslate"><span class="pre">.xclbin</span></code> there. It needs the <code class="docutils literal notranslate"><span class="pre">.xo</span></code> file from <code class="docutils literal notranslate"><span class="pre">synth=True</span></code>, <code class="docutils literal notranslate"><span class="pre">xclbinutil</span></code> and <code class="docutils literal notranslate"><span class="pre">vivado</span></code> on the PATH, and <code class="docutils literal notranslate"><span class="pre">XILINX_VITIS</span></code> set, which sourcing the Vitis <code class="docutils literal notranslate"><span class="pre">settings64.sh</span></code> does. A card platform is found through <code class="docutils literal notranslate"><span class="pre">PLATFORM_REPO_PATHS</span></code>. A prebuilt platform that cannot be found is reported before any step runs.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">log_to_stdout=False</span></code></p></td>
 <td><p>Writes the output of each step to <code class="docutils literal notranslate"><span class="pre">&lt;step&gt;_stdout.log</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;step&gt;_stderr.log</span></code> instead of the terminal.</p></td>
@@ -414,8 +461,9 @@ The raw reports are under <code class="docutils literal notranslate"><span class
 <li><p>Models with several inputs or outputs in <code class="docutils literal notranslate"><span class="pre">axi_stream</span></code> mode. Use <code class="docutils literal notranslate"><span class="pre">axi_master</span></code> for them.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">double</span></code> in <code class="docutils literal notranslate"><span class="pre">axi_stream</span></code> mode with the shipped platforms. Their DMA is 32 bits wide, so pass your own platform with a 64-bit DMA.</p></li>
 <li><p>Multigraph models.</p></li>
-<li><p>A C or C++ host driver. Only the Python (PYNQ) driver is generated.</p></li>
-<li><p>Boards other than SoC boards with a PYNQ driver.</p></li>
+<li><p>A C or C++ host driver. Only Python drivers are generated, PYNQ for SoC boards and XRT for cards.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">axi_stream</span></code> on a data-center card. Its platform has no AXI DMA for the kernel to connect to.</p></li>
+<li><p>Cards other than the ones in <code class="docutils literal notranslate"><span class="pre">supported_boards.json</span></code>. Another card works by passing its <code class="docutils literal notranslate"><span class="pre">platform</span></code> and <code class="docutils literal notranslate"><span class="pre">part</span></code>, but then the bank assignment has to be added to <code class="docutils literal notranslate"><span class="pre">link_system.cfg</span></code> by hand.</p></li>
 </ul>
 </section>
 <section id="tutorial">
