@@ -69,7 +69,7 @@ class InsertZeroPaddingBeforeConv2D(OptimizerPass):
         pad_left = node.get_attr('pad_left')
         pad_right = node.get_attr('pad_right')
 
-        # Check if no padding neeeds to be done
+        # Check if no padding needs to be done
         if pad_top == pad_bottom == pad_left == pad_right == 0:
             return False
 

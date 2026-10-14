@@ -153,7 +153,7 @@ def parse_altera_report(hls_dir):
 
     report = {}
     for prj in prjList:
-        targetType = os.path.basename(prjList[0]).rsplit('.', 2)[1]
+        targetType = os.path.basename(prj).rsplit('.', 2)[1]
         report[targetType] = _parse_single_report(prj)
 
     return report

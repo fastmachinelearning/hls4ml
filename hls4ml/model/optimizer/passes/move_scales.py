@@ -91,7 +91,7 @@ class ScaleDownMatMul(OptimizerPass):
 
         if not can_propagate:
             warnings.warn(
-                'Failed to propagate quantization scales down MatMul node; model probably not suppored.', stacklevel=1
+                'Failed to propagate quantization scales down MatMul node; model probably not supported.', stacklevel=1
             )
             return False
 
@@ -133,7 +133,7 @@ class ScaleDownAdd(OptimizerPass):
             bias = bias0 + bias1
         except ValueError:
             warnings.warn(
-                'Failed to propagate quantization scales down Add node; model probably not suppored.', stacklevel=1
+                'Failed to propagate quantization scales down Add node; model probably not supported.', stacklevel=1
             )
             return False
 
@@ -255,7 +255,7 @@ class ScaleDownConv(OptimizerPass):
                         can_propagate = False
             if not can_propagate:
                 warnings.warn(
-                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                    'Failed to propagate quantization scales down Conv node; model probably not supported.', stacklevel=1
                 )
                 return False
 
@@ -302,7 +302,7 @@ class ScaleDownConv(OptimizerPass):
                         can_propagate = False
             if not can_propagate:
                 warnings.warn(
-                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                    'Failed to propagate quantization scales down Conv node; model probably not supported.', stacklevel=1
                 )
                 return False
 
@@ -326,7 +326,7 @@ class ScaleDownConv(OptimizerPass):
 
             if not can_propagate:
                 warnings.warn(
-                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                    'Failed to propagate quantization scales down Conv node; model probably not supported.', stacklevel=1
                 )
                 return False
 
@@ -388,7 +388,7 @@ class ScaleDownConv(OptimizerPass):
                         can_propagate = False
             if not can_propagate:
                 warnings.warn(
-                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                    'Failed to propagate quantization scales down Conv node; model probably not supported.', stacklevel=1
                 )
                 return False
 
@@ -412,7 +412,7 @@ class ScaleDownConv(OptimizerPass):
                     can_propagate = False
             if not can_propagate:
                 warnings.warn(
-                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                    'Failed to propagate quantization scales down Conv node; model probably not supported.', stacklevel=1
                 )
                 return False
 
@@ -439,7 +439,7 @@ class ScaleDownConv(OptimizerPass):
                         can_propagate = False
             if not can_propagate:
                 warnings.warn(
-                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                    'Failed to propagate quantization scales down Conv node; model probably not supported.', stacklevel=1
                 )
                 return False
 
@@ -475,7 +475,7 @@ class ScaleDownConv(OptimizerPass):
                         can_propagate = False
             if not can_propagate:
                 warnings.warn(
-                    'Failed to propagate quantization scales down Conv node; model probably not suppored.', stacklevel=1
+                    'Failed to propagate quantization scales down Conv node; model probably not supported.', stacklevel=1
                 )
                 return False
 

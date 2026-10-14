@@ -263,9 +263,17 @@ def _(layer: SparseFlatten):
 
 @_request_kif.register
 def _(layer: DACombinational):
-    comb = layer.attributes['da_comb_trace']
+    comb = layer.attributes['da_comb_logic']
     k, i, f = comb.inp_kifs
-    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
+    inp_shapes = get_input_shapes(layer)
+    kk, ii, ff = [], [], []
+    bias = 0
+    for shape in inp_shapes:
+        size = prod(shape)
+        kk.append(k[bias : bias + size].reshape(shape).astype(np.int16))
+        ii.append(i[bias : bias + size].reshape(shape).astype(np.int16))
+        ff.append(f[bias : bias + size].reshape(shape).astype(np.int16))
+    return tuple(zip(kk, ii, ff))
 
 
 def requested_kif(layer: Layer) -> KIF_t:
@@ -335,7 +343,7 @@ def _(layer: FixedPointQuantizer):
     _i = np.minimum(i, li)
     _f = np.minimum(f, lf)
 
-    # Compansate for round-up/downs that may need extra bits for representing (ufixed<2,0> -> ufixed<2,1,RND>, 0.75->1.0)
+    # Compensate for round-up/downs that may need extra bits for representing (ufixed<2,0> -> ufixed<2,1,RND>, 0.75->1.0)
     if layer.RND != 'TRN':
         _i += ((lf > f) & (i > li)).astype(np.int16)
     else:
@@ -344,7 +352,7 @@ def _(layer: FixedPointQuantizer):
     if layer.SAT in ('SAT', 'SAT_SM'):
         k, i, f = _k, _i, _f
     else:
-        # Perserve repr boundaries unless overflow never happens
+        # Preserve repr boundaries unless overflow never happens
         mask = (2.0**i - 2.0**-f >= 2.0**li - 2.0**-lf) & (k >= lk)
         i = np.where(mask, _i, i)
         f = np.where(mask, _f, f)
@@ -738,14 +746,17 @@ def _(layer: UnaryLUT):
 
 @_produce_kif.register
 def _(layer: DACombinational):
-    from da4ml.trace import FixedVariableArray, comb_trace
+    from alkaid.trace import FVArray, trace
 
-    k_in, i_in, f_in = get_input_kifs(layer)[0]
-    inp = FixedVariableArray.from_kif(k_in, i_in, f_in)
-    out = layer.attributes['da_comb_logic'](inp)
-    comb = comb_trace(inp, out)
+    kifs = [np.array(kif).reshape(3, -1) for kif in get_input_kifs(layer)]
+    kif = np.concatenate(kifs, axis=1)
+    inp = FVArray.from_kif(*kif)
+    out = layer.attributes['da_comb_logic'](inp.ravel())
+    comb = trace(inp, out)
     k, i, f = comb.out_kifs
-    return k.astype(np.int16), i.astype(np.int16), f.astype(np.int16)
+    shape = get_output_shape(layer)
+
+    return (k.astype(np.int16).reshape(shape), i.astype(np.int16).reshape(shape), f.astype(np.int16).reshape(shape))
 
 
 @_produce_kif.register
@@ -1135,7 +1146,7 @@ class BitExact(ModelOptimizerPass):
             return False
 
         if self.has_fixed_quantizer(model):
-            # For HGQ-proxy model, no explicit linear layers will be reqired.
+            # For HGQ-proxy model, no explicit linear layers will be required.
             for k in list(model.graph.keys()):
                 v = model.graph[k]
                 if isinstance(v, Activation) and v.attributes.get('activation') == 'linear':

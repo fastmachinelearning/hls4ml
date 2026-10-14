@@ -83,6 +83,27 @@ class AlteraWriter(Writer):
             h_file.write('}};\n')
             h_file.write('\n#endif\n')
 
+    def _get_namespace(self, model):
+        """Namespace for the kernel and pipe declarations. Without an explicit namespace, the project name is used,
+        with the stamp appended for the default project name so that such models can be loaded into the same process.
+        """
+        namespace = model.config.get_writer_config().get('Namespace', None)
+        if namespace is not None:
+            return namespace
+        project_name = model.config.get_project_name()
+        if project_name == 'myproject':
+            return f'{project_name}_{model.config.get_config_value("Stamp")}'
+        return project_name
+
+    @staticmethod
+    def _get_interface_pipe_size(var):
+        """Minimum capacity of an interface pipe. In io_stream, the host writes a whole input before reading any
+        output, so the pipes must be able to buffer the full stream. In io_parallel, no buffering is needed.
+        """
+        if isinstance(var.pragma, tuple) and var.pragma[0] == 'stream':
+            return var.pragma[1]
+        return 0
+
     def write_project_dir(self, model):
         """Write the base project directory
 
@@ -99,6 +120,7 @@ class AlteraWriter(Writer):
             model (ModelGraph): the hls4ml model.
         """
         project_name = model.config.get_project_name()
+        namespace = self._get_namespace(model)
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
@@ -116,8 +138,10 @@ class AlteraWriter(Writer):
             indent = '    '
 
             for line in f.readlines():
+                if 'mynamespace' in line:
+                    newline = line.replace('mynamespace', namespace)
                 # Add headers to weights and biases
-                if 'myproject' in line:
+                elif 'myproject' in line:
                     newline = line.replace('myproject', project_name)
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
@@ -205,6 +229,7 @@ class AlteraWriter(Writer):
         """
 
         project_name = model.config.get_project_name()
+        namespace = self._get_namespace(model)
 
         filedir = os.path.dirname(os.path.abspath(__file__))
         with (
@@ -224,6 +249,9 @@ class AlteraWriter(Writer):
                 if 'MYPROJECT' in line:
                     newline = line.replace('MYPROJECT', format(project_name.upper()))
 
+                elif 'mynamespace' in line:
+                    newline = line.replace('mynamespace', namespace)
+
                 elif 'myproject' in line:
                     newline = line.replace('myproject', project_name)
 
@@ -234,13 +262,13 @@ class AlteraWriter(Writer):
                 elif '// hls-fpga-machine-learning insert inputs' in line:
                     newline = line
                     for inp in model_inputs:
-                        newline += inp.declare_cpp()
+                        newline += inp.declare_cpp(pipe_min_size=self._get_interface_pipe_size(inp))
 
                 # and declareations for the outputs
                 elif '// hls-fpga-machine-learning insert outputs' in line:
                     newline = line
                     for out in model_outputs:
-                        newline += out.declare_cpp()
+                        newline += out.declare_cpp(pipe_min_size=self._get_interface_pipe_size(out))
 
                 # Simply copy line, if no inserts are required
                 else:
@@ -470,14 +498,15 @@ class AlteraWriter(Writer):
                 elif '// hls-fpga-machine-learning insert wrapper' in line:
                     dtype = line.split('#', 1)[1].strip()
                     newline = ''
-                    for i in model_inputs:
-                        newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
 
                     newline += (
                         indent
                         + f'q.single_task<{convert_to_pascal_case(project_name)}Class{dtype.capitalize()}_{stamp}>'
                         + f'({convert_to_pascal_case(project_name)}{{}});\n'
                     )
+
+                    for i in model_inputs:
+                        newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
 
                     for o in model_outputs:
                         newline += (

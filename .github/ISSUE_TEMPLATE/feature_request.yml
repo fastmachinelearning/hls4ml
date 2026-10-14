@@ -1,0 +1,64 @@
+name: Feature request
+description: Suggest a new capability for hls4ml
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please consider raising the idea in
+        [Discussions](https://github.com/fastmachinelearning/hls4ml/discussions/categories/ideas) first, so
+        you can find out whether it is already being worked on. A feature request is still welcome afterwards,
+        as the place to track the work.
+
+        If you are proposing a design rather than requesting a capability — something with a migration path,
+        a new configuration surface, or changes across several components — use the Plan / RFC template
+        instead.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can you not do today, and why does it matter for real hls4ml users?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      description: |
+        What hls4ml should do instead. If it adds a user-facing surface — a config key, a Strategy, an
+        `io_type`, an API argument — name it here.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Parts of hls4ml affected
+      description: Frontends, backends and components you expect this to touch.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional. Workarounds you tried, and why they are not enough.
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to work on this myself.
+          required: false
+
+  - type: checkboxes
+    id: ai_disclosure
+    attributes:
+      label: AI assistance
+      description: See the [contributing guidelines](https://github.com/fastmachinelearning/hls4ml/blob/main/CONTRIBUTING.md#use-of-ai-tools).
+      options:
+        - label: An AI tool helped produce this request, and I have checked its content myself.
+          required: false

@@ -18,10 +18,8 @@ from hls4ml.utils.simulation_utils import (
 
 
 class VitisBackend(VivadoBackend):
-    def __init__(self):
-        super(VivadoBackend, self).__init__(name='Vitis')
-        self._register_layer_attributes()
-        self._register_flows()
+    def __init__(self, name='Vitis'):
+        super().__init__(name=name)
 
     def _register_flows(self):
         validation_passes = [
@@ -30,9 +28,19 @@ class VitisBackend(VivadoBackend):
             'vitis:validate_resource_unrolled_strategy',
             'vitis:validate_bidirectional_merge_mode',
             'vitis:validate_bidirectional_io_type',
+            'vitis:validate_fused_io_type',
             'vitis:validate_std_cpp_types',
         ]
         validation_flow = register_flow('validation', validation_passes, requires=['vivado:init_layers'], backend=self.name)
+
+        fusion_passes = [
+            'vitis:plan_dense_fusion',
+            'vitis:substitute_unfused_strategy',
+            'vitis:fold_activation_into_fused',
+            'vitis:layout_fused_dot_weights',
+            'vitis:validate_dense_fusion',
+        ]
+        fusion_flow = register_flow('fuse_dense', fusion_passes, requires=['vivado:init_layers'], backend=self.name)
 
         # Any potential templates registered specifically for Vitis backend
         template_flow = register_flow(
@@ -44,16 +52,20 @@ class VitisBackend(VivadoBackend):
 
         ip_flow_requirements = get_flow('vivado:ip').requires.copy()
         ip_flow_requirements.insert(ip_flow_requirements.index('vivado:init_layers'), validation_flow)
+        ip_flow_requirements.insert(ip_flow_requirements.index('vivado:specific_types'), fusion_flow)
         ip_flow_requirements.insert(ip_flow_requirements.index('vivado:apply_templates'), template_flow)
 
         self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, backend=self.name)
 
-        # Register the fifo depth optimization flow which is different from the one for vivado
-        fifo_depth_opt_passes = [
-            'vitis:fifo_depth_optimization'
-        ] + writer_passes  # After optimization, a new project will be written
-
-        register_flow('fifo_depth_optimization', fifo_depth_opt_passes, requires=['vitis:ip'], backend=self.name)
+        # FIFO depth optimization: enlarge the FIFOs, write, synthesize and co-simulate, read the measured depths,
+        # then write the optimized project once more
+        profiling_passes = (
+            ['vitis:fifo_depth_optimization']
+            + writer_passes
+            + ['vitis:fifo_depth_optimization_profile', 'vitis:fifo_depth_optimization_post']
+        )
+        profiling_flow = register_flow('fifo_depth_profiling', profiling_passes, requires=['vitis:ip'], backend=self.name)
+        register_flow('fifo_depth_optimization', writer_passes, requires=[profiling_flow], backend=self.name)
 
     def create_initial_config(
         self,

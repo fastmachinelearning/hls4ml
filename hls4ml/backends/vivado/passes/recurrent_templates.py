@@ -84,6 +84,7 @@ recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
     static const bool store_weights_in_bram = false;
     static const bool use_static = {static};
     static const bool pytorch_order = {pytorch};
+    static const bool reset_after = {reset_after};
 }};\n"""
 
 # Bidirectional templates
@@ -106,6 +107,7 @@ single_config_template = """struct config{index} : nnet::single_layer_config {{
     static const unsigned n_state = {n_state};
     static const unsigned n_mult = {n_mult};
     static const bool pytorch_order = {pytorch};
+    static const bool reset_after = {reset_after};
 }};\n"""
 
 bidirectional_config_template = """struct config{index} : nnet::bidirectional_config {{
@@ -168,6 +170,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         params['pytorch'] = 'true' if node.get_attr('pytorch', False) else 'false'
         params['recr_type'] = node.class_name.lower()
         params['RECR_TYPE'] = node.class_name
+        params['reset_after'] = 'true' if node.get_attr('apply_reset_gate', 'after') == 'after' else 'false'
 
         if node.class_name == 'LSTM':
             n_recr_mult = 4
@@ -308,6 +311,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             )
             layer_params['act_t'] = '{}_config{}'.format(node.get_attr(f'{d}_activation'), str(node.index) + f'_{d[0]}')
             layer_params['RECR_TYPE'] = node.get_attr(f'{d}_class_name')
+            layer_params['reset_after'] = 'true' if node.get_attr(f'{d}_apply_reset_gate', 'after') == 'after' else 'false'
 
             layer_params['weight_t'] = layer_params[f'{d}_weight_t']
             layer_params['recurrent_weight_t'] = layer_params[f'{d}_recurrent_weight_t']

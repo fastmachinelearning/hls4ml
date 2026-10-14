@@ -473,7 +473,7 @@ class Reshape(Layer):
         # take care of -1 shapes
         shape = self._infer_output_shape(input_shape, target_shape)
 
-        # update the target shape with chnges from above
+        # update the target shape with changes from above
         self.set_attr('target_shape', shape)
 
         self.add_output_variable(shape)
@@ -689,21 +689,25 @@ class Conv2DBatchnorm(Conv2D):
     def initialize(self):
         super().initialize()
         folded_weights, folded_bias = self._get_folded_weights()
+        weight_q = self.get_attr('weight_quantizer')
         if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in [
             'Vivado',
             'VivadoAccelerator',
             'Catapult',
         ]:
             self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 0, 1, 2])
-            self.weights['weight'].data = self.get_attr('weight_quantizer')(self.weights['weight'].data_unquantized)
-
         else:
             self.weights['weight'].data_unquantized = folded_weights
-            self.weights['weight'].data = self.get_attr('weight_quantizer')(folded_weights)
+        if weight_q is not None:
+            self.weights['weight'].data = weight_q(self.weights['weight'].data_unquantized)
+        else:
+            self.weights['weight'].data = self.weights['weight'].data_unquantized
         self.weights['bias'].data_unquantized = folded_bias
         bias_q = self.get_attr('bias_quantizer')
         if bias_q is not None:
             self.weights['bias'].data = bias_q(folded_bias)
+        else:
+            self.weights['bias'].data = folded_bias
 
 
 class SeparableConv2D(Layer):
@@ -1212,7 +1216,7 @@ class BatchNormalization(Layer):
             self.add_weights_variable(name='bias', var_name='b{index}')
 
 
-# TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
+# TODO:  discuss whether this should be renamed to something more descriptive, and whether the class hierarchy makes sense
 class ApplyAlpha(BatchNormalization):
     """A custom layer to scale the output of a QDense layer which used 'alpha != 1'
     Inference computation uses BatchNormalization methods"""

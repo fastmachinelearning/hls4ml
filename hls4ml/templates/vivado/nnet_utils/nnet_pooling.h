@@ -44,7 +44,7 @@ template <typename T, int N, Pool_Op op, typename accum_t> accum_t pool_op(T (&x
 template <typename T, Pool_Op op> T pad_val() {
     /*---
      *- In Tensorflow, pooling ignores the value in the padded cells
-     *- For Avg pooling, return 0 (the divisior is modified to the
+     *- For Avg pooling, return 0 (the divisor is modified to the
      *- area overlapping the unpadded image.
      *- For max pooling, return the most negative value for the type.
      *- TODO this is not really generic, it assumes fixed point or integer T

@@ -93,7 +93,7 @@ HeightLoop:
 //       2D Convolution for 3x3 kernels from Winograd's algoirithm
 // ****************************************************************
 
-// Explicity transofrmed input (B'dB) needed for Winograd calculation, as explained by Lavin & Gray, 2015
+// Explicitly transformed input (B'dB) needed for Winograd calculation, as explained by Lavin & Gray, 2015
 template <typename data_T, typename res_T>
 inline void winograd_transform_input_tile_3x3_kernel(const data_T I[16], res_T D[16]) {
     D[0] = I[0] - I[2] - I[8] + I[10];

@@ -1121,6 +1121,12 @@ def test_functional_activation_arguments(test_case_id, activation):
     hls_prediction = hls_model.predict(X_input)
     # the table-based softmax is coarser than the other activations at the default precision
     atol = 0.05 if 'softmax' in activation else 0.01
+    if 'threshold' in activation:
+        # fixed-point weights and outputs (< 6 LSB here) can move a value across the threshold, so skip those
+        pre_activation = model.linear(torch.Tensor(X_input)).detach().numpy()
+        keep = np.abs(pre_activation - 0.5) > 2**-7
+        hls_prediction = hls_prediction.reshape(pytorch_prediction.shape)[keep]
+        pytorch_prediction = pytorch_prediction[keep]
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=1e-2, atol=atol)
 
 
