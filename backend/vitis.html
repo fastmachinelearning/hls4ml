@@ -71,6 +71,7 @@
 <p class="caption" role="heading"><span class="caption-text">Backends</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Vivado/Vitis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#known-issues">Known issues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fused-strategy">Fused strategy</a></li>
 </ul>
 </li>
@@ -149,6 +150,14 @@ for generating easily-deployable models with <code class="docutils literal notra
 backend can be easily incorporated into a Vitis kernel.</p>
 <p>Users should generally use the <strong>Vitis</strong> backend for new designs that target AMD/Xilinx FPGAs; new <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> developments will not necessarily be backported to
 the <strong>Vivado</strong> backend.</p>
+<section id="known-issues">
+<h2>Known issues<a class="headerlink" href="#known-issues" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>With <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2023.2, recurrent layers (<code class="docutils literal notranslate"><span class="pre">SimpleRNN</span></code>, <code class="docutils literal notranslate"><span class="pre">LSTM</span></code>, <code class="docutils literal notranslate"><span class="pre">GRU</span></code>) using <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> and the <code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy may not meet the target
+clock at the default clock uncertainty. <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2024.1 is not affected. With 2023.2, raising the clock uncertainty to 35%
+(<code class="docutils literal notranslate"><span class="pre">clock_uncertainty='35%'</span></code>) was enough for the models tested, at the cost of about one extra clock cycle per time step.</p></li>
+</ul>
+</section>
 <section id="fused-strategy">
 <h2>Fused strategy<a class="headerlink" href="#fused-strategy" title="Link to this heading"></a></h2>
 <p>The <strong>Vitis</strong> backend also provides <code class="docutils literal notranslate"><span class="pre">Strategy:</span> <span class="pre">Fused</span></code>, which computes a chain of <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers together so that consecutive layers run at the same
