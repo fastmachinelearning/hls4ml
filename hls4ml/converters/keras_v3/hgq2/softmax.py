@@ -3,7 +3,6 @@ from collections.abc import Sequence
 from math import prod
 
 import numpy as np
-from keras import ops
 
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
@@ -50,6 +49,7 @@ def hgq_reference_kif(q: 'FixedPointQuantizerBase') -> tuple[int, int, int]:
     """
     This is a helper for checking the quantisation of HGQ against Keras during optimisation passes.
     """
+    from keras import ops
 
     k, i, f = q.kif
     return (
