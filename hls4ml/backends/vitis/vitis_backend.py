@@ -26,8 +26,6 @@ class VitisBackend(VivadoBackend):
             'vitis:validate_conv_implementation',
             'vitis:validate_resource_strategy',
             'vitis:validate_resource_unrolled_strategy',
-            'vitis:validate_bidirectional_merge_mode',
-            'vitis:validate_bidirectional_io_type',
             'vitis:validate_fused_io_type',
             'vitis:validate_std_cpp_types',
         ]
