@@ -141,3 +141,30 @@ def test_softmax_skipped(test_case_id, softmax_impl, backend, io_type):
     y_keras_dense = dense(X).numpy()  # type: ignore
     y_hls4ml = hls_model.predict(X).reshape(y_keras_dense.shape)  # type: ignore
     np.testing.assert_allclose(y_hls4ml, y_keras_dense, rtol=0, atol=2e-2)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult'])
+def test_softmax_explicit_table_size(test_case_id, backend):
+    """An explicitly configured exp/inv table size larger than TableSize is only capped for bit-exact (HGQ) layers."""
+    model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
+    model.compile()
+
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    cfg['LayerName']['softmax']['Implementation'] = 'stable'
+    cfg['LayerName']['softmax']['TableSize'] = 1024
+    cfg['LayerName']['softmax']['ExpTableSize'] = 2048
+    cfg['LayerName']['softmax']['InvTableSize'] = 2048
+    cfg['LayerName']['softmax']['inp_norm_t'] = 'ufixed<16,6>'
+    cfg['LayerName']['softmax']['inv_inp_t'] = 'ufixed<16,6>'
+
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=cfg, io_type='io_parallel', output_dir=odir, backend=backend
+    )
+
+    softmax = hls_model.graph['softmax']
+    assert softmax.get_attr('exp_table_size') == 2048
+    assert softmax.get_attr('inv_table_size') == 2048
+    if backend != 'Catapult':  # Catapult's softmax config has no separate exp/inv table sizes
+        assert 'exp_table_size = 2048;' in softmax.get_attr('config_cpp')
+        assert 'inv_table_size = 2048;' in softmax.get_attr('config_cpp')

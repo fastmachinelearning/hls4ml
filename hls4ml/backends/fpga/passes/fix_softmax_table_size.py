@@ -22,11 +22,16 @@ class FixSoftmaxTableSize(OptimizerPass):
         implemenation = node.get_attr('implementation')
 
         if implemenation == 'stable':
+            if node.get_attr('_bit_exact', False):
+                # Bit-exact (HGQ) tables are sized to address every input value, so bound them by table_size
+                exp_table_size = min(table_size, exp_table_size)
+                inv_table_size = min(table_size, inv_table_size)
+
             inp_norm_bw = node.get_attr('inp_norm_t').precision.width
-            node.set_attr('exp_table_size', min(2**inp_norm_bw, min(table_size, exp_table_size)))
+            node.set_attr('exp_table_size', min(2**inp_norm_bw, exp_table_size))
 
             inv_inp_bw = node.get_attr('inv_inp_t').precision.width
-            node.set_attr('inv_table_size', min(2**inv_inp_bw, min(table_size, inv_table_size)))
+            node.set_attr('inv_table_size', min(2**inv_inp_bw, inv_table_size))
 
         elif implemenation == 'latency':
             input_bw = inp_layer.get_attr('result_t').precision.width
