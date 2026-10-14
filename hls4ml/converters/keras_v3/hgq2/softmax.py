@@ -2,6 +2,9 @@ import typing
 from collections.abc import Sequence
 from math import prod
 
+import numpy as np
+from keras import ops
+
 from hls4ml.model.types import FixedPrecisionType, RoundingMode, SaturationMode
 
 from ._base import QLayerHandler
@@ -19,7 +22,6 @@ def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False, fo
 
     if force_unsigned:
         k = 0.0
-        i += 1.0
 
     k = ops.convert_to_numpy(k)
     i = ops.convert_to_numpy(i)
@@ -42,6 +44,19 @@ def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False, fo
     round_mode = getattr(RoundingMode, round_mode)
     sat_mode = getattr(SaturationMode, q.overflow_mode)
     return FixedPrecisionType(b, I, k, rounding_mode=round_mode, saturation_mode=sat_mode)
+
+
+def hgq_reference_kif(q: 'FixedPointQuantizerBase') -> tuple[int, int, int]:
+    """
+    This is a helper for checking the quantisation of HGQ against Keras during optimisation passes.
+    """
+
+    k, i, f = q.kif
+    return (
+        int(np.max(ops.convert_to_numpy(k))),
+        int(np.max(ops.convert_to_numpy(i))),
+        int(np.max(ops.convert_to_numpy(f))),
+    )
 
 
 class QSoftmaxHandler(QLayerHandler):
@@ -106,11 +121,12 @@ class QSoftmaxHandler(QLayerHandler):
         else:
             raise ValueError(f'Too many inputs for softmax layer {layer.name}: expected 1 or 2, got {len(in_tensors)}')
 
-        # For masked implementation assume first input is the tensor we are operating on
+        # For multidim implementation assume first input is the tensor we are operating on
         activation = 'softmax'
-        if len(in_tensors[0].shape[1:]) > 1:
-            if (1 not in in_tensors[0].shape[1:]) or (len(in_tensors[0].shape[1:]) > 2):
-                activation = 'softmax_multidim'
+        # import pdb; pdb.set_trace()
+        # if len(in_tensors[0].shape[1:]) > 1:
+        #    if (1 not in in_tensors[0].shape[1:]) or (len(in_tensors[0].shape[1:]) > 2):
+        #        activation = 'softmax_multidim'
 
         config = {}
         config.update(self.default_config)
@@ -131,6 +147,12 @@ class QSoftmaxHandler(QLayerHandler):
                 'parallelization_factor': parallelization_factor,
                 'class_name': class_name,
                 '_bit_exact': True,
+                '_hgq_ref_kif': {
+                    'exp_table_t': hgq_reference_kif(exp_oq),
+                    'inv_table_t': hgq_reference_kif(inv_oq),
+                    'inv_inp_t': hgq_reference_kif(inv_iq),
+                    **({'result_t': hgq_reference_kif(layer.oq.quantizer)} if layer.enable_oq else {}),
+                },
             }
         )
 
@@ -138,5 +160,6 @@ class QSoftmaxHandler(QLayerHandler):
             # Force unsigned since norm >= 0
             inp_norm_t = fixed_quantizer_to_hls4ml_t(layer.exp_table.iq.quantizer, force_unsigned=True)
             config['inp_norm_t'] = inp_norm_t
+            config['_hgq_ref_kif']['inp_norm_t'] = hgq_reference_kif(layer.exp_table.iq.quantizer)
 
         return (config,)

@@ -5,7 +5,7 @@ from hls4ml.backends.template import FunctionCallTemplate
 from hls4ml.model.layers import Layer
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer, UnaryLUT
-from hls4ml.model.types import Source
+from hls4ml.model.types import FixedPrecisionType, Source
 
 
 def to_apfixed(k, b, i, RND, SAT):
@@ -18,7 +18,18 @@ def to_acfixed(k, b, i, RND, SAT):
     if b == 1:
         # Currently Altera ac_fixed requires at least two bits for both signed and unsigned cases
         # Should be fixed in the future once Altera supports 1-bit unsigned ac_fixed
+        if k == 1:
+            print(
+                f'Warning: Current variable is 1-bit signed (ac_fixed<1,{i},{k}>)'
+                'Current Altera HLS backend does not support 1 bit types therefore conversion '
+                'of signed 1 bit type to 2 bits will be lossy when widened to 2 bits.'
+            )
+
+        # Widen by assigning the extra bit as the sign bit
         b = 2
+        i += 1
+        k = 1
+
     return f'ac_fixed<{b},{i},{k},AC_{RND},AC_{SAT}>'
 
 
@@ -59,20 +70,28 @@ class ProcessFixedPointQuantizerLayer(OptimizerPass):
         return isinstance(node, FixedPointQuantizer)
 
     def transform(self, model, node: FixedPointQuantizer):
+
+        # instead of error assertion just force homogeneous quantisation
         if model.config.config['IOType'] != 'io_parallel':
-            raise NotImplementedError('Heterogenous quantization for activations is only supported with IOType=io_parallel')
+            k, b, i = node.mask_kbi
+            k_val = int(np.max(k))
+            b_val = int(np.max(b))
+            i_val = int(np.max(i))
+            inp_var = node.get_input_variable()
+            inp_var.type.precision = FixedPrecisionType(b_val, i_val, bool(k_val))
+            model.remove_node(node)
+            return True
+        else:
+            backend = model.config.config['Backend']
+            name = node.name
 
-        backend = model.config.config['Backend']
+            assert node.mask_kbi is not None
+            k, b, i = node.mask_kbi
+            RND = node.RND
+            SAT = node.SAT
+            mask_fn: str = generate_mask_fn(name, node.get_input_variable().shape, k, b, i, RND, SAT, backend)
 
-        name = node.name
-
-        assert node.mask_kbi is not None
-        k, b, i = node.mask_kbi
-        RND = node.RND
-        SAT = node.SAT
-        mask_fn: str = generate_mask_fn(name, node.get_input_variable().shape, k, b, i, RND, SAT, backend)
-
-        node.set_attr('mask_fn_codegen', Source(mask_fn))
+            node.set_attr('mask_fn_codegen', Source(mask_fn))
 
 
 class ProcessFixedPointQuantizerCall(FunctionCallTemplate):
