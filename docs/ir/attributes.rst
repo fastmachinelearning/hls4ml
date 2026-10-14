@@ -2173,7 +2173,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, Coyote
 
 * static: bool (Default: True)
 
@@ -2277,7 +2277,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, Coyote
 
 * static: bool (Default: True)
 
@@ -2383,7 +2383,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, Quartus, Catapult, Coyote
 
 * static: bool (Default: True)
 

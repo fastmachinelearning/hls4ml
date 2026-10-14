@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -443,3 +444,35 @@ def test_bidirectional_gru_reset_after_accuracy(test_case_id, reset_after, stati
     keras_prediction = model.predict(X)
     hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=5e-2)
+
+
+@pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
+def test_altera_recurrent_reuse_factor_removed(test_case_id, rnn_layer):
+    """Altera ignores RecurrentReuseFactor and warns; the recurrent multiplication uses ReuseFactor."""
+    model = Sequential()
+    model.add(Input(shape=(8, 6)))
+    model.add(rnn_layer(16, name='rnn'))
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Altera')
+    assert 'RecurrentReuseFactor' not in config['LayerName']['rnn']
+
+    config['LayerName']['rnn']['ReuseFactor'] = 8
+    config['LayerName']['rnn']['RecurrentReuseFactor'] = 4
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.warns(UserWarning, match='RecurrentReuseFactor'):
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, output_dir=output_dir, backend='Altera'
+        )
+
+    assert hls_model.graph['rnn'].get_attr('recurrent_reuse_factor') == 8
+
+    del config['LayerName']['rnn']['RecurrentReuseFactor']
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always')
+        hls4ml.converters.convert_from_keras_model(
+            model,
+            hls_config=config,
+            output_dir=str(test_root_path / f'{test_case_id}_nowarn'),
+            backend='Altera',
+        )
+    assert not any('RecurrentReuseFactor' in str(w.message) for w in caught)
