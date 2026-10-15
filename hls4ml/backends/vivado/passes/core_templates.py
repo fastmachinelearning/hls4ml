@@ -1,5 +1,3 @@
-from math import ceil, log2
-
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import (
@@ -308,29 +306,11 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
         n_slice = params['n_in'] // params['n_inner'] // params['n_outer']  # type: ignore
         params['n_slice'] = n_slice
 
-        if params['accum_t'].name == 'model_default_t':  # type: ignore
-            scale = ceil(log2(n_slice))
-            exp_table_t = node.attributes['exp_table_t'].precision
-            signed, width, integers = exp_table_t.signed, exp_table_t.width, exp_table_t.integer
-            params['accum_t_str'] = f'ap_{"" if signed else "u"}fixed<{width + scale}, {integers + scale}>'
-        else:
-            params['accum_t_str'] = params['accum_t'].name  # type: ignore
         if params['inv_inp_t'].name == 'model_default_t':  # type: ignore
             params['inv_inp_t'] = params['exp_table_t']
 
         if params['implementation'] == 'stable':
-            if 'inp_norm_t' not in params:
-                # Only used in stable (max-normalized) implementation
-                input_t = node.get_input_variable().type.precision
-                width, iwidth, signed = input_t.width, input_t.integer, input_t.signed  # noqa: F841
-                width, iwidth = width - signed, iwidth - signed
-                if signed:
-                    # Fix table size if too large
-                    exp_table_size = params['inv_table_size']
-                    params['exp_table_size'] = str(min(int(exp_table_size), 2**width))
-                params['inp_norm_t_str'] = f'ap_ufixed<{width}, {iwidth}>'
-            else:
-                params['inp_norm_t_str'] = params['inp_norm_t'].name  # type: ignore
+            params['inp_norm_t_str'] = params['inp_norm_t'].name  # type: ignore
         else:
             params['inp_norm_t_str'] = 'ap_fixed<1,0>'
 

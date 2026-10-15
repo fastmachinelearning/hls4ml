@@ -200,8 +200,6 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static const unsigned n_outer = {n_outer};
     static const unsigned n_inner = {n_inner};
 
-    // For legacy softmax
-    typedef {table_t.name} table_t;
     static constexpr unsigned table_size = {table_size};
 
     static constexpr unsigned exp_table_size = {exp_table_size};
