@@ -120,8 +120,8 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     if (!initialized) {
         // Note we are exponentiating the inputs, which have type data_T
         init_exp_table<typename data_T::value_type, CONFIG_T>(exp_table);
-        // Note we are inverting the summed exponentials, which have type accum_t
-        init_invert_table<typename CONFIG_T::accum_t, CONFIG_T>(invert_table);
+        // Note we are inverting the summed exponentials, cast to inv_inp_t
+        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
         initialized = true;
     }
 
@@ -131,7 +131,7 @@ void softmax_latency(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     // Calculate all the e^x's
     typename CONFIG_T::accum_t exp_res[data_T::size];
     #pragma HLS array_partition variable=exp_res complete
-    typename CONFIG_T::accum_t exp_sum(0);
+    typename CONFIG_T::inv_inp_t exp_sum(0);
 SoftmaxExpLoop:
     for (unsigned i = 0; i < CONFIG_T::n_in / data_T::size; i++) {
         #pragma HLS PIPELINE II=ii
@@ -150,7 +150,7 @@ SoftmaxExpLoop:
         exp_sum = reduce<typename CONFIG_T::accum_t, data_T::size, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
         typename CONFIG_T::inv_table_t inv_exp_sum =
-            invert_table[softmax_idx_from_real_val<typename CONFIG_T::accum_t, CONFIG_T::inv_table_size>(exp_sum)];
+            invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
 
         res_T out_pack;
         PRAGMA_DATA_PACK(out_pack)

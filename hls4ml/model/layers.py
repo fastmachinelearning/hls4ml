@@ -206,8 +206,9 @@ class Layer(Serializable):
             if has_type_t:
                 type_t = NamedType(*reversed(self.model.config.get_precision(self, name)))
                 self.set_attr(name + '_t', type_t)
-        # We skip if table is quantised by HGQ (_bit_exact property) since we want to match Keras and HGQ saturation
-        if name == 'inv_inp' and not self.get_attr('_bit_exact', False):
+        # We skip if table is quantised by HGQ (_bit_exact property) since we want to match Keras and HGQ saturation.
+        # Only the stable implementation bounds the sum of exponentials by the number of inputs.
+        if name == 'inv_inp' and self.get_attr('implementation') == 'stable' and not self.get_attr('_bit_exact', False):
             self.get_attr(f'{name}_t').precision.integer = 1 + math.ceil(math.log2(max(self.get_input_variable().shape)))
 
     def get_input_node(self, input_name=None):

@@ -1,5 +1,6 @@
 import math
 from collections.abc import Iterable
+from copy import copy
 
 import numpy as np
 
@@ -643,7 +644,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         if 'inv_inp_t' in types_to_infer:
             # if not set, just choose the accumulator type
-            node.types['inv_inp_t'].precision = node.types['accum_t'].precision
+            node.types['inv_inp_t'].precision = copy(node.types['accum_t'].precision)
             inferred_types.append('inv_inp_t')
 
         if 'inp_norm_t' in types_to_infer:

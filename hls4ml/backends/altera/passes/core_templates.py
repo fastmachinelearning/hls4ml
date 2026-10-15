@@ -215,6 +215,7 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     typedef {inv_table_t.name} inv_table_t;"""
 
 softmax_config_table_template = """
+    typedef {inv_inp_t.name} inv_inp_t;
 
     using {exp_table_name}_arr_t = nnet::array<exp_table_t, exp_table_size>;
     using {inv_table_name}_arr_t = nnet::array<inv_table_t, inv_table_size>;

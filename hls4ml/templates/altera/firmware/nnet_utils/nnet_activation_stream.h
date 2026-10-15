@@ -362,13 +362,14 @@ SoftmaxExpLoop:
         // Explicitly sum the results with an adder tree.
         // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
         Op_add<typename CONFIG_T::accum_t> op_add;
-        [[intel::fpga_register]] typename CONFIG_T::accum_t exp_sum =
+        [[intel::fpga_register]] typename CONFIG_T::inv_inp_t exp_sum =
             reduce<typename CONFIG_T::accum_t, std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{},
                    Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
         // Multiply previously calculated exponetials with the reciprocal of the sum
         [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-            CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::accum_t, CONFIG_T::inv_table_size>(exp_sum)];
+            CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(
+                exp_sum)];
 
         typename ExtractPipeType<res_pipe>::value_type out_pack;
     SoftmaxInvPackLoop:

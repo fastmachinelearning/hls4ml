@@ -793,8 +793,7 @@ class AlteraWriter(Writer):
                         if table_kind == 'exp':
                             ac_type = layer.get_input_variable().type
                         else:
-                            # Note: keyed off accum_t, not inv_table_t/inv_inp_t
-                            ac_type = layer.get_attr('accum_t')
+                            ac_type = layer.get_attr('inv_inp_t')
 
                         fp_bits = ac_type.precision.integer + ac_type.precision.fractional
                         fp_integer = ac_type.precision.integer

@@ -37,8 +37,8 @@ class FixSoftmaxTableSize(OptimizerPass):
             input_bw = inp_layer.get_attr('result_t').precision.width
             node.set_attr('exp_table_size', min(2**input_bw, exp_table_size))
 
-            accum_bw = node.get_attr('accum_t').precision.width
-            node.set_attr('inv_table_size', min(2**accum_bw, inv_table_size))
+            inv_inp_bw = node.get_attr('inv_inp_t').precision.width
+            node.set_attr('inv_table_size', min(2**inv_inp_bw, inv_table_size))
 
         # One could try shrinking the size of legacy, but ignore it for now.
         # Argmax doesn't use tables so the size is irrelevant in that case.

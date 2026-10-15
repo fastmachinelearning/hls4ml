@@ -188,8 +188,8 @@ void softmax_latency(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice
     if (!initialized) {
         // Note we are exponentiating the inputs, which have type data_T
         init_exp_table<data_T, CONFIG_T>(exp_table);
-        // Note we are inverting the exponentials, which have type exp_table_t
-        init_invert_table<typename CONFIG_T::accum_t, CONFIG_T>(invert_table);
+        // Note we are inverting the summed exponentials, cast to inv_inp_t
+        init_invert_table<typename CONFIG_T::inv_inp_t, CONFIG_T>(invert_table);
         initialized = true;
     }
 
@@ -205,11 +205,11 @@ void softmax_latency(data_T data[CONFIG_T::n_slice], res_T res[CONFIG_T::n_slice
     // Explicitly sum the results with an adder tree.
     // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
     Op_add<typename CONFIG_T::accum_t> op_add;
-    typename CONFIG_T::accum_t exp_sum =
+    typename CONFIG_T::inv_inp_t exp_sum =
         reduce<typename CONFIG_T::accum_t, CONFIG_T::n_slice, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
     typename CONFIG_T::inv_table_t inv_exp_sum =
-        invert_table[softmax_idx_from_real_val<typename CONFIG_T::accum_t, CONFIG_T::inv_table_size>(exp_sum)];
+        invert_table[softmax_idx_from_real_val<typename CONFIG_T::inv_inp_t, CONFIG_T::inv_table_size>(exp_sum)];
     for (unsigned i = 0; i < CONFIG_T::n_slice; i++) {
         #pragma HLS unroll
         res[i] = exp_res[i] * inv_exp_sum;
