@@ -240,15 +240,17 @@ def test_softmax_stable_inp_norm(test_case_id, backend, input_precision):
 
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
-def test_softmax_stable_model_precision(test_case_id, backend):
-    """With only a model-level precision the softmax types share model_default_t; adjusting inv_inp_t must not
-    change the shared type in place, otherwise Altera's precomputed tables disagree with the generated code."""
+@pytest.mark.parametrize('default_precision', ['fixed<16,6>', 'fixed<24,12>'])
+def test_softmax_stable_model_precision(test_case_id, backend, default_precision):
+    """With only a model-level precision, the softmax internal types are inferred rather than set to the model default."""
     np.random.seed(0)
     X = np.random.rand(1000, 8) * 8 - 4
     model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
     model.compile()
 
-    cfg = hls4ml.utils.config_from_keras_model(model, granularity='model', backend=backend)
+    cfg = hls4ml.utils.config_from_keras_model(
+        model, granularity='model', backend=backend, default_precision=default_precision
+    )
     cfg['LayerType'] = {'Softmax': {'Implementation': 'stable'}}
 
     odir = str(test_root_path / test_case_id)

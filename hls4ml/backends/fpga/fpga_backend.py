@@ -146,7 +146,7 @@ class FPGABackend(Backend):
                 default=UnspecifiedPrecisionType(),
                 description='The internal width used for the exp table lookup (only in stable)',
             ),
-            TypeAttribute('accum', description=descriptions.accum_type),
+            TypeAttribute('accum', default=UnspecifiedPrecisionType(), description=descriptions.accum_type),
         ]
         self.attribute_map[Softmax] = softmax_attrs
 
