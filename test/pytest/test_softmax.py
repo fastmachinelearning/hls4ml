@@ -182,10 +182,10 @@ def test_softmax_values(test_case_id, backend, implementation, io_type):
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     cfg['LayerName']['softmax']['Implementation'] = implementation
-    for table in ('inv_table', 'exp_table', 'inv_inp'):
+    for table in ('inv_table', 'exp_table'):
         cfg['LayerName']['softmax']['Precision'][table] = 'ufixed<18,8,RND_CONV,SAT>'
     if implementation == 'latency':
-        # The inverse table is addressed by the (inferred) accum_t, ufixed<13,9>, so size it to cover every value
+        # The inverse table is addressed by inv_inp_t, inferred from accum_t as ufixed<13,9>, so size it to cover every value
         cfg['LayerName']['softmax']['Precision']['exp_table'] = 'ufixed<10,6,RND_CONV,SAT>'
         cfg['LayerName']['softmax']['InvTableSize'] = 8192
     inp_layer_name = next(iter(cfg['LayerName'].keys()))

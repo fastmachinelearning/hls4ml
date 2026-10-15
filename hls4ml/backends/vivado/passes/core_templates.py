@@ -306,9 +306,6 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
         n_slice = params['n_in'] // params['n_inner'] // params['n_outer']  # type: ignore
         params['n_slice'] = n_slice
 
-        if params['inv_inp_t'].name == 'model_default_t':  # type: ignore
-            params['inv_inp_t'] = params['exp_table_t']
-
         if params['implementation'] == 'stable':
             params['inp_norm_t_str'] = params['inp_norm_t'].name  # type: ignore
         else:

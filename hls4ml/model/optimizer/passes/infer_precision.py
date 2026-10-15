@@ -643,8 +643,17 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('accum_t')
 
         if 'inv_inp_t' in types_to_infer:
-            # if not set, just choose the accumulator type
-            node.types['inv_inp_t'].precision = copy(node.types['accum_t'].precision)
+            accum = node.types['accum_t'].precision
+            if node.get_attr('implementation') == 'stable':
+                # The normalized exponentials are at most 1, so their sum is at most n_slice
+                n_slice = node.get_attr('n_in') // node.get_attr('n_inner') // node.get_attr('n_outer')
+                inv_int = min(accum.integer, 1 + math.ceil(np.log2(n_slice)))
+                node.types['inv_inp_t'].precision = FixedPrecisionType(
+                    inv_int + accum.width - accum.integer, inv_int, signed=False
+                )
+            else:
+                # if not set, just choose the accumulator type
+                node.types['inv_inp_t'].precision = copy(accum)
             inferred_types.append('inv_inp_t')
 
         if 'inp_norm_t' in types_to_infer:

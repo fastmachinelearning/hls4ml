@@ -1,4 +1,3 @@
-import math
 import typing
 from copy import copy
 from warnings import warn
@@ -206,15 +205,6 @@ class Layer(Serializable):
                 # The model-wide default does not override the attribute's own default, which is applied later
                 if type_name != 'model_default_t' or type_attr.default is None:
                     self.set_attr(name + '_t', NamedType(type_name, precision))
-        # We skip if table is quantised by HGQ (_bit_exact property) since we want to match Keras and HGQ saturation.
-        # Only the stable implementation bounds the sum of exponentials by the number of inputs.
-        if name == 'inv_inp' and self.get_attr('implementation') == 'stable' and not self.get_attr('_bit_exact', False):
-            precision = self.get_attr(f'{name}_t').precision if self.get_attr(f'{name}_t') is not None else None
-            if isinstance(precision, FixedPrecisionType):
-                # Copy into a type of this layer's own, since the original may be shared (e.g. model_default_t)
-                precision = copy(precision)
-                precision.integer = 1 + math.ceil(math.log2(max(self.get_input_variable().shape))) + precision.signed
-                self.set_attr(f'{name}_t', NamedType(f'{self.name}_{name}_t', precision))
 
     def get_input_node(self, input_name=None):
         if input_name is None:
