@@ -323,11 +323,6 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
                 # Only used in stable (max-normalized) implementation
                 input_t = node.get_input_variable().type.precision
                 width, iwidth, signed = input_t.width, input_t.integer, input_t.signed  # noqa: F841
-                width, iwidth = width - signed, iwidth - signed
-                if signed:
-                    # Fix table size if too large
-                    exp_table_size = params['inv_table_size']
-                    params['exp_table_size'] = str(min(int(exp_table_size), 2**width))
                 params['inp_norm_t_str'] = f'ap_ufixed<{width}, {iwidth}>'
             else:
                 params['inp_norm_t_str'] = params['inp_norm_t'].name  # type: ignore

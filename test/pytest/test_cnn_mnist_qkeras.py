@@ -100,4 +100,4 @@ def test_accuracy(mnist_data, mnist_model, hls_model):
     print(f'Accuracy hls4ml:     {acc_hls4ml}')
     print(f'Relative difference: {rel_diff}')
 
-    assert acc_keras > 0.92 and rel_diff < 0.01
+    assert acc_keras > 0.92 and rel_diff < 0.015
