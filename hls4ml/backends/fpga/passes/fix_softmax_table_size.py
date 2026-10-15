@@ -1,3 +1,5 @@
+import warnings
+
 from hls4ml.model.layers import Layer, Softmax
 from hls4ml.model.optimizer import OptimizerPass
 
@@ -22,10 +24,13 @@ class FixSoftmaxTableSize(OptimizerPass):
         implemenation = node.get_attr('implementation')
 
         if implemenation == 'stable':
-            if node.get_attr('_bit_exact', False):
-                # Bit-exact (HGQ) tables are sized to address every input value, so bound them by table_size
-                exp_table_size = min(table_size, exp_table_size)
-                inv_table_size = min(table_size, inv_table_size)
+            if node.get_attr('_bit_exact', False) and max(exp_table_size, inv_table_size) > table_size:
+                # Bit-exact (HGQ) tables address every value of their input type; shrinking them breaks bit-exactness
+                warnings.warn(
+                    f'Softmax layer {node.name}: bit-exact tables ({exp_table_size}, {inv_table_size} entries) '
+                    f'exceed TableSize={table_size}; keeping them to stay bit-exact.',
+                    stacklevel=1,
+                )
 
             inp_norm_bw = node.get_attr('inp_norm_t').precision.width
             node.set_attr('exp_table_size', min(2**inp_norm_bw, exp_table_size))

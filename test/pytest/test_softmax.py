@@ -145,7 +145,7 @@ def test_softmax_skipped(test_case_id, softmax_impl, backend, io_type):
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult'])
 def test_softmax_explicit_table_size(test_case_id, backend):
-    """An explicitly configured exp/inv table size larger than TableSize is only capped for bit-exact (HGQ) layers."""
+    """An explicitly configured exp/inv table size larger than TableSize is kept."""
     model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
     model.compile()
 
