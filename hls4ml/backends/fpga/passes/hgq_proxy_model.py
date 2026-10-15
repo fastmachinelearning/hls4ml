@@ -5,7 +5,7 @@ from hls4ml.backends.template import FunctionCallTemplate
 from hls4ml.model.layers import Layer
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer, UnaryLUT
-from hls4ml.model.types import FixedPrecisionType, Source
+from hls4ml.model.types import Source
 
 
 def to_apfixed(k, b, i, RND, SAT):
@@ -70,28 +70,20 @@ class ProcessFixedPointQuantizerLayer(OptimizerPass):
         return isinstance(node, FixedPointQuantizer)
 
     def transform(self, model, node: FixedPointQuantizer):
-
-        # instead of error assertion just force homogeneous quantisation
         if model.config.config['IOType'] != 'io_parallel':
-            k, b, i = node.mask_kbi
-            k_val = int(np.max(k))
-            b_val = int(np.max(b))
-            i_val = int(np.max(i))
-            inp_var = node.get_input_variable()
-            inp_var.type.precision = FixedPrecisionType(b_val, i_val, bool(k_val))
-            model.remove_node(node)
-            return True
-        else:
-            backend = model.config.config['Backend']
-            name = node.name
+            raise NotImplementedError('Heterogenous quantization for activations is only supported with IOType=io_parallel')
 
-            assert node.mask_kbi is not None
-            k, b, i = node.mask_kbi
-            RND = node.RND
-            SAT = node.SAT
-            mask_fn: str = generate_mask_fn(name, node.get_input_variable().shape, k, b, i, RND, SAT, backend)
+        backend = model.config.config['Backend']
 
-            node.set_attr('mask_fn_codegen', Source(mask_fn))
+        name = node.name
+
+        assert node.mask_kbi is not None
+        k, b, i = node.mask_kbi
+        RND = node.RND
+        SAT = node.SAT
+        mask_fn: str = generate_mask_fn(name, node.get_input_variable().shape, k, b, i, RND, SAT, backend)
+
+        node.set_attr('mask_fn_codegen', Source(mask_fn))
 
 
 class ProcessFixedPointQuantizerCall(FunctionCallTemplate):
