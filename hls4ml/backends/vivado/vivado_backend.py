@@ -37,6 +37,7 @@ from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedTy
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.einsum_utils import parse_einsum
+from hls4ml.utils.string_utils import convert_to_pascal_case
 
 
 class VivadoBackend(FPGABackend):
@@ -46,12 +47,11 @@ class VivadoBackend(FPGABackend):
         self._register_flows()
 
     def _register_layer_attributes(self):
-        # Add RNN-specific attributes, recurrent_reuse_factor and static implementation
+        # Add RNN-specific attributes, static implementation
         rnn_layers = [SimpleRNN, LSTM, GRU]
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
             attrs.append(
                 ConfigurableAttribute('static', value_type=bool, default=True, description=descriptions.recurrent_static)
             )
@@ -62,14 +62,6 @@ class VivadoBackend(FPGABackend):
         bidir_rnn_layers = [Bidirectional]
         for layer in bidir_rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('forward_reuse_factor', default=1, description=descriptions.reuse_factor))
-            attrs.append(ConfigurableAttribute('backward_reuse_factor', default=1, description=descriptions.reuse_factor))
-            attrs.append(
-                ConfigurableAttribute('forward_recurrent_reuse_factor', default=1, description=descriptions.reuse_factor)
-            )
-            attrs.append(
-                ConfigurableAttribute('backward_recurrent_reuse_factor', default=1, description=descriptions.reuse_factor)
-            )
             attrs.append(
                 ConfigurableAttribute('static', value_type=bool, default=True, description=descriptions.recurrent_static)
             )
@@ -642,9 +634,33 @@ class VivadoBackend(FPGABackend):
         if layer.attributes['n_in'] is None:
             raise Exception('Input length of Embedding layer must be specified.')
 
-    @layer_optimizer(LSTM)
-    def init_lstm(self, layer):
-        # TODO Allow getting recurrent reuse factor from the config
+    def _validate_recurrent_activations(self, layer, attributes):
+        """Raise for an activation that recurrent layers do not implement."""
+
+        for attribute in attributes:
+            activation = layer.get_attr(attribute)
+            if activation is not None and activation not in ('linear', 'relu', 'sigmoid', 'tanh'):
+                raise NotImplementedError(
+                    f'{attribute.replace("_", " ").capitalize()} "{activation}" of layer "{layer.name}" '
+                    f'({layer.class_name}) is not supported. Use "linear", "relu", "sigmoid" or "tanh".'
+                )
+
+    def _warn_removed_reuse_factors(self, layer, attributes):
+        """Warn about reuse factor settings that are no longer used but are still in the config."""
+
+        for attribute in attributes:
+            if attribute in layer.attributes:
+                warn(
+                    f'{convert_to_pascal_case(attribute)} of layer "{layer.name}" ({layer.class_name}) is no longer used. '
+                    'The ReuseFactor of the layer applies to all of its multiplications.'
+                )
+
+    def _init_recurrent(self, layer):
+        """Setup shared by SimpleRNN, LSTM and GRU layers."""
+
+        self._validate_recurrent_activations(layer, ['activation', 'recurrent_activation'])
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
+
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
@@ -675,41 +691,29 @@ class VivadoBackend(FPGABackend):
         else:
             layer.set_attr('strategy', 'latency')
 
+        # In io_stream the time steps run one after another, so one cell is always shared
+        if layer.model.config.get_config_value('IOType') == 'io_stream' and not layer.get_attr('static'):
+            warn(
+                f'Static set to False in layer "{layer.name}" has no effect with "io_stream", where one cell is always '
+                'shared across time steps. Use "io_parallel" for one cell per time step.'
+            )
+            layer.set_attr('static', True)
+
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
+
+    @layer_optimizer(SimpleRNN)
+    def init_simple_rnn(self, layer):
+        if 'recurrent_bias' not in layer.weights:
+            layer.add_weights_variable(name='recurrent_bias', var_name='br{index}', data=np.zeros(layer.get_attr('n_out')))
+        self._init_recurrent(layer)
+
+    @layer_optimizer(LSTM)
+    def init_lstm(self, layer):
+        self._init_recurrent(layer)
 
     @layer_optimizer(GRU)
     def init_gru(self, layer):
-        reuse_factor = layer.model.config.get_reuse_factor(layer)
-        layer.set_attr('recurrent_reuse_factor', reuse_factor)
-
-        if layer.model.config.is_resource_strategy(layer):
-            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
-            self.set_closest_reuse_factor(layer, n_in, n_out)
-            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-            layer.set_attr('strategy', 'resource')
-        elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
-            use_resource_instead = False
-            if layer.get_attr('reuse_factor', 1) == 1:
-                print(
-                    f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}". '
-                    'Using "resource" strategy instead.'
-                )
-                use_resource_instead = True
-            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
-            if use_resource_instead:
-                self.set_closest_reuse_factor(layer, n_in, n_out)
-                self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-                layer.set_attr('strategy', 'resource')
-            else:
-                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
-                self.set_closest_reuse_factor(
-                    layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor', include_max_rf=False
-                )
-                layer.set_attr('strategy', 'resource_unrolled')
-        else:
-            layer.set_attr('strategy', 'latency')
-
-        layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
+        self._init_recurrent(layer)
 
     @layer_optimizer(TimeDistributed)
     def init_time_distributed(self, layer):
@@ -721,41 +725,43 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Bidirectional)
     def init_bidirectional(self, layer):
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            raise NotImplementedError(
+                f'Layer "{layer.name}" (Bidirectional) is not supported with "io_stream". Use "io_parallel".'
+            )
+        merge_mode = layer.get_attr('merge_mode', 'concat')
+        if merge_mode != 'concat':
+            raise NotImplementedError(
+                f'Merge mode "{merge_mode}" of layer "{layer.name}" (Bidirectional) is not supported. Use "concat".'
+            )
+        self._validate_recurrent_activations(
+            layer, [f'{d}_{a}' for d in ('forward', 'backward') for a in ('activation', 'recurrent_activation')]
+        )
+
+        if layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
+            warn(
+                f'Unrolled resource strategy is not supported in layer "{layer.name}" (Bidirectional). '
+                'Using "resource" strategy instead.'
+            )
+            use_resource = True
+        else:
+            use_resource = layer.model.config.is_resource_strategy(layer)
+
+        self._warn_removed_reuse_factors(
+            layer, [f'{d}_{m}reuse_factor' for d in ('forward', 'backward') for m in ('', 'recurrent_')]
+        )
         reuse_factor = layer.model.config.get_reuse_factor(layer)
 
         for i, d in enumerate(['forward', 'backward']):
             layer.set_attr(f'{d}_reuse_factor', reuse_factor)
             layer.set_attr(f'{d}_recurrent_reuse_factor', reuse_factor)
 
-            if layer.model.config.is_resource_strategy(layer):
+            if use_resource:
                 n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)[i]
                 self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor')
                 self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor')
-                layer.set_attr('strategy', 'resource')
 
-            elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
-                use_resource_instead = False
-                if layer.get_attr('reuse_factor', 1) == 1:
-                    print(
-                        f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name} ({d})". '
-                        'Using "resource" strategy instead.'
-                    )
-                use_resource_instead = True
-
-                n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)[i]
-                if use_resource_instead:
-                    self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor')
-                    self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor')
-                    layer.set_attr('strategy', 'resource')
-                else:
-                    self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor', include_max_rf=False)
-                    self.set_closest_reuse_factor(
-                        layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor', include_max_rf=False
-                    )
-                    layer.set_attr('strategy', 'resource_unrolled')
-            else:
-                layer.set_attr('strategy', 'latency')
-
+        layer.set_attr('strategy', 'resource' if use_resource else 'latency')
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))
 
     @layer_optimizer(GarNet)

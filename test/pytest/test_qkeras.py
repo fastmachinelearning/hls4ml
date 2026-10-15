@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from keras.layers import BatchNormalization, Input
+from keras.layers import GRU, LSTM, BatchNormalization, Bidirectional, Input, SimpleRNN
 from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
@@ -751,6 +751,47 @@ def test_qgru(test_case_id, backend):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+
+
+@pytest.mark.parametrize('rnn_layer', ['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_binary_input_rnn(test_case_id, rnn_layer, backend, io_type):
+    """A binary input to a recurrent layer does not make its recurrent multiplication treat the state as binary.
+
+    BatchNormalization followed by a binary activation is merged into one layer whose output has the 1-bit binary type.
+    """
+    if rnn_layer == 'Bidirectional' and io_type == 'io_stream':
+        pytest.skip('Bidirectional is only supported with io_parallel')
+
+    layers = {
+        'SimpleRNN': lambda: SimpleRNN(8, name='rnn'),
+        'LSTM': lambda: LSTM(8, name='rnn'),
+        'GRU': lambda: GRU(8, name='rnn'),
+        'Bidirectional': lambda: Bidirectional(LSTM(8), name='rnn'),
+    }
+    x_in = Input((6, 4))
+    x = BatchNormalization()(x_in)
+    x = QActivation('binary')(x)
+    model = Model(x_in, layers[rnn_layer]()(x))
+    model.compile()
+
+    # Exact in the input type and never zero, so the binary activation gives the same sign in Keras and hls4ml
+    X = np.round((np.random.rand(50, 6, 4) * 2 - 1) * 2**8) * 2**-8
+    X[X == 0] = 2**-8
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<24,10>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
+    np.testing.assert_allclose(y_hls4ml, y_keras, rtol=0, atol=5e-2)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
