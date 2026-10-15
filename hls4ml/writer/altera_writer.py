@@ -9,6 +9,7 @@ import numpy as np
 import yaml
 
 from hls4ml.backends import get_backend
+from hls4ml.model.layers import Softmax
 from hls4ml.utils.fixed_point_utils import FixedPointEmulator, ceil_log2, uint_to_binary
 from hls4ml.utils.string_utils import convert_to_pascal_case
 from hls4ml.writer.writers import Writer
@@ -335,12 +336,7 @@ class AlteraWriter(Writer):
                 elif '// hls-fpga-machine-learning insert softmax tables' in line:
                     newline = line
                     for layer in model.get_layers():
-                        if (
-                            layer.get_attr('activation') == 'softmax'
-                            or layer.get_attr('recurrent_activation') == 'softmax'
-                            or layer.get_attr('activation') == 'softmax_multidim'
-                            or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                        ):
+                        if isinstance(layer, Softmax):
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_exp_table.h"\n'
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_inv_table.h"\n'
 
@@ -732,15 +728,10 @@ class AlteraWriter(Writer):
 
     def __write_softmax_tables(self, model, path):
         for layer in model.get_layers():
-            activations = (layer.get_attr('activation'), layer.get_attr('recurrent_activation'))
-            is_softmax = any(activation in ('softmax', 'softmax_multidim') for activation in activations)
-
-            if not is_softmax:  # or 'implementation' not in layer.attributes:
+            if not isinstance(layer, Softmax):
                 continue
 
             implementation = layer.get_attr('implementation')
-            if implementation not in ('stable', 'latency', 'legacy', 'argmax'):
-                continue
 
             for table_kind in ('exp', 'inv'):
                 table_name = f'{layer.name}_{table_kind}_table'
