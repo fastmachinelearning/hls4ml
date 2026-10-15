@@ -297,3 +297,45 @@ def test_fifo_depth_optimization_post_missing_fifo(tmp_path):
 
     with pytest.raises(RuntimeError, match='could not find the profiled depths of layer3_out'):
         FifoDepthOptimizationPost().transform(hls_model)
+
+
+def get_multi_io_stream_model(output_dir):
+    """Convert a two-input, two-output Keras model without vendor synthesis."""
+    from tensorflow.keras.layers import Concatenate, Input
+    from tensorflow.keras.models import Model
+
+    input_a = Input((16,), name='in_a')
+    input_b = Input((16,), name='in_b')
+    hidden = Concatenate(name='cat')([Dense(8, name='da')(input_a), Dense(8, name='db')(input_b)])
+    hidden = Dense(8, name='dh')(hidden)
+    outputs = [Dense(4, name='oa')(hidden), Dense(2, name='ob')(hidden)]
+    model = Model([input_a, input_b], outputs)
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<16, 6>'
+    )
+    return hls4ml.converters.convert_from_keras_model(
+        model, io_type='io_stream', hls_config=config, output_dir=str(output_dir), backend='Vitis'
+    )
+
+
+def test_initialize_large_fifos_excludes_all_model_io(tmp_path):
+    """Only internal FIFOs should be profiled for multi-input/output models (issue #1582)."""
+    from hls4ml.backends.vitis.passes.fifo_depth_optimization import initialize_large_fifos
+
+    model = get_multi_io_stream_model(tmp_path / 'prj')
+    input_names = {variable.name for variable in model.get_input_variables()}
+    output_names = {variable.name for variable in model.get_output_variables()}
+    internal_streams = {
+        variable.name
+        for variable in model.output_vars.values()
+        if 'StreamVariable' in str(type(variable))
+        and variable.name not in input_names
+        and variable.name not in output_names
+        and variable.pragma
+    }
+
+    initial_depths = initialize_large_fifos(model, profiling_fifo_depth=100_000)
+
+    assert input_names.isdisjoint(initial_depths)
+    assert output_names.isdisjoint(initial_depths)
+    assert set(initial_depths) == internal_streams
