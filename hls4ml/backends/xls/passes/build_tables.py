@@ -147,10 +147,7 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTableDefinition]:
             raise ValueError(f'Unknown softmax implementation={implementation}')
 
     exp_out = node.get_attr('exp_table_t').precision
-    # inv_inp_t is only meaningful for 'stable' (matches Vivado/Vitis);
-    # 'latency' sums the exponents into accum_t directly.
-    inv_inp_t = 'inv_inp_t' if implementation == 'stable' else 'accum_t'
-    inv_in = node.get_attr(inv_inp_t).precision
+    inv_in = node.get_attr('inv_inp_t').precision
     inv_out = node.get_attr('inv_table_t').precision
     inv_name = 'INV_TABLE'
 
