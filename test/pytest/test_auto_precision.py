@@ -322,7 +322,7 @@ def test_precision_from_constant_unit(val, expected_width):
 
 
 @pytest.mark.parametrize('n_in', [4, 8, 16])
-@pytest.mark.parametrize('backend', ['Vitis', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 def test_auto_precision_softmax(test_case_id, n_in, backend):
     """Test that auto accumulator precision is correctly inferred for softmax layers."""
     model = Sequential()
