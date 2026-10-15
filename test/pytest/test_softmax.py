@@ -232,7 +232,7 @@ def test_softmax_values(test_case_id, backend, implementation, io_type):
     assert err.max() < max_err
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('input_precision', ['fixed<10,3,RND_CONV,SAT>', 'ufixed<1,1>', 'ufixed<8,0>'])
 def test_softmax_stable_inp_norm(test_case_id, backend, input_precision):
     """x_max - x_i can reach twice the input range; the inferred inp_norm_t must hold it without wrapping,
@@ -292,7 +292,7 @@ def test_softmax_stable_argmax(test_case_id, backend, io_type, n_classes):
     np.testing.assert_array_equal(np.argmax(y_hls4ml, axis=-1), np.argmax(X_q, axis=-1))
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('default_precision', ['fixed<16,6>', 'fixed<24,12>'])
 def test_softmax_stable_model_precision(test_case_id, backend, default_precision):
     """With only a model-level precision, the softmax internal types are inferred rather than set to the model default."""
