@@ -208,7 +208,7 @@ class Layer(Serializable):
                 self.set_attr(name + '_t', type_t)
         # We skip if table is quantised by HGQ (_bit_exact property) since we want to match Keras and HGQ saturation
         if name == 'inv_inp' and not self.get_attr('_bit_exact', False):
-            self.get_attr(f'{name}_t').integer = 1 + math.ceil(math.log2(max(self.get_input_variable().shape)))
+            self.get_attr(f'{name}_t').precision.integer = 1 + math.ceil(math.log2(max(self.get_input_variable().shape)))
 
     def get_input_node(self, input_name=None):
         if input_name is None:
@@ -1053,6 +1053,9 @@ class PReLU(Activation):
 class Softmax(Activation):
     def initialize(self):
         super().initialize()
+
+        # A standalone Keras Softmax layer arrives as 'Softmax'
+        self.set_attr('activation', self.get_attr('activation').lower())
 
         # set the needed types if needed
         self._set_type_t('exp_table')

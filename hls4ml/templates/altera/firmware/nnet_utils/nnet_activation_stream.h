@@ -342,7 +342,7 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_laten
 
     // Calculate all the e^x's
     [[intel::fpga_register]]
-    typename CONFIG_T::exp_table_t exp_res[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
+    typename CONFIG_T::accum_t exp_res[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
 
 SoftmaxExpLoop:
     [[intel::initiation_interval(pipeline)]] for (unsigned i = 0;
@@ -361,14 +361,14 @@ SoftmaxExpLoop:
 
         // Explicitly sum the results with an adder tree.
         // Rounding & Saturation mode, which improve accuracy, prevent Vivado from expression balancing
-        Op_add<typename CONFIG_T::exp_table_t> op_add;
-        [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_sum =
-            reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+        Op_add<typename CONFIG_T::accum_t> op_add;
+        [[intel::fpga_register]] typename CONFIG_T::accum_t exp_sum =
+            reduce<typename CONFIG_T::accum_t, std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{},
+                   Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
         // Multiply previously calculated exponetials with the reciprocal of the sum
         [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
-            CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::exp_table_t, CONFIG_T::inv_table_size>(
-                exp_sum)];
+            CONFIG_T::invert_table[softmax_idx_from_real_val<typename CONFIG_T::accum_t, CONFIG_T::inv_table_size>(exp_sum)];
 
         typename ExtractPipeType<res_pipe>::value_type out_pack;
     SoftmaxInvPackLoop:
@@ -386,8 +386,8 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_legac
 
     // Index into the lookup table based on data for exponentials
     [[intel::fpga_register]]
-    typename CONFIG_T::table_t exp_res[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
-    [[intel::fpga_register]] typename CONFIG_T::table_t exp_diff_res;
+    typename CONFIG_T::accum_t exp_res[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
+    [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_diff_res;
     [[intel::fpga_register]] typename ExtractPipeType<data_pipe>::value_type::value_type
         data_cache[std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{}];
 
@@ -476,7 +476,7 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_strea
     } else if constexpr (CONFIG_T::implementation == softmax_implementation::argmax) {
         softmax_argmax_stream<data_pipe, res_pipe, CONFIG_T>();
     } else if constexpr (CONFIG_T::implementation == softmax_implementation::legacy) {
-        softmax_argmax_stream<data_pipe, res_pipe, CONFIG_T>();
+        softmax_legacy_stream<data_pipe, res_pipe, CONFIG_T>();
     } else { // Default to stable
         softmax_stable_stream<data_pipe, res_pipe, CONFIG_T>();
     }

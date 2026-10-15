@@ -739,7 +739,7 @@ class AlteraWriter(Writer):
                 continue
 
             implementation = layer.get_attr('implementation')
-            if implementation not in ('stable', 'latency', 'legacy'):
+            if implementation not in ('stable', 'latency', 'legacy', 'argmax'):
                 continue
 
             for table_kind in ('exp', 'inv'):
@@ -802,8 +802,8 @@ class AlteraWriter(Writer):
                         if table_kind == 'exp':
                             ac_type = layer.get_input_variable().type
                         else:
-                            # Note: keyed off exp_table_t, not inv_table_t/inv_inp_t
-                            ac_type = layer.get_attr('exp_table_t')
+                            # Note: keyed off accum_t, not inv_table_t/inv_inp_t
+                            ac_type = layer.get_attr('accum_t')
 
                         fp_bits = ac_type.precision.integer + ac_type.precision.fractional
                         fp_integer = ac_type.precision.integer
@@ -815,6 +815,10 @@ class AlteraWriter(Writer):
                             real_val = f.exp_float() if table_kind == 'exp' else f.inv_float()
                             h_file.write(sep + str(real_val))
                             sep = ', '
+
+                    elif implementation == 'argmax':
+                        # Dummy values, argmax does not use the tables but the config still references them
+                        h_file.write(', '.join(['0'] * table_size))
 
                     else:  # legacy
                         for i in range(table_size):

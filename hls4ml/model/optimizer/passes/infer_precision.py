@@ -644,21 +644,23 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if 'inv_inp_t' in types_to_infer:
             # if not set, just choose the accumulator type
             node.types['inv_inp_t'].precision = node.types['accum_t'].precision
-            if node.model.config.backend.name == 'oneAPI':
-                # TODO - Can introduce this on onther backends since it benefits from only using required number of bits
-                # for the integer part. + 1 is for guarding
-                node.types['inv_inp_t'].precision.integer = 1 + math.ceil(math.log2(max(node.get_input_variable().shape)))
             inferred_types.append('inv_inp_t')
 
         if 'inp_norm_t' in types_to_infer:
             in_type = node.get_input_variable().type.precision
-            if node.model.config.backend.name == 'oneAPI':
-                inp_norm_width = in_type.width
-                inp_norm_int = in_type.integer
-            else:
-                inp_norm_width = in_type.width - in_type.signed
-                inp_norm_int = in_type.integer - in_type.signed
-            node.types['inp_norm_t'].precision = FixedPrecisionType(inp_norm_width, inp_norm_int, signed=False)
+            in_frac = in_type.width - in_type.integer
+            # x_max - x_i is non-negative and below 2**integer, but beyond about (f + 1) * ln(2) the exp table
+            # entries round to zero anyway, so only keep the integer bits that matter and saturate above them.
+            # This keeps the resolution of the table lookup, which uses the most significant bits.
+            exp_frac = node.types['exp_table_t'].precision.width - node.types['exp_table_t'].precision.integer
+            exp_int = max(math.ceil(math.log2((exp_frac + 1) * math.log(2))), 0)
+            inp_norm_int = min(in_type.integer, exp_int)
+            # Altera cannot index a table with a 1-bit type
+            min_width = 2 if node.model.config.backend.name == 'Altera' else 1
+            inp_norm_width = max(inp_norm_int + in_frac, min_width)
+            node.types['inp_norm_t'].precision = FixedPrecisionType(
+                inp_norm_width, inp_norm_int, signed=False, saturation_mode=SaturationMode.SAT
+            )
             inferred_types.append('inp_norm_t')
 
         if 'result_t' in types_to_infer:

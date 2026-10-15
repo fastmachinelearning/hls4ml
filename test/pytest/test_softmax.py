@@ -168,3 +168,72 @@ def test_softmax_explicit_table_size(test_case_id, backend):
     if backend != 'Catapult':  # Catapult's softmax config has no separate exp/inv table sizes
         assert 'exp_table_size = 2048;' in softmax.get_attr('config_cpp')
         assert 'inv_table_size = 2048;' in softmax.get_attr('config_cpp')
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('implementation', ['stable', 'latency', 'legacy'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_softmax_values(test_case_id, backend, implementation, io_type):
+    """Compare the softmax outputs themselves, which an argmax-based accuracy check cannot distinguish from argmax."""
+    np.random.seed(0)
+    X = np.random.rand(1000, 8) * 8 - 4
+    model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
+    model.compile()
+
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    cfg['LayerName']['softmax']['Implementation'] = implementation
+    for table in ('inv_table', 'exp_table', 'inv_inp'):
+        cfg['LayerName']['softmax']['Precision'][table] = 'ufixed<18,8,RND_CONV,SAT>'
+    if implementation == 'latency':
+        # The inverse table is addressed by the (inferred) accum_t, ufixed<13,9>, so size it to cover every value
+        cfg['LayerName']['softmax']['Precision']['exp_table'] = 'ufixed<10,6,RND_CONV,SAT>'
+        cfg['LayerName']['softmax']['InvTableSize'] = 8192
+    inp_layer_name = next(iter(cfg['LayerName'].keys()))
+    cfg['LayerName'][inp_layer_name]['Precision']['result'] = 'fixed<16,6,RND_CONV,SAT>'
+
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
+
+    # Stable normalizes before the lookups, the others do not, so they are allowed larger errors
+    max_mean_err, max_err = {'stable': (0.002, 0.02), 'latency': (0.005, 0.5), 'legacy': (0.01, 0.1)}[implementation]
+    err = np.abs(y_hls4ml - y_keras)
+    assert err.mean() < max_mean_err
+    assert err.max() < max_err
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('input_precision', ['fixed<10,3,RND_CONV,SAT>', 'ufixed<1,1>'])
+def test_softmax_stable_inp_norm(test_case_id, backend, input_precision):
+    """x_max - x_i can reach twice the input range; the inferred inp_norm_t must hold it without wrapping,
+    and must be usable as a table index even for a 1-bit input."""
+    np.random.seed(0)
+    if input_precision == 'ufixed<1,1>':
+        X = (np.random.rand(1000, 8) > 0.5).astype(float)
+    else:
+        X = np.random.rand(1000, 8) * 8 - 4
+    model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
+    model.compile()
+
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    cfg['LayerName']['softmax']['Implementation'] = 'stable'
+    inp_layer_name = next(iter(cfg['LayerName'].keys()))
+    cfg['LayerName'][inp_layer_name]['Precision']['result'] = input_precision
+
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=cfg, io_type='io_parallel', output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
+
+    err = np.abs(y_hls4ml - y_keras)
+    assert err.mean() < 0.002
+    assert err.max() < 0.02
