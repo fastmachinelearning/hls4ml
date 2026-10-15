@@ -188,9 +188,8 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
             case 'stable':
                 return xls_named_type_definitions(layer, 'inp_norm_t')
             case 'latency':
-                # The exponent sum is resized into accum_t (not inv_inp_t, which only applies to
-                # 'stable') before indexing the inverse table.
-                return xls_named_type_definitions(layer, 'accum_t', keys=['rounding_mode', 'overflow_mode'])
+                # The exponent sum is resized into inv_inp_t before indexing the inverse table.
+                return xls_named_type_definitions(layer, 'inv_inp_t', keys=['rounding_mode', 'overflow_mode'])
             case _:
                 return []
     elif class_name == 'Transpose':
