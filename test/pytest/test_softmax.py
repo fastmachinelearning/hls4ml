@@ -167,11 +167,16 @@ def test_softmax_explicit_table_size(test_case_id, backend):
         assert 'inv_table_size = 2048;' in softmax.get_attr('config_cpp')
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('implementation', ['stable', 'latency', 'legacy'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_values(test_case_id, backend, implementation, io_type):
     """Compare the softmax outputs themselves, which an argmax-based accuracy check cannot distinguish from argmax."""
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+    if backend == 'XLS' and implementation == 'legacy':
+        pytest.skip('XLS backend does not support the legacy implementation')
+
     np.random.seed(0)
     X = np.random.rand(1000, 8) * 8 - 4
     model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
@@ -204,7 +209,7 @@ def test_softmax_values(test_case_id, backend, implementation, io_type):
     assert err.max() < max_err
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('input_precision', ['fixed<10,3,RND_CONV,SAT>', 'ufixed<1,1>'])
 def test_softmax_stable_inp_norm(test_case_id, backend, input_precision):
     """x_max - x_i can reach twice the input range; the inferred inp_norm_t must hold it without wrapping,
@@ -236,7 +241,7 @@ def test_softmax_stable_inp_norm(test_case_id, backend, input_precision):
     assert err.max() < 0.02
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('default_precision', ['fixed<16,6>', 'fixed<24,12>'])
 def test_softmax_stable_model_precision(test_case_id, backend, default_precision):
     """With only a model-level precision, the softmax internal types are inferred rather than set to the model default."""
