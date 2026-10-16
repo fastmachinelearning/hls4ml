@@ -12,7 +12,7 @@
 #ifndef NNET_ACTIVATION_H_
 #define NNET_ACTIVATION_H_
 
-// Define this macro to switch the implementations of certain activiation functions
+// Define this macro to switch the implementations of certain activation functions
 // from the original HLS4ML look-up table approach to using the piecewise-linear approximation
 // functions in AC Math.
 #define USE_AC_MATH 1

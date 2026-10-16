@@ -191,7 +191,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
 
 
 class ExtractTernaryThreshold(OptimizerPass):
-    """The input value (threshold) at which the output of a a ternary activation
+    """The input value (threshold) at which the output of a ternary activation
     changes is configurable. This pass extracts that threshold point, inserting
     a BatchNormalization layer to execute the scaling. That BatchNormalization
     layer is then expected to be fused into a BatchNormalizationQuantizedTanh

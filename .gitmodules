@@ -10,3 +10,7 @@
 [submodule "hls4ml/templates/catapult/ac_math"]
 	path = hls4ml/templates/catapult/ac_math
 	url = https://github.com/hlslibs/ac_math.git
+[submodule "hls4ml/contrib/Coyote"]
+	path = hls4ml/contrib/Coyote
+	url = https://github.com/fpgasystems/Coyote.git
+	branch = integrations/hls4ml

@@ -48,6 +48,8 @@ class MergeHandler(KerasV3LayerHandler):
                 )
                 assert all(len(t.shape) == 2 for t in in_tensors), msg
                 assert in_tensors[0].shape[1] == in_tensors[1].shape[1], f'Input shape mismatch for layer {layer.name}.'
+                if getattr(layer, 'normalize', False):
+                    raise NotImplementedError(f'Layer {layer.name}: Dot with normalize=True is not supported.')
                 class_name = 'Dot'
                 op = 'dot1d'
                 config['axes'] = layer.axes

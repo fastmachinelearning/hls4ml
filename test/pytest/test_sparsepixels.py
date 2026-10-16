@@ -95,6 +95,42 @@ def test_sparse_cnn(test_case_id, backend, pool):
     _convert_and_check(model, x, test_root_path / test_case_id, backend)
 
 
+def _build_sparse_cnn_chain(input_shape, n, pools, pool='avg', threshold=0.4):
+    """Conv+pool blocks with per-block (asymmetric) pool sizes, e.g. x-only pooling on odd heights."""
+    iq_conf = QuantizerConfig(place='datalane', q_type='kif', i0=4, f0=8, overflow_mode='WRAP')
+    pool_cls = MaxPooling2DSparse if pool == 'max' else AveragePooling2DSparse
+    with (
+        QuantizerConfigScope(place='all', default_q_type='kbi', overflow_mode='SAT_SYM'),
+        QuantizerConfigScope(place='datalane', default_q_type='kif', overflow_mode='WRAP'),
+        LayerConfigScope(enable_ebops=True, enable_iq=True, beta0=1e-5),
+    ):
+        x_in = keras.Input(shape=input_shape, name='x_in')
+        x, keep_mask = InputReduce(n=n, threshold=threshold, name='input_reduce')(x_in)
+        for k, ps in enumerate(pools, 1):
+            x = QConv2DSparse(
+                filters=2, kernel_size=3, name=f'conv{k}', padding='same', strides=1, activation='relu', iq_conf=iq_conf
+            )([x, keep_mask])
+            x, keep_mask = pool_cls(ps, name=f'pool{k}')([x, keep_mask])
+        x = Flatten(name='flatten')(x)
+        x = QDense(1, name='dense', iq_conf=iq_conf)(x)
+    return keras.Model(x_in, x, name='cnn_sparse_asym_test')
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('pool', ['avg', 'max'])
+@pytest.mark.parametrize('pools', [((1, 4), (2, 2)), ((2, 2), (1, 2))])
+def test_sparse_cnn_asymmetric_pool(test_case_id, backend, pool, pools):
+    # Asymmetric pool sizes on an odd input height (9 rows). The ((2, 2), ...) chain pools the odd
+    # dimension first, so pixels of the dropped partial window (out-of-range pooled coordinates)
+    # flow through a later conv and pool: they must be invalidated to match the dense keras layers.
+    np.random.seed(44)
+    keras.utils.set_random_seed(44)
+
+    model = _build_sparse_cnn_chain(input_shape=(9, 16, 1), n=6, pools=pools, pool=pool)
+    x = _make_sparse_inputs(n_samples=1000, h=9, w=16, n_active_per_sample=5)
+    _convert_and_check(model, x, test_root_path / test_case_id, backend)
+
+
 @pytest.mark.parametrize('backend', ['Vitis'])
 def test_sparse_cnn_parallelization(test_case_id, backend):
     # Partial parallelization and the streaming input reduce only change the unroll/implementation,

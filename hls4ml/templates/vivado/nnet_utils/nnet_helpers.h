@@ -9,6 +9,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <type_traits>
 #include <vector>
 
 namespace nnet {
@@ -171,13 +172,28 @@ template <class data_T, class save_T> void save_output_array(data_T *data, save_
     }
 }
 
-template <class data_T, class save_T> void save_output_array(hls::stream<data_T> &data, save_T *ptr, size_t layer_size) {
+template <class T, class = void> struct is_nnet_array : std::false_type {};
+template <class T> struct is_nnet_array<T, decltype(void(T::size))> : std::true_type {};
+
+template <class data_T, class save_T>
+typename std::enable_if<is_nnet_array<data_T>::value>::type save_output_array(hls::stream<data_T> &data, save_T *ptr,
+                                                                              size_t layer_size) {
     for (size_t i = 0; i < layer_size / data_T::size; i++) {
         data_T ctype = data.read();
         for (size_t j = 0; j < data_T::size; j++) {
             ptr[i * data_T::size + j] = save_T(ctype[j]);
         }
         data.write(ctype);
+    }
+}
+
+template <class data_T, class save_T>
+typename std::enable_if<!is_nnet_array<data_T>::value>::type save_output_array(hls::stream<data_T> &data, save_T *ptr,
+                                                                               size_t layer_size) {
+    for (size_t i = 0; i < layer_size; i++) {
+        data_T value = data.read();
+        ptr[i] = save_T(value);
+        data.write(value);
     }
 }
 
@@ -235,12 +251,10 @@ template <class data_T> void save_layer_output(hls::stream<data_T> &data, const 
         std::fstream out;
         out.open(filename.str(), std::ios::app);
         assert(out.is_open());
-        for (size_t i = 0; i < layer_size / data_T::size; i++) {
-            data_T ctype = data.read();
-            for (size_t j = 0; j < data_T::size; j++) {
-                out << float(ctype[j]) << " "; // We don't care about precision in text files
-            }
-            data.write(ctype);
+        std::vector<float> values(layer_size);
+        save_output_array<data_T, float>(data, values.data(), layer_size);
+        for (size_t i = 0; i < layer_size; i++) {
+            out << values[i] << " "; // We don't care about precision in text files
         }
         out << std::endl;
         out.close();

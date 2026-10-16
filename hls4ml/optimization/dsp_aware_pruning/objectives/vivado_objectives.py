@@ -32,7 +32,7 @@ class VivadoDSPEstimator(ObjectiveEstimator):
         if not layer_attributes.weight_shape or layer_attributes.args['hls4ml_attributes'].weight_precision.width < 9:
             return [0]
         else:
-            # TOOD - Extend for parallelization factor
+            # TODO - Extend for parallelization factor
             return [np.prod(layer_attributes.weight_shape) // layer_attributes.args['hls4ml_attributes'].reuse_factor]
 
     @classmethod
@@ -45,7 +45,7 @@ class VivadoDSPEstimator(ObjectiveEstimator):
         if not pruning:
             logging.warn(
                 'Pruning needs to be enabled to decrease the number of DSPs used. \
-                It is recommened to use the default attributes, returned from is_layer_optimizable(...)'
+                It is recommended to use the default attributes, returned from is_layer_optimizable(...)'
             )
             return [0]
 
@@ -117,7 +117,7 @@ class VivadoMultiObjectiveEstimator(ObjectiveEstimator):
         if not layer_attributes.weight_shape:
             return [0]
 
-        # TOOD - Extend for parallelization factor
+        # TODO - Extend for parallelization factor
         if layer_attributes.args['hls4ml_attributes'].strategy.lower() == 'latency':
             return [
                 int(np.prod(layer_attributes.weight_shape) // layer_attributes.args['hls4ml_attributes'].reuse_factor),
@@ -153,7 +153,7 @@ class VivadoMultiObjectiveEstimator(ObjectiveEstimator):
         if not pruning:
             logging.warn(
                 'Pruning needs to be enabled to decrease the number of DSPs used. \
-                It is recommened to use the default attributes, returned from is_layer_optimizable(...)'
+                It is recommended to use the default attributes, returned from is_layer_optimizable(...)'
             )
             return [0]
 
@@ -230,7 +230,7 @@ class VivadoFFEstimator(ObjectiveEstimator):
         ):
             return True, OptimizationAttributes(SUPPORTED_STRUCTURES.UNSTRUCTURED, pruning=True, weight_sharing=False)
 
-    # TODO - This method is inaccurate (accross all cases); in general, estimating FFs is hard,
+    # TODO - This method is inaccurate (across all cases); in general, estimating FFs is hard,
     # But as long as it is consistent(ly wrong), it should not matter for the pruning
     @classmethod
     def layer_resources(self, layer_attributes):
@@ -286,14 +286,14 @@ class VivadoFFEstimator(ObjectiveEstimator):
         if weight_sharing:
             logging.warn(
                 'Weight sharing does not decrease the number of parameters. \
-                         It is recommened to use the default attributes, returned from is_layer_optimizable(...)'
+                         It is recommended to use the default attributes, returned from is_layer_optimizable(...)'
             )
             return [0]
 
         if not pruning:
             logging.warn(
                 'Pruning needs to be enabled to decrease the number of parameters. \
-                         It is recommened to use the default attributes, returned from is_layer_optimizable(...)'
+                         It is recommended to use the default attributes, returned from is_layer_optimizable(...)'
             )
             return [0]
 

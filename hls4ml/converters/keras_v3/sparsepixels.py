@@ -77,6 +77,7 @@ class InputReduceHandler(KerasV3LayerHandler):
         # Clear any stale state from a previous conversion in the same Python process
         _sparse_context.clear()
         _sparse_context['n_sparse'] = n_sparse
+        _sparse_context['spatial'] = (int(in_height), int(in_width))
 
         # Hash stores 1-based H and W coordinates separately (see nnet_sparsepixels.h::sparse_input_reduce).
         # Spatial dims only shrink through the network (pooling), so input H/W bound the required bits.
@@ -175,18 +176,27 @@ class QConv2DSparseHandler(KerasV3LayerHandler):
 
 
 def _sparse_pooling_config(
-    in_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor'], pool_size: int, pool_op: str
+    in_tensors: Sequence['KerasTensor'], out_tensors: Sequence['KerasTensor'], pool_size: tuple, pool_op: str
 ) -> dict[str, Any]:
     """Shared config for the average/max sparse pooling handlers (differ only in pool_op)."""
     feat_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
     n_chan = int(feat_shape[-1])
     n_sparse = _sparse_context.get('n_sparse', 0)
+    pool_h, pool_w = int(pool_size[0]), int(pool_size[1])
+
+    # Spatial dims at this layer (tracked from the input reduction through the pooling chain);
+    # the kernel needs them to invalidate pooled cells falling outside the valid output grid.
+    prev_h, prev_w = _sparse_context.get('spatial', (1, 1))
+    _sparse_context['spatial'] = (prev_h // pool_h, prev_w // pool_w)
 
     return {
         'class_name': 'SparsePooling2D',
         'n_sparse': n_sparse,
         'n_chan': n_chan,
-        'pool_size': pool_size,
+        'in_height': prev_h,
+        'in_width': prev_w,
+        'pool_height': pool_h,
+        'pool_width': pool_w,
         'pool_op': pool_op,
     }
 
@@ -200,7 +210,7 @@ class AveragePooling2DSparseHandler(KerasV3LayerHandler):
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
-        return _sparse_pooling_config(in_tensors, out_tensors, int(layer.avg_pool.pool_size[0]), 'avg')
+        return _sparse_pooling_config(in_tensors, out_tensors, tuple(layer.avg_pool.pool_size), 'avg')
 
 
 class MaxPooling2DSparseHandler(KerasV3LayerHandler):
@@ -212,4 +222,4 @@ class MaxPooling2DSparseHandler(KerasV3LayerHandler):
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
-        return _sparse_pooling_config(in_tensors, out_tensors, int(layer.max_pool.pool_size[0]), 'max')
+        return _sparse_pooling_config(in_tensors, out_tensors, tuple(layer.max_pool.pool_size), 'max')

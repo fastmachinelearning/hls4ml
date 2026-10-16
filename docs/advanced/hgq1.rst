@@ -20,7 +20,7 @@ High Granularity Quantization (HGQ)
    :alt: Overview of HGQ
    :align: center
 
-Conversion of models made with HGQ library is fully supported. The HGQ models are first converted to proxy model format, which can then be parsed by hls4ml bit-accurately. Below is an example of how to create a model with HGQ and convert it to hls4ml model.
+Conversion of models made with the HGQ library is fully supported. The HGQ models are first converted to proxy model format, which can then be parsed by hls4ml bit-accurately. Below is an example of how to create a model with HGQ and convert it to an hls4ml model.
 
 .. code-block:: Python
 
@@ -35,20 +35,20 @@ Conversion of models made with HGQ library is fully supported. The HGQ models ar
       HDense(10, beta=1.e-5),
    ])
 
-    opt = keras.optimizers.Adam(learning_rate=0.001)
-    loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    model.compile(optimizer=opt, loss=loss, metrics=['accuracy'])
-    callbacks = [ResetMinMax(), FreeBOPs()]
+   opt = keras.optimizers.Adam(learning_rate=0.001)
+   loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+   model.compile(optimizer=opt, loss=loss, metrics=['accuracy'])
+   callbacks = [ResetMinMax(), FreeBOPs()]
 
-    model.fit(..., callbacks=callbacks)
+   model.fit(..., callbacks=callbacks)
 
-    from HGQ import trace_minmax, to_proxy_model
-    from hls4ml.converters import convert_from_keras_model
+   from HGQ import trace_minmax, to_proxy_model
+   from hls4ml.converters import convert_from_keras_model
 
-    trace_minmax(model, x_train, cover_factor=1.0)
-    proxy = to_proxy_model(model, aggressive=True)
+   trace_minmax(model, x_train, cover_factor=1.0)
+   proxy = to_proxy_model(model, aggressive=True)
 
-    model_hls = convert_from_keras_model(proxy, backend='vivado',output_dir=... ,part=...)
+   model_hls = convert_from_keras_model(proxy, backend='vivado', output_dir=..., part=...)
 
 
-An interactive example of HGQ can be found in the `kaggle notebook <https://www.kaggle.com/code/calad0i/small-jet-tagger-with-hgq-1>`_. Full documentation can be found at `calad0i.github.io/HGQ <https://calad0i.github.io/HGQ/>`_.
+An interactive example of HGQ can be found in the `Kaggle notebook <https://www.kaggle.com/code/calad0i/small-jet-tagger-with-hgq-1>`_. Full documentation can be found at `calad0i.github.io/HGQ <https://calad0i.github.io/HGQ/>`_.

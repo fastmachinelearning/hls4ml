@@ -1,4 +1,4 @@
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.pytorch_to_hls import get_call_arg, pytorch_handler
 from hls4ml.converters.utils import compute_padding_1d_pytorch, compute_padding_2d_pytorch, parse_data_format
 
 pooling_layers = ['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d']
@@ -22,31 +22,52 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
     layer['name'] = layer_name
     layer['inputs'] = input_names
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
-    if node.op == 'call_module' and 'Avg' in operation:
-        if class_object.count_include_pad:
-            layer['count_pad'] = True
-        else:
-            layer['count_pad'] = False
+
+    # Read the layer options, from the module or from the (positional or keyword) call arguments.
+    # Call signature: (input, kernel_size, stride, padding, dilation, ceil_mode) for max pooling and
+    # (input, kernel_size, stride, padding, ceil_mode, count_include_pad[, divisor_override]) for average pooling.
+    if node.op == 'call_module':
+        kernel_size = class_object.kernel_size
+        stride = class_object.stride
+        padding = class_object.padding
+        ceil_mode = bool(class_object.ceil_mode)
+        dilation = getattr(class_object, 'dilation', 1)  # only max pooling has it
+        count_include_pad = bool(getattr(class_object, 'count_include_pad', True))
+        divisor_override = getattr(class_object, 'divisor_override', None)  # only AvgPool2d has it
     else:
-        layer['count_pad'] = True
+        kernel_size = get_call_arg(node, 1, 'kernel_size')
+        stride = get_call_arg(node, 2, 'stride', None)
+        padding = get_call_arg(node, 3, 'padding', 0)
+        if 'Max' in operation:
+            dilation = get_call_arg(node, 4, 'dilation', 1)
+            ceil_mode = bool(get_call_arg(node, 5, 'ceil_mode', False))
+            count_include_pad = True
+            divisor_override = None
+        else:
+            dilation = 1
+            ceil_mode = bool(get_call_arg(node, 4, 'ceil_mode', False))
+            count_include_pad = bool(get_call_arg(node, 5, 'count_include_pad', True))
+            divisor_override = get_call_arg(node, 6, 'divisor_override', None) if operation == 'AvgPool2d' else None
+    if stride is None:
+        # if stride is not set it defaults to the kernel size
+        stride = kernel_size
+
+    if ceil_mode:
+        raise NotImplementedError(f'Layer {layer_name}: pooling with ceil_mode=True is not supported.')
+    if any(d != 1 for d in (dilation if isinstance(dilation, (tuple, list)) else (dilation,))):
+        raise NotImplementedError(f'Layer {layer_name}: pooling with dilation != 1 is not supported.')
+    if divisor_override is not None:
+        raise NotImplementedError(f'Layer {layer_name}: average pooling with divisor_override is not supported.')
+
+    layer['count_pad'] = count_include_pad
 
     if int(layer['class_name'][-2]) == 1:
         (*_, layer['n_in'], layer['n_filt']) = parse_data_format(input_shapes[0], layer['data_format'])
-        if node.op == 'call_module':
-            layer['pool_width'] = (
-                class_object.kernel_size if type(class_object.kernel_size) is not tuple else class_object.kernel_size[0]
-            )
-            layer['stride_width'] = class_object.stride if type(class_object.stride) is not tuple else class_object.stride[0]
 
-            if type(class_object.padding) is tuple:
-                padding = class_object.padding[0]
-            else:
-                padding = class_object.padding
-
-        else:
-            layer['pool_width'] = int(node.args[1])
-            layer['stride_width'] = node.kwargs['stride'] if node.kwargs['stride'] is not None else int(node.args[1])
-            padding = node.kwargs['padding']
+        layer['pool_width'] = kernel_size[0] if isinstance(kernel_size, (tuple, list)) else kernel_size
+        layer['stride_width'] = stride[0] if isinstance(stride, (tuple, list)) else stride
+        if isinstance(padding, (tuple, list)):
+            padding = padding[0]
 
         if padding == 0:  # No padding, i.e., 'VALID' padding in Keras/Tensorflow
             layer['padding'] = 'valid'
@@ -67,48 +88,22 @@ def parse_pooling_layer(operation, layer_name, input_names, input_shapes, node, 
             input_shapes[0], layer['data_format']
         )
 
-        if node.op == 'call_module':
-            if type(class_object.stride) is tuple:
-                layer['stride_height'] = class_object.stride[0]
-                layer['stride_width'] = class_object.stride[1]
-            else:
-                layer['stride_height'] = class_object.stride
-                layer['stride_width'] = class_object.stride
-
-            if type(class_object.kernel_size) is tuple:
-                layer['pool_height'] = class_object.kernel_size[0]
-                layer['pool_width'] = class_object.kernel_size[1]
-            else:
-                layer['pool_height'] = class_object.kernel_size
-                layer['pool_width'] = class_object.kernel_size
-
-            if type(class_object.padding) is tuple:
-                padding = class_object.padding
-            else:
-                padding = [class_object.padding, class_object.padding]
-
+        if isinstance(kernel_size, (tuple, list)):
+            layer['pool_height'] = kernel_size[0]
+            layer['pool_width'] = kernel_size[1]
         else:
-            if type(node.kwargs['stride']) is tuple:
-                layer['stride_height'] = node.kwargs['stride'][0]
-                layer['stride_width'] = node.kwargs['stride'][1]
-            else:
-                if node.kwargs['stride'] is None:
-                    # if stride is not set it is supposed to default to the kernel size
-                    layer['stride_height'] = node.args[1]
-                    layer['stride_width'] = node.args[1]
-                else:
-                    layer['stride_height'] = node.kwargs['stride']
-                    layer['stride_width'] = node.kwargs['stride']
-            if type(node.args[1]) is tuple:
-                layer['pool_height'] = node.args[1][0]
-                layer['pool_width'] = node.args[1][1]
-            else:
-                layer['pool_height'] = node.args[1]
-                layer['pool_width'] = node.args[1]
-            if type(node.kwargs['padding']) is tuple:
-                padding = node.kwargs['padding']
-            else:
-                padding = [node.kwargs['padding'], node.kwargs['padding']]
+            layer['pool_height'] = kernel_size
+            layer['pool_width'] = kernel_size
+
+        if isinstance(stride, (tuple, list)):
+            layer['stride_height'] = stride[0]
+            layer['stride_width'] = stride[1]
+        else:
+            layer['stride_height'] = stride
+            layer['stride_width'] = stride
+
+        if not isinstance(padding, (tuple, list)):
+            padding = [padding, padding]
 
         if all(x == 0 for x in padding):  # No padding, i.e., 'VALID' padding in Keras/Tensorflow
             layer['padding'] = 'valid'

@@ -19,7 +19,8 @@ def generate_data(input_shape):
     return np.clip(d, -32, 31)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('strategy', ['stable', 'latency', 'argmax'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
@@ -35,15 +36,26 @@ def generate_data(input_shape):
         ('16,6', (8, 8, 3), '18,8', 'io_stream', False),
     ],
 )
-def test_softmax(test_case_id, backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum):
+def test_softmax(
+    test_case_id, softmax_impl, backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum
+):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     X = generate_data
     model = tf.keras.models.Sequential()
-    model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
+    if softmax_impl == 'activation':
+        model.add(tf.keras.layers.Activation(input_shape=input_shape, activation='softmax', name='softmax'))
+    else:
+        model.add(tf.keras.layers.Softmax(input_shape=input_shape, name='softmax'))
     model.compile()
 
     table_type = f'fixed<{table_bits}, RND, SAT>'
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    # TODO this line does not work and should be replaced with
+    # cfg['LayerName']['softmax']['implementation'] = strategy
+    # See https://github.com/fastmachinelearning/hls4ml/issues/1443
     cfg['LayerName']['softmax']['Strategy'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = table_type
     cfg['LayerName']['softmax']['exp_table_t'] = table_type
@@ -73,12 +85,18 @@ def test_softmax(test_case_id, backend, strategy, generate_data, input_bits, inp
     assert acc_hls4ml >= 0.98
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult'])
+@pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_softmax_skipped(test_case_id, backend, io_type):
+def test_softmax_skipped(test_case_id, softmax_impl, backend, io_type):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
     X = np.random.rand(100, 10)
     dense = tf.keras.layers.Dense(14, input_shape=(10,), name='dense')
-    softmax = tf.keras.layers.Activation(activation='softmax', name='softmax')
+    if softmax_impl == 'activation':
+        softmax = tf.keras.layers.Activation(activation='softmax', name='softmax')
+    else:
+        softmax = tf.keras.layers.Softmax(name='softmax')
     model = tf.keras.models.Sequential([dense, softmax])
     model.compile()
 

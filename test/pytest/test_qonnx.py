@@ -256,7 +256,7 @@ def bnn_fc_small_qonnx_model_scale_nonunit(bnn_fc_small_qonnx_model):
     This is done by modifying the bnn_fc_small_qonnx_model, which has unit scale factors.
     """
 
-    model = copy.deepcopy(bnn_fc_small_qonnx_model)  # is copying neccessary?
+    model = copy.deepcopy(bnn_fc_small_qonnx_model)  # is copying necessary?
     new_iscale = onnx.helper.make_tensor('BipolarQuant_0_param0', 1, [1], [0.5])
     new_wscale = onnx.helper.make_tensor('BipolarQuant_1_param1', 1, [1], [0.5])
     old_iscale = old_wscale = None
@@ -280,7 +280,7 @@ def bnn_fc_small_qonnx_model_scale_nonunit2(bnn_fc_small_qonnx_model):
     This is done by modifying the bnn_fc_small_qonnx_model, which has unit scale factors.
     """
 
-    model = copy.deepcopy(bnn_fc_small_qonnx_model)  # is copying neccessary?
+    model = copy.deepcopy(bnn_fc_small_qonnx_model)  # is copying necessary?
     new_iscale = onnx.helper.make_tensor('BipolarQuant_0_param0', 1, [1], [2])
     new_wscale = onnx.helper.make_tensor('BipolarQuant_1_param1', 1, [1], [4])
     old_iscale = old_wscale = None
@@ -506,7 +506,7 @@ def test_simple_model(test_case_id, request, model_name, io_type, backend):
         ('Catapult', 'Latency'),
         ('Vitis', 'Resource'),
         ('Vitis', 'Latency'),
-        ('oneAPI', 'Resource'),
+        ('Altera', 'Resource'),
     ],
 )
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])

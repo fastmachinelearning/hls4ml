@@ -16,6 +16,9 @@ def get_baseline_path(baseline_file_name, backend, version):
     Returns:
         Path: A pathlib.Path object pointing to the baseline file location.
     """
+    # Baseline files are named without the hls4mlprj_ prefix the test_case_id fixture
+    # adds for output directories
+    baseline_file_name = baseline_file_name.removeprefix('hls4mlprj_')
     return Path(__file__).parent / 'baselines' / backend / version / baseline_file_name
 
 
@@ -92,9 +95,9 @@ def compare_vitis_backend(data, baseline):
     compare_dicts(data['CSynthesisReport'], baseline['CSynthesisReport'], tolerances)
 
 
-def compare_oneapi_backend(data, baseline):
+def compare_altera_backend(data, baseline):
     """
-    Compare reports from the oneAPI backend.
+    Compare reports from the Altera backend.
 
     Args:
         data (dict): The current synthesis report.
@@ -120,14 +123,16 @@ def compare_oneapi_backend(data, baseline):
 COMPARE_FUNCS = {
     'Vivado': compare_vitis_backend,
     'Vitis': compare_vitis_backend,
-    'oneAPI': compare_oneapi_backend,
+    'Altera': compare_altera_backend,
+    'VitisUnified': compare_vitis_backend,
 }
 
 
 EXPECTED_REPORT_KEYS = {
     'Vivado': {'CSynthesisReport'},
     'Vitis': {'CSynthesisReport'},
-    'oneAPI': {'report'},
+    'Altera': {'report'},
+    'VitisUnified': {'CSynthesisReport'},
 }
 
 
@@ -147,8 +152,8 @@ def run_synthesis_test(config, hls_model, baseline_file_name, backend):
     if not config.get('run_synthesis', False):
         return
 
-    # Skip Quartus backend
-    if backend == 'Quartus':
+    # Skip Quartus and XLS backends
+    if backend in ['Quartus', 'XLS']:
         return
 
     # Run synthesis

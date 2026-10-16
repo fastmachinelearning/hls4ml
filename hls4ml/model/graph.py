@@ -820,7 +820,12 @@ class ModelGraph(Serializable):
             dlclose_func(self._top_function_lib._handle)
         self._top_function_lib = ctypes.cdll.LoadLibrary(lib_name)
 
-    def _get_top_function(self, x):
+    def _get_top_function(self, x, *args, **kwargs):
+        backend = self.config.backend
+
+        if hasattr(backend, 'get_top_function') and callable(backend.get_top_function):
+            return backend.get_top_function(self, x, *args, **kwargs)
+
         if self._top_function_lib is None:
             raise Exception('Model not compiled')
         if len(self.get_input_variables()) == 1:
@@ -831,7 +836,7 @@ class ModelGraph(Serializable):
 
         for xi in xlist:
             if not isinstance(xi, np.ndarray):
-                raise Exception(f'Expected numpy.ndarray, but got {type(x)}')
+                raise Exception(f'Expected numpy.ndarray, but got {type(xi)}')
             if not xi.flags['C_CONTIGUOUS']:
                 raise Exception('Array must be c_contiguous, try using numpy.ascontiguousarray(x)')
 

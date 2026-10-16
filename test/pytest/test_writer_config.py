@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -20,15 +21,56 @@ def keras_model():
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])  # No Quartus for now
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])  # No Quartus for now
 @pytest.mark.parametrize('namespace', [None, 'test_namespace'])
 def test_namespace(test_case_id, keras_model, namespace, io_type, backend):
     config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
     odir = str(test_root_path / test_case_id)
+    # Altera libraries in one process clash if they declare the same pipe types; keep namespaces distinct
+    if namespace is not None:
+        namespace = f'{namespace}_{io_type}'
     hls_model = hls4ml.converters.convert_from_keras_model(
         keras_model, hls_config=config, io_type=io_type, output_dir=odir, namespace=namespace, backend=backend
     )
     hls_model.compile()  # It's enough that the model compiles
+
+
+def _read_altera_namespace(odir, project_name):
+    header = Path(odir, f'src/firmware/{project_name}.h').read_text()
+    return re.search(r'^namespace (\w+) \{', header, re.MULTILINE).group(1)
+
+
+@pytest.mark.parametrize(
+    'project_name, namespace, expected',
+    [
+        ('myproject', 'test_ns', 'test_ns'),
+        ('foo', None, 'foo'),
+        ('myproject', None, None),
+    ],
+)
+def test_altera_namespace_rule(test_case_id, keras_model, project_name, namespace, expected):
+    config = hls4ml.utils.config_from_keras_model(keras_model, granularity='name')
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        keras_model,
+        hls_config=config,
+        output_dir=odir,
+        project_name=project_name,
+        namespace=namespace,
+        backend='Altera',
+    )
+
+    written = []
+    for _ in range(2):
+        hls_model.write()
+        written.append(_read_altera_namespace(odir, project_name))
+
+    if expected is not None:
+        assert written == [expected, expected]
+    else:
+        # The default project name is stamped, so the namespace changes on every write
+        assert all(re.fullmatch(r'myproject_\w+', ns) for ns in written)
+        assert written[0] != written[1]
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])

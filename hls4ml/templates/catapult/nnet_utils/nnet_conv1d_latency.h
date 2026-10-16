@@ -29,7 +29,7 @@ int compute_multiplier_limit(
                             n_mult++;
                         } // end if nonzero weight
                     }     // end not padding
-                }         // end loop accross filter
+                }         // end loop across filter
             }             // end channel loop
         }                 // end filter loop
     }                     // end output loop

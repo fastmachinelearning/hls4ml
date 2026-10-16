@@ -18,7 +18,7 @@ class QMultiHeadAttentionHandler(QLayerHandler):
 
     def handle(
         self,
-        layer: 'hgq.layers.QMultiHeadAttention',
+        layer: 'hgq.layers.attn.mha.QMultiHeadAttention',
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
@@ -131,7 +131,7 @@ class QLinformerAttentionHandler(QMultiHeadAttentionHandler):
 
     def handle(
         self,
-        layer: 'hgq.layers.linformer_attention.QLinformerAttention',
+        layer: 'hgq.layers.attn.linformer.QLinformerAttention',
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):

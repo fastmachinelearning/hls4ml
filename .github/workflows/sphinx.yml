@@ -1,0 +1,53 @@
+name: sphinx
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event.pull_request.head.sha }}
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+        cache: pip
+        cache-dependency-path: docs/requirements.txt
+    - name: Install documentation dependencies
+      run: pip install -r docs/requirements.txt
+    - name: Build documentation
+      env:
+        SPHINX_GITHUB_CHANGELOG_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: make -C docs html
+    - name: Upload documentation artifact
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v7
+      with:
+        path: docs/_build/html
+    - name: Commit Documentation Changes
+      if: github.event_name == 'push'
+      run: |
+        git clone https://github.com/fastmachinelearning/hls4ml.git --branch gh-pages --single-branch gh-pages
+        cp -r docs/_build/html/* gh-pages/
+        cd gh-pages
+        touch .nojekyll
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Update Sphinx Documentation" -a || true
+    - name: Push Documentation Changes
+      if: github.event_name == 'push'
+      uses: ad-m/github-push-action@master
+      with:
+        branch: gh-pages
+        directory: gh-pages
+        github_token: ${{ secrets.PAT_HLSML_BUILD_SPHINX }}

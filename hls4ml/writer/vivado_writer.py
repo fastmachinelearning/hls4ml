@@ -220,6 +220,8 @@ class VivadoWriter(Writer):
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
+                    if all_brams:
+                        newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
                     newline += pipeline_pragma
 
                 if io_type == 'io_stream':
@@ -538,14 +540,12 @@ class VivadoWriter(Writer):
         with open(project_path, 'w') as f:
             print_data(f)
 
-    def write_test_bench(self, model):
-        """Write the testbench files (myproject_test.cpp and input/output .dat files)
+    def write_tb_data(self, model):
+        """Write the testbench input/output .dat files
 
         Args:
             model (ModelGraph): the hls4ml model.
         """
-
-        filedir = os.path.dirname(os.path.abspath(__file__))
 
         if not os.path.exists(f'{model.config.get_output_dir()}/tb_data/'):
             os.mkdir(f'{model.config.get_output_dir()}/tb_data/')
@@ -567,6 +567,17 @@ class VivadoWriter(Writer):
                     output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
                 )
 
+    def write_test_bench(self, model):
+        """Write the testbench files (myproject_test.cpp and input/output .dat files)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        self.write_tb_data(model)
+
         f = open(os.path.join(filedir, '../templates/vivado/myproject_test.cpp'))
         fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp', 'w')
 
@@ -585,6 +596,14 @@ class VivadoWriter(Writer):
                 newline = line
                 for bram in model_brams:
                     newline += f'#include "firmware/weights/{bram.name}.h"\n'
+
+            elif '// hls-fpga-machine-learning insert load weights' in line:
+                newline = line
+                if model_brams and model.config.get_writer_config()['WriteWeightsTxt']:
+                    for bram in model_brams:
+                        newline += indent + 'nnet::load_weights_from_txt<{}, {}>({}, "{}.txt");\n'.format(
+                            bram.type.name, bram.data_length, bram.name, bram.name
+                        )
 
             elif '// hls-fpga-machine-learning insert data' in line:
                 newline = line

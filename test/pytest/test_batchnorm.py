@@ -29,7 +29,7 @@ def model(request):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'Altera'])
 @pytest.mark.parametrize('model', [True, False], indirect=True)
 def test_batchnorm(test_case_id, model, data, backend, io_type):
     default_precision = 'fixed<32, 1>'
@@ -47,3 +47,16 @@ def test_batchnorm(test_case_id, model, data, backend, io_type):
     y_keras = np.squeeze(model.predict(data))
     y_hls = hls_model.predict(data)
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
+
+
+def test_batchnorm_rejects_non_channel_axis(test_case_id):
+    """Normalization along an axis other than the channel axis was silently misparsed."""
+    model = Sequential()
+    model.add(BatchNormalization(axis=1, input_shape=(8, 4)))
+    model.compile()
+
+    with pytest.raises(NotImplementedError, match='axis'):
+        config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+        hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, output_dir=str(test_root_path / test_case_id), backend='Vivado'
+        )

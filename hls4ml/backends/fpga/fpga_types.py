@@ -97,8 +97,8 @@ class ACFixedPrecisionDefinition(PrecisionDefinition):
             self.saturation_bits,
         ]
         if args[0] == 1:
-            # Currently oneAPI ac_fixed requires at least two bits for both signed and unsigned cases
-            # Should be fixed in the future once oneAPI supports 1-bit unsigned ac_fixed
+            # Currently Altera ac_fixed requires at least two bits for both signed and unsigned cases
+            # Should be fixed in the future once Altera supports 1-bit unsigned ac_fixed
             args[0] = 2
         if args[3] == 'AC_TRN' and args[4] == 'AC_WRAP':
             # This is the default, so we won't write the full definition for brevity
@@ -371,6 +371,40 @@ class StreamVariableConverter:
         tensor_var.__class__ = type(
             self.prefix + 'StreamVariable', (type(tensor_var), self.definition_cls), {'_wrapped': tensor_cls_fqn}
         )
+        return tensor_var
+
+
+# endregion
+
+# region ScalarStreamVariable
+
+
+class ScalarStreamVariableConverter:
+    """Convert a tensor variable into a stream that carries one value at a time.
+
+    Unlike ``StreamVariableConverter``, which packs the whole last dimension into each read, this keeps
+    the type of the variable, so each read returns a single value. A layer can then start on the first
+    value the layer before it produces, and each stream keeps the precision of the layer that writes it.
+    """
+
+    def __init__(self, type_converter, prefix, definition_cls):
+        self.type_converter = type_converter
+        self.prefix = prefix
+        self.definition_cls = definition_cls
+
+    def convert(self, tensor_var, depth=0):
+        if isinstance(tensor_var, self.definition_cls):  # Already converted
+            return tensor_var
+
+        tensor_var.pragma = ('stream', depth if depth > 0 else 2)
+        tensor_var.type = self.type_converter.convert(tensor_var.type)
+
+        tensor_cls_fqn = tensor_var.__class__.__module__ + '.' + tensor_var.__class__.__qualname__
+
+        tensor_var.__class__ = type(
+            self.prefix + 'ScalarStreamVariable', (type(tensor_var), self.definition_cls), {'_wrapped': tensor_cls_fqn}
+        )
+
         return tensor_var
 
 

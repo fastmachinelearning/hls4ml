@@ -3,8 +3,8 @@ High Granularity Quantization (HGQ2)
 ======================================
 
 .. note::
-   New projects are encouraged to use ``HGQ2`` instead of the original ``HGQ`` (doc page moved `here <./hgq1   .html>`_).
-   HGQ2 is a major improvement over HGQ with more supported layers, more quantizer options, better performance. As HGQ2 moves to Keras v3, it can be used natively with ``JAX``, ``PyTorch``, and ``TensorFlow`` backends.
+   New projects are encouraged to use ``HGQ2`` instead of the original ``HGQ`` (doc page moved `here <./hgq1.html>`_).
+   HGQ2 is a major improvement over HGQ with more supported layers, more quantizer options, and better performance. As HGQ2 moves to Keras v3, it can be used natively with ``JAX``, ``PyTorch``, and ``TensorFlow`` backends.
 
 .. image:: https://img.shields.io/badge/License-LGPLv3-blue.svg
    :target: https://www.gnu.org/licenses/lgpl-3.0.en.html
@@ -17,7 +17,7 @@ High Granularity Quantization (HGQ2)
 
 HGQ2 (High Granularity Quantization 2) is a quantization-aware training framework built on Keras v3, targeting real-time deep learning applications on edge devices like FPGAs. It provides a comprehensive set of tools for creating and training quantized neural networks with minimal effort.
 
-HGQ2 implements an gradient-based automatic bitwidth optimization and quantization-aware training algorithm. By laveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.
+HGQ2 implements a gradient-based automatic bitwidth optimization and quantization-aware training algorithm. By leveraging gradients, it allows for bitwidth optimization at arbitrary granularity, up to per-weight and per-activation level.
 
 .. rst-class:: light
 .. image:: _static/hgq-overview.svg
@@ -61,11 +61,11 @@ Key Features
 
    ... # Training, evaluation, and anything else you want to do with the model
 
-   model_hls = hls4ml.converters.convert_from_keras(model, ...)
+   model_hls = hls4ml.converters.convert_from_keras_model(model, ...)
    # Model-wise precision propagation is done automatically for HGQ models for bit-exactness
    # Do NOT pass precision config if you don't know what you are doing
 
    model_hls.compile()
 
 .. note::
-   Do not pass any precision configuration from ``hls4ml.converters.convert_from_keras`` in general. HGQ-defined models will invoke model-wise precision propagation automatically to ensure bit-exactness between the Keras model and the generated HLS code (See `here <./precision.html>`__ for more details).
+   Do not pass any precision configuration to ``hls4ml.converters.convert_from_keras_model`` in general. HGQ-defined models will invoke model-wise precision propagation automatically to ensure bit-exactness between the Keras model and the generated HLS code (See `here <./precision.html>`__ for more details).

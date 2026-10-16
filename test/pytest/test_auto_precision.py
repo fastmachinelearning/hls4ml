@@ -21,33 +21,60 @@ from hls4ml.model.optimizer.passes.infer_precision import _get_precision_from_co
 
 test_root_path = Path(__file__).parent
 
-in_height = 10
-in_width = 12
-in_feat = 4
+
+# XLS tests are slow due to big IR size, we reduce dimensions to make it faster.
+def in_height(backend):
+    if backend == 'XLS':
+        return 8
+    return 10
 
 
-@pytest.fixture(scope='module')
-def data_1d():
-    X = np.random.rand(100, in_feat)
+def in_width(backend):
+    if backend == 'XLS':
+        return 8
+    return 12
+
+
+def in_feat(backend):
+    if backend == 'XLS':
+        return 2
+    return 4
+
+
+def input_shape_1d(backend):
+    return (in_feat(backend),)
+
+
+def input_shape_2d(backend):
+    return in_width(backend), in_feat(backend)
+
+
+def input_shape_3d(backend):
+    return in_height(backend), in_width(backend), in_feat(backend)
+
+
+@pytest.fixture()
+def data_1d(backend):
+    X = np.random.rand(100, *input_shape_1d(backend))
     return X
 
 
-@pytest.fixture(scope='module')
-def data_2d():
-    X = np.random.rand(100, in_width, in_feat)
+@pytest.fixture()
+def data_2d(backend):
+    X = np.random.rand(100, *input_shape_2d(backend))
     return X
 
 
-@pytest.fixture(scope='module')
-def data_3d():
-    X = np.random.rand(100, in_height, in_width, in_feat)
+@pytest.fixture()
+def data_3d(backend):
+    X = np.random.rand(100, *input_shape_3d(backend))
     return X
 
 
-@pytest.fixture(scope='module')
-def keras_model_dense():
+@pytest.fixture()
+def keras_model_dense(backend):
     model = Sequential()
-    model.add(Dense(8, activation='relu', input_shape=(in_feat,), name='first_layer'))
+    model.add(Dense(8, activation='relu', input_shape=input_shape_1d(backend), name='first_layer'))
     model.add(BatchNormalization(name='first_bn'))
     model.add(Dense(6, activation='relu', name='middle_layer'))
     model.add(BatchNormalization(name='middle_bn'))
@@ -56,10 +83,10 @@ def keras_model_dense():
     return model
 
 
-@pytest.fixture(scope='module')
-def keras_model_conv1d():
+@pytest.fixture()
+def keras_model_conv1d(backend):
     model = Sequential()
-    model.add(Conv1D(8, kernel_size=3, activation='linear', name='first_layer', input_shape=(in_width, in_feat)))
+    model.add(Conv1D(8, kernel_size=3, activation='linear', name='first_layer', input_shape=input_shape_2d(backend)))
     model.add(AveragePooling1D(pool_size=2, name='first_pool'))
     model.add(ReLU(name='first_act'))
     model.add(Conv1D(4, kernel_size=2, activation='relu', name='middle_layer'))
@@ -70,12 +97,10 @@ def keras_model_conv1d():
     return model
 
 
-@pytest.fixture(scope='module')
-def keras_model_conv2d():
+@pytest.fixture()
+def keras_model_conv2d(backend):
     model = Sequential()
-    model.add(
-        Conv2D(8, kernel_size=(3, 3), activation='linear', name='first_layer', input_shape=(in_height, in_width, in_feat))
-    )
+    model.add(Conv2D(8, kernel_size=(3, 3), activation='linear', name='first_layer', input_shape=input_shape_3d(backend)))
     model.add(AveragePooling2D(pool_size=(2, 2), name='first_pool'))
     model.add(ReLU(name='first_act'))
     model.add(Conv2D(4, kernel_size=(3, 3), activation='relu', name='middle_layer'))
@@ -86,10 +111,12 @@ def keras_model_conv2d():
     return model
 
 
-@pytest.fixture(scope='module')
-def keras_model_sepconv1d():
+@pytest.fixture()
+def keras_model_sepconv1d(backend):
     model = Sequential()
-    model.add(SeparableConv1D(8, kernel_size=3, activation='linear', name='first_layer', input_shape=(in_width, in_feat)))
+    model.add(
+        SeparableConv1D(8, kernel_size=3, activation='linear', name='first_layer', input_shape=input_shape_2d(backend))
+    )
     model.add(AveragePooling1D(pool_size=2, name='first_pool'))
     model.add(ReLU(name='first_act'))
     model.add(Conv1D(4, kernel_size=2, activation='relu', name='middle_layer'))
@@ -100,13 +127,11 @@ def keras_model_sepconv1d():
     return model
 
 
-@pytest.fixture(scope='module')
-def keras_model_sepconv2d():
+@pytest.fixture()
+def keras_model_sepconv2d(backend):
     model = Sequential()
     model.add(
-        SeparableConv2D(
-            8, kernel_size=(3, 3), activation='linear', name='first_layer', input_shape=(in_height, in_width, in_feat)
-        )
+        SeparableConv2D(8, kernel_size=(3, 3), activation='linear', name='first_layer', input_shape=input_shape_3d(backend))
     )
     model.add(AveragePooling2D(pool_size=(2, 2), name='first_pool'))
     model.add(ReLU(name='first_act'))
@@ -119,11 +144,14 @@ def keras_model_sepconv2d():
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'XLS'])
 @pytest.mark.parametrize('model_type', ['conv1d', 'conv2d'])
 def test_auto_precision_conv(
     test_case_id, keras_model_conv1d, keras_model_conv2d, data_2d, data_3d, model_type, io_type, backend
 ):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     if model_type == 'conv1d':
         model = keras_model_conv1d
         data = data_2d
@@ -218,8 +246,11 @@ def test_auto_precision_sepconv(
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'XLS'])
 def test_auto_precision_dense(test_case_id, keras_model_dense, data_1d, io_type, backend):
+    if backend == 'XLS' and io_type != 'io_parallel':
+        pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
+
     model = keras_model_dense
     data = data_1d
 

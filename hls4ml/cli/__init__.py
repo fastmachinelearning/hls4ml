@@ -128,10 +128,10 @@ def _config(args, extra_args):
                 default_reuse_factor=args.reuse_factor,
             )
     elif args.model.endswith('.onnx'):
-        print('Creating configuration for ONNX mdoels is not supported yet.')
+        print('Creating configuration for ONNX models is not supported yet.')
         sys.exit(1)
     elif args.model.endswith('.pb'):
-        print('Creating configuration for Tensorflow mdoels is not supported yet.')
+        print('Creating configuration for Tensorflow models is not supported yet.')
         sys.exit(1)
 
     if args.output is not None:

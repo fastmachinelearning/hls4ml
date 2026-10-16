@@ -1,4 +1,5 @@
 .
+myst-parser
 setuptools_scm[toml]>=5
 sphinx>=3.2.1
 sphinx-tabs

@@ -7,6 +7,7 @@ sdist/
 *.egg-info/
 vivado_prj
 .vscode
+.idea
 my-hls-test
 *.tar.gz
 docs/_build
@@ -16,3 +17,9 @@ hls4mlprj_*
 *.ipynb
 *.ipynb_checkpoints/
 *.bak
+
+# Assistant-specific views generated from .agents/ by .agents/agent_adapters.py
+/.claude/
+/.cursor/
+/.github/instructions/
+/agent-docs.md

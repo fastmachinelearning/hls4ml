@@ -73,8 +73,8 @@ class DenseConfigTemplate(LayerConfigTemplate):
         return self.template.format(**params)
 
     def match(self, node):
-        if node.get_attr('strategy') == 'distributed_arithmetic':
-            return False  # DA does not use common dense template
+        if node.get_attr('strategy') in ('distributed_arithmetic', 'fused'):
+            return False  # these have kernels and templates of their own
         return super().match(node)
 
 
@@ -91,8 +91,8 @@ class DenseFunctionTemplate(FunctionCallTemplate):
         return self.template.format(**params)
 
     def match(self, node):
-        if node.get_attr('strategy') == 'distributed_arithmetic':
-            return False  # DA does not use common dense template
+        if node.get_attr('strategy') in ('distributed_arithmetic', 'fused'):
+            return False  # these have kernels and templates of their own
         return super().match(node)
 
 
@@ -347,7 +347,7 @@ class SoftmaxFunctionTemplate(FunctionCallTemplate):
         use_multidim = node.get_attr('n_inner', 1) > 1 or node.get_attr('n_outer', 1) > 1
         use_multidim = use_multidim and node.model.config.get_config_value('IOType') == 'io_parallel'
         params['activation'] = 'softmax' if not use_multidim else 'softmax_multidim'
-        params['config'] = f'softmax_config{node.index}'
+        params['config'] = '{}_config{}'.format(node.get_attr('activation'), node.index)
 
         return self.template.format(**params)
 

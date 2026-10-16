@@ -13,15 +13,15 @@ example of a layer optimizer is :py:class:`~hls4ml.model.optimizer.passes.fuse_b
 :py:class:`~hls4ml.model.layers.Dense`, :py:class:`~hls4ml.model.layers.Conv1D`, or :py:class:`~hls4ml.model.layers.Conv2D` layer, while an example of
 an optimizer pass that runs on the full model is :py:class:`~hls4ml.model.optimizer.passes.stamp.MakeStamp`, which creates a unique number (stamp).
 
-Subclasses of :py:class:`~hls4ml.model.optimizer.optimizer.OptimizerPass` must provide a criteria in ``match`` function that, if satisfied, will
-perform the transformation from ``transform`` function. The boolean return value of ``transform`` indicates if the optimizer pass made changes to the
+Subclasses of :py:class:`~hls4ml.model.optimizer.optimizer.OptimizerPass` must provide a criterion in the ``match`` function that, if satisfied, will
+perform the transformation from the ``transform`` function. The boolean return value of ``transform`` indicates if the optimizer pass made changes to the
 model graph that may require running the optimizers again. In that case, optimizers in a flow are run again.
 
 Optimizers can be general, independent of the backend, in which case they are located in :py:mod:`hls4ml.model.optimizer.passes`, or they may be backend-specific,
 in which case they are located in a folder dependent on the backend, e.g., :py:mod:`hls4ml.backends.vivado.passes` or
 :py:mod:`hls4ml.backends.quartus.passes`. A common set of optimizers that are used by FPGA backends are located in :py:mod:`hls4ml.backends.fpga.passes`.
 
-Certain optimizers are used frequently enough that it makes sense to define special classes, which inherit from :py:class:`~hls4ml.model.optimizer.optimizer.OptimizerPass`
+Certain optimizers are used frequently enough that it makes sense to define special classes, which inherit from :py:class:`~hls4ml.model.optimizer.optimizer.OptimizerPass`:
 
  * :py:class:`~hls4ml.model.optimizer.optimizer.GlobalOptimizerPass`: An optimizer pass that matches each node. This is useful, for example,
    to transform the types for a particular backend.
@@ -34,7 +34,7 @@ Certain optimizers are used frequently enough that it makes sense to define spec
 Note that :py:class:`~hls4ml.model.optimizer.optimizer.LayerOptimizerPass` and :py:class:`~hls4ml.model.optimizer.optimizer.ModelOptimizerPass`
 also exist as decorators that wrap a function.
 
-New optimizers can be registered with the :py:func:`~hls4ml.model.optimizer.optimizer.register_pass`. Optimizers should be assigned to a flow (see below).
+New optimizers can be registered with the :py:func:`~hls4ml.model.optimizer.optimizer.register_pass` function. Optimizers should be assigned to a flow (see below).
 
 Flows
 -----
@@ -48,9 +48,9 @@ There are common model-level flows that can run regardless of the backend, and t
 The `convert and optimize <https://github.com/fastmachinelearning/hls4ml/blob/7c0a065935904f50bd7e4c547f85354b36276092/hls4ml/model/optimizer/__init__.py#L14-L20>`_
 flows do not depend on a backend.
 
-Each backend provides provides a default flow that defines the default target for that backend. For example, the Vivado backend defaults to an
+Each backend provides a default flow that defines the default target for that backend. For example, the Vivado backend defaults to an
 `IP flow <https://github.com/fastmachinelearning/hls4ml/blob/7c0a065935904f50bd7e4c547f85354b36276092/hls4ml/backends/vivado/vivado_backend.py#L148-L160>`_
-that requires additional flows and produces an IP. It runs no optimizers itself, but it requires that many other flows (sub-flows) to have run.
+that requires additional flows and produces an IP. It runs no optimizers itself, but it requires many other flows (sub-flows) to have run.
 The convert and optimize flows defined above are some of these required sub-flows.
 
-Another example is FIFO buffer depth optimization explained in the :ref:`FIFO Buffer Depth Optimization` section.
+Another example is the FIFO buffer depth optimization explained in the :ref:`FIFO Buffer Depth Optimization` section.
