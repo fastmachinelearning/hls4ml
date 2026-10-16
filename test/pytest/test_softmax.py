@@ -265,3 +265,36 @@ def test_softmax_stable_model_precision(test_case_id, backend, default_precision
     err = np.abs(y_hls4ml - y_keras)
     assert err.mean() < 0.005
     assert err.max() < 0.05
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('axis', [1, 2, -1])
+def test_softmax_axis(test_case_id, axis, io_type, backend):
+    """Softmax along the last axis must work, given as -1 or as a positive index; any other axis must be rejected."""
+    if backend == 'Altera' and io_type == 'io_parallel':
+        pytest.skip('Altera io_parallel does not support multidimensional softmax')
+    np.random.seed(0)
+    X = np.random.rand(200, 4, 6) * 8 - 4
+    model = tf.keras.models.Sequential([tf.keras.layers.Softmax(axis=axis, input_shape=(4, 6), name='softmax')])
+    model.compile()
+
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    cfg['LayerName']['softmax']['Implementation'] = 'stable'
+    odir = str(test_root_path / test_case_id)
+
+    if axis == 1:
+        with pytest.raises(ValueError, match='Softmax layer softmax'):
+            hls4ml.converters.convert_from_keras_model(
+                model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
+            )
+        return
+
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
+    assert np.abs(y_hls4ml - y_keras).max() < 0.05

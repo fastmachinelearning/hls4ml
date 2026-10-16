@@ -30,6 +30,7 @@ from hls4ml.model.layers import (
     SeparableConv1D,
     SeparableConv2D,
     SimpleRNN,
+    Softmax,
     TimeDistributed,
 )
 from hls4ml.model.optimizer import get_backend_passes, layer_optimizer
@@ -633,6 +634,10 @@ class VivadoBackend(FPGABackend):
     def init_embed(self, layer):
         if layer.attributes['n_in'] is None:
             raise Exception('Input length of Embedding layer must be specified.')
+
+    @layer_optimizer(Softmax)
+    def init_softmax(self, layer):
+        self.validate_softmax_axis(layer)
 
     def _validate_recurrent_activations(self, layer, attributes):
         """Raise for an activation that recurrent layers do not implement."""

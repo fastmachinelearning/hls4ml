@@ -273,6 +273,7 @@ class AlteraBackend(FPGABackend):
             assert len(layer.get_input_variable().shape) == 1, (
                 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
             )
+        self.validate_softmax_axis(layer)
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):
