@@ -1,6 +1,5 @@
 import math
 from collections.abc import Iterable
-from copy import copy
 
 import numpy as np
 
@@ -652,8 +651,16 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                     inv_int + accum.width - accum.integer, inv_int, signed=False
                 )
             else:
-                # if not set, just choose the accumulator type
-                node.types['inv_inp_t'].precision = copy(accum)
+                # The inverse table is indexed by the top bits of inv_inp_t, so integer bits beyond what the table
+                # covers at a step of 0.25 cost resolution; saturate the rare larger sums instead.
+                inv_table_size = node.get_attr('inv_table_size', node.get_attr('table_size'))
+                inv_int = min(accum.integer, math.ceil(math.log2(inv_table_size)) - 2)
+                node.types['inv_inp_t'].precision = FixedPrecisionType(
+                    inv_int + accum.width - accum.integer,
+                    inv_int,
+                    signed=False,
+                    saturation_mode=SaturationMode.SAT if inv_int < accum.integer else None,
+                )
             inferred_types.append('inv_inp_t')
 
         if 'inp_norm_t' in types_to_infer:

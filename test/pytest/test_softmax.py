@@ -314,3 +314,24 @@ def test_softmax_altera_config_after_stable(test_case_id):
 
     assert 'inp_norm_t' in configs['stable']
     assert 'inp_norm_t' not in configs['latency']
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('n_in,max_mean_err', [(2, 0.05), (10, 0.005)])
+def test_softmax_latency_inferred_inv_inp(test_case_id, backend, n_in, max_mean_err):
+    """The inferred latency inv_inp_t keeps the inverse table resolution for small logits."""
+    X = np.random.default_rng(0).normal(0, 1, (2000, n_in))
+    model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(n_in,), name='softmax')])
+    model.compile()
+
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend, default_precision='fixed<16,6>')
+    cfg['LayerName']['softmax']['Implementation'] = 'latency'
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=cfg, io_type='io_parallel', output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
+    assert np.abs(y_hls4ml - y_keras).mean() < max_mean_err
