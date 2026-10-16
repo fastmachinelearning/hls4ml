@@ -264,7 +264,7 @@ class ActivationConfigTemplate(LayerConfigTemplate):
             params['smax_accum_t'] = params['accum_t'].name
 
             if params['implementation'] == 'stable':
-                self.template = softmax_config_template + softmax_config_table_template_stable
+                return (softmax_config_template + softmax_config_table_template_stable).format(**params)
 
         return self.template.format(**params)
 

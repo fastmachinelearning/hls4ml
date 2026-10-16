@@ -298,3 +298,19 @@ def test_softmax_axis(test_case_id, axis, io_type, backend):
     y_keras = model.predict(X)
     y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
     assert np.abs(y_hls4ml - y_keras).max() < 0.05
+
+
+def test_softmax_altera_config_after_stable(test_case_id):
+    """A stable softmax must not change the config template used for later softmax layers."""
+    configs = {}
+    for implementation in ('stable', 'latency'):
+        model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
+        cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Altera')
+        cfg['LayerName']['softmax']['Implementation'] = implementation
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=cfg, output_dir=str(test_root_path / f'{test_case_id}_{implementation}'), backend='Altera'
+        )
+        configs[implementation] = hls_model.graph['softmax'].get_attr('config_cpp')
+
+    assert 'inp_norm_t' in configs['stable']
+    assert 'inp_norm_t' not in configs['latency']
