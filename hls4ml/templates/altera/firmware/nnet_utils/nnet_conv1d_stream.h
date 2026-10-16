@@ -172,6 +172,26 @@ PaddingRightWidth:
     }
 }
 
+template <class data_pipe, class res_pipe, typename CONFIG_T>
+void pointwise_conv_1d_cl_stream(typename CONFIG_T::weight_t weights, typename CONFIG_T::bias_t biases) {
+    static_assert(CONFIG_T::filt_width == 1 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0,
+                  "Pointwise convolution requires a 1x1 filter without padding");
+
+    using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
+    using res_T = typename ExtractPipeType<res_pipe>::value_type;
+
+ReadInputWidth:
+    for (int col = 0; col < CONFIG_T::in_width; col++) {
+        [[intel::fpga_register]] data_arr_T in_elem = data_pipe::read();
+        if (col % CONFIG_T::stride_width != 0)
+            continue;
+
+        [[intel::fpga_register]] res_T res_out;
+        dense_resource<data_arr_T, res_T, typename CONFIG_T::mult_config>(in_elem, res_out, weights, biases);
+        res_pipe::write(res_out);
+    }
+}
+
 } // namespace nnet
 
 #endif
