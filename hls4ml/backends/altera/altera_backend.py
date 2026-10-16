@@ -26,7 +26,6 @@ from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedTy
 from hls4ml.report import parse_altera_report
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.einsum_utils import parse_einsum
-from hls4ml.utils.string_utils import convert_to_pascal_case
 
 # from hls4ml.report import parse_altera_report
 
@@ -277,16 +276,6 @@ class AlteraBackend(FPGABackend):
     def init_embed(self, layer):
         if layer.attributes['n_in'] is None:
             raise Exception('Input length of Embedding layer must be specified.')
-
-    def _warn_removed_reuse_factors(self, layer, attributes):
-        """Warn about reuse factor settings that are no longer used but are still in the config."""
-
-        for attribute in attributes:
-            if attribute in layer.attributes:
-                warn(
-                    f'{convert_to_pascal_case(attribute)} of layer "{layer.name}" ({layer.class_name}) is no longer used. '
-                    'The ReuseFactor of the layer applies to all of its multiplications.'
-                )
 
     @layer_optimizer(GRU)
     def init_gru(self, layer):
