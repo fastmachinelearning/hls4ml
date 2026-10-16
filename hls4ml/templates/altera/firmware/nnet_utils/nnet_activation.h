@@ -254,45 +254,6 @@ template <class data_T, class res_T, typename CONFIG_T> inline void softmax(cons
 }
 
 // *************************************************
-//       Multidimensional Softmax
-// *************************************************
-
-// Helper to remap the config for the core softmax function
-template <class CONFIG_T> struct softmax_multidim_slice_config : CONFIG_T {
-    static constexpr unsigned n_in = CONFIG_T::n_slice;
-};
-
-template <class data_T, class res_T, typename CONFIG_T> inline void softmax_multidim(const data_T &data, res_T &res) {
-    using buffer_data_t = std::array<typename data_T::value_type, CONFIG_T::n_slice>;
-    using buffer_res_t = std::array<typename res_T::value_type, CONFIG_T::n_slice>;
-    using slice_config = softmax_multidim_slice_config<CONFIG_T>;
-
-    #pragma unroll
-    for (unsigned i = 0; i < CONFIG_T::n_outer; i++) {
-        #pragma unroll
-        for (unsigned k = 0; k < CONFIG_T::n_inner; k++) {
-
-            [[intel::fpga_register]] buffer_data_t buffer_in;
-            [[intel::fpga_register]] buffer_res_t buffer_out;
-
-            // Gather Phase
-            #pragma unroll
-            for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
-                unsigned idx = (i * CONFIG_T::n_slice * CONFIG_T::n_inner) + (j * CONFIG_T::n_inner) + k;
-                buffer_in[j] = data[idx];
-            }
-
-            nnet::softmax<buffer_data_t, buffer_res_t, slice_config>(buffer_in, buffer_out);
-
-            #pragma unroll
-            for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
-                unsigned idx = (i * CONFIG_T::n_slice * CONFIG_T::n_inner) + (j * CONFIG_T::n_inner) + k;
-                res[idx] = buffer_out[j];
-            }
-        }
-    }
-}
-// *************************************************
 //       TanH Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T> void dense_tanh(const data_T &data, res_T &res) {

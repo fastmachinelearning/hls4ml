@@ -121,11 +121,7 @@ class QSoftmaxHandler(QLayerHandler):
         else:
             raise ValueError(f'Too many inputs for softmax layer {layer.name}: expected 1 or 2, got {len(in_tensors)}')
 
-        # For multidim implementation assume first input is the tensor we are operating on
         activation = 'softmax'
-        # if len(in_tensors[0].shape[1:]) > 1:
-        #    if (1 not in in_tensors[0].shape[1:]) or (len(in_tensors[0].shape[1:]) > 2):
-        #        activation = 'softmax_multidim'
 
         config = {}
         config.update(self.default_config)

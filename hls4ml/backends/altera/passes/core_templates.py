@@ -194,12 +194,6 @@ hard_activ_config_template = """struct {type}_config{index} : nnet::activ_config
 
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static constexpr unsigned n_in = {n_in};
-
-    // For multi-dim softmax
-    static const unsigned n_slice = {n_slice};
-    static const unsigned n_outer = {n_outer};
-    static const unsigned n_inner = {n_inner};
-
     static constexpr unsigned table_size = {table_size};
 
     static constexpr unsigned exp_table_size = {exp_table_size};
@@ -250,7 +244,7 @@ class ActivationConfigTemplate(LayerConfigTemplate):
         params = self._default_config_params(node)
         params['type'] = node.get_attr('activation').lower()
 
-        if (params['type'] == 'softmax') or (params['type'] == 'softmax_multidim'):
+        if params['type'] == 'softmax':
             # If no table size is specified, assume default size of 1024
             params.setdefault('exp_table_size', params['table_size'])
             params.setdefault('inv_table_size', params['table_size'])
@@ -264,9 +258,6 @@ class ActivationConfigTemplate(LayerConfigTemplate):
 
             params.setdefault('exp_scale', 1.0)
             params.setdefault('parallelization_factor', -1)
-
-            n_slice = params['n_in'] // params['n_inner'] // params['n_outer']
-            params['n_slice'] = n_slice
 
             params['exp_table_name'] = node.name + '_exp_table'
             params['inv_table_name'] = node.name + '_inv_table'
