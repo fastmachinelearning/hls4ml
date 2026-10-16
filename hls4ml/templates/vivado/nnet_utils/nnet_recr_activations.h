@@ -19,6 +19,16 @@ template <class data_T, class res_T, typename CONFIG_T> class Activation {
     static void activation(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {} // Nothing to do here
 };
 
+template <class data_T, class res_T, typename CONFIG_T> class linear : public Activation<data_T, res_T, CONFIG_T> {
+  public:
+    // *************************************************
+    //       Linear Activation
+    // *************************************************
+    static void activation(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
+        nnet::linear<data_T, res_T, CONFIG_T>(data, res);
+    }
+};
+
 template <class data_T, class res_T, typename CONFIG_T> class relu : public Activation<data_T, res_T, CONFIG_T> {
   public:
     // *************************************************

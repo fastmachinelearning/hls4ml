@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from hls4ml.model.layers import GRU, LSTM, Conv1D, Conv2D, Dense
+from hls4ml.model.layers import GRU, LSTM, Conv1D, Conv2D, Dense, SimpleRNN
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import Source
 
@@ -13,7 +13,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
     def match(self, node):
         # Only apply to layers use that use Dense Matrix Multiplication
         # TODO - Extend (& test) for Separable Conv / Depthwise Conv / Recurrent layers
-        layers_with_dense = (Dense, Conv1D, Conv2D, LSTM, GRU)
+        layers_with_dense = (Dense, Conv1D, Conv2D, SimpleRNN, LSTM, GRU)
 
         # Unrolled Dense mimics the hardware implementation of Resource strategy -> apply after Resource optimizer
         weights_transposed = node.get_attr('_weights_transposed', False)
@@ -27,7 +27,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
         return isinstance(node, layers_with_dense) and weights_transposed and rf_gt_one and is_unrolled
 
     def transform(self, model, node):
-        if isinstance(node, (LSTM, GRU)):
+        if isinstance(node, (SimpleRNN, LSTM, GRU)):
             n_in, n_out, n_in_recr, n_out_recr = node.model.config.backend.get_layer_mult_size(node)
 
             reuse_factor = node.get_attr('reuse_factor')
