@@ -1,6 +1,6 @@
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import GRU, LSTM, Bidirectional, Layer, TimeDistributed
+from hls4ml.model.layers import GRU, LSTM, Bidirectional, Layer, SimpleRNN, TimeDistributed
 
 # recurrent multiplication template
 
@@ -8,7 +8,7 @@ recr_mult_config_template_1 = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned strategy = nnet::{strategy};
-    static const unsigned reuse_factor = {reuse};
+    static const unsigned reuse_factor = {reuse_factor};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
     static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
@@ -26,7 +26,7 @@ recr_mult_config_template_2 = """struct config{index} : nnet::dense_config {{
     static const unsigned n_in = {n_in};
     static const unsigned n_out = {n_out};
     static const unsigned strategy = nnet::{strategy};
-    static const unsigned reuse_factor = {reuse};
+    static const unsigned reuse_factor = {reuse_factor};
     static const unsigned n_zeros = {nzeros};
     static const unsigned n_nonzeros = {nonzeros};
     static const unsigned multiplier_limit = DIV_ROUNDUP(n_in * n_out, reuse_factor) - n_zeros / reuse_factor;
@@ -87,6 +87,29 @@ recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
     static const bool reset_after = {reset_after};
 }};\n"""
 
+# SimpleRNN template
+
+simple_rnn_config_template = """struct config{index} : nnet::simple_rnn_config {{
+    typedef {accum_t.name} accum_t;
+    typedef {weight_t.name} weight_t;
+    typedef {recurrent_weight_t.name} recurrent_weight_t;
+    typedef {bias_t.name} bias_t;
+    typedef {recurrent_bias_t.name} recurrent_bias_t;
+    typedef {config_mult_t1} mult_config1;
+    typedef {config_mult_t2} mult_config2;
+    typedef {act_t} ACT_CONFIG_T;
+    template<class x_T, class y_T, class config_T>
+    using activation = nnet::activation::{activation}<x_T, y_T, config_T>;
+    static const unsigned n_in  = {n_in};
+    static const unsigned n_out = {n_out};
+    static const unsigned n_state = {n_state};
+    static const unsigned n_sequence = {n_sequence};
+    static const unsigned n_sequence_out = {n_sequence_out};
+    static const unsigned reuse_factor = {reuse};
+    static const bool store_weights_in_bram = false;
+    static const bool use_static = {static};
+}};\n"""
+
 # Bidirectional templates
 
 single_config_template = """struct config{index} : nnet::single_layer_config {{
@@ -139,8 +162,9 @@ recr_include_list = ['nnet_utils/nnet_recurrent.h']
 
 class RecurrentConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__((LSTM, GRU))
+        super().__init__((SimpleRNN, LSTM, GRU))
         self.template = recr_config_template
+        self.simple_rnn_template = simple_rnn_config_template
         self.act_template = activ_config_template
         self.recr_act_template = recr_activ_config_template
         self.mult1_template = recr_mult_config_template_1
@@ -174,10 +198,15 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
 
         if node.class_name == 'LSTM':
             n_recr_mult = 4
-        else:  # GRU
+        elif node.class_name == 'GRU':
             n_recr_mult = 3
+        else:  # SimpleRNN
+            n_recr_mult = 1
 
-        recr_config = self.template.format(**params)
+        if node.class_name == 'SimpleRNN':
+            recr_config = self.simple_rnn_template.format(**params)
+        else:
+            recr_config = self.template.format(**params)
 
         act_params = self._default_config_params(node)
         recr_act_params = self._default_config_params(node)
@@ -192,7 +221,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
             recr_act_params['n_in'] = node.get_output_variable().shape[0] * (n_recr_mult - 1)
 
         act_config = self.act_template.format(**act_params)
-        recr_act_config = self.recr_act_template.format(**recr_act_params)
+        recr_act_config = self.recr_act_template.format(**recr_act_params) if node.class_name != 'SimpleRNN' else ''
 
         mult_params1 = self._default_config_params(node)
         mult_params2 = self._default_config_params(node)
@@ -205,7 +234,7 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         mult_params1['product_type'] = get_backend('vivado').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
-        mult_params1['reuse'] = params['reuse']
+        mult_params1['reuse_factor'] = node.attributes['reuse_factor']
         mult_params1['index'] = str(node.index) + '_1'
         mult_params1['nzeros'] = node.get_weights('weight').nzeros
         mult_params1['nonzeros'] = node.get_weights('weight').nonzeros
@@ -230,9 +259,9 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
             mult_params2['n_in'] = node.get_output_variable().shape[0]
             mult_params2['n_out'] = node.get_output_variable().shape[0] * n_recr_mult
         mult_params2['product_type'] = get_backend('vivado').product_type(
-            node.get_input_variable().type.precision, node.get_weights('recurrent_weight').type.precision
+            node.get_output_variable().type.precision, node.get_weights('recurrent_weight').type.precision
         )
-        mult_params2['reuse'] = node.attributes['recurrent_reuse_factor']
+        mult_params2['reuse_factor'] = node.attributes['recurrent_reuse_factor']
         mult_params2['index'] = str(node.index) + '_2'
         mult_params2['nzeros'] = node.get_weights('recurrent_weight').nzeros
         mult_params2['nonzeros'] = node.get_weights('recurrent_weight').nonzeros
@@ -347,7 +376,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             mult_params1['product_type'] = get_backend('vivado').product_type(
                 node.get_input_variable().type.precision, node.get_weights(f'{d}_weight').type.precision
             )
-            mult_params1['reuse'] = params['reuse']
+            mult_params1['reuse_factor'] = node.attributes[f'{d}_reuse_factor']
             mult_params1['index'] = str(node.index) + f'_1_{d[0]}'
             mult_params1['nzeros'] = node.get_weights(f'{d}_weight').nzeros
             mult_params1['nonzeros'] = node.get_weights(f'{d}_weight').nonzeros
@@ -362,7 +391,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             if node.get_attr('strategy').lower() == 'latency':
                 mult_params1['dense_function'] = 'nnet::DenseLatency'
             elif node.get_attr('strategy').lower() == 'resource':
-                if int(mult_params1[f'{d}_reuse_factor']) <= int(mult_params1['n_in']):
+                if int(mult_params1['reuse_factor']) <= int(mult_params1['n_in']):
                     mult_params1['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
                 else:
                     mult_params1['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
@@ -373,9 +402,9 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             mult_params2['n_in'] = node.get_attr(f'{d}_n_states')
             mult_params2['n_out'] = node.get_attr(f'{d}_n_states') * n_recr_mult
             mult_params2['product_type'] = get_backend('vivado').product_type(
-                node.get_input_variable().type.precision, node.get_weights(f'{d}_recurrent_weight').type.precision
+                node.get_output_variable().type.precision, node.get_weights(f'{d}_recurrent_weight').type.precision
             )
-            mult_params2['reuse'] = node.attributes[f'{d}_recurrent_reuse_factor']
+            mult_params2['reuse_factor'] = node.attributes[f'{d}_recurrent_reuse_factor']
             mult_params2['index'] = str(node.index) + f'_2_{d[0]}'
             mult_params2['nzeros'] = node.get_weights(f'{d}_recurrent_weight').nzeros
             mult_params2['nonzeros'] = node.get_weights(f'{d}_recurrent_weight').nonzeros
@@ -383,7 +412,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             if node.get_attr('strategy').lower() == 'latency':
                 mult_params2['dense_function'] = 'nnet::DenseLatency'
             elif node.get_attr('strategy').lower() == 'resource':
-                if int(mult_params2[f'{d}_reuse_factor']) <= int(mult_params2['n_in']):
+                if int(mult_params2['reuse_factor']) <= int(mult_params2['n_in']):
                     mult_params2['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
                 else:
                     mult_params2['dense_function'] = 'nnet::DenseResource_rf_gt_nin_rem0'
@@ -403,7 +432,7 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
 
 class RecurrentFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((LSTM, GRU), include_header=recr_include_list)
+        super().__init__((SimpleRNN, LSTM, GRU), include_header=recr_include_list)
 
     def format(self, node):
         params = self._default_function_params(node)
@@ -420,12 +449,12 @@ class RecurrentFunctionTemplate(FunctionCallTemplate):
         params['br'] = node.get_weights('recurrent_bias').name
         params['activation'] = node.get_attr('activation')
         params['recurrent_activation'] = node.get_attr('recurrent_activation')
-        params['recr_type'] = node.class_name.lower()
+        params['recr_type'] = 'simple_rnn' if node.class_name == 'SimpleRNN' else node.class_name.lower()
 
         if params['pass_initial_states'] == 'true':
             if node.class_name == 'LSTM':
                 template = recr_function_template_initial_states_lstm
-            else:
+            else:  # GRU and SimpleRNN have one state
                 template = recr_function_template_initial_states_gru
         else:
             template = recr_function_template

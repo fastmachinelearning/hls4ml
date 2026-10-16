@@ -1,10 +1,21 @@
 import os
+import re
 import stat
 from pathlib import Path
 from shutil import copytree
 
 from hls4ml.backends.vitis_unified.vitis_unified_config import VitisUnifiedConfig
 from hls4ml.writer.vitis_writer import VitisWriter
+
+PYNQ_HANDOFF_BLOCK = """[ -f ../../export/system.bit ] && rm -f ../../export/system.bit
+[ -f ../../export/system.hwh ] && rm -f ../../export/system.hwh
+
+xclbinutil --dump-section BITSTREAM:RAW:../../export/system.bit --input {PROJECT_NAME}.xclbin
+# the linked design is always named vitis_design; skip the sub-block and platform copies of the handoff
+HWH=$(find _x/link/vivado/vpl/prj -name vitis_design.hwh -not -path "*/ip/*")
+[ "$(printf '%s\\n' "$HWH" | grep -c .)" -eq 1 ] || { echo "ERROR: expected exactly one vitis_design.hwh under \
+_x/link/vivado/vpl/prj, found:"; echo "$HWH"; exit 1; }
+cp "$HWH" ../../export/system.hwh"""
 
 
 class VitisUnifiedWriter(VitisWriter):
@@ -270,10 +281,22 @@ fi
         else:
             platform_path_for_vpp = self.vitis_unified_config.get_platform_path()
             platform_generator_block = ''
-            if '${XILINX_VITIS}' in platform_path_for_vpp:
-                platform_generator_block = (
-                    ': "${XILINX_VITIS:?XILINX_VITIS is not set. Source the Vitis settings64.sh first.}"\n'
+            rooted_at = re.search(r'\$\{(\w+)\}', platform_path_for_vpp)
+            if rooted_at:
+                var = rooted_at.group(1)
+                hint = (
+                    'Source the Vitis settings64.sh first.'
+                    if var == 'XILINX_VITIS'
+                    else 'Set it to the directory holding the card platforms.'
                 )
+                platform_generator_block = f': "${{{var}:?{var} is not set. {hint}}}"\n'
+
+        # PYNQ loads the raw bitstream and the hardware handoff, XRT loads the .xclbin itself
+        project_name = self._get_project_name(model)
+        if self.vitis_unified_config.get_driver() == 'python':
+            export_block = PYNQ_HANDOFF_BLOCK.replace('{PROJECT_NAME}', project_name)
+        else:
+            export_block = f'cp {project_name}.xclbin ../../export/'
 
         output_path = f'{self.get_vitis_linker_dir(model)}/link_system.sh'
         self._fill_template(
@@ -281,6 +304,7 @@ fi
             output_path,
             replacements={
                 '{XSA_GENERATOR_BLOCK}': platform_generator_block,
+                '{EXPORT_BLOCK}': export_block,
                 '{PLATFORM_PATH}': platform_path_for_vpp,
                 '{KERNEL_XO}': self._get_xo_file_path(model),
                 '{PROJECT_NAME}': self._get_project_name(model),
@@ -291,26 +315,58 @@ fi
 
     def _write_linker_config(self, model):
         def connectivity(indent):
-            if not self._is_axi_stream():
+            if self._is_axi_stream():
+                top_mod_inst_name = self._get_wrap_ip_name(model, False)
+                return (
+                    '\n[connectivity]\n'
+                    f'nk={self._get_kernel_declaration(model)}\n'
+                    f'stream_connect=DMA_MM2S:{top_mod_inst_name}.axi_input_stream\n'
+                    f'stream_connect={top_mod_inst_name}.axi_output_stream:DMA_S2MM\n'
+                )
+            memory = self.vitis_unified_config.get_memory()
+            if not memory:
                 return ''
-            top_mod_inst_name = self._get_wrap_ip_name(model, False)
-            return (
-                '\n[connectivity]\n'
-                f'nk={self._get_kernel_declaration(model)}\n'
-                f'stream_connect=DMA_MM2S:{top_mod_inst_name}.axi_input_stream\n'
-                f'stream_connect={top_mod_inst_name}.axi_output_stream:DMA_S2MM\n'
+            return f'\n[connectivity]\nnk={self._get_kernel_declaration(model)}\n' + self._get_memory_assignment(
+                model, memory
             )
+
+        def clock(indent):
+            # a card's kernel clock is set by the platform and scaled by Vitis, so [clock] would not take effect
+            if self.vitis_unified_config.get_memory():
+                return ''
+            kernel = self._get_top_wrap_func_name(model, self._is_axi_master())
+            return f'[clock]\nfreqHz={round(1_000_000_000 / self._get_clock_period_ns(model))}:{kernel}_1.ap_clk\n'
 
         self._fill_template(
             'vitis_workspace/system_link/link_system.cfg',
             f'{self.get_vitis_linker_dir(model)}/link_system.cfg',
-            replacements={
-                '{CLK}': str(round(1_000_000_000 / self._get_clock_period_ns(model))),
-                '{KERNEL_NAME}': self._get_top_wrap_func_name(model, self._is_axi_master()),
-                '{GUI_STATUS}': 'true',
+            replacements={'{GUI_STATUS}': 'true'},
+            blocks={
+                '# hls-fpga-machine-learning insert clock': clock,
+                '# hls-fpga-machine-learning insert custom connection': connectivity,
             },
-            blocks={'# hls-fpga-machine-learning insert custom connection': connectivity},
         )
+
+    def _get_memory_assignment(self, model, memory):
+        """One contiguous slice of the card's memory banks per kernel pointer argument.
+
+        The host must allocate each buffer in the same banks, which the generated XRT driver does
+        through the kernel argument index.
+        """
+        instance = self._get_wrap_ip_name(model, True)
+        ports = [self._get_io_port_name(var, True, idx) for idx, var in enumerate(model.get_input_variables())]
+        ports += [self._get_io_port_name(var, False, idx) for idx, var in enumerate(model.get_output_variables())]
+        kind, banks = memory['type'], memory['banks']
+        per_port = banks // len(ports)
+        lines = ''
+        for idx, port in enumerate(ports):
+            first = idx * per_port
+            span = f'{kind}[{first}]' if per_port == 1 else f'{kind}[{first}:{first + per_port - 1}]'
+            lines += f'sp={instance}.{port}:{span}\n'
+        kernel_slr = self.vitis_unified_config.get_kernel_slr()
+        if kernel_slr:
+            lines += f'slr={instance}:{kernel_slr}\n'
+        return lines
 
     # ===== Bridge generation =====
     def _gen_bridge_body(self, model, dtype, indent):
@@ -580,6 +636,11 @@ fi
                 f"{indent}'{self._get_io_port_name(var, is_input, idx)}',\n" for idx, var in enumerate(variables)
             )
 
+        def port_sizes(variables):
+            return lambda indent: ''.join(f'{indent}{var.size()},\n' for var in variables)
+
+        numpy_type = {'float': 'float32', 'double': 'float64'}
+
         self._fill_template(
             self.vitis_unified_config.get_driver_template_path(),
             f'{model.config.get_output_dir()}/export/{self.vitis_unified_config.get_driver_file()}',
@@ -587,10 +648,14 @@ fi
                 '<TOP_WRAPPER_NAME>': self._get_wrap_ip_name(model, is_axi_master),
                 '<TOP_NAME>': self._get_top_wrap_func_name(model, is_axi_master),
                 '<IP_VERSION>': self._get_ip_vlnv_version(model),
+                '<INPUT_DTYPE>': numpy_type.get(self.vitis_unified_config.get_input_type(), 'float32'),
+                '<OUTPUT_DTYPE>': numpy_type.get(self.vitis_unified_config.get_output_type(), 'float32'),
             },
             blocks={
                 '# hls-driver-input-names': port_names(inputs, True),
                 '# hls-driver-output-names': port_names(outputs, False),
+                '# hls-driver-input-sizes': port_sizes(inputs),
+                '# hls-driver-output-sizes': port_sizes(outputs),
             },
         )
 

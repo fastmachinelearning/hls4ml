@@ -10,6 +10,13 @@ backend can be easily incorporated into a Vitis kernel.
 Users should generally use the **Vitis** backend for new designs that target AMD/Xilinx FPGAs; new ``hls4ml`` developments will not necessarily be backported to
 the **Vivado** backend.
 
+Known issues
+============
+
+* With ``Vitis HLS`` 2023.2, recurrent layers (``SimpleRNN``, ``LSTM``, ``GRU``) using ``io_stream`` and the ``Latency`` strategy may not meet the target
+  clock at the default clock uncertainty. ``Vitis HLS`` 2024.1 is not affected. With 2023.2, raising the clock uncertainty to 35%
+  (``clock_uncertainty='35%'``) was enough for the models tested, at the cost of about one extra clock cycle per time step.
+
 Fused strategy
 ==============
 
