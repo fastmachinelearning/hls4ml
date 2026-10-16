@@ -41,7 +41,7 @@ template <class data_T, class res_T, typename CONFIG_T> void relu(data_T data[CO
 
     data_T datareg;
     #pragma HLS loop pipeline
-    for (uint ii = 0; ii < CONFIG_T::n_in; ii++) {
+    for (unsigned ii = 0; ii < CONFIG_T::n_in; ii++) {
         datareg = data[ii];
         if (datareg > 0)
             res[ii] = datareg;
@@ -316,15 +316,15 @@ void softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     typename CONFIG_T::table_t exp_diff_res;            // different, independent, fixed point precision
     data_T data_cache[CONFIG_T::n_in];
     int data_round;
-    uint index;
+    unsigned index;
     #pragma HLS loop pipeline
-    for (uint ii = 0; ii < CONFIG_T::n_in; ii++) {
+    for (unsigned ii = 0; ii < CONFIG_T::n_in; ii++) {
         data_cache[ii] = data[ii];
         exp_res[ii] = 0;
     }
 
-    for (uint ii = 0; ii < CONFIG_T::n_in; ii++) {
-        for (uint jj = 0; jj < CONFIG_T::n_in; jj++) {
+    for (unsigned ii = 0; ii < CONFIG_T::n_in; ii++) {
+        for (unsigned jj = 0; jj < CONFIG_T::n_in; jj++) {
             if (ii == jj)
                 exp_diff_res = 1;
             else {
@@ -341,8 +341,8 @@ void softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     }
 
     // Second loop to invert
-    for (uint ii = 0; ii < CONFIG_T::n_in; ii++) {
-        uint exp_res_index = exp_res[ii] * CONFIG_T::table_size / 64;
+    for (unsigned ii = 0; ii < CONFIG_T::n_in; ii++) {
+        unsigned exp_res_index = exp_res[ii] * CONFIG_T::table_size / 64;
         if (exp_res_index < 0)
             exp_res_index = 0;
         if (exp_res_index > CONFIG_T::table_size - 1)
@@ -355,7 +355,7 @@ void softmax_legacy(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
 template <class data_T, class res_T, typename CONFIG_T>
 void softmax_argmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     #pragma HLS loop unroll
-    for (uint i = 0; i < CONFIG_T::n_in; i++) {
+    for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         res[i] = (res_T)0;
     }
 
@@ -363,7 +363,7 @@ void softmax_argmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     int idx = 0;
 
     #pragma HLS loop pipeline
-    for (uint i = 1; i < CONFIG_T::n_in; i++) {
+    for (unsigned i = 1; i < CONFIG_T::n_in; i++) {
         if (data[i] > maximum) {
             maximum = data[i];
             idx = i;

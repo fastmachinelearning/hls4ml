@@ -1,5 +1,4 @@
 import glob
-import stat
 import tarfile
 from collections import OrderedDict
 from pathlib import Path
@@ -247,7 +246,7 @@ class LiberoWriter(Writer):
                     for o in model_outputs:
                         tmp_struct_var_name = f'{o.name}_struct'
                         newline += f'    {o.struct_name} {tmp_struct_var_name};\n'
-                        newline += f'    for (unsigned i = 0; i < {i.size_cpp()}; i++) {{\n'
+                        newline += f'    for (unsigned i = 0; i < {o.size_cpp()}; i++) {{\n'
                         newline += f'        {tmp_struct_var_name}.data[i] = {o.name}[i];\n'
                         newline += '    }\n'
                         newline += f'    {o.name}_fifo.write({tmp_struct_var_name});\n'
@@ -742,13 +741,12 @@ class LiberoWriter(Writer):
                 dst.write(newline)
 
     def write_build_script(self, model):
-        """Write the TCL/Shell build scripts (config.tcl, Makefile, build_lib.sh)
+        """Write the TCL and Makefile build scripts.
 
         Args:
             model (ModelGraph): the hls4ml model.
         """
 
-        filedir = Path(__file__).parent
         prj_name = model.config.get_project_name()
         prj_dir = model.config.get_output_dir()
 
@@ -764,15 +762,10 @@ class LiberoWriter(Writer):
             f.write(f'set_parameter CLOCK_PERIOD {clock}\n')
 
         # Makefile
+        filedir = Path(__file__).parent
+        makefile_src = (filedir / '../templates/libero/Makefile').resolve()
         makefile_dst = Path(f'{prj_dir}/Makefile')
-        with open(makefile_dst, 'w') as f:
-            f.write(f'NAME = {prj_name}\n')
-            f.write('LOCAL_CONFIG = -legup-config=config.tcl\n')
-            f.write(f'SRCS = firmware/{prj_name}.cpp {prj_name}_test.cpp \n')
-            # Not sure if this is required, it is present in both GUI- and CLI-generated projects
-            f.write('LEVEL = $(SHLS_ROOT_DIR)/examples\n')
-            # This must be the last line
-            f.write('include $(LEVEL)/Makefile.common\n')
+        makefile_dst.write_text(makefile_src.read_text().replace('myproject', prj_name))
 
         # Makefile.compile
         makefile_dst = Path(f'{prj_dir}/Makefile.compile')
@@ -781,27 +774,14 @@ class LiberoWriter(Writer):
             shls_lib_path = str(model.config.get_config_value('SmartHLSPath') / 'smarthls-library/hls')
 
             f.write(f'NAME = {prj_name}\n')
-            f.write('LOCAL_CONFIG = -legup-config=config.tcl\n')
+            f.write('LOCAL_CONFIG = -shls-config=config.tcl\n')
             f.write(f'SRCS = firmware/{prj_name}.cpp {prj_name}_bridge.cpp \n')
-            f.write('LEVEL = $(SHLS_ROOT_DIR)/examples\n')
             f.write(f'WEIGHTS_DIR="\\"{prj_path}/firmware/weights\\""\n')
             f.write('USER_CXX_FLAG = -fPIC -D WEIGHTS_DIR="${WEIGHTS_DIR}"\n')
             f.write(
                 'USER_LINK_FLAG = -shared -D WEIGHTS_DIR="${WEIGHTS_DIR}"'
                 + f' -L{shls_lib_path} -lhls_x86 -Wl,-rpath,{shls_lib_path}\n'
             )
-            f.write('include $(LEVEL)/Makefile.common\n')
-
-        # build_lib.sh
-        build_lib_src = (filedir / '../templates/libero/build_lib.sh').resolve()
-        build_lib_dst = Path(f'{prj_dir}/build_lib.sh').resolve()
-        with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', prj_name)
-                line = line.replace('mystamp', model.config.get_config_value('Stamp'))
-
-                dst.write(line)
-        build_lib_dst.chmod(build_lib_dst.stat().st_mode | stat.S_IEXEC)
 
     def write_nnet_utils(self, model):
         """Copy the nnet_utils, AP types headers and any custom source to the project output directory
