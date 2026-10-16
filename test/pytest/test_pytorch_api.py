@@ -1285,3 +1285,35 @@ def test_functional_threshold_replacement_value_rejected(test_case_id):
 
     with pytest.raises(NotImplementedError, match='replacement value'):
         _convert_parse_only(model, test_case_id, (4,))
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('channels_last_conversion', ['full', 'off'])
+@pytest.mark.parametrize('dim', [1, -1])
+def test_softmax_multidim(test_case_id, dim, channels_last_conversion, io_type, backend):
+    """Multidimensional softmax normalizes along dim, also after conversion to channels_last."""
+    if backend == 'Altera' and io_type == 'io_parallel':
+        pytest.skip('Altera io_parallel does not support multidimensional softmax')
+    model = nn.Sequential(nn.Softmax(dim=dim)).eval()
+    X_input = np.random.default_rng(0).uniform(-4, 4, (200, 4, 6)).astype(np.float32)
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    config = config_from_pytorch_model(
+        model, (4, 6), backend=backend, default_precision='fixed<16,6>', channels_last_conversion=channels_last_conversion
+    )
+    output_dir = str(test_root_path / test_case_id)
+    # io_stream normalizes along the last axis of the (possibly channels_last) tensor
+    last_axis = dim == 1 if channels_last_conversion == 'full' else dim == -1
+    if io_type == 'io_stream' and not last_axis:
+        with pytest.raises(ValueError, match='last axis'):
+            convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+        return
+
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+    hls_model.compile()
+
+    if channels_last_conversion == 'full':
+        pytorch_prediction = pytorch_prediction.transpose(0, 2, 1)
+    hls_prediction = np.asarray(hls_model.predict(X_input)).reshape(pytorch_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, atol=0.05)
