@@ -94,6 +94,7 @@ class AlteraBackend(FPGABackend):
             'infer_precision_types',
             'altera:process_fixed_point_quantizer_layer',
             'altera:validate_ac_types',
+            'altera:validate_hgq_softmax_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -272,6 +273,7 @@ class AlteraBackend(FPGABackend):
             assert len(layer.get_input_variable().shape) == 1, (
                 'Softmax with io_parallel strategy cannot be used on multidimensional tensors.'
             )
+        self.validate_softmax_axis(layer)
 
     @layer_optimizer(Embedding)
     def init_embed(self, layer):

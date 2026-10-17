@@ -93,8 +93,6 @@ def convert(load_jettagging_model, request, test_case_id):
 
     config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
     config['Model']['Strategy'] = strategy
-    config['LayerName']['softmax']['exp_table_t'] = 'ap_fixed<18,8>'
-    config['LayerName']['softmax']['inv_table_t'] = 'ap_fixed<18,4>'
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,
