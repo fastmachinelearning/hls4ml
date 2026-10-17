@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
-from qkeras import QConv2D, QDense
 from tensorflow.keras.layers import Conv2D, Dense, Flatten
 from tensorflow.keras.models import Sequential
 
 from hls4ml.optimization.dsp_aware_pruning.attributes import get_attributes_from_keras_model
 from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
+from hls4ml.optimization.dsp_aware_pruning.keras.config import CONV2D_LAYERS, DENSE_LAYERS
 from hls4ml.optimization.dsp_aware_pruning.keras.masking import get_model_masks
 from hls4ml.optimization.dsp_aware_pruning.objectives import ParameterEstimator
 
@@ -21,8 +21,8 @@ Therefore, all the test verify offsets are zero
 """
 sparsity = 0.33
 local_masking = [True, False]
-dense_layers = [Dense, QDense]
-conv2d_layers = [Conv2D, QConv2D]
+dense_layers = list(DENSE_LAYERS)
+conv2d_layers = list(CONV2D_LAYERS)
 
 
 # Create a Dense layer with artificial weights, so that (1, 1) and (2, 3) (matrix indexing) are pruned

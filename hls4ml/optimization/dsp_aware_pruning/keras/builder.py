@@ -3,16 +3,24 @@ import re
 import keras_tuner as kt
 import numpy as np
 import tensorflow as tf
-from qkeras import QConv2D, QDense
-from qkeras.utils import _add_supported_quantized_objects
 from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.layers import Conv2D, Dense
 
-from hls4ml.optimization.dsp_aware_pruning.keras.config import SUPPORTED_LAYERS, TMP_DIRECTORY
+from hls4ml.optimization.dsp_aware_pruning.keras.config import (
+    CONV2D_LAYERS,
+    DENSE_LAYERS,
+    SUPPORTED_LAYERS,
+    TMP_DIRECTORY,
+)
 from hls4ml.optimization.dsp_aware_pruning.keras.regularizers import Conv2DRegularizer, DenseRegularizer
+from hls4ml.optimization.dsp_aware_pruning.keras.utils import clone_optimizer
 
 co = {}
-_add_supported_quantized_objects(co)
+try:
+    from qkeras.utils import _add_supported_quantized_objects
+
+    _add_supported_quantized_objects(co)
+except ImportError:
+    pass
 
 
 class HyperOptimizationModel(kt.HyperModel):
@@ -64,7 +72,7 @@ class HyperOptimizationModel(kt.HyperModel):
                     else 0
                 )
 
-                if isinstance(layer, (Dense, QDense)) and self.attributes[layer.name].optimizable:
+                if isinstance(layer, DENSE_LAYERS) and self.attributes[layer.name].optimizable:
                     layer.kernel_regularizer = DenseRegularizer(
                         alpha,
                         beta,
@@ -74,7 +82,7 @@ class HyperOptimizationModel(kt.HyperModel):
                         pattern_offset=pattern_offset,
                         consecutive_patterns=consecutive_patterns,
                     )
-                elif isinstance(layer, (Conv2D, QConv2D)) and self.attributes[layer.name].optimizable:
+                elif isinstance(layer, CONV2D_LAYERS) and self.attributes[layer.name].optimizable:
                     layer.kernel_regularizer = Conv2DRegularizer(
                         alpha,
                         beta,
@@ -87,7 +95,9 @@ class HyperOptimizationModel(kt.HyperModel):
         # Rebuild model graph
         model_to_prune = tf.keras.models.model_from_json(model_to_prune.to_json(), custom_objects=co)
         model_to_prune.set_weights(self.model.get_weights())
-        model_to_prune.compile(optimizer=self.optimizer, loss=self.loss_fn, metrics=[self.validation_metric])
+        model_to_prune.compile(
+            optimizer=clone_optimizer(self.optimizer), loss=self.loss_fn, metrics=[self.validation_metric]
+        )
 
         return model_to_prune
 
@@ -160,7 +170,7 @@ def build_optimizable_model(
                 alpha = regularization_range[0] if pruning else 0
                 beta = regularization_range[0] if weight_sharing else 0
 
-                if isinstance(layer, (Dense, QDense)) and attributes[layer.name].optimizable:
+                if isinstance(layer, DENSE_LAYERS) and attributes[layer.name].optimizable:
                     layer.kernel_regularizer = DenseRegularizer(
                         alpha,
                         beta,
@@ -170,7 +180,7 @@ def build_optimizable_model(
                         pattern_offset=pattern_offset,
                         consecutive_patterns=consecutive_patterns,
                     )
-                elif isinstance(layer, (Conv2D, QConv2D)) and attributes[layer.name].optimizable:
+                elif isinstance(layer, CONV2D_LAYERS) and attributes[layer.name].optimizable:
                     layer.kernel_regularizer = Conv2DRegularizer(
                         alpha,
                         beta,
@@ -183,7 +193,7 @@ def build_optimizable_model(
         # Rebuild model graph
         model_to_prune = tf.keras.models.model_from_json(model_to_prune.to_json(), custom_objects=co)
         model_to_prune.set_weights(model.get_weights())
-        model_to_prune.compile(optimizer=optimizer, loss=loss_fn, metrics=[validation_metric])
+        model_to_prune.compile(optimizer=clone_optimizer(optimizer), loss=loss_fn, metrics=[validation_metric])
 
         return model_to_prune
 

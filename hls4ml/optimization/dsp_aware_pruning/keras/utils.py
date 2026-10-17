@@ -110,3 +110,35 @@ def get_last_layer_with_weights(model):
         if hasattr(layer, 'kernel'):
             return idx
     return len(model.layers)
+
+
+def clone_optimizer(optimizer):
+    """
+    Create a new optimizer with the same configuration
+
+    A Keras optimizer is bound to the variables of the first model it trains, so every model needs its own instance
+
+    Args:
+        optimizer (keras.optimizers.Optimizer or equivalent string description): Optimizer to copy
+
+    Returns:
+        keras.optimizers.Optimizer or string: New optimizer; string descriptions are returned unchanged
+    """
+    if isinstance(optimizer, str):
+        return optimizer
+    return tf.keras.optimizers.deserialize(tf.keras.optimizers.serialize(optimizer))
+
+
+def reset_optimizer_state(optimizer):
+    """
+    Set the optimizer state (iteration count, moments etc.) to zero, keeping the learning rate
+
+    Args:
+        optimizer (keras.optimizers.Optimizer): Optimizer to reset
+    """
+    # In Keras 2, variables is a method and does not include the learning rate; in Keras 3, it is a list that does
+    variables = optimizer.variables() if callable(optimizer.variables) else optimizer.variables
+    learning_rate = getattr(optimizer, '_learning_rate', None)
+    for x in variables:
+        if x is not learning_rate:
+            x.assign(tf.zeros_like(x))
