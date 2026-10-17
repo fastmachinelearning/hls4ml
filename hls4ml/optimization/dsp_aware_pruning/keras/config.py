@@ -1,12 +1,21 @@
-from qkeras import QConv2D, QDense
 from tensorflow.keras.layers import Conv2D, Dense
 
 """
 Optimizable layers in Keras / QKeras
+QKeras layers are supported if QKeras (or QKeras v3 with Keras 3) is installed
 Any new layers need to be registered here first
 Additional logic in the source files may need to be written (e.g. recurrent layers should also optimize recurrent kernels)
 """
-SUPPORTED_LAYERS = (Dense, Conv2D, QDense, QConv2D)
+try:
+    from qkeras import QConv2D, QDense
+
+    DENSE_LAYERS = (Dense, QDense)
+    CONV2D_LAYERS = (Conv2D, QConv2D)
+except ImportError:
+    DENSE_LAYERS = (Dense,)
+    CONV2D_LAYERS = (Conv2D,)
+
+SUPPORTED_LAYERS = DENSE_LAYERS + CONV2D_LAYERS
 
 
 """
