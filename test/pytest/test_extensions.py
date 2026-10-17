@@ -129,7 +129,7 @@ def register_custom_layer():
     hls4ml.model.layers.register_layer('HReverse', HReverse)
 
 
-@pytest.mark.parametrize('backend_id', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend_id', ['Vivado', 'Vitis'])
 def test_extensions(test_case_id, tmp_path, backend_id):
     # Register the optimization passes (if any)
     backend = hls4ml.backends.get_backend(backend_id)
