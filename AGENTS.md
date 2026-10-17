@@ -73,6 +73,8 @@ the person opening the pull request, and tell them what remains to be confirmed.
   `pre-commit run --hook-stage manual --all-files`, which is what CI runs and which catches packaging
   problems the default hooks do not.
 - Add or update a test under `test/pytest/`. For a bug fix, the test should fail without the fix.
+- If the change touches layer attributes, regenerate `docs/ir/attributes.rst` as
+  [CONTRIBUTING.md](CONTRIBUTING.md) describes.
 - Check the whole diff yourself, hunk by hunk, before presenting it. Remove debug output, commented-out code
   and stray changes.
 - Do not commit generated HLS projects, model files or logs.
