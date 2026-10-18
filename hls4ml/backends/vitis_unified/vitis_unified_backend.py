@@ -30,10 +30,14 @@ class VitisUnifiedBackend(VitisBackend):
         bitfile=False,
         log_to_stdout=True,
         vitis_fifo_sizing=False,
+        pnr=False,
     ):
-        for name, value in [('validation', validation), ('export', export), ('vsynth', vsynth)]:
+        for name, value in [('validation', validation), ('export', export)]:
             if value:
                 warnings.warn(f'{name} is not supported by the VitisUnified backend and is ignored.', stacklevel=2)
+
+        # Place and route runs after Vivado synthesis
+        vsynth = vsynth or pnr
 
         if fifo_opt and not cosim:
             warnings.warn('fifo_opt requires cosim to be enabled; cosim will be run automatically.', stacklevel=2)
@@ -45,6 +49,10 @@ class VitisUnifiedBackend(VitisBackend):
 
         if cosim and not synth:
             warnings.warn('cosim requires synth to be enabled; synth will be run automatically.', stacklevel=2)
+            synth = True
+
+        if vsynth and not synth:
+            warnings.warn('vsynth requires synth to be enabled; synth will be run automatically.', stacklevel=2)
             synth = True
 
         output_dir = model.config.get_output_dir()
@@ -84,11 +92,23 @@ class VitisUnifiedBackend(VitisBackend):
         if cosim or fifo_opt:
             commands.append(('cosim', cosim_cmd, vitis_hls_dir))
 
+        if vsynth:
+            axi_mode = model.config.get_config_value('VitisUnifiedConfig')['axi_mode']
+            vsynth_cmd = (
+                'vivado -mode batch -source vivado_synth.tcl -tclargs '
+                f'src={os.path.relpath(writer.get_vitis_hls_exec_dir(model), output_dir)}/hls/syn/verilog '
+                f'top={model.config.get_project_name()}_{axi_mode} '
+                f'part={model.config.get_config_value("Part")} '
+                f'clock_period={writer._get_clock_period_ns(model)} '
+                f'pnr={int(pnr)}'
+            )
+            commands.append(('vsynth', vsynth_cmd, output_dir))
+
         if bitfile:
             commands.append(('kerlink', kerlink_cmd, kerlink_cwd))
 
         if commands and 'linux' in sys.platform:
-            tools = ['v++', 'vitis-run'] + (['xclbinutil', 'vivado'] if bitfile else [])
+            tools = ['v++', 'vitis-run'] + (['vivado'] if vsynth or bitfile else []) + (['xclbinutil'] if bitfile else [])
             for tool in tools:
                 if os.system(f'command -v {tool} > /dev/null') != 0:
                     raise Exception(f'Vitis installation not found. Make sure "{tool}" is on PATH.')

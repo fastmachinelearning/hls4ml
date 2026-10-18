@@ -1,6 +1,7 @@
 #################
 #    HLS4ML
 #################
+# Default build options. build_opt.tcl, written by build(), overrides them.
 array set opt {
     reset      0
     csim       1
@@ -10,10 +11,14 @@ array set opt {
     export     0
     vsynth     0
     fifo_opt   0
+    pnr        0
 }
 
 set tcldir [file dirname [info script]]
 source [file join $tcldir project.tcl]
+if {[file exists [file join $tcldir build_opt.tcl]]} {
+    source [file join $tcldir build_opt.tcl]
+}
 
 proc remove_recursive_log_wave {} {
     set tcldir [file dirname [info script]]
@@ -238,11 +243,12 @@ if {$opt(export)} {
     report_time "EXPORT IP" $time_start $time_end
 }
 
-if {$opt(vsynth)} {
+# Place and route runs after Vivado synthesis
+if {$opt(vsynth) || $opt(pnr)} {
     puts "***** VIVADO SYNTHESIS *****"
     if {[file exist ${project_name}_prj/solution1/syn/verilog]} {
         set time_start [clock clicks -milliseconds]
-        exec vivado -mode batch -source vivado_synth.tcl >@ stdout
+        exec vivado -mode batch -source vivado_synth.tcl -tclargs pnr=$opt(pnr) >@ stdout
         set time_end [clock clicks -milliseconds]
         report_time "VIVADO SYNTHESIS" $time_start $time_end
     } else {

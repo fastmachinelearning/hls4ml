@@ -210,6 +210,8 @@ All paths inside the generated files are relative, so the output directory can b
     ├── <project_name>_test.cpp            C testbench of the AXI wrapper
     ├── <project_name>_bridge.cpp          bridge used by hls_model.predict()
     ├── build_lib.sh                       builds the shared library for predict()
+    ├── vivado_synth.tcl                   Vivado synthesis, and place and route, of the kernel (vsynth=True)
+    ├── vivado_synth*.rpt, vivado_impl*.rpt    reports of vsynth=True and pnr=True
     ├── hls4ml_config.yml
     ├── fifo_depths.json                   with FIFO depth optimization only
     ├── <step>_stdout.log, <step>_stderr.log   with log_to_stdout=False only
@@ -254,16 +256,21 @@ Build options
      - Runs the FIFO depth optimization. It turns on ``cosim`` by itself.
    * - ``vitis_fifo_sizing=True``
      - Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on ``cosim`` by itself.
+   * - ``vsynth=True``
+     - Synthesizes the kernel alone with Vivado, out of context and with the clock period constrained, and writes ``vivado_synth.rpt`` (utilization) and ``vivado_synth_timing.rpt``. It turns on ``synth`` by itself and needs ``vivado`` on the PATH.
+   * - ``pnr=True``
+     - Also places and routes the kernel after Vivado synthesis and writes ``vivado_impl.rpt``, ``vivado_impl_timing.rpt`` and ``vivado_impl_power.rpt``. It turns on ``vsynth`` by itself.
    * - ``bitfile=True``
      - Links the packaged kernel to the board platform and writes the ``.xclbin`` to ``vitis_workspace/system_link/``. With the PYNQ driver it also writes the bitstream and the hardware handoff file to ``export/``, with the XRT driver it copies the ``.xclbin`` there. It needs the ``.xo`` file from ``synth=True``, ``xclbinutil`` and ``vivado`` on the PATH, and ``XILINX_VITIS`` set, which sourcing the Vitis ``settings64.sh`` does. A card platform is found through ``PLATFORM_REPO_PATHS``. A prebuilt platform that cannot be found is reported before any step runs.
    * - ``log_to_stdout=False``
      - Writes the output of each step to ``<step>_stdout.log`` and ``<step>_stderr.log`` instead of the terminal.
    * - ``reset=True``
      - Deletes the Vitis HLS project and the link work directory before the selected steps run.
-   * - ``validation``, ``export``, ``vsynth``
+   * - ``validation``, ``export``
      - Accepted for compatibility with the other backends. They are ignored with a warning. The kernel is always packaged by ``synth=True``.
 
-``build()`` returns a dictionary with the same keys as the Vitis backend: ``CSynthesisReport`` after ``synth=True`` and ``CosimReport`` after ``cosim=True``.
+``build()`` returns a dictionary with the same keys as the Vitis backend: ``CSynthesisReport`` after ``synth=True``, ``CosimReport`` after ``cosim=True``, ``VivadoSynthReport`` after ``vsynth=True`` and ``VivadoImplReport`` after ``pnr=True``.
+After ``bitfile=True`` it also has ``BitfileReport``: the resources of the kernel in the linked design, and the slack of the whole design and the power of the whole device, which include the platform.
 The raw reports are under ``vitis_workspace/<project_name>/vitis_unified_project/`` and, after ``bitfile=True``, under ``final_reports/``.
 
 

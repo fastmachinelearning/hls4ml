@@ -1,5 +1,6 @@
 import os
-import sys
+import shutil
+import subprocess
 from warnings import warn
 
 import numpy as np
@@ -300,28 +301,66 @@ class VivadoBackend(FPGABackend):
         export=False,
         vsynth=False,
         fifo_opt=False,
+        pnr=False,
     ):
-        if 'linux' in sys.platform:
-            found = os.system('command -v vivado_hls > /dev/null')
-            if found != 0:
-                raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+        """Build the HLS project, running the steps that are enabled.
 
-        curr_dir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
-        vivado_cmd = (
-            f'vivado_hls -f build_prj.tcl "reset={reset} '
-            f'csim={csim} '
-            f'synth={synth} '
-            f'cosim={cosim} '
-            f'validation={validation} '
-            f'export={export} '
-            f'vsynth={vsynth} '
-            f'fifo_opt={fifo_opt}"'
+        Args:
+            model (ModelGraph): The model to build.
+            reset (bool, optional): Start a new HLS project, removing the previous one. Defaults to False.
+            csim (bool, optional): Run C simulation. Defaults to True.
+            synth (bool, optional): Run C synthesis. Defaults to True.
+            cosim (bool, optional): Run C/RTL co-simulation. Defaults to False.
+            validation (bool, optional): Compare the outputs of C simulation and co-simulation. Defaults to False.
+            export (bool, optional): Export the design as an IP. Defaults to False.
+            vsynth (bool, optional): Synthesize the generated Verilog with Vivado, out of context. Defaults to False.
+            fifo_opt (bool, optional): Record the FIFO occupancy during co-simulation, used by the FIFO depth
+                optimization flow. Defaults to False.
+            pnr (bool, optional): Also place and route the design after Vivado synthesis, for the resources, timing
+                and power after implementation. Implies ``vsynth``. Defaults to False.
+
+        Returns:
+            dict: The reports read from the project, see ``hls4ml.report.parse_vivado_report``.
+
+        Raises:
+            Exception: If vivado_hls is not on PATH, or if a step of the build fails.
+        """
+
+        if shutil.which('vivado_hls') is None:
+            raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+
+        self._write_build_opts(
+            model,
+            reset=reset,
+            csim=csim,
+            synth=synth,
+            cosim=cosim,
+            validation=validation,
+            export=export,
+            vsynth=vsynth,
+            fifo_opt=fifo_opt,
+            pnr=pnr,
         )
-        os.system(vivado_cmd)
-        os.chdir(curr_dir)
 
-        return parse_vivado_report(model.config.get_output_dir())
+        output_dir = model.config.get_output_dir()
+        if subprocess.run(['vivado_hls', '-f', 'build_prj.tcl'], cwd=output_dir).returncode != 0:
+            raise Exception(f'Build failed for {model.config.get_project_name()}. See {output_dir}/vivado_hls.log.')
+
+        return parse_vivado_report(output_dir)
+
+    def _write_build_opts(self, model, **build_opts):
+        """Write the build options to build_opt.tcl, which build_prj.tcl reads.
+
+        Running build_prj.tcl again without arguments then repeats the same build.
+
+        Args:
+            model (ModelGraph): The model being built.
+            build_opts: The options, each a bool.
+        """
+
+        lines = ''.join(f'    {name:<10} {int(value)}\n' for name, value in build_opts.items())
+        with open(os.path.join(model.config.get_output_dir(), 'build_opt.tcl'), 'w') as f:
+            f.write('array set opt {\n' + lines + '}\n')
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
