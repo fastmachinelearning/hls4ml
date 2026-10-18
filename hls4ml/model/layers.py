@@ -560,6 +560,7 @@ class SeparableConv1D(Layer):
         Attribute('depth_multiplier', default=1),
         Attribute('filt_width'),
         Attribute('stride_width'),
+        Attribute('dilation', default=1),
         Attribute('pad_left'),
         Attribute('pad_right'),
         WeightAttribute('depthwise'),

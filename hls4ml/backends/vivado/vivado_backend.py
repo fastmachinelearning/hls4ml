@@ -440,6 +440,12 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
+        if layer.get_attr('dilation') != 1 and layer.model.config.get_config_value('IOType') != 'io_parallel':
+            raise NotImplementedError(
+                f'Layer {layer.name}: SeparableConv1D dilation_rate={layer.get_attr("dilation")} '
+                'is only supported with io_parallel.'
+            )
+
         if layer.model.config.is_resource_strategy(layer):
             layer.set_attr('strategy', 'resource')
             n_in, n_out = self.get_layer_mult_size(layer)
