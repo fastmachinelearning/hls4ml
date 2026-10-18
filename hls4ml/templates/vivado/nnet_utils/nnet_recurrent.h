@@ -34,6 +34,15 @@ struct lstm_config {
     static const bool store_weights_in_bram = false;
     static const bool use_static = true;
 
+    // Used by the cells of the Resource strategy, described below
+    static const unsigned strategy = latency;
+    static const unsigned n_unit_par = 1;
+    static const unsigned n_cycles = 1;
+    static const unsigned n_lanes_in = 1;
+    static const unsigned n_lanes_state = 1;
+    static const unsigned n_weight = 16;
+    static const unsigned n_recurrent_weight = 16;
+
     template <class x_T, class y_T, class config_T> using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
     template <class x_T, class y_T, class config_T> using activation = nnet::activation::relu<x_T, y_T, config_T>;
 };
@@ -193,11 +202,199 @@ void lstm_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate
     }
 }
 
+// *************************************************
+//       Cells of the Resource strategy
+// *************************************************
+// A step computes the units n_unit_par at a time, spending n_cycles cycles on each group, and updates the state of each
+// unit as soon as its gates are done. The input and the state are multiplied by separate groups of multipliers,
+// n_lanes_in and n_lanes_state for each gate of each unit, so a step takes n_state / n_unit_par * n_cycles cycles,
+// the reuse factor of the layer. Of the ways to get a reuse factor, the backend uses the one with the fewest units at a
+// time, since each of them needs its own activations and state update. It lays out the weights as
+// [group][cycle][unit][gate][lane], with zeros past the end of the input or the state, so the arrays are n_weight and
+// n_recurrent_weight long, and the biases as [unit][gate], with the gates in Keras order. The results are those of the
+// cells above.
+
+// The sums of one cycle: each lane adds the product of one input or state value and one weight. step is the iteration of
+// the loop over all groups and cycles, so the weights of a lane are read from consecutive addresses of its own memory.
+template <class data_T, class res_T, typename CONFIG_T, unsigned n_gates>
+void recurrent_resource_mac(unsigned step, unsigned cycle, data_T data[CONFIG_T::n_in], res_T state[CONFIG_T::n_state],
+                            typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                            typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
+                            typename CONFIG_T::accum_t sum_in[CONFIG_T::n_unit_par * n_gates * CONFIG_T::n_lanes_in],
+                            typename CONFIG_T::accum_t sum_state[CONFIG_T::n_unit_par * n_gates * CONFIG_T::n_lanes_state]) {
+    #pragma HLS INLINE
+    const unsigned lanes_in = CONFIG_T::n_unit_par * n_gates * CONFIG_T::n_lanes_in;
+    const unsigned lanes_state = CONFIG_T::n_unit_par * n_gates * CONFIG_T::n_lanes_state;
+
+    for (unsigned l = 0; l < lanes_in; l++) {
+        #pragma HLS UNROLL
+        unsigned i = cycle * CONFIG_T::n_lanes_in + l % CONFIG_T::n_lanes_in;
+        typename CONFIG_T::accum_t term = 0;
+        if (i < CONFIG_T::n_in)
+            term = CONFIG_T::mult_config1::template product<data_T, typename CONFIG_T::weight_t>::product(
+                data[i], param[step * lanes_in + l]);
+        sum_in[l] = cycle == 0 ? term : (typename CONFIG_T::accum_t)(sum_in[l] + term);
+    }
+    for (unsigned l = 0; l < lanes_state; l++) {
+        #pragma HLS UNROLL
+        unsigned i = cycle * CONFIG_T::n_lanes_state + l % CONFIG_T::n_lanes_state;
+        typename CONFIG_T::accum_t term = 0;
+        if (i < CONFIG_T::n_state)
+            term = CONFIG_T::mult_config2::template product<res_T, typename CONFIG_T::recurrent_weight_t>::product(
+                state[i], param_r[step * lanes_state + l]);
+        sum_state[l] = cycle == 0 ? term : (typename CONFIG_T::accum_t)(sum_state[l] + term);
+    }
+}
+
+// The sum of the lanes of one gate of one unit, started from the bias
+template <typename CONFIG_T, unsigned n_gates, unsigned n_lanes>
+typename CONFIG_T::accum_t recurrent_resource_total(typename CONFIG_T::accum_t sum[CONFIG_T::n_unit_par * n_gates * n_lanes],
+                                                    unsigned unit, unsigned gate, typename CONFIG_T::accum_t bias) {
+    #pragma HLS INLINE
+    typename CONFIG_T::accum_t total = bias;
+    for (unsigned p = 0; p < n_lanes; p++) {
+        #pragma HLS UNROLL
+        total += sum[(unit * n_gates + gate) * n_lanes + p];
+    }
+    return total;
+}
+
+// Lookup tables of the activations, one for each value computed in the same cycle. They are filled once in C
+// simulation, as in nnet_activation.h, and on every call in synthesis, where they become ROMs.
+#ifdef __HLS_SYN__
+#define RECURRENT_TABLE
+#else
+#define RECURRENT_TABLE static
+#endif
+
+template <class data_T, class res_T, typename CONFIG_T>
+void lstm_resource(data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state], res_T s_state[CONFIG_T::n_state],
+                   typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                   typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
+                   typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
+                   typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
+    typedef typename CONFIG_T::accum_t accum_t;
+    typedef typename CONFIG_T::ACT_CONFIG_LSTM recr_config;
+    typedef typename CONFIG_T::ACT_CONFIG_T act_config;
+    typedef typename CONFIG_T::template activation_recr<accum_t, accum_t, recr_config> recr_act;
+    typedef typename CONFIG_T::template activation<accum_t, accum_t, act_config> act;
+    typedef typename CONFIG_T::template activation<res_T, accum_t, act_config> state_act;
+
+    const unsigned n_par = CONFIG_T::n_unit_par;
+    const unsigned lanes_in = n_par * 4 * CONFIG_T::n_lanes_in;
+    const unsigned lanes_state = n_par * 4 * CONFIG_T::n_lanes_state;
+    const unsigned bias_banks = n_par * 4;
+    #pragma HLS ARRAY_PARTITION variable=param cyclic factor=lanes_in
+    #pragma HLS ARRAY_PARTITION variable=param_r cyclic factor=lanes_state
+    #pragma HLS ARRAY_PARTITION variable=param_b cyclic factor=bias_banks
+    #pragma HLS ARRAY_PARTITION variable=param_br cyclic factor=bias_banks
+    #pragma HLS ARRAY_PARTITION variable=data complete
+    #pragma HLS ARRAY_PARTITION variable=h_state complete
+    #pragma HLS ARRAY_PARTITION variable=s_state complete
+
+    RECURRENT_TABLE bool initialized = false;
+    RECURRENT_TABLE typename recr_config::table_t recr_table[n_par][3][recr_config::table_size];
+    RECURRENT_TABLE typename act_config::table_t act_table[n_par][2][act_config::table_size];
+    #pragma HLS ARRAY_PARTITION variable=recr_table complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=recr_table complete dim=2
+    #pragma HLS ARRAY_PARTITION variable=act_table complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=act_table complete dim=2
+    if (!initialized) {
+        for (unsigned u = 0; u < n_par; u++) {
+            #pragma HLS UNROLL
+            for (unsigned k = 0; k < 3; k++) {
+                #pragma HLS UNROLL
+                recr_act::init_table(recr_table[u][k]);
+            }
+            for (unsigned k = 0; k < 2; k++) {
+                #pragma HLS UNROLL
+                act::init_table(act_table[u][k]);
+            }
+        }
+        initialized = true;
+    }
+
+    accum_t sum_in[lanes_in];
+    accum_t sum_state[lanes_state];
+    res_T h_newstate[CONFIG_T::n_state];
+    #pragma HLS ARRAY_PARTITION variable=sum_in complete
+    #pragma HLS ARRAY_PARTITION variable=sum_state complete
+    #pragma HLS ARRAY_PARTITION variable=h_newstate complete
+
+    unsigned group = 0, cycle = 0;
+LSTMUnits:
+    for (unsigned it = 0; it < CONFIG_T::n_state / n_par * CONFIG_T::n_cycles; it++) {
+        #pragma HLS PIPELINE II=1
+        recurrent_resource_mac<data_T, res_T, CONFIG_T, 4>(it, cycle, data, h_state, param, param_r, sum_in, sum_state);
+        if (cycle == CONFIG_T::n_cycles - 1) {
+            for (unsigned up = 0; up < n_par; up++) {
+                #pragma HLS UNROLL
+                unsigned u = group * n_par + up;
+                accum_t gate[4];
+                #pragma HLS ARRAY_PARTITION variable=gate complete
+                for (unsigned g = 0; g < 4; g++) {
+                    #pragma HLS UNROLL
+                    accum_t from_in =
+                        recurrent_resource_total<CONFIG_T, 4, CONFIG_T::n_lanes_in>(sum_in, up, g, param_b[u * 4 + g]);
+                    accum_t from_state = recurrent_resource_total<CONFIG_T, 4, CONFIG_T::n_lanes_state>(sum_state, up, g,
+                                                                                                        param_br[u * 4 + g]);
+                    gate[g] = from_in + from_state;
+                }
+                accum_t gate_i = recr_act::single(gate[0], recr_table[up][0]);
+                accum_t gate_f = recr_act::single(gate[1], recr_table[up][1]);
+                accum_t gate_o = recr_act::single(gate[3], recr_table[up][2]);
+                accum_t gate_c = act::single(gate[2], act_table[up][0]);
+                s_state[u] = gate_c * gate_i + s_state[u] * gate_f;
+                h_newstate[u] = gate_o * state_act::single(s_state[u], act_table[up][1]);
+            }
+        }
+        if (++cycle == CONFIG_T::n_cycles) {
+            cycle = 0;
+            group++;
+        }
+    }
+
+    for (unsigned u = 0; u < CONFIG_T::n_state; u++) {
+        #pragma HLS UNROLL
+        h_state[u] = h_newstate[u];
+    }
+}
+
+// One step of the LSTM: the cell of the Resource strategy, or the static or the non-static cell built from Dense calls
+template <class data_T, class res_T, typename CONFIG_T, bool use_static,
+          bool resource = CONFIG_T::strategy == nnet::resource>
+struct lstm_cell {
+    static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
+                      res_T s_state[CONFIG_T::n_state], typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
+                      typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
+                      typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
+        #pragma HLS INLINE
+        if (use_static)
+            nnet::lstm_static<data_T, res_T, CONFIG_T>(reset_state, data, h_state, s_state, param, param_r, param_b,
+                                                       param_br);
+        else
+            nnet::lstm<data_T, res_T, CONFIG_T>(reset_state, data, h_state, s_state, param, param_r, param_b, param_br);
+    }
+};
+
+template <class data_T, class res_T, typename CONFIG_T, bool use_static>
+struct lstm_cell<data_T, res_T, CONFIG_T, use_static, true> {
+    static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
+                      res_T s_state[CONFIG_T::n_state], typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
+                      typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
+                      typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
+        #pragma HLS INLINE
+        nnet::lstm_resource<data_T, res_T, CONFIG_T>(data, h_state, s_state, param, param_r, param_b, param_br);
+    }
+};
+
 template <class data_T, class res_T, typename CONFIG_T, bool backward = false> class lstm_class {
   public:
     static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_total[2 * CONFIG_T::n_state],
-                      typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
                       typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
                       typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
         res_T h_newstate[CONFIG_T::n_state];
@@ -209,7 +406,8 @@ template <class data_T, class res_T, typename CONFIG_T, bool backward = false> c
             h_newstate[i_state] = h_total[i_state];
             s_newstate[i_state] = h_total[i_state + CONFIG_T::n_state];
         }
-        nnet::lstm<data_T, res_T, CONFIG_T>(reset_state, data, h_newstate, s_newstate, param, param_r, param_b, param_br);
+        nnet::lstm_cell<data_T, res_T, CONFIG_T, false>::apply(reset_state, data, h_newstate, s_newstate, param, param_r,
+                                                               param_b, param_br);
         for (int i_state = 0; i_state < CONFIG_T::n_state; i_state++) {
             #pragma HLS UNROLL
             h_total[i_state] = h_newstate[i_state];
@@ -221,8 +419,8 @@ template <class data_T, class res_T, typename CONFIG_T, bool backward = false> c
 template <class data_T, class res_T, typename CONFIG_T, bool backward = false> class lstm_class_static {
   public:
     static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_total[2 * CONFIG_T::n_state],
-                      typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
                       typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
                       typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
         res_T h_newstate[CONFIG_T::n_state];
@@ -241,8 +439,8 @@ template <class data_T, class res_T, typename CONFIG_T, bool backward = false> c
 
 template <class data_T, class res_T, typename CONFIG_T>
 void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
-                typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-                typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
                 typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
                 typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
 
@@ -264,12 +462,8 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CO
             #pragma HLS UNROLL
             data_in[j] = data[j + iloop * CONFIG_T::n_in];
         }
-        if (CONFIG_T::use_static)
-            nnet::lstm_static<data_T, res_T, CONFIG_T>(reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b,
-                                                       param_br);
-        else
-            nnet::lstm<data_T, res_T, CONFIG_T>(reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b,
-                                                param_br);
+        nnet::lstm_cell<data_T, res_T, CONFIG_T, CONFIG_T::use_static>::apply(reset_state, data_in, h_newstate, s_newstate,
+                                                                              param, param_r, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
             for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
                 #pragma HLS UNROLL
@@ -287,8 +481,8 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CO
 template <class data_T, class h_T, class s_T, class res_T, typename CONFIG_T>
 void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_init[CONFIG_T::n_state],
                 s_T s_init[CONFIG_T::n_state], res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
-                typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-                typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
                 typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
                 typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
 
@@ -313,7 +507,8 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_init[C
             data_in[j] = data[j + iloop * CONFIG_T::n_in];
         }
 
-        nnet::lstm<data_T, res_T, CONFIG_T>(reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
+        nnet::lstm_cell<data_T, res_T, CONFIG_T, false>::apply(reset_state, data_in, h_newstate, s_newstate, param, param_r,
+                                                               param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
             for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
                 #pragma HLS UNROLL
@@ -330,8 +525,8 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_init[C
 
 template <class data_T, class res_T, typename CONFIG_T>
 void lstm_stack(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream,
-                typename CONFIG_T::weight_t param[CONFIG_T::n_state * 4 * CONFIG_T::n_in],
-                typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * 4 * CONFIG_T::n_state],
+                typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
                 typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 4],
                 typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 4]) {
 
@@ -361,7 +556,7 @@ DataPropagation:
             data_in[i_pack] = data_pack[i_pack];
         }
         // The time steps run one after another, so one cell is shared whether or not it is static.
-        nnet::lstm<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
+        nnet::lstm_cell<typename data_T::value_type, typename res_T::value_type, CONFIG_T, false>::apply(
             reset_state, data_in, h_newstate, s_newstate, param, param_r, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1) {
             res_T res_pack;
@@ -414,6 +609,14 @@ struct gru_config {
     static const bool pytorch_order = false;
     static const bool reset_after = true;
     static const unsigned n_zeros = 0;
+
+    static const unsigned strategy = latency;
+    static const unsigned n_unit_par = 1;
+    static const unsigned n_cycles = 1;
+    static const unsigned n_lanes_in = 1;
+    static const unsigned n_lanes_state = 1;
+    static const unsigned n_weight = 12;
+    static const unsigned n_recurrent_weight = 12;
 
     template <class x_T, class y_T, class config_T> using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
     template <class x_T, class y_T, class config_T> using activation = nnet::activation::relu<x_T, y_T, config_T>;
@@ -599,20 +802,202 @@ void gru_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_newstate[
     }
 }
 
-template <class data_T, class res_T, typename CONFIG_T, bool backward = false> struct gru_class {
+// The GRU cell of the Resource strategy (see lstm_resource). When the reset gate is applied before the recurrent
+// multiplication (reset_after false), the candidate needs the reset gate of every unit, so a step takes two passes over
+// the units: one for the update and reset gates, one for the candidate.
+template <class data_T, class res_T, typename CONFIG_T>
+void gru_resource(data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
+                  typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                  typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_recurrent_weight],
+                  typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
+                  typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
+    typedef typename CONFIG_T::accum_t accum_t;
+    typedef typename CONFIG_T::ACT_CONFIG_GRU recr_config;
+    typedef typename CONFIG_T::ACT_CONFIG_T act_config;
+    typedef typename CONFIG_T::template activation_recr<accum_t, accum_t, recr_config> recr_act;
+    typedef typename CONFIG_T::template activation<accum_t, accum_t, act_config> act;
+
+    const unsigned n_par = CONFIG_T::n_unit_par;
+    const unsigned lanes_in = n_par * 3 * CONFIG_T::n_lanes_in;
+    const unsigned lanes_state = n_par * 3 * CONFIG_T::n_lanes_state;
+    const unsigned bias_banks = n_par * 3;
+    const unsigned n_iter = CONFIG_T::n_state / n_par * CONFIG_T::n_cycles;
+    #pragma HLS ARRAY_PARTITION variable=param cyclic factor=lanes_in
+    #pragma HLS ARRAY_PARTITION variable=param_zr cyclic factor=lanes_state
+    #pragma HLS ARRAY_PARTITION variable=param_b cyclic factor=bias_banks
+    #pragma HLS ARRAY_PARTITION variable=param_br cyclic factor=bias_banks
+    #pragma HLS ARRAY_PARTITION variable=data complete
+    #pragma HLS ARRAY_PARTITION variable=h_state complete
+
+    RECURRENT_TABLE bool initialized = false;
+    RECURRENT_TABLE typename recr_config::table_t recr_table[n_par][2][recr_config::table_size];
+    RECURRENT_TABLE typename act_config::table_t act_table[n_par][act_config::table_size];
+    #pragma HLS ARRAY_PARTITION variable=recr_table complete dim=1
+    #pragma HLS ARRAY_PARTITION variable=recr_table complete dim=2
+    #pragma HLS ARRAY_PARTITION variable=act_table complete dim=1
+    if (!initialized) {
+        for (unsigned u = 0; u < n_par; u++) {
+            #pragma HLS UNROLL
+            for (unsigned k = 0; k < 2; k++) {
+                #pragma HLS UNROLL
+                recr_act::init_table(recr_table[u][k]);
+            }
+            act::init_table(act_table[u]);
+        }
+        initialized = true;
+    }
+
+    accum_t sum_in[lanes_in];
+    accum_t sum_state[lanes_state];
+    res_T h_newstate[CONFIG_T::n_state];
+    #pragma HLS ARRAY_PARTITION variable=sum_in complete
+    #pragma HLS ARRAY_PARTITION variable=sum_state complete
+    #pragma HLS ARRAY_PARTITION variable=h_newstate complete
+
+    if (CONFIG_T::reset_after) {
+        unsigned group = 0, cycle = 0;
+    GRUUnits:
+        for (unsigned it = 0; it < n_iter; it++) {
+            #pragma HLS PIPELINE II=1
+            recurrent_resource_mac<data_T, res_T, CONFIG_T, 3>(it, cycle, data, h_state, param, param_zr, sum_in, sum_state);
+            if (cycle == CONFIG_T::n_cycles - 1) {
+                for (unsigned up = 0; up < n_par; up++) {
+                    #pragma HLS UNROLL
+                    unsigned u = group * n_par + up;
+                    accum_t from_in[3], from_state[3];
+                    #pragma HLS ARRAY_PARTITION variable=from_in complete
+                    #pragma HLS ARRAY_PARTITION variable=from_state complete
+                    for (unsigned g = 0; g < 3; g++) {
+                        #pragma HLS UNROLL
+                        from_in[g] =
+                            recurrent_resource_total<CONFIG_T, 3, CONFIG_T::n_lanes_in>(sum_in, up, g, param_b[u * 3 + g]);
+                        from_state[g] = recurrent_resource_total<CONFIG_T, 3, CONFIG_T::n_lanes_state>(sum_state, up, g,
+                                                                                                       param_br[u * 3 + g]);
+                    }
+                    accum_t sum_z = from_in[0] + from_state[0];
+                    accum_t sum_r = from_in[1] + from_state[1];
+                    accum_t gate_z = recr_act::single(sum_z, recr_table[up][0]);
+                    accum_t gate_r = recr_act::single(sum_r, recr_table[up][1]);
+                    accum_t reset_h = gate_r * from_state[2];
+                    accum_t sum_h = from_in[2] + reset_h;
+                    accum_t gate_h = act::single(sum_h, act_table[up]);
+                    h_newstate[u] = (res_T)(gate_h * (1 - gate_z) + h_state[u] * gate_z);
+                }
+            }
+            if (++cycle == CONFIG_T::n_cycles) {
+                cycle = 0;
+                group++;
+            }
+        }
+    } else {
+        accum_t gate_z[CONFIG_T::n_state], cand_in[CONFIG_T::n_state];
+        res_T h_reset[CONFIG_T::n_state];
+        #pragma HLS ARRAY_PARTITION variable=gate_z complete
+        #pragma HLS ARRAY_PARTITION variable=cand_in complete
+        #pragma HLS ARRAY_PARTITION variable=h_reset complete
+
+        unsigned group = 0, cycle = 0;
+    GRUGates:
+        for (unsigned it = 0; it < n_iter; it++) {
+            #pragma HLS PIPELINE II=1
+            recurrent_resource_mac<data_T, res_T, CONFIG_T, 3>(it, cycle, data, h_state, param, param_zr, sum_in, sum_state);
+            if (cycle == CONFIG_T::n_cycles - 1) {
+                for (unsigned up = 0; up < n_par; up++) {
+                    #pragma HLS UNROLL
+                    unsigned u = group * n_par + up;
+                    accum_t sum_z =
+                        recurrent_resource_total<CONFIG_T, 3, CONFIG_T::n_lanes_in>(sum_in, up, 0, param_b[u * 3]) +
+                        recurrent_resource_total<CONFIG_T, 3, CONFIG_T::n_lanes_state>(sum_state, up, 0, param_br[u * 3]);
+                    accum_t sum_r =
+                        recurrent_resource_total<CONFIG_T, 3, CONFIG_T::n_lanes_in>(sum_in, up, 1, param_b[u * 3 + 1]) +
+                        recurrent_resource_total<CONFIG_T, 3, CONFIG_T::n_lanes_state>(sum_state, up, 1,
+                                                                                       param_br[u * 3 + 1]);
+                    gate_z[u] = recr_act::single(sum_z, recr_table[up][0]);
+                    accum_t gate_r = recr_act::single(sum_r, recr_table[up][1]);
+                    cand_in[u] =
+                        recurrent_resource_total<CONFIG_T, 3, CONFIG_T::n_lanes_in>(sum_in, up, 2, param_b[u * 3 + 2]);
+                    h_reset[u] = (res_T)(gate_r * h_state[u]);
+                }
+            }
+            if (++cycle == CONFIG_T::n_cycles) {
+                cycle = 0;
+                group++;
+            }
+        }
+
+        group = 0;
+        cycle = 0;
+    GRUCandidate:
+        for (unsigned it = 0; it < n_iter; it++) {
+            #pragma HLS PIPELINE II=1
+            recurrent_resource_mac<data_T, res_T, CONFIG_T, 3>(it, cycle, data, h_reset, param, param_zr, sum_in, sum_state);
+            if (cycle == CONFIG_T::n_cycles - 1) {
+                for (unsigned up = 0; up < n_par; up++) {
+                    #pragma HLS UNROLL
+                    unsigned u = group * n_par + up;
+                    accum_t sum_h = cand_in[u] + recurrent_resource_total<CONFIG_T, 3, CONFIG_T::n_lanes_state>(
+                                                     sum_state, up, 2, param_br[u * 3 + 2]);
+                    accum_t gate_h = act::single(sum_h, act_table[up]);
+                    h_newstate[u] = (res_T)(gate_h * (1 - gate_z[u]) + h_state[u] * gate_z[u]);
+                }
+            }
+            if (++cycle == CONFIG_T::n_cycles) {
+                cycle = 0;
+                group++;
+            }
+        }
+    }
+
+    for (unsigned u = 0; u < CONFIG_T::n_state; u++) {
+        #pragma HLS UNROLL
+        h_state[u] = h_newstate[u];
+    }
+}
+
+// One step of the GRU, as lstm_cell
+template <class data_T, class res_T, typename CONFIG_T, bool use_static,
+          bool resource = CONFIG_T::strategy == nnet::resource>
+struct gru_cell {
     static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
-                      typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
-                      typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_recurrent_weight],
                       typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
                       typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
-        nnet::gru<data_T, res_T, CONFIG_T>(reset_state, data, h_state, param, param_zr, param_b, param_br);
+        #pragma HLS INLINE
+        if (use_static)
+            nnet::gru_static<data_T, res_T, CONFIG_T>(reset_state, data, h_state, param, param_zr, param_b, param_br);
+        else
+            nnet::gru<data_T, res_T, CONFIG_T>(reset_state, data, h_state, param, param_zr, param_b, param_br);
+    }
+};
+
+template <class data_T, class res_T, typename CONFIG_T, bool use_static>
+struct gru_cell<data_T, res_T, CONFIG_T, use_static, true> {
+    static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_recurrent_weight],
+                      typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
+                      typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
+        #pragma HLS INLINE
+        nnet::gru_resource<data_T, res_T, CONFIG_T>(data, h_state, param, param_zr, param_b, param_br);
+    }
+};
+
+template <class data_T, class res_T, typename CONFIG_T, bool backward = false> struct gru_class {
+    static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_recurrent_weight],
+                      typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
+                      typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
+        nnet::gru_cell<data_T, res_T, CONFIG_T, false>::apply(reset_state, data, h_state, param, param_zr, param_b,
+                                                              param_br);
     };
 };
 
 template <class data_T, class res_T, typename CONFIG_T, bool backward = false> struct gru_class_static {
     static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
-                      typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
-                      typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_recurrent_weight],
                       typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
                       typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
         nnet::gru_static<data_T, res_T, CONFIG_T, backward>(reset_state, data, h_state, param, param_zr, param_b, param_br);
@@ -621,8 +1006,8 @@ template <class data_T, class res_T, typename CONFIG_T, bool backward = false> s
 
 template <class data_T, class res_T, typename CONFIG_T>
 void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
-               typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
-               typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+               typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+               typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_recurrent_weight],
                typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
                typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
 
@@ -642,10 +1027,8 @@ void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CON
             #pragma HLS UNROLL
             data_in[j] = data[j + iloop * CONFIG_T::n_in];
         }
-        if (CONFIG_T::use_static)
-            nnet::gru_static<data_T, res_T, CONFIG_T>(reset_state, data_in, h_state, param, param_zr, param_b, param_br);
-        else
-            nnet::gru<data_T, res_T, CONFIG_T>(reset_state, data_in, h_state, param, param_zr, param_b, param_br);
+        nnet::gru_cell<data_T, res_T, CONFIG_T, CONFIG_T::use_static>::apply(reset_state, data_in, h_state, param, param_zr,
+                                                                             param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
             for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
                 #pragma HLS UNROLL
@@ -663,8 +1046,8 @@ void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CON
 template <class data_T, class h_T, class res_T, typename CONFIG_T>
 void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_init[CONFIG_T::n_state],
                res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
-               typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
-               typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+               typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+               typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_recurrent_weight],
                typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
                typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
 
@@ -684,7 +1067,8 @@ void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_init[CO
             #pragma HLS UNROLL
             data_in[j] = data[j + iloop * CONFIG_T::n_in];
         }
-        nnet::gru<data_T, res_T, CONFIG_T>(reset_state, data_in, h_state, param, param_zr, param_b, param_br);
+        nnet::gru_cell<data_T, res_T, CONFIG_T, false>::apply(reset_state, data_in, h_state, param, param_zr, param_b,
+                                                              param_br);
 
         if (CONFIG_T::n_sequence_out > 1)
             for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
@@ -703,8 +1087,8 @@ void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_init[CO
 
 template <class data_T, class res_T, typename CONFIG_T>
 void gru_stack(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream,
-               typename CONFIG_T::weight_t param[CONFIG_T::n_state * 3 * CONFIG_T::n_in],
-               typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_state * 3 * CONFIG_T::n_state],
+               typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+               typename CONFIG_T::recurrent_weight_t param_zr[CONFIG_T::n_recurrent_weight],
                typename CONFIG_T::bias_t param_b[CONFIG_T::n_state * 3],
                typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state * 3]) {
 
@@ -731,8 +1115,8 @@ DataPropagation:
         }
         // The time steps run one after another, so one cell is shared whether or not it is static. The static
         // cell is not used here: with it, Vivado HLS outputs zeros when only the last time step is returned.
-        nnet::gru<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(reset_state, data_in, h_newstate, param,
-                                                                                     param_zr, param_b, param_br);
+        nnet::gru_cell<typename data_T::value_type, typename res_T::value_type, CONFIG_T, false>::apply(
+            reset_state, data_in, h_newstate, param, param_zr, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1) {
             res_T res_pack;
             PRAGMA_DATA_PACK(res_pack)
@@ -781,6 +1165,14 @@ struct simple_rnn_config {
     static const bool store_weights_in_bram = false;
     static const bool use_static = true;
     static const unsigned n_zeros = 0;
+
+    static const unsigned strategy = latency;
+    static const unsigned n_unit_par = 1;
+    static const unsigned n_cycles = 1;
+    static const unsigned n_lanes_in = 1;
+    static const unsigned n_lanes_state = 1;
+    static const unsigned n_weight = 4;
+    static const unsigned n_recurrent_weight = 4;
 
     template <class x_T, class y_T, class config_T> using activation = nnet::activation::tanh<x_T, y_T, config_T>;
 };
@@ -858,11 +1250,105 @@ void simple_rnn_static(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_ne
     }
 }
 
+// The SimpleRNN cell of the Resource strategy (see lstm_resource)
+template <class data_T, class res_T, typename CONFIG_T>
+void simple_rnn_resource(data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
+                         typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                         typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
+                         typename CONFIG_T::bias_t param_b[CONFIG_T::n_state],
+                         typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state]) {
+    typedef typename CONFIG_T::accum_t accum_t;
+    typedef typename CONFIG_T::ACT_CONFIG_T act_config;
+    typedef typename CONFIG_T::template activation<accum_t, res_T, act_config> act;
+
+    const unsigned n_par = CONFIG_T::n_unit_par;
+    const unsigned lanes_in = n_par * CONFIG_T::n_lanes_in;
+    const unsigned lanes_state = n_par * CONFIG_T::n_lanes_state;
+    #pragma HLS ARRAY_PARTITION variable=param cyclic factor=lanes_in
+    #pragma HLS ARRAY_PARTITION variable=param_r cyclic factor=lanes_state
+    #pragma HLS ARRAY_PARTITION variable=param_b cyclic factor=n_par
+    #pragma HLS ARRAY_PARTITION variable=param_br cyclic factor=n_par
+    #pragma HLS ARRAY_PARTITION variable=data complete
+    #pragma HLS ARRAY_PARTITION variable=h_state complete
+
+    RECURRENT_TABLE bool initialized = false;
+    RECURRENT_TABLE typename act_config::table_t act_table[n_par][act_config::table_size];
+    #pragma HLS ARRAY_PARTITION variable=act_table complete dim=1
+    if (!initialized) {
+        for (unsigned u = 0; u < n_par; u++) {
+            #pragma HLS UNROLL
+            act::init_table(act_table[u]);
+        }
+        initialized = true;
+    }
+
+    accum_t sum_in[lanes_in];
+    accum_t sum_state[lanes_state];
+    res_T h_newstate[CONFIG_T::n_state];
+    #pragma HLS ARRAY_PARTITION variable=sum_in complete
+    #pragma HLS ARRAY_PARTITION variable=sum_state complete
+    #pragma HLS ARRAY_PARTITION variable=h_newstate complete
+
+    unsigned group = 0, cycle = 0;
+SimpleRNNUnits:
+    for (unsigned it = 0; it < CONFIG_T::n_state / n_par * CONFIG_T::n_cycles; it++) {
+        #pragma HLS PIPELINE II=1
+        recurrent_resource_mac<data_T, res_T, CONFIG_T, 1>(it, cycle, data, h_state, param, param_r, sum_in, sum_state);
+        if (cycle == CONFIG_T::n_cycles - 1) {
+            for (unsigned up = 0; up < n_par; up++) {
+                #pragma HLS UNROLL
+                unsigned u = group * n_par + up;
+                accum_t sum = recurrent_resource_total<CONFIG_T, 1, CONFIG_T::n_lanes_in>(sum_in, up, 0, param_b[u]) +
+                              recurrent_resource_total<CONFIG_T, 1, CONFIG_T::n_lanes_state>(sum_state, up, 0, param_br[u]);
+                h_newstate[u] = act::single(sum, act_table[up]);
+            }
+        }
+        if (++cycle == CONFIG_T::n_cycles) {
+            cycle = 0;
+            group++;
+        }
+    }
+
+    for (unsigned u = 0; u < CONFIG_T::n_state; u++) {
+        #pragma HLS UNROLL
+        h_state[u] = h_newstate[u];
+    }
+}
+
+// One step of the SimpleRNN, as lstm_cell
+template <class data_T, class res_T, typename CONFIG_T, bool use_static,
+          bool resource = CONFIG_T::strategy == nnet::resource>
+struct simple_rnn_cell {
+    static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
+                      typename CONFIG_T::bias_t param_b[CONFIG_T::n_state],
+                      typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state]) {
+        #pragma HLS INLINE
+        if (use_static)
+            nnet::simple_rnn_static<data_T, res_T, CONFIG_T>(reset_state, data, h_state, param, param_r, param_b, param_br);
+        else
+            nnet::simple_rnn<data_T, res_T, CONFIG_T>(reset_state, data, h_state, param, param_r, param_b, param_br);
+    }
+};
+
+template <class data_T, class res_T, typename CONFIG_T, bool use_static>
+struct simple_rnn_cell<data_T, res_T, CONFIG_T, use_static, true> {
+    static void apply(bool reset_state, data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
+                      typename CONFIG_T::bias_t param_b[CONFIG_T::n_state],
+                      typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state]) {
+        #pragma HLS INLINE
+        nnet::simple_rnn_resource<data_T, res_T, CONFIG_T>(data, h_state, param, param_r, param_b, param_br);
+    }
+};
+
 template <class data_T, class res_T, typename CONFIG_T>
 void simple_rnn_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in],
                       res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
-                      typename CONFIG_T::weight_t param[CONFIG_T::n_state * CONFIG_T::n_in],
-                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
                       typename CONFIG_T::bias_t param_b[CONFIG_T::n_state],
                       typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state]) {
 
@@ -882,11 +1368,8 @@ void simple_rnn_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in],
             #pragma HLS UNROLL
             data_in[j] = data[j + iloop * CONFIG_T::n_in];
         }
-        if (CONFIG_T::use_static)
-            nnet::simple_rnn_static<data_T, res_T, CONFIG_T>(reset_state, data_in, h_state, param, param_r, param_b,
-                                                             param_br);
-        else
-            nnet::simple_rnn<data_T, res_T, CONFIG_T>(reset_state, data_in, h_state, param, param_r, param_b, param_br);
+        nnet::simple_rnn_cell<data_T, res_T, CONFIG_T, CONFIG_T::use_static>::apply(reset_state, data_in, h_state, param,
+                                                                                    param_r, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
             for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
                 #pragma HLS UNROLL
@@ -904,8 +1387,8 @@ void simple_rnn_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in],
 template <class data_T, class h_T, class res_T, typename CONFIG_T>
 void simple_rnn_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_init[CONFIG_T::n_state],
                       res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_state],
-                      typename CONFIG_T::weight_t param[CONFIG_T::n_state * CONFIG_T::n_in],
-                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
                       typename CONFIG_T::bias_t param_b[CONFIG_T::n_state],
                       typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state]) {
 
@@ -926,7 +1409,8 @@ void simple_rnn_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_
             #pragma HLS UNROLL
             data_in[j] = data[j + iloop * CONFIG_T::n_in];
         }
-        nnet::simple_rnn<data_T, res_T, CONFIG_T>(reset_state, data_in, h_state, param, param_r, param_b, param_br);
+        nnet::simple_rnn_cell<data_T, res_T, CONFIG_T, false>::apply(reset_state, data_in, h_state, param, param_r, param_b,
+                                                                     param_br);
         if (CONFIG_T::n_sequence_out > 1)
             for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
                 #pragma HLS UNROLL
@@ -943,8 +1427,8 @@ void simple_rnn_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_
 
 template <class data_T, class res_T, typename CONFIG_T>
 void simple_rnn_stack(hls::stream<data_T> &data_stream, hls::stream<res_T> &res_stream,
-                      typename CONFIG_T::weight_t param[CONFIG_T::n_state * CONFIG_T::n_in],
-                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_state * CONFIG_T::n_state],
+                      typename CONFIG_T::weight_t param[CONFIG_T::n_weight],
+                      typename CONFIG_T::recurrent_weight_t param_r[CONFIG_T::n_recurrent_weight],
                       typename CONFIG_T::bias_t param_b[CONFIG_T::n_state],
                       typename CONFIG_T::recurrent_bias_t param_br[CONFIG_T::n_state]) {
 
@@ -966,7 +1450,7 @@ DataPropagation:
             #pragma HLS UNROLL
             data_in[i_pack] = data_pack[i_pack];
         }
-        nnet::simple_rnn<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(
+        nnet::simple_rnn_cell<typename data_T::value_type, typename res_T::value_type, CONFIG_T, false>::apply(
             reset_state, data_in, h_newstate, param, param_r, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1) {
             res_T res_pack;
@@ -1010,6 +1494,14 @@ struct single_layer_config {
     static const unsigned table_size = 1024;
     static const bool reset_after = true;
 
+    static const unsigned strategy = latency;
+    static const unsigned n_unit_par = 1;
+    static const unsigned n_cycles = 1;
+    static const unsigned n_lanes_in = 1;
+    static const unsigned n_lanes_state = 1;
+    static const unsigned n_weight = 12;
+    static const unsigned n_recurrent_weight = 12;
+
     template <class x_T, class y_T, class config_T> using activation_recr = nnet::activation::relu<x_T, y_T, config_T>;
     template <class x_T, class y_T, class config_T> using activation = nnet::activation::relu<x_T, y_T, config_T>;
 };
@@ -1039,18 +1531,13 @@ struct bidirectional_config {
 template <class data_T, class res_T, typename CONFIG_T>
 void bidirectional_stack(
     data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CONFIG_T::n_sequence_out * CONFIG_T::n_out],
-    typename CONFIG_T::FORWARD_CONFIG::weight_t
-        param[CONFIG_T::FORWARD_CONFIG::n_state * CONFIG_T::FORWARD_CONFIG::n_mult * CONFIG_T::n_in],
-    typename CONFIG_T::FORWARD_CONFIG::recurrent_weight_t
-        param_r[CONFIG_T::FORWARD_CONFIG::n_state * CONFIG_T::FORWARD_CONFIG::n_mult * CONFIG_T::FORWARD_CONFIG::n_state],
+    typename CONFIG_T::FORWARD_CONFIG::weight_t param[CONFIG_T::FORWARD_CONFIG::n_weight],
+    typename CONFIG_T::FORWARD_CONFIG::recurrent_weight_t param_r[CONFIG_T::FORWARD_CONFIG::n_recurrent_weight],
     typename CONFIG_T::FORWARD_CONFIG::bias_t param_b[CONFIG_T::FORWARD_CONFIG::n_state * CONFIG_T::FORWARD_CONFIG::n_mult],
     typename CONFIG_T::FORWARD_CONFIG::recurrent_bias_t
         param_br[CONFIG_T::FORWARD_CONFIG::n_state * CONFIG_T::FORWARD_CONFIG::n_mult],
-    typename CONFIG_T::BACKWARD_CONFIG::weight_t
-        param_back[CONFIG_T::BACKWARD_CONFIG::n_state * CONFIG_T::BACKWARD_CONFIG::n_mult * CONFIG_T::n_in],
-    typename CONFIG_T::BACKWARD_CONFIG::recurrent_weight_t
-        param_r_back[CONFIG_T::BACKWARD_CONFIG::n_state * CONFIG_T::BACKWARD_CONFIG::n_mult *
-                     CONFIG_T::BACKWARD_CONFIG::n_state],
+    typename CONFIG_T::BACKWARD_CONFIG::weight_t param_back[CONFIG_T::BACKWARD_CONFIG::n_weight],
+    typename CONFIG_T::BACKWARD_CONFIG::recurrent_weight_t param_r_back[CONFIG_T::BACKWARD_CONFIG::n_recurrent_weight],
     typename CONFIG_T::BACKWARD_CONFIG::bias_t
         param_b_back[CONFIG_T::BACKWARD_CONFIG::n_state * CONFIG_T::BACKWARD_CONFIG::n_mult],
     typename CONFIG_T::BACKWARD_CONFIG::recurrent_bias_t

@@ -31,6 +31,8 @@ class RecurentHandler(KerasV3LayerHandler):
             raise Exception(f'return_state=True is not supported for {layer.__class__} layer.')
         if layer.go_backwards:
             raise NotImplementedError(f'Layer {layer.name}: go_backwards=True is not supported.')
+        if len(in_tensors) > 1:
+            raise NotImplementedError(f'Layer {layer.name}: initial_state is not supported.')
         if layer.stateful:
             print(
                 f'WARNING: "stateful" of layer {layer.name} is ignored; '
@@ -95,15 +97,15 @@ class BidirectionalHandler(KerasV3LayerHandler):
         import keras
 
         if layer.forward_layer.go_backwards:
-            rnn_forward_layer = layer.backward_layer
-            rnn_backward_layer = layer.forward_layer
-            print(
-                f'WARNING: The selected order for forward and backward layers in "{layer.name}" '
-                f'({layer.__class__.__name__}) is not supported. Switching to forward layer first, backward layer last.'
+            # Keras then puts the outputs of the layer that reads backwards first
+            raise NotImplementedError(
+                f'Layer {layer.name}: a forward layer with go_backwards=True is not supported. Pass the layer that reads '
+                'forwards as the layer and the one with go_backwards=True as the backward_layer.'
             )
-        else:
-            rnn_forward_layer = layer.forward_layer
-            rnn_backward_layer = layer.backward_layer
+        if len(in_tensors) > 1:
+            raise NotImplementedError(f'Layer {layer.name}: initial_state is not supported.')
+        rnn_forward_layer = layer.forward_layer
+        rnn_backward_layer = layer.backward_layer
 
         for rnn_layer in [rnn_forward_layer, rnn_backward_layer]:
             class_name = rnn_layer.__class__.__name__

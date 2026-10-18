@@ -24,6 +24,8 @@ def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader):
 
     if keras_layer['config'].get('go_backwards', False):
         raise NotImplementedError(f'Layer {layer["name"]}: go_backwards=True is not supported.')
+    if input_names is not None and len(input_names) > 1:
+        raise NotImplementedError(f'Layer {layer["name"]}: initial_state is not supported.')
     if keras_layer['config'].get('stateful', False):
         print(
             f'WARNING: "stateful" of layer {layer["name"]} is ignored; hls4ml inference does not carry state between inputs.'
@@ -76,7 +78,7 @@ def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader):
         output_shape = [input_shapes[0][0], layer['n_out']]
 
     if layer['return_state']:
-        raise Exception('"return_state" of {} layer is not yet supported.')
+        raise NotImplementedError(f'Layer {layer["name"]}: return_state=True is not supported.')
 
     return layer, output_shape
 
@@ -138,20 +140,18 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
     assert keras_layer['class_name'] == 'Bidirectional'
 
     rnn_forward_layer = keras_layer['config']['layer']
-    swapped_order = False
     if keras_layer['config'].get('backward_layer'):
         rnn_backward_layer = keras_layer['config']['backward_layer']
         if rnn_forward_layer['config']['go_backwards']:
-            temp_layer = rnn_forward_layer.copy()
-            rnn_forward_layer = rnn_backward_layer.copy()
-            rnn_backward_layer = temp_layer
-            swapped_order = True
-            print(
-                f'WARNING: The selected order for forward and backward layers in "{keras_layer["config"]["name"]}" '
-                f'({keras_layer["class_name"]}) is not supported. Switching to forward layer first, backward layer last.'
+            # Keras then puts the outputs of the layer that reads backwards first
+            raise NotImplementedError(
+                f'Layer {keras_layer["config"]["name"]}: a forward layer with go_backwards=True is not supported. Pass the '
+                'layer that reads forwards as the layer and the one with go_backwards=True as the backward_layer.'
             )
     else:
         rnn_backward_layer = rnn_forward_layer
+    if input_names is not None and len(input_names) > 1:
+        raise NotImplementedError(f'Layer {keras_layer["config"]["name"]}: initial_state is not supported.')
 
     assert (rnn_forward_layer['class_name'] in rnn_layers or rnn_forward_layer['class_name'][1:] in rnn_layers) and (
         rnn_backward_layer['class_name'] in rnn_layers or rnn_backward_layer['class_name'][1:] in rnn_layers
@@ -194,17 +194,14 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
 
         rnn_layer_name = rnn_layer['config']['name']
         cell_name = rnn_layer['class_name'].lower()
-        temp_dir = direction
-        if swapped_order:
-            temp_dir = 'backward' if direction == 'forward' else 'forward'
         layer[f'{direction}_weight_data'], layer[f'{direction}_recurrent_weight_data'], layer[f'{direction}_bias_data'] = (
             get_weights_data(
                 data_reader,
                 layer['name'],
                 [
-                    f'{temp_dir}_{rnn_layer_name}/{cell_name}_cell/kernel',
-                    f'{temp_dir}_{rnn_layer_name}/{cell_name}_cell/recurrent_kernel',
-                    f'{temp_dir}_{rnn_layer_name}/{cell_name}_cell/bias',
+                    f'{direction}_{rnn_layer_name}/{cell_name}_cell/kernel',
+                    f'{direction}_{rnn_layer_name}/{cell_name}_cell/recurrent_kernel',
+                    f'{direction}_{rnn_layer_name}/{cell_name}_cell/bias',
                 ],
             )
         )
@@ -242,6 +239,6 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
         output_shape = [input_shapes[0][0], layer['n_out']]
 
     if layer['return_state']:
-        raise Exception('"return_state" of {} layer is not yet supported.')
+        raise NotImplementedError(f'Layer {layer["name"]}: return_state=True is not supported.')
 
     return layer, output_shape
