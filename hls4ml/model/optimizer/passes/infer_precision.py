@@ -90,6 +90,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         if node_class in ['PReLU']:
             return self._infer_prelu_act_precision(node, types_to_infer)
+
+        if node_class in ['Softmax']:
+            return self._infer_softmax_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -602,6 +605,85 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             node.weights['param'].update_precision(node.types['param_t'].precision)
 
             inferred_types.append('param_t')
+
+        return inferred_types
+
+    def _infer_softmax_precision(self, node, types_to_infer):
+        inferred_types = []
+
+        if 'exp_table_t' in types_to_infer:
+            if node.get_attr('implementation') == 'stable':
+                # this is <= 1
+                prec = FixedPrecisionType(
+                    16, 1, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+                )
+            else:
+                prec = FixedPrecisionType(
+                    18, 8, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+                )
+            node.types['exp_table_t'].precision = prec
+            inferred_types.append('exp_table_t')
+
+        if 'inv_table_t' in types_to_infer:
+            # this is <= 1
+            prec = FixedPrecisionType(
+                16, 1, signed=False, rounding_mode=RoundingMode.RND_CONV, saturation_mode=SaturationMode.SAT
+            )
+            node.types['inv_table_t'].precision = prec
+            inferred_types.append('inv_table_t')
+
+        if 'accum_t' in types_to_infer:
+            exp_w = node.types['exp_table_t'].precision.width
+            exp_i = node.types['exp_table_t'].precision.integer
+            exp_s = node.types['exp_table_t'].precision.signed
+            n_slice = node.get_attr('n_in') // node.get_attr('n_inner') // node.get_attr('n_outer')
+            ceillog = math.ceil(np.log2(n_slice))
+            node.types['accum_t'].precision = FixedPrecisionType(exp_w + ceillog, exp_i + ceillog, signed=exp_s)
+            inferred_types.append('accum_t')
+
+        if 'inv_inp_t' in types_to_infer:
+            accum = node.types['accum_t'].precision
+            if node.get_attr('implementation') == 'stable':
+                # The normalized exponentials are at most 1, so their sum is at most n_slice
+                n_slice = node.get_attr('n_in') // node.get_attr('n_inner') // node.get_attr('n_outer')
+                inv_int = min(accum.integer, 1 + math.ceil(np.log2(n_slice)))
+                node.types['inv_inp_t'].precision = FixedPrecisionType(
+                    inv_int + accum.width - accum.integer, inv_int, signed=False
+                )
+            else:
+                # The inverse table is indexed by the top bits of inv_inp_t, so integer bits beyond what the table
+                # covers at a step of 0.25 cost resolution; saturate the rare larger sums instead.
+                inv_table_size = node.get_attr('inv_table_size', node.get_attr('table_size'))
+                inv_int = min(accum.integer, math.ceil(math.log2(inv_table_size)) - 2)
+                node.types['inv_inp_t'].precision = FixedPrecisionType(
+                    inv_int + accum.width - accum.integer,
+                    inv_int,
+                    signed=False,
+                    saturation_mode=SaturationMode.SAT if inv_int < accum.integer else None,
+                )
+            inferred_types.append('inv_inp_t')
+
+        if 'inp_norm_t' in types_to_infer:
+            in_type = node.get_input_variable().type.precision
+            in_frac = in_type.width - in_type.integer
+            # x_max - x_i is non-negative and below 2**integer, but beyond about (f + 1) * ln(2) the exp table
+            # entries round to zero anyway, so only keep the integer bits that matter and saturate above them.
+            # This keeps the resolution of the table lookup, which uses the most significant bits.
+            exp_frac = node.types['exp_table_t'].precision.width - node.types['exp_table_t'].precision.integer
+            exp_int = max(math.ceil(math.log2((exp_frac + 1) * math.log(2))), 0)
+            inp_norm_int = min(in_type.integer, exp_int)
+            # Altera cannot index a table with a 1-bit type
+            min_width = 2 if node.model.config.backend.name == 'Altera' else 1
+            inp_norm_width = max(inp_norm_int + in_frac, min_width)
+            node.types['inp_norm_t'].precision = FixedPrecisionType(
+                inp_norm_width, inp_norm_int, signed=False, saturation_mode=SaturationMode.SAT
+            )
+            inferred_types.append('inp_norm_t')
+
+        if 'result_t' in types_to_infer:
+            # if not set, just choose the inv_table_t type
+            node.types['result_t'].precision = node.types['inv_table_t'].precision
+            inferred_types.append('result_t')
 
         return inferred_types
 

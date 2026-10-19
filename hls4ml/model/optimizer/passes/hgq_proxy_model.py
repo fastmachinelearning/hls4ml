@@ -81,7 +81,17 @@ class FuseFixedPointQuantizer(OptimizerPass):
             return False
 
         if isinstance(node, FixedPointQuantizer):
-            return all(np.unique(x).size == 1 for x in node.mask_kbi)
+            if not all(np.unique(x).size == 1 for x in node.mask_kbi):
+                return False
+            config = node.model.config.config
+            if (
+                config['Backend'].lower() in ('altera', 'quartus')
+                and config['IOType'] == 'io_parallel'
+                and int(node.mask_kbi[1].ravel()[0]) == 1
+            ):
+                # ac_fixed has no 1-bit type, so keep the quantizer to reproduce 1-bit rounding and saturation exactly
+                return False
+            return True
 
         if isinstance(node, Activation):
             return node.get_attr('activation') == 'linear' and node.get_attr('trusted', False)

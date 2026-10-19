@@ -66,7 +66,13 @@ class ActivationHandler(KerasV3LayerHandler):
         match activation:
             case keras.activations.softmax:
                 class_name = 'Softmax'
+                ax = len(in_tensors[0].shape) - 1
+                n_outer: int = prod(in_tensors[0].shape[1:ax])  # type: ignore
+                n_inner: int = prod(in_tensors[0].shape[ax + 1 :])  # type: ignore
                 config['axis'] = -1
+                config['activation'] = 'softmax'
+                config['n_outer'] = n_outer
+                config['n_inner'] = n_inner
             case keras.activations.hard_sigmoid:
                 class_name = 'HardActivation'
             case keras.activations.leaky_relu:

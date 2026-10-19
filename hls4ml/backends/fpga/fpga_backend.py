@@ -44,7 +44,6 @@ from hls4ml.model.types import (
     IntegerPrecisionType,
     PrecisionType,
     RoundingMode,
-    SaturationMode,
     StandardFloatPrecisionType,
     UnspecifiedPrecisionType,
     XnorPrecisionType,
@@ -129,22 +128,25 @@ class FPGABackend(Backend):
             ConfigurableAttribute('skip', value_type=bool, default=False, description=descriptions.softmax_skip),
             TypeAttribute(
                 'exp_table',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                default=UnspecifiedPrecisionType(),
                 description=descriptions.table_type,
             ),
             TypeAttribute(
                 'inv_table',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                default=UnspecifiedPrecisionType(),
                 description=descriptions.table_type,
             ),
             TypeAttribute(
                 'inv_inp',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                default=UnspecifiedPrecisionType(),
+                description='What the accumulated value is cast to before accessing the inversion table (only in stable)',
             ),
             TypeAttribute(
-                'accum',
-                default=FixedPrecisionType(18, 8, rounding_mode=RoundingMode.RND, saturation_mode=SaturationMode.SAT),
+                'inp_norm',
+                default=UnspecifiedPrecisionType(),
+                description='The internal width used for the exp table lookup (only in stable)',
             ),
+            TypeAttribute('accum', default=UnspecifiedPrecisionType(), description=descriptions.accum_type),
         ]
         self.attribute_map[Softmax] = softmax_attrs
 
@@ -342,6 +344,27 @@ class FPGABackend(Backend):
                 rf = targ_cycles - shuffle_cycles * kernel_multiplies  # subtract data shuffling overhead
 
             layer.set_attr('reuse_factor', float(rf) / kernel_multiplies)
+
+    def validate_softmax_axis(self, layer):
+        """Check that softmax is along a supported axis, and canonicalize the last axis to -1.
+
+        With io_stream, only softmax along the last axis is supported. With io_parallel, Vivado and Vitis also
+        support other axes, as described by n_outer and n_inner; a different axis with n_outer and n_inner
+        describing the last axis is rejected. Altera currently only supports softmax along the last axis.
+        """
+        shape = layer.get_input_variable().shape
+        axis = layer.get_attr('axis', -1)
+        # 'axis' counts the batch dimension, the input shape does not
+        last_axis = axis in (-1, len(shape))
+        n_slice = int(np.prod(shape)) // layer.get_attr('n_outer', 1) // layer.get_attr('n_inner', 1)
+        last_axis_slices = layer.get_attr('n_inner', 1) == 1 and n_slice == shape[-1]
+        if layer.model.config.get_config_value('IOType') == 'io_stream':
+            if not (last_axis and last_axis_slices):
+                raise ValueError(f'Softmax layer {layer.name}: io_stream only supports softmax along the last axis.')
+        elif last_axis_slices and not last_axis:
+            raise ValueError(f'Softmax layer {layer.name}: softmax along axis {axis} is not supported.')
+        if axis == len(shape):
+            layer.set_attr('axis', -1)
 
     def get_valid_conv_partition_splits(self, out_height, out_width):
         """Generate valid partition splits of a Conv1D/2D layer.
