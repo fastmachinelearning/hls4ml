@@ -165,6 +165,7 @@ Consult <a class="reference external" href="https://help.github.com/articles/abo
 <li><p>If you are introducing new functionality, add at least one unit test under the <code class="docutils literal notranslate"><span class="pre">test</span></code> folder and make sure it passes before you submit the pull request.</p></li>
 <li><p>Similarly, if you are fixing a bug, add at least one unit test under the <code class="docutils literal notranslate"><span class="pre">test</span></code> folder such that the main branch fails the test and your branch passes the test.</p></li>
 <li><p>Install and run <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> on the files that you have edited.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/ir/attributes.rst</span></code> is generated. If you add layers or backends, or change layer attributes or their descriptions, regenerate it by running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">../attr_doc_gen.py</span></code> from the <code class="docutils literal notranslate"><span class="pre">docs/ir</span></code> folder, and commit the result. Do not edit it by hand.</p></li>
 <li><p>Submit the pull request to the <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml">main</a> branch.</p></li>
 </ol>
 <p>Pull requests are <strong>squash-merged</strong>, so the individual commits on your branch are not preserved.
