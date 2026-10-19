@@ -1,4 +1,4 @@
-exclude: (^hls4ml\/templates\/(vivado|quartus)\/(ap_types|ac_types)\/|^test/pytest/test_report/)
+exclude: (^hls4ml\/templates\/vivado\/ap_types\/|^test/pytest/test_report/)
 
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit

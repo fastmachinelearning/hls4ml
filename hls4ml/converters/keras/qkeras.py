@@ -165,7 +165,6 @@ def get_activation_quantizer(keras_layer, input_names, activation_name='activati
         layer['class_name'] = 'HardActivation'
         layer['slope'] = 0.5  # the default values in QKeras
         layer['shift'] = 0.5
-        # Quartus seems to have trouble if the width is 1.
         layer['slope_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
         layer['shift_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
         layer[activation_name] = activation_config['class_name'].replace('quantized_', 'hard_')
