@@ -257,9 +257,9 @@ Build options
    * - ``vitis_fifo_sizing=True``
      - Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on ``cosim`` by itself.
    * - ``vsynth=True``
-     - Synthesizes the kernel alone with Vivado, out of context and with the clock period constrained, and writes ``vivado_synth.rpt`` (utilization) and ``vivado_synth_timing.rpt``. It reads the Verilog of an earlier ``synth=True``, and turns on ``synth`` by itself only when there is none, or with ``reset=True``. It needs ``vivado`` on the PATH.
+     - Synthesizes the kernel alone with Vivado, out of context and with the clock period constrained, and writes ``vivado_synth.rpt`` (utilization) and ``vivado_synth_timing.rpt``. It reads the Verilog of an earlier ``synth=True``, and turns on ``synth`` by itself only when there is none, or with ``reset=True``. If synthesis leaves the cascade input of a DSP unconnected (design rule DSPS-2), the kernel is synthesized again with ``-cascade_dsp tree``, which can change the resources. It needs ``vivado`` on the PATH.
    * - ``pnr=True``
-     - Also places and routes the kernel after Vivado synthesis and writes ``vivado_impl.rpt``, ``vivado_impl_timing.rpt`` and ``vivado_impl_power.rpt``. It turns on ``vsynth`` by itself.
+     - Also places and routes the kernel after Vivado synthesis and writes ``vivado_impl.rpt``, ``vivado_impl_timing.rpt`` and ``vivado_impl_power.rpt``. Vivado estimates the power from default switching activity, not from a simulation of the kernel, so most of the total can be the static power of the device; ``DynamicPower`` is the part that depends on the kernel. It turns on ``vsynth`` by itself.
    * - ``bitfile=True``
      - Links the packaged kernel to the board platform and writes the ``.xclbin`` to ``vitis_workspace/system_link/``. With the PYNQ driver it also writes the bitstream and the hardware handoff file to ``export/``, with the XRT driver it copies the ``.xclbin`` there. It needs the ``.xo`` file from ``synth=True``, ``xclbinutil`` and ``vivado`` on the PATH, and ``XILINX_VITIS`` set, which sourcing the Vitis ``settings64.sh`` does. A card platform is found through ``PLATFORM_REPO_PATHS``. A prebuilt platform that cannot be found is reported before any step runs.
    * - ``log_to_stdout=False``

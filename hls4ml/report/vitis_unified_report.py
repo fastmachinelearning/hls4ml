@@ -58,12 +58,15 @@ def _parse_kernel_utilization(util_file, kernel_name):
             elif cells[0] == kernel_name:
                 report = {}
                 for name, cell in zip(header[1:], cells[1:]):
-                    if name in columns:
-                        # A cell holds the count and the share of the device, as in '6869 [  2.55%]'
-                        value = cell.split()[0]
-                        if name == 'BRAM':
-                            value = f'{float(value) * 2:g}'
-                        report[columns[name]] = value
+                    if name not in columns:
+                        continue
+                    # A cell holds the count and the share of the device, as in '6869 [  2.55%]'
+                    value = cell.split()[0] if cell else ''
+                    try:
+                        count = float(value)
+                    except ValueError:
+                        continue
+                    report[columns[name]] = f'{count * 2:g}' if name == 'BRAM' else value
                 return report
     return {}
 

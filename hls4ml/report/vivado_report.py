@@ -197,9 +197,11 @@ def _parse_vivado_utilization(util_file):
             for key, row_names in _vivado_utilization_rows.items():
                 if key not in report and row_name in row_names:
                     value = cells[2].strip()
-                    if key == 'BRAM_18K':
-                        value = f'{float(value) * 2:g}'
-                    report[key] = value
+                    try:
+                        count = float(value)
+                    except ValueError:
+                        continue
+                    report[key] = f'{count * 2:g}' if key == 'BRAM_18K' else value
     return report
 
 
@@ -217,7 +219,7 @@ def _parse_vivado_timing_summary(timing_file):
     for i, line in enumerate(lines):
         if line.split()[:1] == ['WNS(ns)']:
             # The header is followed by a line of dashes, then the values
-            values = lines[i + 2].split()
+            values = lines[i + 2].split() if i + 2 < len(lines) else []
             for column, key in columns.items():
                 try:
                     report[key] = float(values[column])
@@ -228,24 +230,29 @@ def _parse_vivado_timing_summary(timing_file):
 
 
 def _parse_vivado_power(power_file):
-    """Read the total, dynamic and static on-chip power, in W, from a report written by Vivado's report_power."""
+    """Read the dynamic, static and total on-chip power, in W, from a report written by Vivado's report_power.
+
+    Vivado estimates the power from default switching activity, not from a simulation of the design, so for a small
+    design on a large device most of the total is the static power of the device.
+    """
 
     rows = {
-        'Total On-Chip Power (W)': 'TotalPower',
         'Dynamic (W)': 'DynamicPower',
         'Device Static (W)': 'StaticPower',
+        'Total On-Chip Power (W)': 'TotalPower',
     }
-    report = {}
+    power = {}
     with open(power_file) as f:
         for line in f:
             cells = line.split('|')
-            if len(cells) < 3 or cells[1].strip() not in rows or rows[cells[1].strip()] in report:
+            if len(cells) < 3 or cells[1].strip() not in rows or rows[cells[1].strip()] in power:
                 continue
             try:
-                report[rows[cells[1].strip()]] = float(cells[2].split()[0])
+                power[rows[cells[1].strip()]] = float(cells[2].split()[0])
             except (IndexError, ValueError):
                 pass
-    return report
+    # The report lists the total first
+    return {key: power[key] for key in rows.values() if key in power}
 
 
 def _parse_vivado_synth_reports(hls_dir, stage):
@@ -605,9 +612,9 @@ def _make_vivado_tables(vivado_report, make_table_template, titles=('Resource ut
         'Total Hold Slack (THS)': 'THS',
     }
     power_rows = {
-        'Total On-Chip Power (W)': 'TotalPower',
         'Dynamic (W)': 'DynamicPower',
         'Device Static (W)': 'StaticPower',
+        'Total On-Chip Power (W)': 'TotalPower',
     }
 
     tables = make_table_template(titles[0], area_rows)

@@ -313,11 +313,15 @@ class VivadoBackend(FPGABackend):
             cosim (bool, optional): Run C/RTL co-simulation. Defaults to False.
             validation (bool, optional): Compare the outputs of C simulation and co-simulation. Defaults to False.
             export (bool, optional): Export the design as an IP. Defaults to False.
-            vsynth (bool, optional): Synthesize the generated Verilog with Vivado, out of context. Defaults to False.
+            vsynth (bool, optional): Synthesize the generated Verilog with Vivado, out of context. If synthesis leaves
+                the cascade input of a DSP unconnected (design rule DSPS-2), the design is synthesized again with
+                ``-cascade_dsp tree``, which can change the resources. Defaults to False.
             fifo_opt (bool, optional): Record the FIFO occupancy during co-simulation, used by the FIFO depth
                 optimization flow. Defaults to False.
             pnr (bool, optional): Also place and route the design after Vivado synthesis, for the resources, timing
-                and power after implementation. Implies ``vsynth``. Defaults to False.
+                and power after implementation. Vivado estimates the power from default switching activity, not
+                from a simulation of the design, so most of the total can be the static power of the device.
+                Implies ``vsynth``. Defaults to False.
 
         Returns:
             dict: The reports read from the project, see ``hls4ml.report.parse_vivado_report``.

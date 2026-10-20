@@ -228,9 +228,9 @@ def test_vivado_impl_report(tmp_path, capsys):
         + '    Worst Hold Slack (WHS):     0.055\n'
         + '    Total Hold Slack (THS):     0.0\n\n'
         + ' - Power:\n'
-        + '    Total On-Chip Power (W): 2.95\n'
         + '    Dynamic (W):             0.012\n'
-        + '    Device Static (W):       2.938\n\n'
+        + '    Device Static (W):       2.938\n'
+        + '    Total On-Chip Power (W): 2.95\n\n'
     )
 
 

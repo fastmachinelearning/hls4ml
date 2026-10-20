@@ -106,7 +106,7 @@ Build your HLS project. If you have a project directory called ``my-hls-test``\ 
 * ``-r, --co-simulation``\ : run C/RTL co-simulation.
 * ``-v, --validation``\ : run C/RTL validation.
 * ``-e, --export``\ : export IP (implies -s)
-* ``-l, --vivado_synthesis``\ : run Vivado synthesis (implies -s).
+* ``-l, --vivado-synthesis``\ : run Vivado synthesis (implies -s).
 * ``--pnr``\ : run Vivado place and route after Vivado synthesis (implies --vivado-synthesis).
 * ``-a, --all``\ : run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis.
 * ``--reset``\ : remove any previous builds
