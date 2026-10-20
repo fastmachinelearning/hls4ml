@@ -8,6 +8,7 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 The Optimization API works with Keras 2 and with Keras 3 using the TensorFlow backend. Its dependencies are installed with ``pip install hls4ml[optimization]``.
 QKeras layers (``QDense`` and ``QConv2D``) can be optimized if QKeras is installed: ``qkeras`` with Keras 2, or ``qkeras-v3`` with Keras 3.
 With Keras 3, QKeras v3 currently requires Python 3.12 or older, because of the dependency versions required by OR-Tools and tensorflow-model-optimization.
+With Keras 2, do not use an optimizer with ``use_ema=True``. Between pruning steps the optimizer state is reset, and in Keras 2 this also resets the moving averages, so the weights shrink at the end of the following training.
 
 The code block below showcases three use cases of the hls4ml Optimization API - network sparsity (unstructured pruning), GPU FLOPs (structured pruning) and Vivado DSP utilization (pattern pruning). First, we start with unstructured pruning:
 
