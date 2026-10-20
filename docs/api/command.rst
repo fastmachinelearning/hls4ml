@@ -88,7 +88,7 @@ hls4ml build
 
 .. code-block::
 
-   hls4ml build [-h] [-p PROJECT] [-c] [-s] [-r] [-v] [-e] [-l] [-a] [--reset]
+   hls4ml build [-h] [-p PROJECT] [-l] [-c] [-s] [-r] [-v] [-e] [--vivado-synthesis] [--pnr] [-a] [--reset]
 
 Build your HLS project. If you have a project directory called ``my-hls-test``\ , you can often do the following to build the whole project with all the steps described in the arguments section:
 
@@ -101,12 +101,13 @@ Build your HLS project. If you have a project directory called ``my-hls-test``\ 
 
 * ``-h, --help``\ : show help message and exit.
 * ``-p PROJECT``\ , or ``--project PROJECT``\ : project directory.
+* ``-l, --list-options``\ : list the build options of the backend of the project.
 * ``-c, --simulation``\ : run C simulation.
 * ``-s, --synthesis``\ : run C/RTL synthesis
 * ``-r, --co-simulation``\ : run C/RTL co-simulation.
 * ``-v, --validation``\ : run C/RTL validation.
 * ``-e, --export``\ : export IP (implies -s)
-* ``-l, --vivado-synthesis``\ : run Vivado synthesis (implies -s).
+* ``--vivado-synthesis``\ : run Vivado synthesis (implies -s).
 * ``--pnr``\ : run Vivado place and route after Vivado synthesis (implies --vivado-synthesis).
 * ``-a, --all``\ : run C simulation, C/RTL synthesis, C/RTL co-simulation and Vivado synthesis.
 * ``--reset``\ : remove any previous builds

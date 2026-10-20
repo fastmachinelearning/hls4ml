@@ -183,8 +183,9 @@ def _build_vivado(args, extra_args):
     vivado_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation', action='store_true', default=False)
     vivado_parser.add_argument('-v', '--validation', help='Run C/RTL validation', action='store_true', default=False)
     vivado_parser.add_argument('-e', '--export', help='Export IP (implies -s)', action='store_true', default=False)
+    # -l is taken by --list-options of hls4ml build
     vivado_parser.add_argument(
-        '-l', '--vivado-synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False
+        '--vivado-synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False
     )
     vivado_parser.add_argument(
         '--pnr',
