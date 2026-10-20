@@ -75,9 +75,7 @@ def test_optimize_keras_model_for_hls4ml(tmp_path):
     model.add(Dense(16, input_shape=(8,), activation='relu', name='dense_1'))
     model.add(Dense(4, name='dense_2'))
 
-    hls_config = config_from_keras_model(
-        model, granularity='name', default_precision='ac_fixed<16, 6>', default_reuse_factor=4
-    )
+    hls_config = config_from_keras_model(model, granularity='name', default_precision='fixed<16,6>', default_reuse_factor=4)
     hls_config['IOType'] = 'io_parallel'
     hls_config['Model']['Strategy'] = 'Resource'
 

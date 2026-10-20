@@ -219,6 +219,7 @@ def get_attributes_from_keras_model_and_hls4ml_config(model, config):
             weight_precision = layer_precision.get('weight', 'auto')
             weight_precision = default_precision if weight_precision == 'auto' else weight_precision
             weight_precision = hls4ml.backends.fpga.fpga_backend.FPGABackend.convert_precision_string(weight_precision)
+            # Results set to 'auto' get a wider type during conversion
             output_precision = layer_precision.get('result', 'auto')
             output_precision = default_precision if output_precision == 'auto' else output_precision
             output_precision = hls4ml.backends.fpga.fpga_backend.FPGABackend.convert_precision_string(output_precision)

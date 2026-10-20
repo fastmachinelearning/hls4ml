@@ -126,7 +126,7 @@ def clone_optimizer(optimizer):
     """
     if isinstance(optimizer, str):
         return optimizer
-    return tf.keras.optimizers.deserialize(tf.keras.optimizers.serialize(optimizer))
+    return type(optimizer).from_config(optimizer.get_config())
 
 
 def reset_optimizer_state(optimizer):
