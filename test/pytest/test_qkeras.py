@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from keras.layers import GRU, LSTM, BatchNormalization, Bidirectional, Input, SimpleRNN
 from keras.models import Model, Sequential, model_from_json
-from keras.utils import to_categorical
+from keras.utils import set_random_seed, to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
 from qkeras.qconvolutional import QConv1D, QConv2D, QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
@@ -13,6 +13,7 @@ from qkeras.qlayers import QActivation, QDense
 from qkeras.qnormalization import QBatchNormalization
 from qkeras.quantizers import (
     binary,
+    get_quantizer,
     quantized_bits,
     quantized_po2,
     quantized_relu,
@@ -414,11 +415,11 @@ NO_QUANT_LAYERS = {
     'QDepthwiseConv2D': ((8, 8, 3), lambda: QDepthwiseConv2D((3, 3)), ['Vivado', 'Vitis']),
     'QSeparableConv1D': ((8, 3), lambda: QSeparableConv1D(4, 3), ['Vivado', 'Vitis']),
     'QSeparableConv2D': ((8, 8, 3), lambda: QSeparableConv2D(4, (3, 3)), ['Vivado', 'Vitis']),
-    'QSimpleRNN': ((5, 3), lambda: QSimpleRNN(4, activation='relu'), ['Quartus', 'Altera']),
+    'QSimpleRNN': ((5, 3), lambda: QSimpleRNN(4, activation='relu'), ALL_BACKENDS),
     'QLSTM': (
         (5, 3),
         lambda: QLSTM(4, activation='tanh', recurrent_activation='sigmoid'),
-        ['Vivado', 'Quartus', 'Altera'],
+        ALL_BACKENDS,
     ),
     'QGRU': (
         (5, 3),
@@ -431,7 +432,7 @@ NO_QUANT_LAYERS = {
             reset_after=True,
             recurrent_quantizer='quantized_bits(24, 7, alpha=1)',
         ),
-        ['Vivado', 'Quartus', 'Altera'],
+        ALL_BACKENDS,
     ),
     'QBatchNormalization': (
         (10,),
@@ -645,7 +646,14 @@ def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
     np.testing.assert_allclose(y_hls.flatten(), y_keras.flatten(), rtol=2e-2)
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Altera'])
+def assert_rnn_weights_quantized(hls_layer, quantizer):
+    """Check that the weights of a recurrent layer are the QKeras-quantized values of the model's weights."""
+    for name in ('weight', 'recurrent_weight', 'bias'):
+        w = hls_layer.weights[name]
+        np.testing.assert_array_equal(w.data, np.asarray(quantizer(w.data_unquantized)))
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 def test_qsimplernn(test_case_id, backend):
     """
     Test proper handling of QSimpleRNN.
@@ -678,9 +686,10 @@ def test_qsimplernn(test_case_id, backend):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+    assert_rnn_weights_quantized(hls_model.graph[model.layers[0].name], quantized_bits(16, 0, alpha=1))
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 def test_qlstm(test_case_id, backend):
     """
     Test proper handling of QLSTM.
@@ -714,9 +723,10 @@ def test_qlstm(test_case_id, backend):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+    assert_rnn_weights_quantized(hls_model.graph[model.layers[0].name], quantized_bits(8, 0, alpha=1))
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 def test_qgru(test_case_id, backend):
     """
     Test proper handling of QGRU.
@@ -751,6 +761,43 @@ def test_qgru(test_case_id, backend):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+    assert_rnn_weights_quantized(hls_model.graph[model.layers[0].name], quantized_bits(8, 0, alpha=1))
+
+
+@pytest.mark.parametrize('layer', ['QSimpleRNN', 'QLSTM', 'QGRU'])
+@pytest.mark.parametrize('quantizer', ['quantized_bits(8, 0, alpha=1)', 'quantized_po2(4)'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_qrnn_weight_quantizers(test_case_id, layer, quantizer, backend):
+    """The kernel, recurrent and bias quantizers of a QKeras recurrent layer are applied to its weights, so hls4ml
+    computes with the same weights as QKeras."""
+    quantizers = dict(
+        kernel_quantizer=quantizer, recurrent_quantizer=quantizer, bias_quantizer='quantized_bits(8, 0, alpha=1)'
+    )
+    layers = {
+        'QSimpleRNN': lambda: QSimpleRNN(8, activation='relu', **quantizers),
+        'QLSTM': lambda: QLSTM(8, activation='tanh', recurrent_activation='sigmoid', **quantizers),
+        'QGRU': lambda: QGRU(8, activation='tanh', recurrent_activation='sigmoid', reset_after=True, **quantizers),
+    }
+    set_random_seed(0)
+    x_in = Input((6, 4))
+    model = Model(x_in, layers[layer]()(x_in))
+    X = np.round(np.random.default_rng(0).uniform(-0.5, 0.5, (50, 6, 4)) * 2**7) * 2**-7
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', backend=backend, default_precision='ap_fixed<24,10>'
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, backend=backend, output_dir=output_dir)
+    hls_model.compile()
+
+    hls_layer = hls_model.graph[model.layers[1].name]
+    for name, q in (('weight', quantizer), ('recurrent_weight', quantizer), ('bias', 'quantized_bits(8, 0, alpha=1)')):
+        w = hls_layer.weights[name]
+        np.testing.assert_array_equal(w.data, np.asarray(get_quantizer(q)(w.data_unquantized)))
+
+    y_qkeras = model.predict(X, verbose=0)
+    y_hls4ml = hls_model.predict(X).reshape(y_qkeras.shape)
+    np.testing.assert_allclose(y_hls4ml, y_qkeras, rtol=0, atol=0.05)
 
 
 @pytest.mark.parametrize('rnn_layer', ['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])

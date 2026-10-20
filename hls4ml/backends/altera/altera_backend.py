@@ -399,14 +399,14 @@ class AlteraBackend(FPGABackend):
                 data=rec_weights_data[
                     0 : layer.get_attr('n_out'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
                 ],
-                quantizer=layer.get_attr('weight_quantizer'),
+                quantizer=layer.get_attr('recurrent_weight_quantizer'),
                 compression=None,
             )
             layer.add_weights_variable(
                 name=f'bias_{weight_types[i]}',
                 var_name=f'bias_{weight_types[i]}_{{index}}',
                 data=bias_data[i * layer.get_attr('n_out') : (i + 1) * (layer.get_attr('n_out'))],
-                quantizer=layer.get_attr('weight_quantizer'),
+                quantizer=layer.get_attr('bias_quantizer'),
                 compression=None,
             )
 
