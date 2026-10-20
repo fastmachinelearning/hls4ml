@@ -595,6 +595,14 @@ def _convert_cycles_to_time(n_cycles, clock_period):
         return str(time_in_s) + ' s'
 
 
+def _format_latency(cycles, clock_period):
+    # Vitis HLS reports 'undef' when the latency depends on a value known only at run time, such as the batch size of
+    # a VitisUnified kernel
+    if not str(cycles).isdigit():
+        return cycles
+    return f'{cycles} ({_convert_cycles_to_time(int(cycles), clock_period)})'
+
+
 def _make_vivado_tables(vivado_report, make_table_template, titles=('Resource utilization', 'Timing', 'Power')):
     """Make the resource, timing and power tables of a report read by _parse_vivado_synth_reports."""
 
@@ -653,8 +661,6 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
 
         csynth_report = report_dict['CSynthesisReport']
         target_clock = float(csynth_report['TargetClockPeriod'])
-        best_latency = int(csynth_report['BestLatency'])
-        worst_latency = int(csynth_report['WorstLatency'])
         bram = int(csynth_report['BRAM_18K'])
         avail_bram = int(csynth_report['AvailableBRAM_18K'])
         dsp = int(csynth_report['DSP'])
@@ -669,8 +675,8 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
 
         params = {}
 
-        params['best_latency'] = str(best_latency) + ' (' + _convert_cycles_to_time(best_latency, target_clock) + ')'
-        params['worst_latency'] = str(worst_latency) + ' (' + _convert_cycles_to_time(worst_latency, target_clock) + ')'
+        params['best_latency'] = _format_latency(csynth_report['BestLatency'], target_clock)
+        params['worst_latency'] = _format_latency(csynth_report['WorstLatency'], target_clock)
         params['interval_min'] = csynth_report['IntervalMin']
         params['interval_max'] = csynth_report['IntervalMax']
         params['estimated_clock'] = csynth_report['EstimatedClockPeriod']
