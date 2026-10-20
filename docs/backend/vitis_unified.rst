@@ -257,7 +257,7 @@ Build options
    * - ``vitis_fifo_sizing=True``
      - Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on ``cosim`` by itself.
    * - ``vsynth=True``
-     - Synthesizes the kernel alone with Vivado, out of context and with the clock period constrained, and writes ``vivado_synth.rpt`` (utilization) and ``vivado_synth_timing.rpt``. It turns on ``synth`` by itself and needs ``vivado`` on the PATH.
+     - Synthesizes the kernel alone with Vivado, out of context and with the clock period constrained, and writes ``vivado_synth.rpt`` (utilization) and ``vivado_synth_timing.rpt``. It reads the Verilog of an earlier ``synth=True``, and turns on ``synth`` by itself only when there is none, or with ``reset=True``. It needs ``vivado`` on the PATH.
    * - ``pnr=True``
      - Also places and routes the kernel after Vivado synthesis and writes ``vivado_impl.rpt``, ``vivado_impl_timing.rpt`` and ``vivado_impl_power.rpt``. It turns on ``vsynth`` by itself.
    * - ``bitfile=True``
@@ -265,7 +265,7 @@ Build options
    * - ``log_to_stdout=False``
      - Writes the output of each step to ``<step>_stdout.log`` and ``<step>_stderr.log`` instead of the terminal.
    * - ``reset=True``
-     - Deletes the Vitis HLS project and the link work directory before the selected steps run.
+     - Deletes the Vitis HLS project, the link work directory and the reports of Vivado synthesis and of the bitfile build before the selected steps run.
    * - ``validation``, ``export``
      - Accepted for compatibility with the other backends. They are ignored with a warning. The kernel is always packaged by ``synth=True``.
 
