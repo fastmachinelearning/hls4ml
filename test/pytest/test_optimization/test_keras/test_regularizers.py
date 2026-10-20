@@ -7,16 +7,22 @@ from tensorflow.keras.optimizers import Adam
 
 from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
 from hls4ml.optimization.dsp_aware_pruning.keras.builder import remove_custom_regularizers
-from hls4ml.optimization.dsp_aware_pruning.keras.config import CONV2D_LAYERS, DENSE_LAYERS
+from hls4ml.optimization.dsp_aware_pruning.keras.config import QKERAS_AVAILABLE
 from hls4ml.optimization.dsp_aware_pruning.keras.regularizers import Conv2DRegularizer, DenseRegularizer
+
+if QKERAS_AVAILABLE:
+    from qkeras import QConv2D, QDense
+else:
+    QConv2D = QDense = None
 
 # Constants
 pattern_offset = 4
 consecutive_patterns = 2
 block_shape = (4, 4)
 
-dense_layers = list(DENSE_LAYERS)
-conv2d_layers = list(CONV2D_LAYERS)
+requires_qkeras = pytest.mark.skipif(not QKERAS_AVAILABLE, reason='QKeras is not available')
+dense_layers = [Dense, pytest.param(QDense, marks=requires_qkeras, id='QDense')]
+conv2d_layers = [Conv2D, pytest.param(QConv2D, marks=requires_qkeras, id='QConv2D')]
 
 
 # Sets the loss due to data to zero; train model only on regularization loss

@@ -1,17 +1,24 @@
 import numpy as np
 import pytest
+from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
 
 from hls4ml.optimization.dsp_aware_pruning.attributes import get_attributes_from_keras_model
 from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
-from hls4ml.optimization.dsp_aware_pruning.keras.config import DENSE_LAYERS
+from hls4ml.optimization.dsp_aware_pruning.keras.config import QKERAS_AVAILABLE
 from hls4ml.optimization.dsp_aware_pruning.keras.masking import get_model_masks
 from hls4ml.optimization.dsp_aware_pruning.objectives import ObjectiveEstimator
+
+if QKERAS_AVAILABLE:
+    from qkeras import QDense
+else:
+    QDense = None
 
 # Similar tests in test_masking.py, weight sharing instead of pruning
 sparsity = 0.33
 local_masking = [True, False]
-dense_layers = list(DENSE_LAYERS)
+requires_qkeras = pytest.mark.skipif(not QKERAS_AVAILABLE, reason='QKeras is not available')
+dense_layers = [Dense, pytest.param(QDense, marks=requires_qkeras, id='QDense')]
 
 """
 A mock objective class for weight sharing

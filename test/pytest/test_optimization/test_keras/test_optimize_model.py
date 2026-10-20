@@ -9,13 +9,18 @@ from tensorflow.keras.optimizers import Adam
 from hls4ml.optimization.dsp_aware_pruning import optimize_keras_model_for_hls4ml
 from hls4ml.optimization.dsp_aware_pruning.attributes import get_attributes_from_keras_model
 from hls4ml.optimization.dsp_aware_pruning.keras import optimize_model
-from hls4ml.optimization.dsp_aware_pruning.keras.config import DENSE_LAYERS
+from hls4ml.optimization.dsp_aware_pruning.keras.config import QKERAS_AVAILABLE
 from hls4ml.optimization.dsp_aware_pruning.keras.regularizers import DenseRegularizer
 from hls4ml.optimization.dsp_aware_pruning.keras.utils import get_model_sparsity, reset_optimizer_state
 from hls4ml.optimization.dsp_aware_pruning.objectives import ParameterEstimator
 from hls4ml.optimization.dsp_aware_pruning.objectives.vivado_objectives import VivadoDSPEstimator
 from hls4ml.optimization.dsp_aware_pruning.scheduler import PolynomialScheduler
 from hls4ml.utils.config import config_from_keras_model
+
+if QKERAS_AVAILABLE:
+    from qkeras import QDense
+else:
+    QDense = None
 
 """
 End-to-end runs of the Optimization API on a small classifier
@@ -24,6 +29,9 @@ A relative tolerance of zero accepts every pruning step, so the scheduler always
 
 final_sparsity = 0.5
 
+requires_qkeras = pytest.mark.skipif(not QKERAS_AVAILABLE, reason='QKeras is not available')
+dense_layers = [Dense, pytest.param(QDense, marks=requires_qkeras, id='QDense')]
+
 rng = np.random.default_rng(0)
 projection = rng.normal(size=(8, 4))
 X = rng.normal(size=(512, 8)).astype('float32')
@@ -31,7 +39,7 @@ y = np.eye(4, dtype='float32')[np.argmax(X @ projection, axis=1)]
 X_train, y_train, X_val, y_val = X[:384], y[:384], X[384:], y[384:]
 
 
-@pytest.mark.parametrize('dense', list(DENSE_LAYERS))
+@pytest.mark.parametrize('dense', dense_layers)
 @pytest.mark.parametrize(
     'tuner, ranking_metric',
     [('Manual', 'l1'), ('Manual', 'oracle'), ('Manual', 'saliency'), ('Bayesian', 'l1'), ('Hyperband', 'l1')],

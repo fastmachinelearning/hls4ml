@@ -8,6 +8,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from hls4ml.optimization.dsp_aware_pruning.keras.config import (
     CONV2D_LAYERS,
     DENSE_LAYERS,
+    QKERAS_AVAILABLE,
     SUPPORTED_LAYERS,
     TMP_DIRECTORY,
 )
@@ -15,12 +16,10 @@ from hls4ml.optimization.dsp_aware_pruning.keras.regularizers import Conv2DRegul
 from hls4ml.optimization.dsp_aware_pruning.keras.utils import clone_optimizer
 
 co = {}
-try:
+if QKERAS_AVAILABLE:
     from qkeras.utils import _add_supported_quantized_objects
 
     _add_supported_quantized_objects(co)
-except ImportError:
-    pass
 
 
 class HyperOptimizationModel(kt.HyperModel):
