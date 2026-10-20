@@ -244,7 +244,7 @@ if {$opt(vsynth) || $opt(pnr)} {
     puts "***** VIVADO SYNTHESIS *****"
     if {[file exist ${project_name}_prj/solution1/syn/verilog]} {
         set time_start [clock clicks -milliseconds]
-        exec vivado -mode batch -source vivado_synth.tcl -tclargs pnr=$opt(pnr) >@ stdout
+        exec vivado -mode batch -source vivado_synth.tcl -tclargs pnr=$opt(pnr) >@ stdout 2>@ stderr
         set time_end [clock clicks -milliseconds]
         report_time "VIVADO SYNTHESIS" $time_start $time_end
     } else {

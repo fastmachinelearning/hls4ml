@@ -45,7 +45,10 @@ close $fh
 
 create_project -in_memory -part $synth_opt(part)
 add_files $synth_opt(src)
-# HLS writes a script for each AMD IP core the design uses, such as a floating-point operator, that creates the core
+# HLS writes a script for each AMD IP core the design uses, such as a floating-point operator, that creates the core.
+# The in-memory project creates the cores in .srcs and .gen in the current directory. The cores of an earlier run are
+# removed first, otherwise Vivado creates new copies next to them.
+file delete -force .srcs/sources_1/ip .gen/sources_1/ip
 foreach ip_script [glob -nocomplain -directory $synth_opt(src) *_ip.tcl] {
     source $ip_script
 }
