@@ -16,10 +16,11 @@ We use GitHub pull requests for this purpose.
 Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more information on using pull requests.
 
 1. In the pull request description, clearly document all changes made and the expected behavior.
-1. If you are introducing new functionality, add at least one unit test under the `test` folder and make sure it passes before you submit the pull request.
-1. Similarly, if you are fixing a bug, add at least one unit test under the `test` folder such that the main branch fails the test and your branch passes the test.
-1. Install and run `pre-commit` on the files that you have edited.
-1. Submit the pull request to the [main](https://github.com/fastmachinelearning/hls4ml) branch.
+2. If you are introducing new functionality, add at least one unit test under the `test` folder and make sure it passes before you submit the pull request.
+3. Similarly, if you are fixing a bug, add at least one unit test under the `test` folder such that the main branch fails the test and your branch passes the test.
+4. Install and run `pre-commit` on the files that you have edited.
+5. `docs/ir/attributes.rst` is generated. If you add layers or backends, or change layer attributes or their descriptions, regenerate it by running `python ../attr_doc_gen.py` from the `docs/ir` folder, and commit the result. Do not edit it by hand.
+6. Submit the pull request to the [main](https://github.com/fastmachinelearning/hls4ml) branch.
 
 Pull requests are **squash-merged**, so the individual commits on your branch are not preserved.
 You do not need to curate them, but the pull request title and description become the permanent record of
