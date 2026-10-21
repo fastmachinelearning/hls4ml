@@ -6,7 +6,7 @@
 #
 # Options are given as name=value after -tclargs. Without project.tcl, src, top, part and clock_period must be given.
 #   src           directory with the Verilog files (default: the HLS project in project.tcl)
-#   top           top module (default: project_name from project.tcl)
+#   top           top module (default: project_name from project.tcl, with _axi for VivadoAccelerator)
 #   part          FPGA part (default: part from project.tcl)
 #   clock_period  clock period in ns (default: clock_period from project.tcl)
 #   pnr           1 to also place and route, 0 to stop after synthesis (default: 0)
@@ -17,7 +17,12 @@ set tcldir [file dirname [info script]]
 if {[file exists [file join $tcldir project.tcl]]} {
     source [file join $tcldir project.tcl]
     set synth_opt(src) ${project_name}_prj/solution1/syn/verilog
-    set synth_opt(top) $project_name
+    # VivadoAccelerator wraps the model in an AXI top function
+    if {$backend eq "vivadoaccelerator"} {
+        set synth_opt(top) ${project_name}_axi
+    } else {
+        set synth_opt(top) $project_name
+    }
     set synth_opt(part) $part
     set synth_opt(clock_period) $clock_period
 }

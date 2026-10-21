@@ -118,8 +118,17 @@ class VitisUnifiedBackend(VitisBackend):
         if bitfile:
             commands.append(('kerlink', kerlink_cmd, kerlink_cwd))
 
-        if commands and 'linux' in sys.platform:
-            tools = ['v++', 'vitis-run'] + (['vivado'] if vsynth or bitfile else []) + (['xclbinutil'] if bitfile else [])
+        if 'linux' in sys.platform:
+            # The tools each step runs; the link script runs v++, vivado and xclbinutil
+            step_tools = {
+                'csynth': ['v++'],
+                'package': ['vitis-run'],
+                'csim': ['vitis-run'],
+                'cosim': ['vitis-run'],
+                'vsynth': ['vivado'],
+                'kerlink': ['v++', 'vivado', 'xclbinutil'],
+            }
+            tools = dict.fromkeys(tool for task_name, _, _ in commands for tool in step_tools[task_name])
             for tool in tools:
                 if os.system(f'command -v {tool} > /dev/null') != 0:
                     raise Exception(f'Vitis installation not found. Make sure "{tool}" is on PATH.')

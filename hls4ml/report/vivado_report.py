@@ -13,7 +13,7 @@ def read_vivado_report(hls_dir, full_report=False):
     top_func_name = None
 
     if os.path.isfile(hls_dir + '/project.tcl'):
-        prj_dir, top_func_name = _parse_project_script(hls_dir)
+        prj_dir, top_func_name, _ = _parse_project_script(hls_dir)
 
     if prj_dir is None or top_func_name is None:
         print('Unable to read project data. Exiting.')
@@ -49,7 +49,7 @@ def _parse_project_script(path):
     if 'accelerator' in backend_name:
         top_func_name += '_axi'
 
-    return prj_dir, top_func_name
+    return prj_dir, top_func_name, backend_name
 
 
 def _find_solutions(sln_dir):
@@ -280,9 +280,10 @@ def parse_vivado_report(hls_dir):
 
     prj_dir = None
     top_func_name = None
+    backend_name = None
 
     if os.path.isfile(hls_dir + '/project.tcl'):
-        prj_dir, top_func_name = _parse_project_script(hls_dir)
+        prj_dir, top_func_name, backend_name = _parse_project_script(hls_dir)
 
     if prj_dir is None or top_func_name is None:
         print('Unable to read project data. Exiting.')
@@ -440,7 +441,7 @@ def parse_vivado_report(hls_dir):
                         implementation_report['DSPs'] = results[7][0]
                         implementation_report['DSPs%'] = results[7][1]
         report['ImplementationReport'] = implementation_report
-    else:
+    elif 'accelerator' in backend_name:
         print('Implementation report not found.')
 
     project_name = prj_dir.removesuffix('_prj')
@@ -449,7 +450,7 @@ def parse_vivado_report(hls_dir):
     )
     if os.path.isfile(timing_report_file):
         report['TimingReport'] = _parse_vivado_timing_summary(timing_report_file)
-    else:
+    elif 'accelerator' in backend_name:
         print('Timing report not found.')
     return report
 

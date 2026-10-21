@@ -148,7 +148,9 @@ set RTL_COSIM_RESULTS "./tb_data/rtl_cosim_results.log"
 if {$opt(reset)} {
     open_project -reset ${project_name}_prj
     # The reports of an earlier Vivado synthesis belong to the project that is reset
-    file delete -force {*}[glob -nocomplain vivado_synth*.rpt vivado_impl*.rpt]
+    foreach report_file [glob -nocomplain vivado_synth*.rpt vivado_impl*.rpt] {
+        file delete -force $report_file
+    }
 } else {
     open_project ${project_name}_prj
 }
