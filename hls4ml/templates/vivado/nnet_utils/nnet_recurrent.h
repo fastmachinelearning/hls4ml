@@ -262,9 +262,9 @@ typename CONFIG_T::accum_t recurrent_resource_total(typename CONFIG_T::accum_t s
 // Lookup tables of the activations, one for each value computed in the same cycle. They are filled once in C
 // simulation, as in nnet_activation.h, and on every call in synthesis, where they become ROMs.
 #ifdef __HLS_SYN__
-#define RECURRENT_TABLE
+#define NNET_RECURRENT_TABLE
 #else
-#define RECURRENT_TABLE static
+#define NNET_RECURRENT_TABLE static
 #endif
 
 template <class data_T, class res_T, typename CONFIG_T>
@@ -292,9 +292,9 @@ void lstm_resource(data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state]
     #pragma HLS ARRAY_PARTITION variable=h_state complete
     #pragma HLS ARRAY_PARTITION variable=s_state complete
 
-    RECURRENT_TABLE bool initialized = false;
-    RECURRENT_TABLE typename recr_config::table_t recr_table[n_par][3][recr_config::table_size];
-    RECURRENT_TABLE typename act_config::table_t act_table[n_par][2][act_config::table_size];
+    NNET_RECURRENT_TABLE bool initialized = false;
+    NNET_RECURRENT_TABLE typename recr_config::table_t recr_table[n_par][3][recr_config::table_size];
+    NNET_RECURRENT_TABLE typename act_config::table_t act_table[n_par][2][act_config::table_size];
     #pragma HLS ARRAY_PARTITION variable=recr_table complete dim=1
     #pragma HLS ARRAY_PARTITION variable=recr_table complete dim=2
     #pragma HLS ARRAY_PARTITION variable=act_table complete dim=1
@@ -829,9 +829,9 @@ void gru_resource(data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_state],
     #pragma HLS ARRAY_PARTITION variable=data complete
     #pragma HLS ARRAY_PARTITION variable=h_state complete
 
-    RECURRENT_TABLE bool initialized = false;
-    RECURRENT_TABLE typename recr_config::table_t recr_table[n_par][2][recr_config::table_size];
-    RECURRENT_TABLE typename act_config::table_t act_table[n_par][act_config::table_size];
+    NNET_RECURRENT_TABLE bool initialized = false;
+    NNET_RECURRENT_TABLE typename recr_config::table_t recr_table[n_par][2][recr_config::table_size];
+    NNET_RECURRENT_TABLE typename act_config::table_t act_table[n_par][act_config::table_size];
     #pragma HLS ARRAY_PARTITION variable=recr_table complete dim=1
     #pragma HLS ARRAY_PARTITION variable=recr_table complete dim=2
     #pragma HLS ARRAY_PARTITION variable=act_table complete dim=1
@@ -1271,8 +1271,8 @@ void simple_rnn_resource(data_T data[CONFIG_T::n_in], res_T h_state[CONFIG_T::n_
     #pragma HLS ARRAY_PARTITION variable=data complete
     #pragma HLS ARRAY_PARTITION variable=h_state complete
 
-    RECURRENT_TABLE bool initialized = false;
-    RECURRENT_TABLE typename act_config::table_t act_table[n_par][act_config::table_size];
+    NNET_RECURRENT_TABLE bool initialized = false;
+    NNET_RECURRENT_TABLE typename act_config::table_t act_table[n_par][act_config::table_size];
     #pragma HLS ARRAY_PARTITION variable=act_table complete dim=1
     if (!initialized) {
         for (unsigned u = 0; u < n_par; u++) {
@@ -1314,6 +1314,8 @@ SimpleRNNUnits:
         h_state[u] = h_newstate[u];
     }
 }
+
+#undef NNET_RECURRENT_TABLE
 
 // One step of the SimpleRNN, as lstm_cell
 template <class data_T, class res_T, typename CONFIG_T, bool use_static,

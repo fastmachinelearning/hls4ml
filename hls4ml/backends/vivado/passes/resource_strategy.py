@@ -1,3 +1,5 @@
+from warnings import warn
+
 import numpy as np
 
 from hls4ml.model.layers import (
@@ -24,8 +26,8 @@ def _lay_out_recurrent_weights(node, prefix=''):
     """Lay out the weights of a recurrent layer in the order the cell of the Resource strategy reads them (see
     nnet_recurrent.h). A PyTorch GRU has its gates in the order r, z, n, which becomes the order of Keras, z, r, h."""
 
-    class_name = node.get_attr(f'{prefix}class_name') if prefix else node.class_name
-    n_gates = 4 if 'LSTM' in class_name else 3 if 'GRU' in class_name else 1
+    n_state, n_columns = node.weights[prefix + 'recurrent_weight'].data.shape
+    n_gates = n_columns // n_state
     order = [1, 0, 2] if n_gates == 3 and node.get_attr('pytorch', False) else list(range(n_gates))
     n_unit_par = node.get_attr(f'{prefix}n_unit_par')
     n_cycles = node.get_attr(f'{prefix}n_cycles')
@@ -33,8 +35,12 @@ def _lay_out_recurrent_weights(node, prefix=''):
     for name, lanes in (('weight', 'n_lanes_in'), ('recurrent_weight', 'n_lanes_state')):
         var = node.weights[prefix + name]
         n_rows = var.data.shape[0]
-        n_state = var.data.shape[1] // n_gates
         n_lanes = node.get_attr(prefix + lanes)
+        if getattr(var, 'storage', '').lower() == 'bram':
+            warn(
+                f'Layer "{node.name}": with BramFactor, the weights {var.name} become {n_unit_par * n_gates * n_lanes} '
+                'separate memory ports, one for each value the Resource strategy reads in a cycle.'
+            )
         padded = np.zeros((n_cycles * n_lanes, n_gates, n_state), dtype=var.data.dtype)
         padded[:n_rows] = var.data.reshape(n_rows, n_gates, n_state)[:, order, :]
         # (cycle, lane, gate, group, unit) -> (group, cycle, unit, gate, lane)

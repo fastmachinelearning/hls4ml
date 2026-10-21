@@ -32,7 +32,7 @@ class RecurentHandler(KerasV3LayerHandler):
         if layer.go_backwards:
             raise NotImplementedError(f'Layer {layer.name}: go_backwards=True is not supported.')
         if len(in_tensors) > 1:
-            raise NotImplementedError(f'Layer {layer.name}: initial_state is not supported.')
+            raise NotImplementedError(f'Layer {layer.name}: extra inputs (initial_state or mask) are not supported.')
         if layer.stateful:
             print(
                 f'WARNING: "stateful" of layer {layer.name} is ignored; '
@@ -103,7 +103,7 @@ class BidirectionalHandler(KerasV3LayerHandler):
                 'forwards as the layer and the one with go_backwards=True as the backward_layer.'
             )
         if len(in_tensors) > 1:
-            raise NotImplementedError(f'Layer {layer.name}: initial_state is not supported.')
+            raise NotImplementedError(f'Layer {layer.name}: extra inputs (initial_state or mask) are not supported.')
         rnn_forward_layer = layer.forward_layer
         rnn_backward_layer = layer.backward_layer
 

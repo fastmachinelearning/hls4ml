@@ -15,6 +15,15 @@ from hls4ml.converters.keras_v2_to_hls import (
 rnn_layers = ['SimpleRNN', 'LSTM', 'GRU']
 
 
+def has_extra_inputs(keras_layer, input_names):
+    """Initial states arrive as extra inputs, while an explicit mask is kept with the options of the call."""
+
+    if input_names is not None and len(input_names) > 1:
+        return True
+    nodes = keras_layer.get('inbound_nodes') or [[]]
+    return any(len(node) > 3 and isinstance(node[3], dict) and node[3].get('mask') is not None for node in nodes[0])
+
+
 @keras_handler(*rnn_layers)
 def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader):
     assert keras_layer['class_name'] in rnn_layers or keras_layer['class_name'][1:] in rnn_layers
@@ -24,8 +33,8 @@ def parse_rnn_layer(keras_layer, input_names, input_shapes, data_reader):
 
     if keras_layer['config'].get('go_backwards', False):
         raise NotImplementedError(f'Layer {layer["name"]}: go_backwards=True is not supported.')
-    if input_names is not None and len(input_names) > 1:
-        raise NotImplementedError(f'Layer {layer["name"]}: initial_state is not supported.')
+    if has_extra_inputs(keras_layer, input_names):
+        raise NotImplementedError(f'Layer {layer["name"]}: extra inputs (initial_state or mask) are not supported.')
     if keras_layer['config'].get('stateful', False):
         print(
             f'WARNING: "stateful" of layer {layer["name"]} is ignored; hls4ml inference does not carry state between inputs.'
@@ -150,8 +159,10 @@ def parse_bidirectional_layer(keras_layer, input_names, input_shapes, data_reade
             )
     else:
         rnn_backward_layer = rnn_forward_layer
-    if input_names is not None and len(input_names) > 1:
-        raise NotImplementedError(f'Layer {keras_layer["config"]["name"]}: initial_state is not supported.')
+    if has_extra_inputs(keras_layer, input_names):
+        raise NotImplementedError(
+            f'Layer {keras_layer["config"]["name"]}: extra inputs (initial_state or mask) are not supported.'
+        )
 
     assert (rnn_forward_layer['class_name'] in rnn_layers or rnn_forward_layer['class_name'][1:] in rnn_layers) and (
         rnn_backward_layer['class_name'] in rnn_layers or rnn_backward_layer['class_name'][1:] in rnn_layers

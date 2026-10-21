@@ -666,9 +666,10 @@ class VivadoBackend(FPGABackend):
         reuse_factor = layer.get_attr(attribute)
         if reuse_factor not in valid_rf:
             closest_rf = self.get_closest_reuse_factor(valid_rf, reuse_factor)
+            direction = f' ({prefix[:-1]} direction)' if prefix else ''
             print(
-                f'WARNING: Invalid ReuseFactor={reuse_factor} in layer "{layer.name}". Using ReuseFactor={closest_rf} '
-                f'instead. Valid ReuseFactor(s): {",".join(map(str, valid_rf))}.'
+                f'WARNING: Invalid ReuseFactor={reuse_factor} in layer "{layer.name}"{direction}. Using '
+                f'ReuseFactor={closest_rf} instead. Valid ReuseFactor(s): {",".join(map(str, valid_rf))}.'
             )
             reuse_factor = closest_rf
             layer.set_attr(attribute, reuse_factor)
