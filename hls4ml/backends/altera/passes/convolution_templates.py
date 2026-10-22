@@ -56,6 +56,9 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
+
+    static constexpr weight_t weights = {weights};
+    static constexpr bias_t biases = {biases};
 }};
 """
 
@@ -65,7 +68,7 @@ conv1d_task_sequence_template = (
     'task_sequence<nnet::conv_1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 )
 
-conv_stream_function_template = '{name}.async({w}, {b});'
+conv_stream_function_template = '{name}.async();'
 
 conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 
@@ -97,6 +100,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         if conv_params['dilation'] != 1:
             raise RuntimeError('dilation != 1 not supported yet')
         conv_params['config_t'] = f'config{node.index}_mult'
+        conv_params['weights'] = node.get_weights('weight').name
+        conv_params['biases'] = node.get_weights('bias').name
         conv_config = self.template.format(**conv_params)
 
         mult_params = self._default_config_params(node)
@@ -146,8 +151,6 @@ class ConvStreamFunctionTemplate(StreamFunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['w'] = node.get_weights('weight').name
-        params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
@@ -197,6 +200,9 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
+
+    static constexpr weight_t weights = {weights};
+    static constexpr bias_t biases = {biases};
 }};\n"""
 
 conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -220,6 +226,8 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         if conv_params['dilation'] != 1:
             raise RuntimeError('dilation != 1 not supported yet')
         conv_params['config_t'] = f'config{node.index}_mult'
+        conv_params['weights'] = node.get_weights('weight').name
+        conv_params['biases'] = node.get_weights('bias').name
         conv_config = self.template.format(**conv_params)
 
         mult_params = self._default_config_params(node)

@@ -31,7 +31,7 @@ pointwise_conv2d_task_sequence_template = (
     'task_sequence<nnet::pointwise_conv_2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 )
 
-pointwise_conv_stream_function_template = '{name}.async({w}, {b});'
+pointwise_conv_stream_function_template = '{name}.async();'
 
 sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_stream.h']
@@ -116,8 +116,6 @@ class PointwiseConvStreamFunctionTemplate(StreamFunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['w'] = node.get_weights('weight').name
-        params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
