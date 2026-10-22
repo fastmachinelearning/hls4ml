@@ -599,7 +599,7 @@ class AlteraWriter(Writer):
                             or layer.get_attr('recurrent_activation') == 'softmax'
                             or layer.get_attr('activation') == 'softmax_multidim'
                             or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                        ): #and 'implementation' in layer.attributes: TODO - CHECK THIS CONDITION
+                        ):  # and 'implementation' in layer.attributes: TODO - CHECK THIS CONDITION
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_exp_table.h"\n'
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_inv_table.h"\n'
 
@@ -745,9 +745,7 @@ class AlteraWriter(Writer):
                     out_names = ','.join([f'output{idx if idx >= 1 else ""}_vals' for idx, out in enumerate(model_outputs)])
                     out_t = ','.join([f'output{idx if idx >= 1 else ""}_item_t' for idx, out in enumerate(model_outputs)])
                     out_pipe_names = ','.join([out.pipe_name for out in model_outputs])
-                    out_sizes = ','.join(
-                        [str(np.prod(out.shape)) for out in model_outputs]
-                    )
+                    out_sizes = ','.join([str(np.prod(out.shape)) for out in model_outputs])
 
                     if len(model_inputs) > 99:
                         for idx, inp in enumerate(model_inputs):
@@ -771,7 +769,8 @@ class AlteraWriter(Writer):
                         for inp in model_inputs:
                             newline += (
                                 indent
-                                + f'q.single_task(nnet::DMA_convert_data_single<{inp.name}_item_t, {inp.pipe_name}>'
+                                + f'q.single_task(nnet::DMA_convert_data_single<{inp.name}_item_t, '
+                                + f'{libstamp}::{inp.pipe_name}>'
                                 + '{'
                                 + f'{inp.name}_vals'
                                 + ', 1'  # {inp.size_cpp()}'
@@ -782,8 +781,8 @@ class AlteraWriter(Writer):
                     newline += (
                         indent
                         + 'constexpr unsigned packing = '
-                        + f'{out_sizes}/std::tuple_size<typename nnet::ExtractPipeType<{out_pipe_names}>'
-                        + f'::value_type>{{}};\n'
+                        + f'{out_sizes}/std::tuple_size<typename nnet::ExtractPipeType<{libstamp}::{out_pipe_names}>'
+                        + '::value_type>{};\n'
                     )  # TODO: EXTREMELY DODGY FOR OUT SIZE > 1
                     newline += (
                         indent
@@ -803,8 +802,8 @@ class AlteraWriter(Writer):
                         newline += (
                             indent
                             + f'constexpr unsigned output{num}_pipeOutSize = '
-                            + f'std::tuple_size<typename nnet::ExtractPipeType<{out.pipe_name}>'
-                            + f'::value_type>{{}};\n'
+                            + f'std::tuple_size<typename nnet::ExtractPipeType<{libstamp}::{out.pipe_name}>'
+                            + '::value_type>{};\n'
                         )
                         newline += (
                             indent
@@ -842,7 +841,9 @@ class AlteraWriter(Writer):
                         newline += indent + f'    {inp.name}_vals[j] = 0.0; \n'
                         newline += indent + '}\n'
                         newline += (
-                            indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, {inp.name}_vals);\n'
+                            indent
+                            + f'nnet::convert_data<float, {libstamp}::{inp.pipe_name}, '
+                            + f'{inp.size_cpp()}>(q, {inp.name}_vals);\n'
                         )
 
                 elif '// hls-fpga-machine-learning insert data' in line:
@@ -853,7 +854,9 @@ class AlteraWriter(Writer):
                         newline += indent + f'    {inp.name}_vals[j] = in[j]; \n'
                         newline += indent + '}\n'
                         newline += (
-                            indent + f'nnet::convert_data<float, {inp.pipe_name}, {inp.size_cpp()}>(q, {inp.name}_vals);\n'
+                            indent
+                            + f'nnet::convert_data<float, {libstamp}::{inp.pipe_name}, '
+                            + f'{inp.size_cpp()}>(q, {inp.name}_vals);\n'
                         )
 
                 elif '// hls-fpga-machine-learning convert output' in line:
@@ -862,7 +865,8 @@ class AlteraWriter(Writer):
                         newline += indent + f'float {out.name}_vals[{out.size_cpp()}];\n'
                         newline += (
                             indent
-                            + f'nnet::convert_data_back<{out.pipe_name}, float, {out.size_cpp()}>(q, {out.name}_vals);\n\n'
+                            + f'nnet::convert_data_back<{libstamp}::{out.pipe_name}, '
+                            + f'float, {out.size_cpp()}>(q, {out.name}_vals);\n\n'
                         )
 
                         newline += (
@@ -954,12 +958,14 @@ class AlteraWriter(Writer):
                     newline += indent + outputs_str + '\n'
 
                 elif '// hls-fpga-machine-learning insert wrapper' in line:
-                    
                     if not host_rw_model:
                         dtype = line.split('#', 1)[1].strip()
                         newline = ''
                         for i in model_inputs:
-                            newline += indent + f'nnet::convert_data<{dtype}, {libstamp}::{i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
+                            newline += (
+                                indent
+                                + f'nnet::convert_data<{dtype}, {libstamp}::{i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
+                            )
                     else:
                         dtype = line.split('#', 1)[1].strip()
                         newline = ''
@@ -1015,7 +1021,7 @@ class AlteraWriter(Writer):
                                 indent
                                 + f'constexpr unsigned packing = {out_sizes}'
                                 + f'/std::tuple_size<typename nnet::ExtractPipeType<{libstamp}::{out_pipe_names}>'
-                                + f'::value_type>'
+                                + '::value_type>'
                                 + '{'
                                 + '};\n'
                             )
