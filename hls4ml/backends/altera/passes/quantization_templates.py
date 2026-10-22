@@ -22,6 +22,8 @@ class ApplyAlphaConfigTemplate(LayerConfigTemplate):
         params['product_type'] = get_backend('Altera').product_type(
             node.get_input_variable().type.precision, node.get_weights('scale').type.precision
         )
+        params['scale'] = node.get_weights('scale').name
+        params['bias'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
@@ -57,7 +59,5 @@ class ApplyAlphaStreamFunctionTemplate(StreamFunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['scale'] = node.get_weights('scale').name
-        params['bias'] = node.get_weights('bias').name
 
         return self.template.format(**params)
