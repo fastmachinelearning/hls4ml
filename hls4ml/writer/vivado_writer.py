@@ -540,14 +540,12 @@ class VivadoWriter(Writer):
         with open(project_path, 'w') as f:
             print_data(f)
 
-    def write_test_bench(self, model):
-        """Write the testbench files (myproject_test.cpp and input/output .dat files)
+    def write_tb_data(self, model):
+        """Write the testbench input/output .dat files
 
         Args:
             model (ModelGraph): the hls4ml model.
         """
-
-        filedir = os.path.dirname(os.path.abspath(__file__))
 
         if not os.path.exists(f'{model.config.get_output_dir()}/tb_data/'):
             os.mkdir(f'{model.config.get_output_dir()}/tb_data/')
@@ -568,6 +566,17 @@ class VivadoWriter(Writer):
                 self.__make_dat_file(
                     output_predictions, f'{model.config.get_output_dir()}/tb_data/tb_output_predictions.dat'
                 )
+
+    def write_test_bench(self, model):
+        """Write the testbench files (myproject_test.cpp and input/output .dat files)
+
+        Args:
+            model (ModelGraph): the hls4ml model.
+        """
+
+        filedir = os.path.dirname(os.path.abspath(__file__))
+
+        self.write_tb_data(model)
 
         f = open(os.path.join(filedir, '../templates/vivado/myproject_test.cpp'))
         fout = open(f'{model.config.get_output_dir()}/{model.config.get_project_name()}_test.cpp', 'w')

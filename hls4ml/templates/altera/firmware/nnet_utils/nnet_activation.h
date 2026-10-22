@@ -292,7 +292,6 @@ template <class data_T, class res_T, typename CONFIG_T> inline void softmax_mult
         }
     }
 }
-
 // *************************************************
 //       TanH Activation
 // *************************************************

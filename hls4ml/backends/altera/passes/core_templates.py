@@ -200,9 +200,9 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static constexpr unsigned n_in = {n_in};
 
     // For multi-dim softmax
-    static constexpr unsigned n_slice = {n_slice};
-    static constexpr unsigned n_outer = {n_outer};
-    static constexpr unsigned n_inner = {n_inner};
+    static const unsigned n_slice = {n_slice};
+    static const unsigned n_outer = {n_outer};
+    static const unsigned n_inner = {n_inner};
 
     // For legacy softmax
     typedef {table_t.name} table_t;
@@ -221,12 +221,6 @@ softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     typedef {smax_accum_t} accum_t;
     typedef {exp_table_t.name} exp_table_t;
     typedef {inv_table_t.name} inv_table_t;"""
-
-# softmax_config_table_template = """
-#
-#    static constexpr const exp_table_t *exp_table = &{exp_table_name}[0];
-#    static constexpr const inv_table_t *invert_table = &{inv_table_name}[0];
-# }};\n"""
 
 softmax_config_table_template = """
 
@@ -276,9 +270,7 @@ class ActivationConfigTemplate(LayerConfigTemplate):
                         warnings.warn(
                             f'Softmax layer {node.name}: {_name}={params[_name]} capped to '
                             f'TableSize={params["table_size"]}, so the LUT is addressed by the top '
-                            f'{_addr} bits of {_t} only and HLS will NOT be bit-exact with Keras. '
-                            f'Raise TableSize, or narrow the HGQ quantizer behind {_t} so that '
-                            f'2**(i0+f0) <= TableSize, for an exact match.',
+                            f'{_addr} bits of {_t} only and HLS will NOT be bit-exact with Keras. ',
                             stacklevel=1,
                         )
             params['exp_table_size'] = min(params['exp_table_size'], params['table_size'])
@@ -410,6 +402,7 @@ class ActivationTaskSequenceTemplate(TaskSequenceTemplate):
         params = self._default_function_params(node)
         params['activation'] = node.get_attr('activation').lower()
         params['config'] = f'{node.get_attr("activation")}_config{node.index}'
+
         return self.template.format(**params)
 
 

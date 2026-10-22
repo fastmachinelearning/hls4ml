@@ -94,6 +94,7 @@ class AlteraBackend(FPGABackend):
             'infer_precision_types',
             'altera:process_fixed_point_quantizer_layer',
             'altera:validate_ac_types',
+            'altera:validate_hgq_softmax_types',
         ]
         optimization_flow = register_flow('optimize', optimization_passes, requires=[init_flow], backend=self.name)
 
@@ -194,7 +195,7 @@ class AlteraBackend(FPGABackend):
 
     def build(self, model, build_type='fpga_emu', run=False):
         """
-        Builds the project using the Intel oneAPI DPC++ compiler.
+        Builds the project using Intel DPC++ (altera) compiler.
 
         Args:
             model (ModelGraph): The model to build

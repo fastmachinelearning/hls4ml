@@ -120,6 +120,52 @@ def _get_abs_and_percentage_values(unparsed_cell):
     return int(unparsed_cell.split('(')[0]), float(unparsed_cell.split('(')[1].replace('%', '').replace(')', ''))
 
 
+def _parse_csynth_xml(syn_file):
+    c_synth_report = {}
+    root = ET.parse(syn_file).getroot()
+
+    # Performance
+    perf_node = root.find('./PerformanceEstimates')
+    c_synth_report['TargetClockPeriod'] = root.find('./UserAssignments/TargetClockPeriod').text
+    c_synth_report['EstimatedClockPeriod'] = perf_node.find('./SummaryOfTimingAnalysis/EstimatedClockPeriod').text
+    c_synth_report['BestLatency'] = perf_node.find('./SummaryOfOverallLatency/Best-caseLatency').text
+    c_synth_report['WorstLatency'] = perf_node.find('./SummaryOfOverallLatency/Worst-caseLatency').text
+    c_synth_report['IntervalMin'] = perf_node.find('./SummaryOfOverallLatency/Interval-min').text
+    c_synth_report['IntervalMax'] = perf_node.find('./SummaryOfOverallLatency/Interval-max').text
+    # Area
+    area_node = root.find('./AreaEstimates')
+    for child in area_node.find('./Resources'):
+        # DSPs are called 'DSP48E' in Vivado and just 'DSP' in Vitis. Overriding here to have consistent keys
+        if child.tag == 'DSP48E':
+            child.tag = 'DSP'
+        c_synth_report[child.tag] = child.text
+    for child in area_node.find('./AvailableResources'):
+        if child.tag == 'DSP48E':
+            child.tag = 'DSP'
+        c_synth_report['Available' + child.tag] = child.text
+    return c_synth_report
+
+
+def _parse_cosim_rpt(cosim_file):
+    cosim_report = {}
+    with open(cosim_file) as f:
+        for line in f.readlines():
+            if re.search('VHDL', line) or re.search('Verilog', line):
+                result = line[1:].split()  # [1:] skips the leading '|'
+                result = [res[:-1] if res[-1] == '|' else res for res in result]
+                # RTL, Status, Latency-min, Latency-avg, Latency-max, Interval-min, Interval-avg, Interval-max
+                if result[1] == 'NA':
+                    continue
+                else:
+                    cosim_report['RTL'] = result[0]
+                    cosim_report['Status'] = result[1]
+                    cosim_report['LatencyMin'] = result[2]
+                    cosim_report['LatencyMax'] = result[4]
+                    cosim_report['IntervalMin'] = result[5]
+                    cosim_report['IntervalMax'] = result[7]
+    return cosim_report
+
+
 def parse_vivado_report(hls_dir):
     if not os.path.exists(hls_dir):
         print(f'Path {hls_dir} does not exist. Exiting.')
@@ -163,30 +209,8 @@ def parse_vivado_report(hls_dir):
         report['CosimResults'] = cosim_results
 
     syn_file = sln_dir + '/' + solutions[0] + f'/syn/report/{top_func_name}_csynth.xml'
-    c_synth_report = {}
     if os.path.isfile(syn_file):
-        root = ET.parse(syn_file).getroot()
-
-        # Performance
-        perf_node = root.find('./PerformanceEstimates')
-        c_synth_report['TargetClockPeriod'] = root.find('./UserAssignments/TargetClockPeriod').text
-        c_synth_report['EstimatedClockPeriod'] = perf_node.find('./SummaryOfTimingAnalysis/EstimatedClockPeriod').text
-        c_synth_report['BestLatency'] = perf_node.find('./SummaryOfOverallLatency/Best-caseLatency').text
-        c_synth_report['WorstLatency'] = perf_node.find('./SummaryOfOverallLatency/Worst-caseLatency').text
-        c_synth_report['IntervalMin'] = perf_node.find('./SummaryOfOverallLatency/Interval-min').text
-        c_synth_report['IntervalMax'] = perf_node.find('./SummaryOfOverallLatency/Interval-max').text
-        # Area
-        area_node = root.find('./AreaEstimates')
-        for child in area_node.find('./Resources'):
-            # DSPs are called 'DSP48E' in Vivado and just 'DSP' in Vitis. Overriding here to have consistent keys
-            if child.tag == 'DSP48E':
-                child.tag = 'DSP'
-            c_synth_report[child.tag] = child.text
-        for child in area_node.find('./AvailableResources'):
-            if child.tag == 'DSP48E':
-                child.tag = 'DSP'
-            c_synth_report['Available' + child.tag] = child.text
-        report['CSynthesisReport'] = c_synth_report
+        report['CSynthesisReport'] = _parse_csynth_xml(syn_file)
     else:
         print('CSynthesis report not found.')
 
@@ -218,23 +242,7 @@ def parse_vivado_report(hls_dir):
 
     cosim_file = sln_dir + '/' + solutions[0] + f'/sim/report/{top_func_name}_cosim.rpt'
     if os.path.isfile(cosim_file):
-        cosim_report = {}
-        with open(cosim_file) as f:
-            for line in f.readlines():
-                if re.search('VHDL', line) or re.search('Verilog', line):
-                    result = line[1:].split()  # [1:] skips the leading '|'
-                    result = [res[:-1] if res[-1] == '|' else res for res in result]
-                    # RTL, Status, Latency-min, Latency-avg, Latency-max, Interval-min, Interval-avg, Interval-max
-                    if result[1] == 'NA':
-                        continue
-                    else:
-                        cosim_report['RTL'] = result[0]
-                        cosim_report['Status'] = result[1]
-                        cosim_report['LatencyMin'] = result[2]
-                        cosim_report['LatencyMax'] = result[4]
-                        cosim_report['IntervalMin'] = result[5]
-                        cosim_report['IntervalMax'] = result[7]
-        report['CosimReport'] = cosim_report
+        report['CosimReport'] = _parse_cosim_rpt(cosim_file)
     else:
         print('Cosim report not found.')
 

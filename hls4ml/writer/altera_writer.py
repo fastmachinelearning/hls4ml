@@ -138,6 +138,18 @@ class AlteraWriter(Writer):
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning lib stamp' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'namespace {libstamp} {{'
+
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning namespace end' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'}} // namespace {libstamp}\n'
+
                 # Altera pipes need to be declared and passed as template parameters
                 elif '// hls-fpga-machine-learning insert inter-task pipes' in line:
                     newline = line
@@ -371,6 +383,19 @@ class AlteraWriter(Writer):
                 elif 'MyProject' in line:
                     newline = line.replace('MyProject', convert_to_pascal_case(project_name))
 
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning lib stamp' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'namespace {libstamp} {{'
+
+                # Wrap myproject around a unique stamp to prevent pipe name collision
+                elif '// hls-fpga-machine-learning namespace end' in line:
+                    libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
+                    newline = line
+                    newline = f'}} // namespace {libstamp}\n\n'
+                    newline += f'using namespace {libstamp};\n'
+
                 # Declarations for the inputs. May need modification when io_stream is supported
                 elif '// hls-fpga-machine-learning insert inputs' in line:
                     newline = line
@@ -574,7 +599,7 @@ class AlteraWriter(Writer):
                             or layer.get_attr('recurrent_activation') == 'softmax'
                             or layer.get_attr('activation') == 'softmax_multidim'
                             or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                        ) and 'implementation' in layer.attributes:
+                        ): #and 'implementation' in layer.attributes: TODO - CHECK THIS CONDITION
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_exp_table.h"\n'
                             newline += f'#include "nnet_utils/activation_tables/{layer.name}_inv_table.h"\n'
 
@@ -641,11 +666,7 @@ class AlteraWriter(Writer):
 
         host_rw_model: bool = model.config.get_config_value('HLSConfig').setdefault('HostRW', 0)
         memory_type = 'malloc_shared' if host_rw_model else 'malloc_host'
-        autoreg_model: bool = model.config.get_config_value('HLSConfig').setdefault('Autoregressive', None) is not None
-        max_invoc = model.config.get_config_value('HLSConfig').setdefault('MaxInvoc', 1)
-        max_iterations = max_invoc
-        if autoreg_model:
-            max_iterations = model.config.get_config_value('HLSConfig')['Autoregressive'].setdefault('MaxIterations', 0)
+        libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
 
         with (
             open(os.path.join(filedir, '../templates/altera/myproject_test.cpp')) as f,
@@ -684,10 +705,7 @@ class AlteraWriter(Writer):
                         )
 
                     for idx, out in enumerate(model_outputs):
-                        if autoreg_model:
-                            out_buffer_size = str(max_iterations)  # + out.pragma[1]) # pipe_width * num_reads
-                        else:
-                            out_buffer_size = str(out.pragma[1] * np.prod(out.shape))
+                        out_buffer_size = str(out.pragma[1] * np.prod(out.shape))
                         out_type = out.definition_cpp().split(' ')[0]
                         num = idx if idx >= 1 else ''
                         newline += indent + f'using output{num}_item_t = typename {out_type}::value_type;\n'
@@ -728,7 +746,7 @@ class AlteraWriter(Writer):
                     out_t = ','.join([f'output{idx if idx >= 1 else ""}_item_t' for idx, out in enumerate(model_outputs)])
                     out_pipe_names = ','.join([out.pipe_name for out in model_outputs])
                     out_sizes = ','.join(
-                        [str(max_iterations if autoreg_model else np.prod(out.shape)) for out in model_outputs]
+                        [str(np.prod(out.shape)) for out in model_outputs]
                     )
 
                     if len(model_inputs) > 99:
@@ -765,9 +783,7 @@ class AlteraWriter(Writer):
                         indent
                         + 'constexpr unsigned packing = '
                         + f'{out_sizes}/std::tuple_size<typename nnet::ExtractPipeType<{out_pipe_names}>'
-                        + f'::value_type{"::data_type" if autoreg_model else ""}>'
-                        + '{'
-                        + '};\n'
+                        + f'::value_type>{{}};\n'
                     )  # TODO: EXTREMELY DODGY FOR OUT SIZE > 1
                     newline += (
                         indent
@@ -788,9 +804,7 @@ class AlteraWriter(Writer):
                             indent
                             + f'constexpr unsigned output{num}_pipeOutSize = '
                             + f'std::tuple_size<typename nnet::ExtractPipeType<{out.pipe_name}>'
-                            + f'::value_type{"::data_type" if autoreg_model else ""}>'
-                            + '{'
-                            + '};\n'
+                            + f'::value_type>{{}};\n'
                         )
                         newline += (
                             indent
@@ -891,15 +905,10 @@ class AlteraWriter(Writer):
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
         # model brambs aren't actually supported yet
 
-        # io_type = model.config.get_config_value('IOType')
         indent = '    '
-
         filedir = os.path.dirname(os.path.abspath(__file__))
+        libstamp = f'{model.config.get_project_name()}_{model.config.get_config_value("Stamp")}'
 
-        autoreg_model: bool = model.config.get_config_value('HLSConfig').setdefault('Autoregressive', None) is not None
-        if autoreg_model:
-            max_iterations = model.config.get_config_value('HLSConfig')['Autoregressive'].setdefault('MaxIterations', 0)
-            assert max_iterations >= 0, 'Invalid max iterations passed (ensure > 0).'
         host_rw_model: bool = model.config.get_config_value('HLSConfig').setdefault('HostRW', 0)
 
         with (
@@ -933,31 +942,24 @@ class AlteraWriter(Writer):
                         outputs_str = ', '.join([f'{dtype} {o.name}[{o.size_cpp()}]' for o in model_outputs])
                     else:
                         inputs_str = ', '.join([f'{dtype} {i.name}_vals[{i.size_cpp()}]' for i in model_inputs])
-                        if autoreg_model:
-                            outputs_str = ', '.join(
-                                [
-                                    f'{dtype} output{idx if idx >= 1 else ""}_vals[{max_iterations}]'
-                                    for idx, o in enumerate(model_outputs)
-                                ]
-                            )
-                        else:
-                            outputs_str = ', '.join(
-                                [
-                                    f'{dtype} output{idx if idx >= 1 else ""}_vals[{o.size_cpp()}]'
-                                    for idx, o in enumerate(model_outputs)
-                                ]
-                            )
+                        outputs_str = ', '.join(
+                            [
+                                f'{dtype} output{idx if idx >= 1 else ""}_vals[{o.size_cpp()}]'
+                                for idx, o in enumerate(model_outputs)
+                            ]
+                        )
 
                     newline = ''
                     newline += indent + inputs_str + ',\n'
                     newline += indent + outputs_str + '\n'
 
                 elif '// hls-fpga-machine-learning insert wrapper' in line:
+                    
                     if not host_rw_model:
                         dtype = line.split('#', 1)[1].strip()
                         newline = ''
                         for i in model_inputs:
-                            newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
+                            newline += indent + f'nnet::convert_data<{dtype}, {libstamp}::{i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
                     else:
                         dtype = line.split('#', 1)[1].strip()
                         newline = ''
@@ -978,11 +980,11 @@ class AlteraWriter(Writer):
                             )
                         else:"""
 
-                        inp_size = '1' if autoreg_model else model_inputs[0].size_cpp()
+                        inp_size = model_inputs[0].size_cpp()
                         for inp in model_inputs:
                             newline += (
                                 indent
-                                + f'q.single_task(nnet::DMA_convert_data_single<{dtype}, {inp.pipe_name}>'
+                                + f'q.single_task(nnet::DMA_convert_data_single<{dtype}, {libstamp}::{inp.pipe_name}>'
                                 + '{'
                                 + f'{inp.name}_vals'
                                 + f', {inp_size}'
@@ -1012,14 +1014,14 @@ class AlteraWriter(Writer):
                             newline += (
                                 indent
                                 + f'constexpr unsigned packing = {out_sizes}'
-                                + f'/std::tuple_size<typename nnet::ExtractPipeType<{out_pipe_names}>'
-                                + f'::value_type{"::data_type" if autoreg_model else ""}>'
+                                + f'/std::tuple_size<typename nnet::ExtractPipeType<{libstamp}::{out_pipe_names}>'
+                                + f'::value_type>'
                                 + '{'
                                 + '};\n'
                             )
                             newline += (
                                 indent
-                                + 'q.single_task(nnet::DMA_convert_data_back_bridge_ver<'
+                                + f'q.single_task(nnet::DMA_convert_data_back_bridge_ver<{libstamp}::'
                                 + out_pipe_names
                                 + ', '
                                 + dtype
@@ -1261,294 +1263,103 @@ class AlteraWriter(Writer):
         h_file.write('};\n')
         h_file.close()
 
-    def __get_table_precision(self, model, activation, table_name='table_precision'):
+    def __write_softmax_tables(self, model, path):
         for layer in model.get_layers():
-            if layer.get_attr('activation') == activation and layer.get_attr(table_name) is not None:
-                precision = layer.get_attr(table_name)
-                return precision.precision
+            activations = (layer.get_attr('activation'), layer.get_attr('recurrent_activation'))
+            is_softmax = any(activation in ('softmax', 'softmax_multidim') for activation in activations)
 
-        return None  # fp_bits, fp_integer, fp_signed
+            if not is_softmax:  # or 'implementation' not in layer.attributes:
+                continue
 
-    def __write_exp_tables_stable(self, model, path):
+            implementation = layer.get_attr('implementation')
+            if implementation not in ('stable', 'latency', 'legacy'):
+                continue
 
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'stable'
-            ):
-                table_name = layer.name + '_exp_table'
-                table_size = min(int(layer.get_attr('table_size')), int(layer.get_attr('exp_table_size')))
+            for table_kind in ('exp', 'inv'):
+                table_name = f'{layer.name}_{table_kind}_table'
+                table_size = int(layer.get_attr(f'{table_kind}_table_size'))
 
                 with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
-
+                    h_file.write(f'#ifndef {table_name.upper()}_H_\n')
+                    h_file.write(f'#define {table_name.upper()}_H_\n\n')
                     h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("exp_table_t").name},{table_size}> {table_name} = {{'
+                        f'static constexpr nnet::array<{layer.get_attr(f"{table_kind}_table_t").name},{table_size}> '
+                        f'{table_name} = {{'
                     )
-
-                    ac_type = layer.get_attr('inp_norm_t')
-                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                    fp_integer = ac_type.precision.integer
-
-                    # Copy scaling from attributes
-                    scale = (
-                        layer.attributes['exp_scale']
-                        if (('exp_scale' in layer.attributes) and (layer.attributes['exp_scale'] is not None))
-                        else 1.0
-                    )
-
-                    N = ceil_log2(table_size)
-                    if N > fp_bits:
-                        raise Exception('Table size is bigger than what precision allows')
-                    maxval = 2**fp_integer - 1
-
-                    # Use the centre of the bin instead of rounding down:
-                    # -1 is gives the half (1/2) (N - fp_int) is the available fractional bits
-                    half_frac = 2.0 ** (fp_integer - N - 1) if N < fp_bits else 0.0
-
-                    sep = ''
-                    # Use the top bits if table_size < 2**bit_width
-                    for i in range(table_size):
-                        # Norm type is always > 1 so if input quantiser is set to be signed for any reason,
-                        # force unsigned but keep the width
-                        f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
-                        b = uint_to_binary(i, N)
-                        f.set_msb_bits(b)
-                        x = f.to_float()
-                        if half_frac and x > 0:  # x > 0 to preserve (x_max - x) == 0 => exp(0) = 1
-                            x += half_frac
-                        real_val = math.exp(-(x * scale))
-                        if real_val > maxval:
-                            real_val = maxval
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
-
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
-
-    def __write_invert_tables_stable(self, model, path):
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'stable'
-            ):
-                table_name = layer.name + '_inv_table'
-                table_size = min(int(layer.get_attr('table_size')), int(layer.get_attr('inv_table_size')))
-
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
-
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("inv_table_t").name},{table_size}> {table_name} = {{'
-                    )
-
-                    ac_type = layer.get_attr('inv_inp_t')
-                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                    fp_integer = ac_type.precision.integer
-
-                    N = ceil_log2(table_size)
-                    if N > fp_bits:
-                        raise Exception('Table size is bigger than what precision allows')
-                    maxval = 2**fp_integer - 1
-
-                    # Use the centre of the bin instead of rounding down:
-                    # -1 is gives the half (1/2) (N - fp_int) is the available fractional bits
-                    half_bin = 2.0 ** (fp_integer - N - 1) if N < fp_bits else 0.0
-
-                    # Use the top bits if table_size < 2**bit_width
-                    sep = ''
-                    for i in range(table_size):
-                        # Norm type is always > 1 so if input quantiser is set to be signed for any reason,
-                        # force unsigned but keep the width
-                        f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
-                        b = uint_to_binary(i, N)
-                        f.set_msb_bits(b)
-                        x = f.to_float()
-                        if half_bin and x != 1.0:  # Again, preserve the special case where x = exp(0) => x = 0
-                            x += half_bin
-                        real_val = 1.0 / x if x > 0 else maxval
-                        if real_val > maxval:
-                            real_val = maxval
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
-
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
-
-    def __write_exp_tables_latency(self, model, path):
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'latency'
-            ):
-                table_name = layer.name + '_exp_table'
-                table_size = int(layer.get_attr('exp_table_size'))
-
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
-
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("exp_table_t").name},{table_size}> {table_name} = {{'
-                    )
-
-                    ac_type = layer.get_input_variable().type
-                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                    fp_integer = ac_type.precision.integer
-                    fp_signed = ac_type.precision.signed
 
                     sep = ''
                     N = ceil_log2(table_size)
-                    for i in range(table_size):
-                        f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-                        f.set_msb_bits(uint_to_binary(i, N))
-                        real_val = f.exp_float()
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
 
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
+                    if implementation == 'stable':
+                        ac_type = layer.get_attr('inp_norm_t' if table_kind == 'exp' else 'inv_inp_t')
+                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                        fp_integer = ac_type.precision.integer
 
-    def __write_invert_tables_latency(self, model, path):
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'latency'
-            ):
-                table_name = layer.name + '_inv_table'
-                table_size = int(layer.get_attr('inv_table_size'))
+                        # Guard mainly for development, this path is not meant to be taken as-is
+                        if N > fp_bits:
+                            raise Exception('Table size is bigger than what precision allows')
 
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
+                        maxval = 2**fp_integer - 1
+                        half_prec = 2.0 ** (fp_integer - N - 1) if N < fp_bits else 0.0
 
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("inv_table_t").name},{table_size}> {table_name} = {{'
-                    )
+                        if table_kind == 'exp':
+                            scale = (
+                                layer.attributes['exp_scale']
+                                if ('exp_scale' in layer.attributes and layer.attributes['exp_scale'] is not None)
+                                else 1.0
+                            )
 
-                    ac_type = layer.get_attr('exp_table_t')
-                    fp_bits = ac_type.precision.integer + ac_type.precision.fractional
-                    fp_integer = ac_type.precision.integer
-                    fp_signed = ac_type.precision.signed
+                        for i in range(table_size):
+                            # Norm type is always > 1, so force unsigned regardless of the quantiser's signedness,
+                            # but keep the width
+                            f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
+                            f.set_msb_bits(uint_to_binary(i, N))
+                            x = f.to_float()
 
-                    sep = ''
-                    N = ceil_log2(table_size)
-                    for i in range(table_size):
-                        f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
-                        f.set_msb_bits(uint_to_binary(i, N))
-                        real_val = f.inv_float()
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
+                            if table_kind == 'exp':
+                                if half_prec and x > 0:  # x > 0 preserves (x_max - x) == 0 => exp(0) = 1
+                                    x += half_prec
+                                real_val = math.exp(-(x * scale))
+                            else:
+                                if half_prec and x != 1.0:  # preserve the special case where x = exp(0) => x = 0
+                                    x += half_prec
+                                real_val = 1.0 / x if x > 0 else maxval
 
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
+                            if real_val > maxval:
+                                real_val = maxval
 
-    def __write_exp_table_legacy(self, model, path):
+                            h_file.write(sep + str(real_val))
+                            sep = ', '
 
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'legacy'
-            ):
-                table_name = layer.name + '_exp_table'
-                table_size = int(layer.get_attr('exp_table_size'))  # not sure if it works, have to test first
+                    elif implementation == 'latency':
+                        if table_kind == 'exp':
+                            ac_type = layer.get_input_variable().type
+                        else:
+                            # Note: keyed off exp_table_t, not inv_table_t/inv_inp_t
+                            ac_type = layer.get_attr('exp_table_t')
 
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
+                        fp_bits = ac_type.precision.integer + ac_type.precision.fractional
+                        fp_integer = ac_type.precision.integer
+                        fp_signed = ac_type.precision.signed
 
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("exp_table_t").name},{table_size}> {table_name} = {{'
-                    )
+                        for i in range(table_size):
+                            f = FixedPointEmulator(fp_bits, fp_integer, signed=fp_signed)
+                            f.set_msb_bits(uint_to_binary(i, N))
+                            real_val = f.exp_float() if table_kind == 'exp' else f.inv_float()
+                            h_file.write(sep + str(real_val))
+                            sep = ', '
 
-                    sep = ''
-                    for i in range(table_size):
-                        in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
-                        real_val = np.exp(in_val)
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
+                    else:  # legacy
+                        for i in range(table_size):
+                            if table_kind == 'exp':
+                                in_val = 2 * 8.0 * (i - float(table_size) / 2.0) / float(table_size)
+                                real_val = np.exp(in_val)
+                            else:
+                                in_val = 64.0 * i / float(table_size)
+                                real_val = 1.0 / in_val if in_val > 0.0 else 0
 
-                    h_file.write('};\n\n')
-                    h_file.write('#endif')
-
-    def __write_invert_table_legacy(self, model, path):
-
-        for layer in model.get_layers():
-            # Last property is essential since it seperates layer with activation property from actual activation layers
-            if (
-                (
-                    layer.get_attr('activation') == 'softmax'
-                    or layer.get_attr('activation') == 'softmax_multidim'
-                    or layer.get_attr('recurrent_activation') == 'softmax'
-                    or layer.get_attr('recurrent_activation') == 'softmax_multidim'
-                )
-                and 'implementation' in layer.attributes
-                and layer.get_attr('implementation') == 'legacy'
-            ):
-                table_name = layer.name + '_inv_table'
-                table_size = int(layer.get_attr('inv_table_size'))
-
-                with open(f'{path}/{table_name}.h', 'w') as h_file:
-                    header_name = table_name
-                    h_file.write(f'#ifndef {header_name.upper()}_H_\n')
-                    h_file.write(f'#define {header_name.upper()}_H_\n\n')
-
-                    h_file.write(
-                        f'static constexpr nnet::array<{layer.get_attr("inv_table_t").name},{table_size}> {table_name} = {{'
-                    )
-
-                    sep = ''
-                    for i in range(table_size):
-                        real_val = 0
-                        in_val = 64.0 * i / float(table_size)
-                        if in_val > 0.0:
-                            real_val = 1.0 / in_val
-                        h_file.write(sep + str(real_val))
-                        sep = ', '
+                            h_file.write(sep + str(real_val))
+                            sep = ', '
 
                     h_file.write('};\n\n')
                     h_file.write('#endif')
@@ -1572,12 +1383,7 @@ class AlteraWriter(Writer):
         self.__write_softplus_table(model, dstpath)
         self.__write_softsign_table(model, dstpath)
         self.__write_selu_table(model, dstpath)
-        self.__write_exp_tables_stable(model, dstpath)
-        self.__write_invert_tables_stable(model, dstpath)
-        self.__write_exp_tables_latency(model, dstpath)
-        self.__write_invert_tables_latency(model, dstpath)
-        self.__write_exp_table_legacy(model, dstpath)
-        self.__write_invert_table_legacy(model, dstpath)
+        self.__write_softmax_tables(model, dstpath)
 
     def write_generated_code(self, model):
         """Write the generated code (nnet_code_gen.h)

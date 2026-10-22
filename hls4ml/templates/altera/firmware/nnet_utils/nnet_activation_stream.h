@@ -521,50 +521,46 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> void softmax_strea
 // *************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T> inline void softmax_multidim_stream() {
 
-    using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
-    using data_T = typename data_arr_T::value_type;
-    using res_arr_T = typename ExtractPipeType<res_pipe>::value_type;
-    using res_T = typename res_arr_T::value_type;
-
+    using data_pipe_T = typename ExtractPipeType<data_pipe>::value_type;
+    using data_T = typename data_pipe_T::value_type;
+    using res_pipe_T = typename ExtractPipeType<res_pipe>::value_type;
+    using res_T = typename res_pipe_T::value_type;
     using in_slice_arr_T = nnet::array<data_T, CONFIG_T::n_slice>;
     using out_slice_arr_T = nnet::array<res_T, CONFIG_T::n_slice>;
 
     using slice_config = softmax_multidim_slice_config<CONFIG_T>;
 
-    [[intel::fpga_register]] data_arr_T buffer_in;
-    [[intel::fpga_register]] res_arr_T buffer_out;
+    [[intel::fpga_register]] data_pipe_T buffer_in;
+    [[intel::fpga_register]] res_pipe_T buffer_out;
     [[intel::fpga_register]] in_slice_arr_T smax_slice_in;
     [[intel::fpga_register]] out_slice_arr_T smax_slice_out;
 
-    static constexpr unsigned TENSOR_SIZE = CONFIG_T::n_slice * CONFIG_T::n_inner * CONFIG_T::n_outer;
-    for (unsigned t = 0; t < CONFIG_T::n_in / TENSOR_SIZE; t++) {
+    buffer_in = data_pipe::read();
 
-        buffer_in = data_pipe::read();
-
+    #pragma unroll
+    for (unsigned i = 0; i < CONFIG_T::n_outer; i++) {
+        unsigned outer_offset = i * CONFIG_T::n_slice * CONFIG_T::n_inner;
         #pragma unroll
-        for (unsigned i = 0; i < CONFIG_T::n_outer; i++) {
-            unsigned outer_offset = i * CONFIG_T::n_slice * CONFIG_T::n_inner;
+        for (unsigned k = 0; k < CONFIG_T::n_inner; k++) {
+
+            // TODO: Access might be inefficient consider data rearrangement
             #pragma unroll
-            for (unsigned k = 0; k < CONFIG_T::n_inner; k++) {
+            for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
+                unsigned idx = outer_offset + j * CONFIG_T::n_inner + k;
+                smax_slice_in[j] = buffer_in[idx];
+            }
 
-                // TODO: Access might be inefficient consider data rearrangement
-                #pragma unroll
-                for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
-                    unsigned idx = outer_offset + j * CONFIG_T::n_inner + k;
-                    smax_slice_in[j] = buffer_in[idx];
-                }
+            nnet::softmax<in_slice_arr_T, out_slice_arr_T, slice_config>(smax_slice_in, smax_slice_out);
 
-                nnet::softmax<in_slice_arr_T, out_slice_arr_T, slice_config>(smax_slice_in, smax_slice_out);
-
-                #pragma unroll
-                for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
-                    unsigned idx = outer_offset + j * CONFIG_T::n_inner + k;
-                    buffer_out[idx] = smax_slice_out[j];
-                }
+            #pragma unroll
+            for (unsigned j = 0; j < CONFIG_T::n_slice; j++) {
+                unsigned idx = outer_offset + j * CONFIG_T::n_inner + k;
+                buffer_out[idx] = smax_slice_out[j];
             }
         }
-        res_pipe::write(buffer_out);
     }
+
+    res_pipe::write(buffer_out);
 }
 
 // *************************************************
