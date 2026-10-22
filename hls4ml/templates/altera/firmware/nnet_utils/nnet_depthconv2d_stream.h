@@ -59,8 +59,7 @@ void compute_depthwise_output_buffer_2d(
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T>
-void depthwise_conv_2d_cl_stream() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void depthwise_conv_2d_cl_stream() {
 
     using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
     using data_element_T = typename data_arr_T::value_type;

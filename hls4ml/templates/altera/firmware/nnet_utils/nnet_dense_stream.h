@@ -8,8 +8,7 @@
 namespace nnet {
 
 // Note:  DataPack logic removed, at least in the initial version
-template <class data_pipe, class res_pipe, typename CONFIG_T>
-void dense_resource_stream() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void dense_resource_stream() {
 
     [[intel::fpga_register]] typename ExtractPipeType<res_pipe>::value_type res;
     [[intel::fpga_register]] auto data = data_pipe::read();

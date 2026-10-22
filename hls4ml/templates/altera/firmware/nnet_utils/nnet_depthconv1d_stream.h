@@ -49,8 +49,7 @@ void compute_depthwise_output_buffer_1d(
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T>
-void depthwise_conv_1d_cl_stream() {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void depthwise_conv_1d_cl_stream() {
 
     using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
     using data_element_T = typename data_arr_T::value_type;
@@ -72,8 +71,8 @@ void depthwise_conv_1d_cl_stream() {
 // Input image left-side padding
 PaddingLeftWidth:
     for (int col = 0; col < CONFIG_T::pad_left; col++) {
-        compute_depthwise_output_buffer_1d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
-                                                                                          CONFIG_T::weights, CONFIG_T::biases, pX, sX);
+        compute_depthwise_output_buffer_1d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(
+            padds, line_buffer, kernel_window, CONFIG_T::weights, CONFIG_T::biases, pX, sX);
     }
 
 // Read input image
@@ -86,8 +85,8 @@ ReadInputWidth:
 // Input image right-side padding
 PaddingRightWidth:
     for (int col = 0; col < CONFIG_T::pad_right; col++) {
-        compute_depthwise_output_buffer_1d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
-                                                                                          CONFIG_T::weights, CONFIG_T::biases, pX, sX);
+        compute_depthwise_output_buffer_1d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(
+            padds, line_buffer, kernel_window, CONFIG_T::weights, CONFIG_T::biases, pX, sX);
     }
 }
 
