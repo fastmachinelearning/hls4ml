@@ -47,7 +47,8 @@ conv_implementation = (
 recurrent_static = (
     'If set to True, will reuse the same recurrent block for computation, resulting in lower resource '
     'usage at the expense of serialized computation and higher latency/II. '
-    'Only applies to io_parallel, as io_stream always reuses the same block.'
+    'Only applies to io_parallel, as io_stream always reuses the same block. '
+    'On Vivado and Vitis, the Resource strategy also always reuses the same block.'
 )
 
 # LayerNorm-related attributes
