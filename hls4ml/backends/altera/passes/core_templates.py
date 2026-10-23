@@ -35,8 +35,17 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
 }};\n"""
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+dense_reloadable_function_template = (
+    'nnet::dense_{strategy}<{input_t}, {output_t}, {config}, {w}_reloadable_t, {b}_reloadable_t>'
+    '({input}, {output}, {w}, {b});'
+)
 dense_task_sequence_template = 'task_sequence<nnet::dense_{strategy}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 dense_stream_function_template = '{name}.async({w}, {b});'
+dense_reloadable_task_sequence_template = (
+    'task_sequence<nnet::reloadable_task<nnet::dense_{strategy}_stream<{input_pipe}, {output_pipe}, {config}, '
+    '{w_t}, {b_t}>, {w_t}, {b_t}>> {name};'
+)
+dense_reloadable_stream_function_template = '{name}.async(mode, {w}, {b});'
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_stream.h']
 
 
@@ -65,6 +74,8 @@ class DenseFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
+        if node.get_weights('weight').storage == 'reloadable':
+            return dense_reloadable_function_template.format(**params)
 
         return self.template.format(**params)
 
@@ -76,6 +87,10 @@ class DenseTaskSequenceTemplate(TaskSequenceTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
+        if node.get_weights('weight').storage == 'reloadable':
+            params['w_t'] = node.get_weights('weight').name + '_reloadable_t'
+            params['b_t'] = node.get_weights('bias').name + '_reloadable_t'
+            return dense_reloadable_task_sequence_template.format(**params)
 
         return self.template.format(**params)
 
@@ -89,6 +104,8 @@ class DenseStreamFunctionTemplate(StreamFunctionCallTemplate):
         params = self._default_function_params(node)
         params['w'] = node.get_weights('weight').name
         params['b'] = node.get_weights('bias').name
+        if node.get_weights('weight').storage == 'reloadable':
+            return dense_reloadable_stream_function_template.format(**params)
 
         return self.template.format(**params)
 

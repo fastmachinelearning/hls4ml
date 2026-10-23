@@ -8,6 +8,7 @@ import numpy as np
 import yaml
 
 from hls4ml.backends import get_backend
+from hls4ml.backends.altera.passes.reloadable_weights import get_reloadable_weights
 from hls4ml.utils.fixed_point_utils import FixedPointEmulator, ceil_log2, uint_to_binary
 from hls4ml.utils.string_utils import convert_to_pascal_case
 from hls4ml.writer.writers import Writer
@@ -70,6 +71,21 @@ class AlteraWriter(Writer):
             h_file.write(f'#define {var.name.upper()}_H_\n')
             h_file.write('\n')
 
+            if var.storage == 'reloadable':
+                # Every set starts out with the weights of the converted model. Like pipes, device_globals are
+                # registered process-wide by name, so they go in the kernel namespace.
+                h_file.write('#include "nnet_utils/nnet_reloadable.h"\n\n')
+                h_file.write(f'namespace {self._get_namespace(layer.model)} {{\n')
+                values = ', '.join(var)
+                for i in range(layer.model.config.get_config_value('WeightSets', 1)):
+                    h_file.write(
+                        f'nnet::reloadable_weight_memory<{var.type.name}::value_type, {var.data_length}> '
+                        f'{var.name}_set{i}{{{values}}};\n'
+                    )
+                h_file.write('}\n')
+                h_file.write('\n#endif\n')
+                return
+
             rf = int(layer.get_attr('reuse_factor', 1))
 
             h_file.write(var.definition_cpp(rf) + ' = {{')
@@ -104,6 +120,10 @@ class AlteraWriter(Writer):
             return var.pragma[1]
         return 0
 
+    @staticmethod
+    def _get_load_pipe_name(var):
+        return f'{convert_to_pascal_case(var.name)}LoadPipe'
+
     def write_project_dir(self, model):
         """Write the base project directory
 
@@ -137,6 +157,10 @@ class AlteraWriter(Writer):
             io_type = model.config.get_config_value('IOType')
             indent = '    '
 
+            reloadable = get_reloadable_weights(model)
+            reloadable_layers = [layer for layer in model.get_layers() if any(w in reloadable for w in layer.get_weights())]
+            weight_sets = model.config.get_config_value('WeightSets', 1)
+
             for line in f.readlines():
                 if 'mynamespace' in line:
                     newline = line.replace('mynamespace', namespace)
@@ -155,10 +179,30 @@ class AlteraWriter(Writer):
                             for var in vars:
                                 if var not in model_inputs and var not in model_outputs:
                                     newline += var.declare_cpp()
+                        for w in reloadable:
+                            pipe = self._get_load_pipe_name(w)
+                            newline += f'class {pipe}ID;\n'
+                            newline += f'using {pipe} = sycl::ext::altera::experimental::pipe<{pipe}ID, weight_word_t, 0>;\n'
+                    for w in reloadable:
+                        pipe = self._get_load_pipe_name(w) if io_type == 'io_stream' else 'WeightLoadPipe'
+                        sets = ', '.join(f'{w.name}_set{i}' for i in range(weight_sets))
+                        newline += (
+                            f'using {w.name}_reloadable_t = nnet::reloadable_weights<{w.type.name}::value_type, '
+                            f'{w.data_length}, {pipe}, {sets}>;\n'
+                        )
 
                 # Read in inputs
                 elif '// hls-fpga-machine-learning read in' in line:
                     newline = line
+                    set_arg = 'weight_set' if weight_sets > 1 else '0'
+                    for w in reloadable:
+                        newline += indent + f'const {w.name}_reloadable_t {w.name}{{{set_arg}}};\n'
+                    if reloadable and io_type == 'io_parallel':
+                        newline += indent + 'if (mode == nnet::mode_load_weights) {\n'
+                        for w in reloadable:
+                            newline += indent * 2 + f'{w.name}.load();\n'
+                        newline += indent * 2 + 'return;\n'
+                        newline += indent + '}\n'
                     if io_type == 'io_parallel':
                         for inp in model_inputs:
                             newline += indent + f'auto {inp.name} = {inp.pipe_name}::read();\n'
@@ -180,6 +224,18 @@ class AlteraWriter(Writer):
                             ts = layer.get_attr('task_sequence_cpp')
                             if ts:
                                 newline += '    ' + ts + '\n'
+                        if reloadable:
+                            newline += indent + 'if (mode == nnet::mode_load_weights) {\n'
+                            for layer in reloadable_layers:
+                                newline += indent * 2 + layer.get_attr('stream_function_cpp') + '\n'
+                            for w in reloadable:
+                                newline += (
+                                    indent * 2
+                                    + f'nnet::forward_weights<WeightLoadPipe, {self._get_load_pipe_name(w)}, '
+                                    + f'{w.data_length}>();\n'
+                                )
+                            newline += indent * 2 + 'return;\n'
+                            newline += indent + '}\n'
 
                 # Neural net instantiation
                 elif '// hls-fpga-machine-learning insert layers' in line:
@@ -239,6 +295,8 @@ class AlteraWriter(Writer):
             model_inputs = model.get_input_variables()
             model_outputs = model.get_output_variables()
             # model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
+            reloadable = get_reloadable_weights(model)
+            weight_sets = model.config.get_config_value('WeightSets', 1)
 
             # io_parallel and io_stream instantiate the top-level function differently (io_stream not yet supported)
             # io_type = model.config.get_config_value('IOType')
@@ -269,6 +327,23 @@ class AlteraWriter(Writer):
                     newline = line
                     for out in model_outputs:
                         newline += out.declare_cpp(pipe_min_size=self._get_interface_pipe_size(out))
+                    if reloadable:
+                        # One weight per word, in the low bits
+                        word_width = max(w.type.precision.width for w in reloadable)
+                        newline += '\n'
+                        newline += f'using weight_word_t = ac_int<{word_width}, false>;\n'
+                        newline += 'class WeightLoadPipeID;\n'
+                        newline += (
+                            'using WeightLoadPipe = sycl::ext::altera::experimental::pipe<WeightLoadPipeID, '
+                            'weight_word_t, 0, PipeProps>;\n'
+                        )
+
+                elif '// hls-fpga-machine-learning insert kernel arguments' in line:
+                    newline = ''
+                    if reloadable:
+                        newline += '    int mode;\n'
+                        if weight_sets > 1:
+                            newline += '    int weight_set;\n'
 
                 # Simply copy line, if no inserts are required
                 else:
@@ -445,6 +520,9 @@ class AlteraWriter(Writer):
         model_outputs = model.get_output_variables()
         model_brams = [var for var in model.get_weight_variables() if var.storage.lower() == 'bram']
         # model brambs aren't actually supported yet
+        reloadable = get_reloadable_weights(model)
+        weight_sets = model.config.get_config_value('WeightSets', 1)
+        kernel_cls = convert_to_pascal_case(project_name)
 
         # io_type = model.config.get_config_value('IOType')
         indent = '    '
@@ -468,6 +546,45 @@ class AlteraWriter(Writer):
                     newline = line
                     for bram in model_brams:
                         newline += f'#include "firmware/weights/{bram.name}.h"\n'
+                    if reloadable:
+                        newline += '#include "firmware/nnet_utils/nnet_reloadable.h"\n'
+
+                # Loading and inference share one queue, so that both use the same device_global weight memories
+                elif '// hls-fpga-machine-learning insert reloadable weights' in line:
+                    newline = ''
+                    if reloadable:
+                        newline += f'static int {project_name}_weight_set = 0;\n\n'
+                        newline += f'static sycl::queue &{project_name}_queue() {{\n'
+                        newline += indent + 'static sycl::queue q(sycl::ext::altera::fpga_emulator_selector_v, '
+                        newline += 'fpga_tools::exception_handler,\n'
+                        newline += indent * 5 + 'sycl::property::queue::enable_profiling{});\n'
+                        newline += indent + 'return q;\n'
+                        newline += '}\n\n'
+                        newline += f'class {kernel_cls}ClassLoad_{stamp};\n\n'
+                        newline += f'void {project_name}_load_weights(int weight_set, double *values) {{\n'
+                        newline += indent + f'sycl::queue &q = {project_name}_queue();\n'
+                        set_arg = ', weight_set' if weight_sets > 1 else ''
+                        newline += (
+                            indent
+                            + f'q.single_task<{kernel_cls}ClassLoad_{stamp}>'
+                            + f'({kernel_cls}{{nnet::mode_load_weights{set_arg}}});\n'
+                        )
+                        offset = 0
+                        for w in reloadable:
+                            newline += (
+                                indent
+                                + f'nnet::write_weights<{w.type.name}::value_type, {w.data_length}, WeightLoadPipe>'
+                                + f'(q, values + {offset});\n'
+                            )
+                            offset += w.data_length
+                        newline += indent + 'q.wait();\n'
+                        newline += '}\n\n'
+                        if weight_sets > 1:
+                            newline += f'void {project_name}_set_weight_set(int weight_set) {{ '
+                            newline += f'{project_name}_weight_set = weight_set; }}\n\n'
+
+                elif reloadable and 'static sycl::queue q(' in line:
+                    newline = indent + f'sycl::queue &q = {project_name}_queue();\n'
 
                 elif '// hls-fpga-machine-learning insert class def' in line:
                     dtype = line.split('#', 1)[1].strip()
@@ -486,10 +603,15 @@ class AlteraWriter(Writer):
                     dtype = line.split('#', 1)[1].strip()
                     newline = ''
 
+                    if reloadable:
+                        set_arg = f', {project_name}_weight_set' if weight_sets > 1 else ''
+                        kernel_args = f'nnet::mode_infer{set_arg}'
+                    else:
+                        kernel_args = ''
                     newline += (
                         indent
                         + f'q.single_task<{convert_to_pascal_case(project_name)}Class{dtype.capitalize()}_{stamp}>'
-                        + f'({convert_to_pascal_case(project_name)}{{}});\n'
+                        + f'({convert_to_pascal_case(project_name)}{{{kernel_args}}});\n'
                     )
 
                     for i in model_inputs:
@@ -531,6 +653,7 @@ class AlteraWriter(Writer):
         device = model.config.get_config_value('Part')
         period = model.config.get_config_value('ClockPeriod')
         hyper = model.config.get_config_value('HyperoptHandshake')
+        reloadable = get_reloadable_weights(model)
         with (
             open(os.path.join(filedir, '../templates/altera/CMakeLists.txt')) as f,
             open(f'{model.config.get_output_dir()}/CMakeLists.txt', 'w') as fout,
@@ -546,6 +669,12 @@ class AlteraWriter(Writer):
                     line += f'set(USER_FPGA_FLAGS -Xsclock={period}ns; ${{USER_FPGA_FLAGS}})\n'
                     if not hyper:
                         line += 'set(USER_FPGA_FLAGS -Xsoptimize=latency; ${USER_FPGA_FLAGS})\n'
+
+                # Initializing the reloadable weight memories needs C++20, and the nesting depth must exceed the
+                # number of initial values
+                if 'set(USER_FLAGS' in line and reloadable:
+                    depth = max(256, max(w.data_length for w in reloadable) + 1)
+                    line += f'set(USER_FLAGS -std=c++20 -fbracket-depth={depth} ${{USER_FLAGS}})\n'
 
                 fout.write(line)
 
