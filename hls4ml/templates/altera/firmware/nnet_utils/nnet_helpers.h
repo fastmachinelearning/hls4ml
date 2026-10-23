@@ -75,41 +75,25 @@ template <> struct pow2<0> {
     enum { val = 1 };
 };
 
-template <class data_T, class save_T> void save_output_array(data_T *data, save_T *ptr, size_t layer_size) {
-    for (int i = 0; i < layer_size; i++) {
-        ptr[i] = static_cast<save_T>(data[i].to_double());
-    }
-}
-
-// We don't want to include save_T in this function because it will be inserted into myproject.cpp
-// so a workaround with element size is used
-template <class data_T> void save_layer_output(data_T *data, const char *layer_name, size_t layer_size) {
-    if (!trace_enabled)
-        return;
-
-    if (trace_outputs) {
+// Called on the host. The trace pipe is always drained so the kernel does not stall when tracing is disabled.
+template <class src_pipe, class dstType, size_t SIZE> void collect_trace_data(sycl::queue &q, const char *layer_name) {
+    dstType *dst = nullptr;
+    if (trace_enabled && trace_outputs) {
         if (trace_outputs->count(layer_name) > 0) {
-            if (trace_type_size == 4) {
-                save_output_array(data, (float *)(*trace_outputs)[layer_name], layer_size);
-            } else if (trace_type_size == 8) {
-                save_output_array(data, (double *)(*trace_outputs)[layer_name], layer_size);
-            } else {
-                std::cout << "Unknown trace type!" << std::endl;
-            }
+            dst = (dstType *)(*trace_outputs)[layer_name];
         } else {
             std::cout << "Layer name: " << layer_name << " not found in debug storage!" << std::endl;
         }
-    } else {
-        std::ostringstream filename;
-        filename << "./tb_data/" << layer_name << "_output.log"; // TODO if run as a shared lib, path should be ../tb_data
-        std::fstream out;
-        out.open(filename.str(), std::ios::app);
-        assert(out.is_open());
-        for (int i = 0; i < layer_size; i++) {
-            out << data[i] << " "; // We don't care about precision in text files
+    }
+
+    constexpr auto srcTypeSize = std::tuple_size<typename ExtractPipeType<src_pipe>::value_type>{};
+    for (size_t i = 0; i < SIZE / srcTypeSize; i++) {
+        auto ctype = src_pipe::read(q);
+        if (dst) {
+            for (size_t j = 0; j < srcTypeSize; j++) {
+                dst[i * srcTypeSize + j] = ctype[j].to_double();
+            }
         }
-        out << std::endl;
-        out.close();
     }
 }
 

@@ -104,6 +104,25 @@ class AlteraWriter(Writer):
             return var.pragma[1]
         return 0
 
+    @staticmethod
+    def _get_traced_variables(model):
+        """Layers and output variables that are sent to the host through trace pipes when tracing is enabled."""
+        if not model.config.trace_output:
+            return []
+        traced = [
+            (layer, var)
+            for layer in model.get_layers()
+            if layer.get_attr('function_cpp') and layer.get_attr('trace', False)
+            for var in layer.get_variables()
+        ]
+        if traced and model.config.get_config_value('IOType') != 'io_parallel':
+            raise NotImplementedError('Tracing is currently only supported for io_parallel in the Altera backend')
+        return traced
+
+    @staticmethod
+    def _get_trace_pipe_name(var):
+        return f'{convert_to_pascal_case(var.name)}TracePipe'
+
     def write_project_dir(self, model):
         """Write the base project directory
 
@@ -184,6 +203,7 @@ class AlteraWriter(Writer):
                 # Neural net instantiation
                 elif '// hls-fpga-machine-learning insert layers' in line:
                     newline = line + '\n'
+                    traced = self._get_traced_variables(model)
                     for layer in model.get_layers():
                         if io_type != 'io_stream':
                             vars = layer.get_variables()
@@ -199,12 +219,11 @@ class AlteraWriter(Writer):
                         )
                         if func:
                             newline += '    ' + func + '\n'
-                            if model.config.trace_output and layer.get_attr('trace', False):
-                                newline += '#ifndef HLS_SYNTHESIS\n'
-                                for var in vars:
-                                    newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(
-                                        var.type.name, var.name, layer.name, var.size_cpp()
-                                    )
+                            traced_vars = [var for traced_layer, var in traced if traced_layer is layer]
+                            if traced_vars:
+                                newline += '#ifdef HLS4ML_TRACE\n'
+                                for var in traced_vars:
+                                    newline += f'    {self._get_trace_pipe_name(var)}::write({var.name});\n'
                                 newline += '#endif\n'
 
                 # Write the output
@@ -269,6 +288,20 @@ class AlteraWriter(Writer):
                     newline = line
                     for out in model_outputs:
                         newline += out.declare_cpp(pipe_min_size=self._get_interface_pipe_size(out))
+
+                elif '// hls-fpga-machine-learning insert trace pipes' in line:
+                    newline = line
+                    traced = self._get_traced_variables(model)
+                    if traced:
+                        newline += '#ifdef HLS4ML_TRACE\n'
+                        for _, var in traced:
+                            pipe_name = self._get_trace_pipe_name(var)
+                            newline += f'class {pipe_name}ID;\n'
+                            newline += (
+                                f'using {pipe_name} = sycl::ext::altera::experimental::pipe<{pipe_name}ID, '
+                                f'{var.type.name}, 0, PipeProps>;\n'
+                            )
+                        newline += '#endif\n'
 
                 # Simply copy line, if no inserts are required
                 else:
@@ -494,6 +527,17 @@ class AlteraWriter(Writer):
 
                     for i in model_inputs:
                         newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
+
+                    # The kernel writes the trace pipes in layer order before the outputs, so read them in that order
+                    traced = self._get_traced_variables(model)
+                    if traced:
+                        newline += '#ifdef HLS4ML_TRACE\n'
+                        for layer, var in traced:
+                            newline += (
+                                indent + f'nnet::collect_trace_data<{self._get_trace_pipe_name(var)}, {dtype}, '
+                                f'{var.size_cpp()}>(q, "{layer.name}");\n'
+                            )
+                        newline += '#endif\n'
 
                     for o in model_outputs:
                         newline += (
