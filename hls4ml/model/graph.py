@@ -955,7 +955,9 @@ class ModelGraph(Serializable):
         free_func.restype = None
 
         curr_dir = os.getcwd()
-        os.chdir(self.config.get_output_dir() + '/firmware')
+        firmware_dir = self.config.get_output_dir() + '/firmware'
+        if os.path.isdir(firmware_dir):
+            os.chdir(firmware_dir)
 
         output = []
         if n_samples == 1 and n_inputs == 1:

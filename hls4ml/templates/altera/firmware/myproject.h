@@ -18,6 +18,9 @@ namespace mynamespace {
 // hls-fpga-machine-learning insert inputs
 // hls-fpga-machine-learning insert outputs
 
+// Trace pipes only exist in the Python bridge library
+// hls-fpga-machine-learning insert trace pipes
+
 class MyProjectID;
 
 struct MyProject {
