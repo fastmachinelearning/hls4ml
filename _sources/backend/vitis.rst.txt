@@ -13,9 +13,10 @@ the **Vivado** backend.
 Known issues
 ============
 
-* With ``Vitis HLS`` 2023.2, recurrent layers (``SimpleRNN``, ``LSTM``, ``GRU``) using ``io_stream`` and the ``Latency`` strategy may not meet the target
-  clock at the default clock uncertainty. ``Vitis HLS`` 2024.1 is not affected. With 2023.2, raising the clock uncertainty to 35%
-  (``clock_uncertainty='35%'``) was enough for the models tested, at the cost of about one extra clock cycle per time step.
+* With ``Vitis HLS`` 2023.2, recurrent layers (``SimpleRNN``, ``LSTM``, ``GRU``) may not meet the target clock at the default clock uncertainty when
+  they use ``io_stream`` and the ``Latency`` strategy, or the ``Resource`` strategy with a reuse factor of 1. ``Vitis HLS`` 2024.1 is not affected. With
+  2023.2, raising the clock uncertainty to 35% (``clock_uncertainty='35%'``) was enough for the models tested, at the cost of one to three extra
+  clock cycles per time step.
 
 Fused strategy
 ==============

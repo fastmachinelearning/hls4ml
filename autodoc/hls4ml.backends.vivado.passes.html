@@ -1554,7 +1554,8 @@ initializer ignores the setting is still caught.</p>
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vivado.passes.resource_strategy.</span></span><span class="sig-name descname"><span class="pre">ApplyResourceStrategy</span></span><a class="headerlink" href="#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
-<p>Transposes the weights to use the dense_resource matrix multiply routine</p>
+<p>Transposes the weights to use the dense_resource matrix multiply routine, or lays out those of a recurrent layer
+for the cell of the Resource strategy.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado.passes.resource_strategy.ApplyResourceStrategy.match" title="Link to this definition"></a></dt>

@@ -2171,7 +2171,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2275,7 +2275,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2381,7 +2381,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2511,7 +2511,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
 

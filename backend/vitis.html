@@ -153,9 +153,10 @@ the <strong>Vivado</strong> backend.</p>
 <section id="known-issues">
 <h2>Known issues<a class="headerlink" href="#known-issues" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>With <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2023.2, recurrent layers (<code class="docutils literal notranslate"><span class="pre">SimpleRNN</span></code>, <code class="docutils literal notranslate"><span class="pre">LSTM</span></code>, <code class="docutils literal notranslate"><span class="pre">GRU</span></code>) using <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> and the <code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy may not meet the target
-clock at the default clock uncertainty. <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2024.1 is not affected. With 2023.2, raising the clock uncertainty to 35%
-(<code class="docutils literal notranslate"><span class="pre">clock_uncertainty='35%'</span></code>) was enough for the models tested, at the cost of about one extra clock cycle per time step.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2023.2, recurrent layers (<code class="docutils literal notranslate"><span class="pre">SimpleRNN</span></code>, <code class="docutils literal notranslate"><span class="pre">LSTM</span></code>, <code class="docutils literal notranslate"><span class="pre">GRU</span></code>) may not meet the target clock at the default clock uncertainty when
+they use <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> and the <code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy, or the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy with a reuse factor of 1. <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2024.1 is not affected. With
+2023.2, raising the clock uncertainty to 35% (<code class="docutils literal notranslate"><span class="pre">clock_uncertainty='35%'</span></code>) was enough for the models tested, at the cost of one to three extra
+clock cycles per time step.</p></li>
 </ul>
 </section>
 <section id="fused-strategy">
