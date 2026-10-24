@@ -238,7 +238,7 @@ template <class src_T, class dst_T, size_t OFFSET, size_t SIZE> void copy_data_a
 }
 
 template <class res_T, size_t SIZE> void print_result(res_T result[SIZE], std::ostream &out, bool keep = false) {
-    for (uint i = 0; i < SIZE; i++) {
+    for (unsigned i = 0; i < SIZE; i++) {
         out << result[i] << " ";
     }
     out << std::endl;
