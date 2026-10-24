@@ -28,6 +28,23 @@ template <class data_T, typename CONFIG_T> class FillConv2DBuffer {
     }
 };
 
+template <class data_T, typename CONFIG_T> class FillConvTransposeBuffer {
+  public:
+    static void fill_buffer(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
+                            data_T buffer[CONFIG_T::n_pixels][CONFIG_T::n_buf], const unsigned partition) {
+        // To be implemented in subclasses
+    }
+};
+
+template <class data_T, class res_T, typename CONFIG_T> class PlaceConvTransposeBlock {
+  public:
+    static void place(typename CONFIG_T::accum_t acc[CONFIG_T::n_pixels]
+                                                    [CONFIG_T::stride_height * CONFIG_T::stride_width * CONFIG_T::n_filt],
+                      res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt], const unsigned partition) {
+        // To be implemented in subclasses
+    }
+};
+
 template <class data_T, class res_T, typename CONFIG_T> class DenseKernel {
   public:
     static void dense(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],

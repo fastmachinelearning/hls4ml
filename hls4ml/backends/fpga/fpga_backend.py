@@ -17,7 +17,9 @@ from hls4ml.model.layers import (
     Bidirectional,
     Conv,
     Conv1D,
+    Conv1DTranspose,
     Conv2D,
+    Conv2DTranspose,
     Dense,
     Dot,
     Embedding,
@@ -65,6 +67,8 @@ class FPGABackend(Backend):
             Dense,
             Conv1D,
             Conv2D,
+            Conv1DTranspose,
+            Conv2DTranspose,
             Pooling1D,
             Pooling2D,
             GlobalPooling1D,
@@ -213,6 +217,9 @@ class FPGABackend(Backend):
             n_in = layer.get_attr('n_in')
             n_out = layer.get_attr('n_out')
             return n_in, n_out
+
+        if 'Transpose' in layer.class_name:
+            return layer.get_attr('n_buf'), layer.get_attr('n_filt')
 
         if 'Conv1D' in layer.class_name:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_width')
@@ -988,6 +995,135 @@ class FPGABackend(Backend):
                         val = f'data[{int(v - 1)}]'
                     buffer_stmts.append(f'buffer[{pixel_idx}][{j}] = {val:>10};')
                 generated_code += indent * 3 + ' '.join(buffer_stmts) + '\n'
+            generated_code += '\n' + indent * 2 + '}\n'
+
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code
+
+    def generate_conv_transpose_line_buffer_fn(self, layer_idx, n_partitions, in_shape, slot_shifts, first_block, n_blocks):
+        """Generate a C++ function that collects the inputs of each block of a transposed convolution.
+
+        Block ``(bh, bw)`` of the output reads, for each tap slot, the input at ``(first_block[0] + bh - shift[0],
+        first_block[1] + bw - shift[1])``, or zero outside the input. Blocks are numbered in row-major order and split
+        into ``n_partitions`` consecutive parts, as in ``generate_conv2d_line_buffer_fn``.
+
+        Args:
+            layer_idx (int): Index of layer ('index' attribute).
+            n_partitions (int): Number of partitions to divide the blocks into.
+            in_shape (tuple): Input height, width and channels; height 1 for 1D.
+            slot_shifts (list): Input offset (height, width) of each tap slot, in buffer order.
+            first_block (tuple): First block (height, width) that is not cropped.
+            n_blocks (tuple): Number of blocks (height, width).
+
+        Returns:
+            str: Generated C++ function
+        """
+
+        in_H, in_W, in_C = in_shape
+        buffers = []
+        for bh in range(n_blocks[0]):
+            for bw in range(n_blocks[1]):
+                row = []
+                for shift_h, shift_w in slot_shifts:
+                    h = first_block[0] + bh - shift_h
+                    w = first_block[1] + bw - shift_w
+                    inside = 0 <= h < in_H and 0 <= w < in_W
+                    row.extend((h * in_W + w) * in_C + c if inside else None for c in range(in_C))
+                buffers.append(row)
+
+        generated_code = (
+            'template<class data_T, typename CONFIG_T>\n'
+            'class fill_buffer_{index} : public nnet::FillConvTransposeBuffer<data_T, CONFIG_T> {{\n'
+            '    public:\n'
+            '    static void fill_buffer(\n'
+            '        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n'
+            '        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::n_buf],\n'
+            '        const unsigned partition\n'
+            '    ) {{\n'
+        ).format(index=layer_idx)
+        indent = '    '
+
+        # The last part is the else branch, so every path writes the whole buffer and nothing is carried over
+        n_pixels = len(buffers) // n_partitions
+        for partition_idx in range(n_partitions):
+            if partition_idx == 0:
+                cond = f'if (partition == {partition_idx:>3})'
+            elif partition_idx < n_partitions - 1:
+                cond = f'else if (partition == {partition_idx:>3})'
+            else:
+                cond = 'else'
+            generated_code += indent * 2 + cond + ' {\n'
+            for pixel_idx, row in enumerate(buffers[partition_idx * n_pixels : (partition_idx + 1) * n_pixels]):
+                buffer_stmts = []
+                for j, v in enumerate(row):
+                    val = '0' if v is None else f'data[{v}]'
+                    buffer_stmts.append(f'buffer[{pixel_idx}][{j}] = {val:>10};')
+                generated_code += indent * 3 + ' '.join(buffer_stmts) + '\n'
+            generated_code += indent * 2 + '}\n'
+
+        generated_code += indent + '}\n'
+        generated_code += '};\n'
+
+        return generated_code
+
+    def generate_conv_transpose_place_fn(self, layer_idx, n_partitions, out_shape, strides, crop, first_block, n_blocks):
+        """Generate a C++ function that writes the results of each block of a transposed convolution.
+
+        Group ``(gh, gw)`` of block ``(bh, bw)`` is output position ``((first_block[0] + bh) * strides[0] + gh - crop[0],
+        (first_block[1] + bw) * strides[1] + gw - crop[1])``; positions outside the output are left out. Blocks are
+        split into partitions as in ``generate_conv_transpose_line_buffer_fn``.
+
+        Args:
+            layer_idx (int): Index of layer ('index' attribute).
+            n_partitions (int): Number of partitions to divide the blocks into.
+            out_shape (tuple): Output height, width and filters; height 1 for 1D.
+            strides (tuple): Stride (height, width).
+            crop (tuple): Positions removed from the top and the left of the full output.
+            first_block (tuple): First block (height, width) that is not cropped.
+            n_blocks (tuple): Number of blocks (height, width).
+
+        Returns:
+            str: Generated C++ function
+        """
+
+        out_H, out_W, n_filt = out_shape
+        blocks = []
+        for bh in range(n_blocks[0]):
+            for bw in range(n_blocks[1]):
+                writes = []
+                for gh in range(strides[0]):
+                    h = (first_block[0] + bh) * strides[0] + gh - crop[0]
+                    for gw in range(strides[1]):
+                        w = (first_block[1] + bw) * strides[1] + gw - crop[1]
+                        if 0 <= h < out_H and 0 <= w < out_W:
+                            group = gh * strides[1] + gw
+                            writes.extend(((h * out_W + w) * n_filt + f, group * n_filt + f) for f in range(n_filt))
+                blocks.append(writes)
+
+        generated_code = (
+            'template<class data_T, class res_T, typename CONFIG_T>\n'
+            'class place_block_{index} : public nnet::PlaceConvTransposeBlock<data_T, res_T, CONFIG_T> {{\n'
+            '    public:\n'
+            '    static void place(\n'
+            '        typename CONFIG_T::accum_t acc[CONFIG_T::n_pixels]'
+            '[CONFIG_T::stride_height * CONFIG_T::stride_width * CONFIG_T::n_filt],\n'
+            '        res_T res[CONFIG_T::out_height * CONFIG_T::out_width * CONFIG_T::n_filt],\n'
+            '        const unsigned partition\n'
+            '    ) {{\n'
+        ).format(index=layer_idx)
+        indent = '    '
+
+        n_pixels = len(blocks) // n_partitions
+        for partition_idx in range(n_partitions):
+            generated_code += indent * 2 + f'if (partition == {partition_idx:>3}) {{\n'
+            for pixel_idx, writes in enumerate(blocks[partition_idx * n_pixels : (partition_idx + 1) * n_pixels]):
+                stmts = [
+                    f'res[{r}] = nnet::cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[{pixel_idx}][{a}]);'
+                    for r, a in writes
+                ]
+                generated_code += indent * 3 + ' '.join(stmts) + '\n'
             generated_code += '\n' + indent * 2 + '}\n'
 
         generated_code += indent + '}\n'

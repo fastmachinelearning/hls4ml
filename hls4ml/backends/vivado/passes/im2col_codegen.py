@@ -1,4 +1,4 @@
-from hls4ml.model.layers import Conv1D, Conv2D, SeparableConv1D, SeparableConv2D
+from hls4ml.model.layers import Conv1D, Conv1DTranspose, Conv2D, Conv2DTranspose, SeparableConv1D, SeparableConv2D
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import Source
 
@@ -9,13 +9,15 @@ class GenerateConvIm2col(OptimizerPass):
     # Note, DepthwizeConv1D/2D also matches because it inherits from Conv1D/2D
     def match(self, node):
         return (
-            isinstance(node, (Conv1D, Conv2D, SeparableConv1D, SeparableConv2D))
+            isinstance(node, (Conv1D, Conv2D, SeparableConv1D, SeparableConv2D, Conv1DTranspose, Conv2DTranspose))
             and node.model.config.get_config_value('IOType') == 'io_parallel'
         )
 
     def transform(self, model, node):
         node_class = node.class_name
-        if 'Separable' in node_class:
+        if 'Transpose' in node_class:
+            self._generate_im2col_transpose(node)
+        elif 'Separable' in node_class:
             if '1D' in node_class:
                 self._generate_separable_im2col_1d(node)
             elif '2D' in node_class:
@@ -42,6 +44,34 @@ class GenerateConvIm2col(OptimizerPass):
         )
 
         node.set_attr('line_buffer_codegen', Source(code_str))
+
+    def _generate_im2col_transpose(self, node):
+        in_shape = node.get_input_variable().shape
+        if len(in_shape) == 2:
+            in_shape = [1, *in_shape]
+        code_str = node.model.config.backend.generate_conv_transpose_line_buffer_fn(
+            node.get_attr('index'),
+            node.get_attr('n_partitions'),
+            in_shape,
+            node.get_attr('slot_shifts'),
+            (node.get_attr('first_block_height', 0), node.get_attr('first_block_width')),
+            (node.get_attr('n_blocks_height', 1), node.get_attr('n_blocks_width')),
+        )
+        node.set_attr('line_buffer_codegen', Source(code_str))
+
+        out_shape = node.get_output_variable().shape
+        if len(out_shape) == 2:
+            out_shape = [1, *out_shape]
+        code_str = node.model.config.backend.generate_conv_transpose_place_fn(
+            node.get_attr('index'),
+            node.get_attr('n_partitions'),
+            out_shape,
+            (node.get_attr('stride_height', 1), node.get_attr('stride_width')),
+            (node.get_attr('crop_top', 0), node.get_attr('crop_left')),
+            (node.get_attr('first_block_height', 0), node.get_attr('first_block_width')),
+            (node.get_attr('n_blocks_height', 1), node.get_attr('n_blocks_width')),
+        )
+        node.set_attr('place_block_codegen', Source(code_str))
 
     def _generate_im2col_2d(self, node):
         code_str = node.model.config.backend.generate_conv2d_line_buffer_fn(

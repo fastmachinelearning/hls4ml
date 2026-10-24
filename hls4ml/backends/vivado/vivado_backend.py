@@ -15,7 +15,9 @@ from hls4ml.model.layers import (
     LSTM,
     Bidirectional,
     Conv1D,
+    Conv1DTranspose,
     Conv2D,
+    Conv2DTranspose,
     Dense,
     DepthwiseConv1D,
     DepthwiseConv2D,
@@ -74,6 +76,8 @@ class VivadoBackend(FPGABackend):
         pf_layers = [
             Conv1D,
             Conv2D,
+            Conv1DTranspose,
+            Conv2DTranspose,
         ]
 
         for layer in pf_layers:
@@ -475,6 +479,56 @@ class VivadoBackend(FPGABackend):
         layer.set_attr('parallelization_factor', closest_pf)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+    @layer_optimizer(Conv1DTranspose)
+    def init_conv1d_transpose(self, layer):
+        self._init_conv_transpose(layer)
+
+    @layer_optimizer(Conv2DTranspose)
+    def init_conv2d_transpose(self, layer):
+        self._init_conv_transpose(layer)
+
+    def _init_conv_transpose(self, layer):
+        if layer.model.config.get_config_value('IOType') != 'io_parallel':
+            raise NotImplementedError(f'Layer {layer.name} ({layer.class_name}) is only supported in io_parallel.')
+
+        strategy = layer.model.config.get_strategy(layer).lower()
+        if strategy == 'resource':
+            layer.set_attr('strategy', 'resource')
+            n_in, n_out = self.get_layer_mult_size(layer)
+            # The kernel goes through all inputs at least once per reuse cycle
+            valid_rf = [rf for rf in self.get_valid_reuse_factors(n_in, n_out) if rf <= n_in]
+            chosen_rf = layer.get_attr('reuse_factor')
+            if chosen_rf not in valid_rf:
+                closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
+                print(
+                    f'WARNING: Invalid ReuseFactor={chosen_rf} in layer "{layer.name}". '
+                    f'Using ReuseFactor={closest_rf} instead. Valid ReuseFactor(s): {",".join(map(str, valid_rf))}.'
+                )
+                layer.set_attr('reuse_factor', closest_rf)
+        elif strategy == 'latency':
+            layer.set_attr('strategy', 'latency')
+        else:
+            raise NotImplementedError(
+                f'Layer {layer.name} ({layer.class_name}) supports only the Latency and Resource strategies, not {strategy}.'
+            )
+
+        n_blocks_h = layer.get_attr('n_blocks_height', 1)
+        n_blocks_w = layer.get_attr('n_blocks_width')
+        user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
+        chosen_pf = user_pf or layer.get_attr('parallelization_factor', None) or 1
+        valid_pf = self.get_valid_conv_partition_splits(n_blocks_h, n_blocks_w)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}". '
+                f'Using ParallelizationFactor={closest_pf} instead. '
+                f'Valid ParallelizationFactor(s): {",".join(map(str, valid_pf))}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', n_blocks_h * n_blocks_w // closest_pf)
+        layer.set_attr('parallelization_factor', closest_pf)
 
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):

@@ -61,6 +61,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['DepthwiseConv1D', 'DepthwiseConv2D']:
             return self._infer_depthconv_precision(node, types_to_infer)
 
+        if node_class in ['Conv1DTranspose', 'Conv2DTranspose']:
+            return self._infer_conv_transpose_precision(node, types_to_infer)
+
         if node_class in ['SeparableConv1D', 'SeparableConv2D']:
             return self._infer_sepconv_precision(node, types_to_infer)
 
@@ -214,6 +217,11 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
     def _infer_conv_precision(self, node, types_to_infer):
         n_ops = node.get_attr('n_chan') * node.get_attr('filt_height', 1) * node.get_attr('filt_width')
+        return self._infer_common_precision(node, types_to_infer, n_ops)
+
+    def _infer_conv_transpose_precision(self, node, types_to_infer):
+        slot_groups = node.get_attr('slot_groups')
+        n_ops = node.get_attr('n_chan') * max(slot_groups.count(g) for g in set(slot_groups))
         return self._infer_common_precision(node, types_to_infer, n_ops)
 
     def _infer_depthconv_precision(self, node, types_to_infer):

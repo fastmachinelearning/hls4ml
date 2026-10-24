@@ -169,3 +169,77 @@ class ConvHandler(KerasV3LayerHandler):
             config['weight_data'] = kernel
 
         return config
+
+
+class ConvTransposeHandler(KerasV3LayerHandler):
+    handles = (
+        'keras.src.layers.convolutional.conv1d_transpose.Conv1DTranspose',
+        'keras.src.layers.convolutional.conv2d_transpose.Conv2DTranspose',
+    )
+
+    def handle(
+        self,
+        layer: 'keras.layers.Conv1DTranspose|keras.layers.Conv2DTranspose',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        assert len(in_tensors) == 1, f'Layer {layer.name} has more than one input'
+        assert len(out_tensors) == 1, f'Layer {layer.name} has more than one output'
+
+        if layer.data_format != 'channels_last':
+            raise NotImplementedError(f'Layer {layer.name}: only data_format="channels_last" is supported.')
+
+        in_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
+        out_shape: tuple[int, ...] = out_tensors[0].shape[1:]  # type: ignore
+        assert all(isinstance(x, int) for x in in_shape), f'Layer {layer.name} has non-fixed size input: {in_shape}'
+        assert all(isinstance(x, int) for x in out_shape), f'Layer {layer.name} has non-fixed size output: {out_shape}'
+
+        *px_in_shape, n_chan = in_shape
+        *px_out_shape, n_filt = out_shape
+
+        # Number of positions Keras removes from the start of the full output along each axis. With 'same' padding it
+        # follows TensorFlow's rule for the convolution this layer is the gradient of.
+        crop = []
+        for n_in, n_out, k, s, d in zip(px_in_shape, px_out_shape, layer.kernel_size, layer.strides, layer.dilation_rate):
+            if layer.padding == 'same':
+                crop.append(max((n_in - 1) * s + (k - 1) * d + 1 - n_out, 0) // 2)
+            else:
+                crop.append(0)
+
+        config = {
+            'n_chan': n_chan,
+            'n_filt': n_filt,
+            'weight_data': self.load_weight(layer, 'kernel'),
+            'bias_data': self.load_weight(layer, 'bias') if layer.use_bias else None,
+            'data_format': 'channels_last',
+        }
+        if len(px_in_shape) == 1:
+            config.update(
+                {
+                    'in_width': px_in_shape[0],
+                    'out_width': px_out_shape[0],
+                    'filt_width': layer.kernel_size[0],
+                    'stride_width': layer.strides[0],
+                    'dilation_width': layer.dilation_rate[0],
+                    'crop_left': crop[0],
+                }
+            )
+        else:
+            config.update(
+                {
+                    'in_height': px_in_shape[0],
+                    'in_width': px_in_shape[1],
+                    'out_height': px_out_shape[0],
+                    'out_width': px_out_shape[1],
+                    'filt_height': layer.kernel_size[0],
+                    'filt_width': layer.kernel_size[1],
+                    'stride_height': layer.strides[0],
+                    'stride_width': layer.strides[1],
+                    'dilation_height': layer.dilation_rate[0],
+                    'dilation_width': layer.dilation_rate[1],
+                    'crop_top': crop[0],
+                    'crop_left': crop[1],
+                }
+            )
+
+        return config

@@ -2,8 +2,10 @@ from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import (
     Conv1D,
+    Conv1DTranspose,
     Conv2D,
     Conv2DBatchnorm,
+    Conv2DTranspose,
     DepthwiseConv1D,
     DepthwiseConv2D,
     SeparableConv1D,
@@ -662,5 +664,115 @@ class SeparableConv2DFunctionTemplate(FunctionCallTemplate):
         params['p'] = node.get_weights('pointwise').name
         params['b'] = node.get_weights('bias').name
         params['z'] = node.get_weights('zero_bias').name
+
+        return self.template.format(**params)
+
+
+# Conv1DTranspose/Conv2DTranspose templates
+
+conv_transpose_config_template = """struct config{index} : nnet::conv_transpose_config {{
+    static const unsigned in_height = {in_height};
+    static const unsigned in_width = {in_width};
+    static const unsigned n_chan = {n_chan};
+    static const unsigned out_height = {out_height};
+    static const unsigned out_width = {out_width};
+    static const unsigned n_filt = {n_filt};
+    static const unsigned stride_height = {stride_height};
+    static const unsigned stride_width = {stride_width};
+    static const unsigned crop_top = {crop_top};
+    static const unsigned crop_left = {crop_left};
+    static const unsigned first_block_height = {first_block_height};
+    static const unsigned first_block_width = {first_block_width};
+    static const unsigned n_blocks_height = {n_blocks_height};
+    static const unsigned n_blocks_width = {n_blocks_width};
+    static const unsigned n_buf = {n_buf};
+    static const unsigned group_of[n_buf];
+    static const unsigned chunk_first_group[{n_chunks}];
+    static const unsigned chunk_last_group[{n_chunks}];
+    static const unsigned reuse_factor = {reuse};
+    static const unsigned strategy = nnet::{strategy};
+    static const unsigned n_partitions = {n_partitions};
+    static const unsigned n_pixels = n_blocks_height * n_blocks_width / n_partitions;
+    static const unsigned multiplier_limit = n_pixels * {config_t}::multiplier_limit;
+    template<class data_T, class CONFIG_T>
+    using fill_buffer = {fill_fn}<data_T, CONFIG_T>;
+    template<class data_T, class res_T, class CONFIG_T>
+    using place_block = {place_fn}<data_T, res_T, CONFIG_T>;
+    typedef {accum_t.name} accum_t;
+    typedef {bias_t.name} bias_t;
+    typedef {weight_t.name} weight_t;
+    typedef {config_t} mult_config;
+    template<class data_T, class res_T, class CONFIG_T>
+    using conv_kernel = {conv_fn}<data_T, res_T, CONFIG_T>;
+}};
+const unsigned config{index}::group_of[] = {{{group_of}}};
+const unsigned config{index}::chunk_first_group[] = {{{chunk_first_group}}};
+const unsigned config{index}::chunk_last_group[] = {{{chunk_last_group}}};"""
+
+conv_transpose_function_template = 'nnet::conv_transpose_cl<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
+
+conv_transpose_include_list = ['nnet_utils/nnet_conv_transpose.h']
+
+
+class ConvTransposeConfigTemplate(LayerConfigTemplate):
+    def __init__(self):
+        super().__init__((Conv1DTranspose, Conv2DTranspose))
+        self.template = conv_transpose_config_template
+        self.mult_template = conv_mult_config_template
+
+    def format(self, node):
+        params = self._default_config_params(node)
+        # A 1D layer is computed as a 2D layer of height 1
+        for key, value in (
+            ('in_height', 1),
+            ('out_height', 1),
+            ('stride_height', 1),
+            ('crop_top', 0),
+            ('first_block_height', 0),
+            ('n_blocks_height', 1),
+        ):
+            params.setdefault(key, value)
+        group_of = [g for g in node.get_attr('slot_groups') for _ in range(node.get_attr('n_chan'))]
+        params['group_of'] = ','.join(map(str, group_of))
+        # Groups of the first and last input of each chunk of reuse_factor inputs; only the Resource strategy reads them
+        rf = node.get_attr('reuse_factor')
+        chunks = [group_of[j : j + rf] for j in range(0, len(group_of), rf)]
+        params['n_chunks'] = len(chunks)
+        params['chunk_first_group'] = ','.join(str(chunk[0]) for chunk in chunks)
+        params['chunk_last_group'] = ','.join(str(chunk[-1]) for chunk in chunks)
+        params['config_t'] = f'config{node.index}_mult'
+        params['fill_fn'] = f'{params["namespace"]}::fill_buffer_{node.index}'
+        params['place_fn'] = f'{params["namespace"]}::place_block_{node.index}'
+        if node.get_attr('strategy').lower() == 'latency':
+            params['conv_fn'] = 'nnet::ConvTransposeLatency'
+        else:
+            params['conv_fn'] = 'nnet::ConvTransposeResource'
+        conv_config = self.template.format(**params)
+
+        mult_params = self._default_config_params(node)
+        mult_params['n_in'] = node.get_attr('n_buf')
+        mult_params['n_out'] = node.get_attr('n_filt')
+        mult_params['nzeros'] = node.get_weights('weight').nzeros
+        mult_params['product_type'] = get_backend('vivado').product_type(
+            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
+        )
+        if node.get_attr('strategy').lower() == 'latency':
+            mult_params['dense_function'] = 'nnet::DenseLatency'
+        else:
+            mult_params['dense_function'] = 'nnet::DenseResource_rf_leq_nin'
+        mult_config = self.mult_template.format(**mult_params)
+
+        return mult_config + '\n' + conv_config
+
+
+class ConvTransposeFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__((Conv1DTranspose, Conv2DTranspose), include_header=conv_transpose_include_list)
+        self.template = conv_transpose_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        params['w'] = node.get_weights('weight').name
+        params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
