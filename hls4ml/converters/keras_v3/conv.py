@@ -3,6 +3,8 @@ from collections.abc import Sequence
 from math import ceil
 from typing import Any
 
+from hls4ml.converters.utils import compute_conv_transpose_output
+
 from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
@@ -197,14 +199,11 @@ class ConvTransposeHandler(KerasV3LayerHandler):
         *px_in_shape, n_chan = in_shape
         *px_out_shape, n_filt = out_shape
 
-        # Number of positions Keras removes from the start of the full output along each axis. With 'same' padding it
-        # follows TensorFlow's rule for the convolution this layer is the gradient of.
-        crop = []
-        for n_in, n_out, k, s, d in zip(px_in_shape, px_out_shape, layer.kernel_size, layer.strides, layer.dilation_rate):
-            if layer.padding == 'same':
-                crop.append(max((n_in - 1) * s + (k - 1) * d + 1 - n_out, 0) // 2)
-            else:
-                crop.append(0)
+        output_padding = layer.output_padding or [None] * len(px_in_shape)
+        crop = [
+            compute_conv_transpose_output(layer.padding, n_in, s, k, d, op)[1]
+            for n_in, s, k, d, op in zip(px_in_shape, layer.strides, layer.kernel_size, layer.dilation_rate, output_padding)
+        ]
 
         config = {
             'n_chan': n_chan,

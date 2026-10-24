@@ -2151,6 +2151,8 @@ layer_map = {
     'QDepthwiseConv2D': DepthwiseConv2D,
     'Conv1DTranspose': Conv1DTranspose,
     'Conv2DTranspose': Conv2DTranspose,
+    'QConv1DTranspose': Conv1DTranspose,
+    'QConv2DTranspose': Conv2DTranspose,
     'BatchNormalization': BatchNormalization,
     'QBatchNormalization': BatchNormalization,
     'MaxPooling1D': Pooling1D,

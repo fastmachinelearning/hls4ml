@@ -9,7 +9,15 @@ from keras.models import Model, Sequential
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
-from qkeras.qconvolutional import QConv1D, QConv2D, QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
+from qkeras.qconvolutional import (
+    QConv1D,
+    QConv1DTranspose,
+    QConv2D,
+    QConv2DTranspose,
+    QDepthwiseConv2D,
+    QSeparableConv1D,
+    QSeparableConv2D,
+)
 from qkeras.qlayers import QActivation, QDense
 from qkeras.quantizers import (
     binary,
@@ -560,6 +568,52 @@ def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('padding', ['valid', 'same'])
+@pytest.mark.parametrize(
+    'qconv_layer,input_shape,layer_kwargs',
+    [
+        (QConv1DTranspose, (8, 2), {'kernel_size': 3, 'strides': 2, 'output_padding': 1}),
+        (QConv2DTranspose, (8, 8, 1), {'kernel_size': (3, 3), 'strides': (2, 2)}),
+    ],
+    ids=['qconv1d_transpose', 'qconv2d_transpose'],
+)
+def test_qconv_transpose(test_case_id, qconv_layer, input_shape, layer_kwargs, backend, padding):
+    """
+    Test proper handling of QConv1DTranspose and QConv2DTranspose.
+    """
+    X = np.random.default_rng(12345).random((100, *input_shape))
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+
+    inputs = Input(shape=input_shape)
+    outputs = qconv_layer(
+        3,
+        **layer_kwargs,
+        padding=padding,
+        kernel_quantizer='quantized_bits(4, 0, alpha=1)',
+        bias_quantizer='quantized_bits(4, 0, alpha=1)',
+        kernel_initializer=keras.initializers.RandomUniform(-1, 1, seed=1),
+        bias_initializer=keras.initializers.RandomUniform(-1, 1, seed=2),
+        activation='quantized_relu(6, 2)',
+    )(inputs)
+    model = Model(inputs, outputs)
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type='io_parallel'
     )
     hls_model.compile()
 

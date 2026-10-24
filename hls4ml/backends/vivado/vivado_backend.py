@@ -491,6 +491,8 @@ class VivadoBackend(FPGABackend):
     def _init_conv_transpose(self, layer):
         if layer.model.config.get_config_value('IOType') != 'io_parallel':
             raise NotImplementedError(f'Layer {layer.name} ({layer.class_name}) is only supported in io_parallel.')
+        if layer.get_attr('data_format') != 'channels_last':
+            raise NotImplementedError(f'Layer {layer.name} ({layer.class_name}) is only supported with channels_last data.')
 
         strategy = layer.model.config.get_strategy(layer).lower()
         if strategy == 'resource':

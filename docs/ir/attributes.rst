@@ -1383,6 +1383,214 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
+Conv1DTranspose
+===============
+Base attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+Type attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* in_width: int
+
+* out_width: int
+
+* n_chan: int
+
+* n_filt: int
+
+* filt_width: int
+
+* stride_width: int
+
+* dilation_width: int (Default: 1)
+
+* crop_left: int
+
+* n_buf: int
+
+* first_block_width: int
+
+* n_blocks_width: int
+
+Weight attributes
+-----------------
+* weight: WeightVariable
+
+* bias: WeightVariable
+
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+Backend-specific attributes
+---------------------------
+* accum_t: NamedType
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* reuse_factor: int (Default: 1)
+
+  * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* parallelization_factor: int (Default: 1)
+
+  * The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+Conv2DTranspose
+===============
+Base attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+Type attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* in_height: int
+
+* in_width: int
+
+* out_height: int
+
+* out_width: int
+
+* n_chan: int
+
+* n_filt: int
+
+* filt_height: int
+
+* filt_width: int
+
+* stride_height: int
+
+* stride_width: int
+
+* dilation_height: int (Default: 1)
+
+* dilation_width: int (Default: 1)
+
+* crop_top: int
+
+* crop_left: int
+
+* n_buf: int
+
+* first_block_height: int
+
+* first_block_width: int
+
+* n_blocks_height: int
+
+* n_blocks_width: int
+
+Weight attributes
+-----------------
+* weight: WeightVariable
+
+* bias: WeightVariable
+
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+Backend-specific attributes
+---------------------------
+* accum_t: NamedType
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* reuse_factor: int (Default: 1)
+
+  * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* parallelization_factor: int (Default: 1)
+
+  * The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
 BatchNormalization
 ==================
 Base attributes

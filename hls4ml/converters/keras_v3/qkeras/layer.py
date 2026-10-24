@@ -9,6 +9,8 @@ class QKerasV3LayerHandler(KerasV3LayerHandler):
         'qkeras.qlayers.QDense',
         'qkeras.qconvolutional.QConv1D',
         'qkeras.qconvolutional.QConv2D',
+        'qkeras.qconvolutional.QConv1DTranspose',
+        'qkeras.qconvolutional.QConv2DTranspose',
         'qkeras.qconvolutional.QDepthwiseConv2D',
         'qkeras.qconv2d_batchnorm.QConv2DBatchnorm',
     )

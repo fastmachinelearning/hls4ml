@@ -131,3 +131,55 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
 
     return layer, output_shape
+
+
+@pytorch_handler('ConvTranspose1d', 'ConvTranspose2d')
+def parse_conv_transpose_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert 'ConvTranspose' in operation
+
+    if class_object.groups != 1:
+        raise NotImplementedError(f'Layer {layer_name}: {operation} with groups={class_object.groups} is not supported.')
+
+    layer = {}
+
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+    layer['class_name'] = 'Conv1DTranspose' if operation == 'ConvTranspose1d' else 'Conv2DTranspose'
+    layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
+
+    # PyTorch stores the kernel as (in_channels, out_channels, *kernel_size); the layer takes the Keras layout
+    # (*kernel_size, out_channels, in_channels), which the channels last conversion leaves unchanged
+    weight = class_object.weight.data.numpy()
+    layer['weight_data'] = weight.transpose(*range(2, weight.ndim), 1, 0)
+    if class_object.bias is not None:
+        layer['bias_data'] = class_object.bias.data.numpy()
+    else:
+        layer['bias_data'] = None
+
+    (*px_in_shape, layer['n_chan']) = parse_data_format(input_shapes[0], 'channels_first')
+    layer['n_filt'] = class_object.out_channels
+
+    # PyTorch removes `padding` positions from both ends of the full output and adds `output_padding` at the end
+    axes = [('width', 'left')] if len(px_in_shape) == 1 else [('height', 'top'), ('width', 'left')]
+    px_out_shape = []
+    for (axis, side), n_in, k, s, d, p, op in zip(
+        axes,
+        px_in_shape,
+        class_object.kernel_size,
+        class_object.stride,
+        class_object.dilation,
+        class_object.padding,
+        class_object.output_padding,
+    ):
+        n_out = (n_in - 1) * s - 2 * p + d * (k - 1) + op + 1
+        layer[f'in_{axis}'] = n_in
+        layer[f'out_{axis}'] = n_out
+        layer[f'filt_{axis}'] = k
+        layer[f'stride_{axis}'] = s
+        layer[f'dilation_{axis}'] = d
+        layer[f'crop_{side}'] = p
+        px_out_shape.append(n_out)
+
+    output_shape = [input_shapes[0][0], layer['n_filt'], *px_out_shape]  # Channel first as default
+
+    return layer, output_shape
