@@ -109,7 +109,8 @@ class ConvHandler(KerasV3LayerHandler):
         assert all(isinstance(x, int) for x in in_shape), f'Layer {layer.name} has non-fixed size input: {in_shape}'
         assert all(isinstance(x, int) for x in out_shape), f'Layer {layer.name} has non-fixed size output: {out_shape}'
 
-        kernel = self.load_weight(layer, 'kernel')
+        kernel_key = 'depthwise_kernel' if isinstance(layer, BaseSeparableConv) else 'kernel'
+        kernel = self.load_weight(layer, kernel_key)
         if layer.use_bias:
             bias = self.load_weight(layer, 'bias')
         else:
