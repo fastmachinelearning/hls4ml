@@ -181,22 +181,36 @@ def test_conv_transpose_dilation(test_case_id, in_shape, kernel, dilation, paddi
     np.testing.assert_allclose(y_hls, y_ref, rtol=0, atol=atol)
 
 
-# (input shape, kernel size, stride, padding, output_padding, dilation); PyTorch allows stride and dilation together
+class ConvTransposeModel(torch.nn.Module):
+    def __init__(self, layer, output_size):
+        super().__init__()
+        self.layer = layer
+        self.output_size = output_size
+
+    def forward(self, x):
+        return self.layer(x, output_size=self.output_size)
+
+
+# (input shape, kernel size, stride, padding, output_padding, dilation, output_size); PyTorch allows stride and dilation
+# together, and output_size passed to the layer call replaces output_padding
 pytorch_cases = [
-    pytest.param((3, 8), 3, 2, 1, 1, 1, id='1d_k3_s2_p1_op1'),
-    pytest.param((3, 8), 4, 3, 0, 0, 2, id='1d_k4_s3_d2'),
-    pytest.param((2, 4, 5), (3, 3), (2, 2), (1, 0), (1, 0), (1, 1), id='2d_k3x3_s2_p1x0_op1x0'),
-    pytest.param((2, 4, 5), (3, 2), (2, 3), (1, 1), (1, 2), (2, 1), id='2d_k3x2_s2x3_p1_op1x2_d2x1'),
+    pytest.param((3, 8), 3, 2, 1, 1, 1, None, id='1d_k3_s2_p1_op1'),
+    pytest.param((3, 8), 4, 3, 0, 0, 2, None, id='1d_k4_s3_d2'),
+    pytest.param((2, 4, 5), (3, 3), (2, 2), (1, 0), (1, 0), (1, 1), None, id='2d_k3x3_s2_p1x0_op1x0'),
+    pytest.param((2, 4, 5), (3, 2), (2, 3), (1, 1), 0, (2, 1), [10, 14], id='2d_k3x2_s2x3_p1_size10x14_d2x1'),
 ]
 
 
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
-@pytest.mark.parametrize('in_shape, kernel, stride, padding, output_padding, dilation', pytorch_cases)
-def test_conv_transpose_pytorch(test_case_id, in_shape, kernel, stride, padding, output_padding, dilation, strategy):
+@pytest.mark.parametrize('in_shape, kernel, stride, padding, output_padding, dilation, output_size', pytorch_cases)
+def test_conv_transpose_pytorch(
+    test_case_id, in_shape, kernel, stride, padding, output_padding, dilation, output_size, strategy
+):
     layer = torch.nn.ConvTranspose1d if len(in_shape) == 2 else torch.nn.ConvTranspose2d
     torch.manual_seed(0)
-    model = torch.nn.Sequential(
-        layer(in_shape[0], 3, kernel, stride=stride, padding=padding, output_padding=output_padding, dilation=dilation)
+    model = ConvTransposeModel(
+        layer(in_shape[0], 3, kernel, stride=stride, padding=padding, output_padding=output_padding, dilation=dilation),
+        output_size,
     )
     model.eval()
 

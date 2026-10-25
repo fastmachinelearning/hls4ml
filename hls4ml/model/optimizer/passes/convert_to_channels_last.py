@@ -4,18 +4,7 @@
 
 import numpy as np
 
-from hls4ml.model.layers import (
-    GRU,
-    LSTM,
-    Concatenate,
-    Conv1DTranspose,
-    Conv2DTranspose,
-    Dense,
-    Input,
-    LayerNormalization,
-    Reshape,
-    Transpose,
-)
+from hls4ml.model.layers import GRU, LSTM, Concatenate, Dense, Input, LayerNormalization, Reshape, Transpose
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer
 from hls4ml.model.types import WeightVariable
@@ -81,9 +70,6 @@ class ChannelsLastConverter(OptimizerPass):
                 node.mask_kbi = tuple(
                     np.transpose(t, transpose_map[t.ndim]) if t.ndim in transpose_map else t for t in node.mask_kbi
                 )
-            elif isinstance(node, (Conv1DTranspose, Conv2DTranspose)):
-                # The parser gives these layers their kernel in the channels last layout already
-                pass
             else:
                 # Transpose weight tensors
                 tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']

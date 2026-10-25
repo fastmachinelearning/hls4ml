@@ -220,8 +220,13 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         return self._infer_common_precision(node, types_to_infer, n_ops)
 
     def _infer_conv_transpose_precision(self, node, types_to_infer):
-        slot_groups = node.get_attr('slot_groups')
-        n_ops = node.get_attr('n_chan') * max(slot_groups.count(g) for g in set(slot_groups))
+        # Kernel element t of an axis adds to output position (t * dilation) % stride of each block of stride positions
+        n_ops = node.get_attr('n_chan')
+        for axis in ('height', 'width'):
+            stride = node.get_attr(f'stride_{axis}', 1)
+            dilation = node.get_attr(f'dilation_{axis}', 1)
+            positions = [(t * dilation) % stride for t in range(node.get_attr(f'filt_{axis}', 1))]
+            n_ops *= max(positions.count(p) for p in positions)
         return self._infer_common_precision(node, types_to_infer, n_ops)
 
     def _infer_depthconv_precision(self, node, types_to_infer):

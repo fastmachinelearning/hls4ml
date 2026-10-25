@@ -1,6 +1,6 @@
 import numpy as np
 
-from hls4ml.model.layers import ApplyAlpha
+from hls4ml.model.layers import ApplyAlpha, Conv1DTranspose, Conv2DTranspose
 from hls4ml.model.optimizer import ConfigurableOptimizerPass, OptimizerPass, register_pass
 from hls4ml.model.quantizers import QKerasPO2Quantizer
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
@@ -90,7 +90,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
     """
 
     def match(self, node):
-        q_layer = node.class_name in ['Dense', 'Conv1D', 'Conv2D', 'Conv2DBatchnorm']
+        q_layer = node.class_name in ['Dense', 'Conv1D', 'Conv2D', 'Conv2DBatchnorm', 'Conv1DTranspose', 'Conv2DTranspose']
         has_w_quant = node.get_attr('weight_quantizer') is not None
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False
@@ -117,6 +117,11 @@ class QKerasFactorizeAlpha(OptimizerPass):
         quantizer = node.weights['weight'].quantizer.quantizer_fn  # get QKeras quantizer
         weights = node.weights['weight'].data_unquantized  # get weights
         qweights = quantizer(tf.convert_to_tensor(weights))
+        if isinstance(node, (Conv1DTranspose, Conv2DTranspose)):
+            # The last axis of a transposed convolution kernel is the input channels, which QKeras scales by default
+            scale_shape = np.shape(quantizer.scale)
+            if len(scale_shape) > 0 and np.prod(scale_shape) == scale_shape[-1]:
+                return self._factorize_input_alpha(model, node, quantizer, qweights)
         if isinstance(quantizer.scale, (int, float)):
             scale = np.ones(shape=node.get_output_variable().shape[-1]) * quantizer.scale
         else:
@@ -187,6 +192,49 @@ class QKerasFactorizeAlpha(OptimizerPass):
         }
         alpha_layer = model.make_node(ApplyAlpha, node.name + '_alpha', attrs, node.outputs)
         model.insert_node(alpha_layer)
+        return True
+
+    def _factorize_input_alpha(self, model, node, quantizer, qweights):
+        # Scaling an input channel is the same as scaling its weights, so the scale is applied to the input of the layer.
+        # The bias is added after the multiplication, so it stays in the layer.
+        scale = np.reshape(quantizer.scale, -1)
+        new_weights = (1.0 / quantizer.scale) * qweights
+
+        qcfg = quantizer.get_config()
+        alpha = qcfg['alpha']
+        # Set the alpha to 1 to avoid hitting this pass again
+        qcfg['alpha'] = 1
+        node.weights['weight'].quantizer.quantizer_fn = quantizer.from_config(qcfg)
+        node.weights['weight'].data = node.weights['weight'].quantizer(new_weights.numpy())
+        node.attributes['weight_quantizer'].alpha = 1
+        if node.get_attr('bias_quantizer') is not None:
+            node.attributes['bias_quantizer'].alpha = 1
+
+        if alpha == 'auto_po2':
+            scale_bits = np.maximum(np.abs(np.log2(scale)).max().astype('int') + 1, 2)
+            scale_quantizer = QKerasPO2Quantizer({'class_name': 'quantized_po2', 'config': {'bits': scale_bits}})
+        else:
+            scale_quantizer = None
+
+        alpha_name = node.get_attr('name') + '_alpha'
+        alpha_precision = {'Precision': 'auto'}
+        model.config.set_name_config(alpha_name, alpha_precision)
+        model.config.parse_name_config(alpha_name, alpha_precision)
+
+        attrs = {
+            'name': alpha_name,
+            'class_name': 'Alpha',
+            'inputs': node.inputs.copy(),
+            'n_in': node.get_input_variable().size(),
+            'n_filt': node.get_attr('n_chan'),
+            'reuse_factor': node.get_attr('reuse_factor'),
+            'scale_data': scale,
+            'scale_quantizer': scale_quantizer,
+            'bias_data': np.zeros(scale.shape),
+            'trace': node.get_attr('trace', False),
+        }
+        alpha_layer = model.make_node(ApplyAlpha, alpha_name, attrs, attrs['inputs'])
+        model.insert_node(alpha_layer, before=node)
         return True
 
 

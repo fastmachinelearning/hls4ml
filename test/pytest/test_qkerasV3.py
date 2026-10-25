@@ -587,7 +587,8 @@ def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     ],
     ids=['qconv1d_transpose', 'qconv2d_transpose'],
 )
-def test_qconv_transpose(test_case_id, qconv_layer, input_shape, layer_kwargs, backend, padding):
+@pytest.mark.parametrize('alpha', ['1', '"auto_po2"'], ids=['alpha_1', 'alpha_auto_po2'])
+def test_qconv_transpose(test_case_id, qconv_layer, input_shape, layer_kwargs, backend, padding, alpha):
     """
     Test proper handling of QConv1DTranspose and QConv2DTranspose.
     """
@@ -599,9 +600,9 @@ def test_qconv_transpose(test_case_id, qconv_layer, input_shape, layer_kwargs, b
         3,
         **layer_kwargs,
         padding=padding,
-        kernel_quantizer='quantized_bits(4, 0, alpha=1)',
+        kernel_quantizer=f'quantized_bits(4, 0, alpha={alpha})',
         bias_quantizer='quantized_bits(4, 0, alpha=1)',
-        kernel_initializer=keras.initializers.RandomUniform(-1, 1, seed=1),
+        kernel_initializer=keras.initializers.RandomUniform(-0.3, 0.3, seed=1),
         bias_initializer=keras.initializers.RandomUniform(-1, 1, seed=2),
         activation='quantized_relu(6, 2)',
     )(inputs)

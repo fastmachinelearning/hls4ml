@@ -801,34 +801,7 @@ class DepthwiseConv2D(Conv2D):
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
-class ConvTranspose(Layer):
-    @staticmethod
-    def _split_axis(filt_size, stride, dilation, crop):
-        # Kernel element t adds to position t * dilation of the block, so it is in group (t * dilation) % stride
-        groups = [[] for _ in range(stride)]
-        for t in range(filt_size):
-            groups[(t * dilation) % stride].append((t, (t * dilation) // stride))
-        return groups, crop // stride
-
-    def _set_blocks(self, axis, side, first_block):
-        last_block = (self.get_attr(f'crop_{side}') + self.get_attr(f'out_{axis}') - 1) // self.get_attr(f'stride_{axis}')
-        self.set_attr(f'first_block_{axis}', first_block)
-        self.set_attr(f'n_blocks_{axis}', last_block - first_block + 1)
-
-    def _add_slot_weights(self, slot_groups, slot_shifts, slot_elements):
-        self.set_attr('slot_groups', slot_groups)
-        self.set_attr('slot_shifts', slot_shifts)
-        self.set_attr('n_buf', len(slot_elements) * self.get_attr('n_chan'))
-
-        kernel = self.get_attr('weight_data')
-        weight = np.stack([kernel[element].T for element in slot_elements]).reshape(-1, self.get_attr('n_filt'))
-        self.add_weights_variable(
-            name='weight', var_name='w{index}', data=weight, quantizer=self.get_attr('weight_quantizer')
-        )
-        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
-
-
-class Conv1DTranspose(ConvTranspose):
+class Conv1DTranspose(Layer):
     _expected_attributes = [
         Attribute('in_width'),
         Attribute('out_width'),
@@ -838,9 +811,6 @@ class Conv1DTranspose(ConvTranspose):
         Attribute('stride_width'),
         Attribute('dilation_width', default=1),
         Attribute('crop_left'),
-        Attribute('n_buf'),
-        Attribute('first_block_width'),
-        Attribute('n_blocks_width'),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         TypeAttribute('weight'),
@@ -853,19 +823,11 @@ class Conv1DTranspose(ConvTranspose):
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_width']]
         self.add_output_variable(shape)
-
-        groups, first_block = self._split_axis(
-            self.get_attr('filt_width'),
-            self.get_attr('stride_width'),
-            self.get_attr('dilation_width', 1),
-            self.get_attr('crop_left'),
-        )
-        self._set_blocks('width', 'left', first_block)
-        slots = [(g, t, shift) for g, elements in enumerate(groups) for t, shift in elements]
-        self._add_slot_weights([g for g, _, _ in slots], [(0, shift) for _, _, shift in slots], [(t,) for _, t, _ in slots])
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
-class Conv2DTranspose(ConvTranspose):
+class Conv2DTranspose(Layer):
     _expected_attributes = [
         Attribute('in_height'),
         Attribute('in_width'),
@@ -881,11 +843,6 @@ class Conv2DTranspose(ConvTranspose):
         Attribute('dilation_width', default=1),
         Attribute('crop_top'),
         Attribute('crop_left'),
-        Attribute('n_buf'),
-        Attribute('first_block_height'),
-        Attribute('first_block_width'),
-        Attribute('n_blocks_height'),
-        Attribute('n_blocks_width'),
         WeightAttribute('weight'),
         WeightAttribute('bias'),
         TypeAttribute('weight'),
@@ -898,28 +855,8 @@ class Conv2DTranspose(ConvTranspose):
         else:
             shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
         self.add_output_variable(shape)
-
-        (groups_h, first_h), (groups_w, first_w) = (
-            self._split_axis(
-                self.get_attr(f'filt_{axis}'),
-                self.get_attr(f'stride_{axis}'),
-                self.get_attr(f'dilation_{axis}', 1),
-                self.get_attr(f'crop_{side}'),
-            )
-            for axis, side in (('height', 'top'), ('width', 'left'))
-        )
-        self._set_blocks('height', 'top', first_h)
-        self._set_blocks('width', 'left', first_w)
-        slots = [
-            (gh * len(groups_w) + gw, (th, tw), (sh, sw))
-            for gh, elements_h in enumerate(groups_h)
-            for gw, elements_w in enumerate(groups_w)
-            for th, sh in elements_h
-            for tw, sw in elements_w
-        ]
-        self._add_slot_weights(
-            [g for g, _, _ in slots], [shift for _, _, shift in slots], [element for _, element, _ in slots]
-        )
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
 class Pooling1D(Layer):

@@ -1391,20 +1391,12 @@ Base attributes
 
   * The datatype (precision) of the output tensor.
 
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
 * weight_t: NamedType
 
 * bias_t: NamedType
 
 Type attributes
 ---------------
-* index: int
-
-  * Internal node counter used for bookkeeping and variable/tensor naming.
-
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1425,12 +1417,6 @@ Type attributes
 
 * crop_left: int
 
-* n_buf: int
-
-* first_block_width: int
-
-* n_blocks_width: int
-
 Weight attributes
 -----------------
 * weight: WeightVariable
@@ -1439,14 +1425,6 @@ Weight attributes
 
 Configurable attributes
 -----------------------
-* trace: int (Default: False)
-
-  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
-
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
 * trace: int (Default: False)
 
   * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
@@ -1479,14 +1457,40 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
 
+* slot_groups: tuple (Default: ())
+
+  * Set by the backend. The output is computed in blocks of stride positions, one block for each input position. For each kernel element, in the order of the rows of the weight matrix, the position in the block that it adds to.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* slot_shifts: tuple (Default: ())
+
+  * Set by the backend. For each kernel element, in the order of the rows of the weight matrix, how many blocks before the current block its input is, as (height, width).
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_buf: int (Default: 0)
+
+  * Set by the backend. The number of inputs multiplied for each block of outputs, which is the number of kernel elements times the number of input channels.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* first_block_width: int (Default: 0)
+
+  * Set by the backend. The index of the first block of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_blocks_width: int (Default: 0)
+
+  * Set by the backend. The number of blocks of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
 Conv2DTranspose
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
@@ -1497,10 +1501,6 @@ Base attributes
 
 Type attributes
 ---------------
-* index: int
-
-  * Internal node counter used for bookkeeping and variable/tensor naming.
-
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1533,16 +1533,6 @@ Type attributes
 
 * crop_left: int
 
-* n_buf: int
-
-* first_block_height: int
-
-* first_block_width: int
-
-* n_blocks_height: int
-
-* n_blocks_width: int
-
 Weight attributes
 -----------------
 * weight: WeightVariable
@@ -1551,14 +1541,6 @@ Weight attributes
 
 Configurable attributes
 -----------------------
-* trace: int (Default: False)
-
-  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
-
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
 * trace: int (Default: False)
 
   * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
@@ -1588,6 +1570,48 @@ Backend-specific attributes
 * parallelization_factor: int (Default: 1)
 
   * The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* slot_groups: tuple (Default: ())
+
+  * Set by the backend. The output is computed in blocks of stride positions, one block for each input position. For each kernel element, in the order of the rows of the weight matrix, the position in the block that it adds to.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* slot_shifts: tuple (Default: ())
+
+  * Set by the backend. For each kernel element, in the order of the rows of the weight matrix, how many blocks before the current block its input is, as (height, width).
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_buf: int (Default: 0)
+
+  * Set by the backend. The number of inputs multiplied for each block of outputs, which is the number of kernel elements times the number of input channels.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* first_block_height: int (Default: 0)
+
+  * Set by the backend. The index of the first block of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_blocks_height: int (Default: 0)
+
+  * Set by the backend. The number of blocks of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* first_block_width: int (Default: 0)
+
+  * Set by the backend. The index of the first block of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_blocks_width: int (Default: 0)
+
+  * Set by the backend. The number of blocks of outputs along this axis that cropping does not remove entirely.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
 

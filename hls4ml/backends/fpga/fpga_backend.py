@@ -218,9 +218,6 @@ class FPGABackend(Backend):
             n_out = layer.get_attr('n_out')
             return n_in, n_out
 
-        if 'Transpose' in layer.class_name:
-            return layer.get_attr('n_buf'), layer.get_attr('n_filt')
-
         if 'Conv1D' in layer.class_name:
             n_in = layer.get_attr('n_chan') * layer.get_attr('filt_width')
             n_out = layer.get_attr('n_filt')
@@ -1005,7 +1002,7 @@ class FPGABackend(Backend):
     def generate_conv_transpose_line_buffer_fn(self, layer_idx, n_partitions, in_shape, slot_shifts, first_block, n_blocks):
         """Generate a C++ function that collects the inputs of each block of a transposed convolution.
 
-        Block ``(bh, bw)`` of the output reads, for each tap slot, the input at ``(first_block[0] + bh - shift[0],
+        Block ``(bh, bw)`` of the output reads, for each kernel element, the input at ``(first_block[0] + bh - shift[0],
         first_block[1] + bw - shift[1])``, or zero outside the input. Blocks are numbered in row-major order and split
         into ``n_partitions`` consecutive parts, as in ``generate_conv2d_line_buffer_fn``.
 
@@ -1013,7 +1010,7 @@ class FPGABackend(Backend):
             layer_idx (int): Index of layer ('index' attribute).
             n_partitions (int): Number of partitions to divide the blocks into.
             in_shape (tuple): Input height, width and channels; height 1 for 1D.
-            slot_shifts (list): Input offset (height, width) of each tap slot, in buffer order.
+            slot_shifts (tuple): Input offset (height, width) of each kernel element, in buffer order.
             first_block (tuple): First block (height, width) that is not cropped.
             n_blocks (tuple): Number of blocks (height, width).
 
