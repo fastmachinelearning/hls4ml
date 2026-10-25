@@ -101,7 +101,9 @@ void pooling2d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::pool_height == CONFIG_T::stride_height && CONFIG_T::pool_width == CONFIG_T::stride_width);
 
-    // Vitis HLS 2025.1 may synthesize a single-row shift-register array with depth 1.\n    // Keep at least two rows; only pool_height - 1 rows are accessed.\n    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::pool_height - 1, 2)]
+    // Vitis HLS 2025.1 may synthesize a single-row shift-register array with depth 1.
+    // Keep at least two rows; only pool_height - 1 rows are accessed.
+    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::pool_height - 1, 2)]
                                                                                     [CONFIG_T::n_filt];
     #pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
