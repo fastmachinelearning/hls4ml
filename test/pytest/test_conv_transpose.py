@@ -34,7 +34,7 @@ def make_model(layer, input_shape, seed=0, **kwargs):
     return model
 
 
-def convert(model, test_case_id, backend, strategy='Latency', layer_config=None):
+def convert(model, test_case_id, backend, strategy='Latency', layer_config=None, io_type='io_parallel'):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='fixed<32,16>', backend=backend
     )
@@ -46,7 +46,7 @@ def convert(model, test_case_id, backend, strategy='Latency', layer_config=None)
         hls_config=config,
         output_dir=str(test_root_path / test_case_id),
         backend=backend,
-        io_type='io_parallel',
+        io_type=io_type,
     )
 
 
@@ -58,10 +58,11 @@ def check_prediction(model, hls_model, seed=1):
     np.testing.assert_allclose(y_hls, y_keras, rtol=0, atol=atol)
 
 
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('in_width, kernel, stride, padding, output_padding', conv1d_cases)
-def test_conv1d_transpose(test_case_id, in_width, kernel, stride, padding, output_padding, backend, strategy):
+def test_conv1d_transpose(test_case_id, in_width, kernel, stride, padding, output_padding, backend, strategy, io_type):
     model = make_model(
         keras.layers.Conv1DTranspose,
         (in_width, 3),
@@ -71,14 +72,15 @@ def test_conv1d_transpose(test_case_id, in_width, kernel, stride, padding, outpu
         padding=padding,
         output_padding=output_padding,
     )
-    hls_model = convert(model, test_case_id, backend, strategy=strategy)
+    hls_model = convert(model, test_case_id, backend, strategy=strategy, io_type=io_type)
     check_prediction(model, hls_model)
 
 
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('in_shape, kernel, strides, padding, output_padding', conv2d_cases)
-def test_conv2d_transpose(test_case_id, in_shape, kernel, strides, padding, output_padding, backend, strategy):
+def test_conv2d_transpose(test_case_id, in_shape, kernel, strides, padding, output_padding, backend, strategy, io_type):
     model = make_model(
         keras.layers.Conv2DTranspose,
         (*in_shape, 2),
@@ -88,7 +90,7 @@ def test_conv2d_transpose(test_case_id, in_shape, kernel, strides, padding, outp
         padding=padding,
         output_padding=output_padding,
     )
-    hls_model = convert(model, test_case_id, backend, strategy=strategy)
+    hls_model = convert(model, test_case_id, backend, strategy=strategy, io_type=io_type)
     check_prediction(model, hls_model)
 
 

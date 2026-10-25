@@ -685,8 +685,17 @@ conv_transpose_config_template = """struct config{index} : nnet::conv_transpose_
     static const unsigned first_block_width = {first_block_width};
     static const unsigned n_blocks_height = {n_blocks_height};
     static const unsigned n_blocks_width = {n_blocks_width};
+    static const unsigned grid_height = {grid_height};
+    static const unsigned grid_width = {grid_width};
+    static const unsigned window_height = {window_height};
+    static const unsigned window_width = {window_width};
+    static const unsigned first_group_height = {first_group_height};
+    static const unsigned first_group_width = {first_group_width};
+    static const unsigned block_fifo_depth = {block_fifo_depth};
     static const unsigned n_buf = {n_buf};
     static const unsigned group_of[n_buf];
+    static const unsigned slot_shift_height[{n_slots}];
+    static const unsigned slot_shift_width[{n_slots}];
     static const unsigned chunk_first_group[{n_chunks}];
     static const unsigned chunk_last_group[{n_chunks}];
     static const unsigned reuse_factor = {reuse};
@@ -706,12 +715,14 @@ conv_transpose_config_template = """struct config{index} : nnet::conv_transpose_
     using conv_kernel = {conv_fn}<data_T, res_T, CONFIG_T>;
 }};
 const unsigned config{index}::group_of[] = {{{group_of}}};
+const unsigned config{index}::slot_shift_height[] = {{{slot_shift_height}}};
+const unsigned config{index}::slot_shift_width[] = {{{slot_shift_width}}};
 const unsigned config{index}::chunk_first_group[] = {{{chunk_first_group}}};
 const unsigned config{index}::chunk_last_group[] = {{{chunk_last_group}}};"""
 
 conv_transpose_function_template = 'nnet::conv_transpose_cl<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 
-conv_transpose_include_list = ['nnet_utils/nnet_conv_transpose.h']
+conv_transpose_include_list = ['nnet_utils/nnet_conv_transpose.h', 'nnet_utils/nnet_conv_transpose_stream.h']
 
 
 class ConvTransposeConfigTemplate(LayerConfigTemplate):
@@ -741,12 +752,16 @@ class ConvTransposeConfigTemplate(LayerConfigTemplate):
         params['chunk_first_group'] = ','.join(str(chunk[0]) for chunk in chunks)
         params['chunk_last_group'] = ','.join(str(chunk[-1]) for chunk in chunks)
         params['config_t'] = f'config{node.index}_mult'
-        params['fill_fn'] = f'{params["namespace"]}::fill_buffer_{node.index}'
-        params['place_fn'] = f'{params["namespace"]}::place_block_{node.index}'
-        if node.get_attr('strategy').lower() == 'latency':
-            params['conv_fn'] = 'nnet::ConvTransposeLatency'
+        self._add_stream_params(params, node.get_attr('slot_shifts'))
+        strategy = 'Latency' if node.get_attr('strategy').lower() == 'latency' else 'Resource'
+        if node.model.config.get_config_value('IOType') == 'io_parallel':
+            params['fill_fn'] = f'{params["namespace"]}::fill_buffer_{node.index}'
+            params['place_fn'] = f'{params["namespace"]}::place_block_{node.index}'
+            params['conv_fn'] = f'nnet::ConvTranspose{strategy}'
         else:
-            params['conv_fn'] = 'nnet::ConvTransposeResource'
+            params['fill_fn'] = 'nnet::FillConvTransposeBuffer'
+            params['place_fn'] = 'nnet::PlaceConvTransposeBlock'
+            params['conv_fn'] = f'nnet::ConvTransposeStream{strategy}'
         conv_config = self.template.format(**params)
 
         mult_params = self._default_config_params(node)
@@ -763,6 +778,76 @@ class ConvTransposeConfigTemplate(LayerConfigTemplate):
         mult_config = self.mult_template.format(**mult_params)
 
         return mult_config + '\n' + conv_config
+
+    def _add_stream_params(self, params, slot_shifts):
+        # Only the io_stream version reads these. Its first process walks the input and, where blocks read past its end,
+        # zeros. Its window holds the last (largest shift + 1) rows and columns, with the newest input last.
+        for i_axis, (axis, side) in enumerate([('height', 'top'), ('width', 'left')]):
+            first_block = params[f'first_block_{axis}']
+            params[f'window_{axis}'] = max(shift[i_axis] for shift in slot_shifts) + 1
+            params[f'grid_{axis}'] = max(params[f'in_{axis}'], first_block + params[f'n_blocks_{axis}'])
+            params[f'first_group_{axis}'] = params[f'crop_{side}'] - first_block * params[f'stride_{axis}']
+        params['n_slots'] = len(slot_shifts)
+        params['slot_shift_height'] = ','.join(str(shift_h) for shift_h, _ in slot_shifts)
+        params['slot_shift_width'] = ','.join(str(shift_w) for _, shift_w in slot_shifts)
+
+        params['block_fifo_depth'] = self._block_fifo_depth(params)
+
+    def _block_fifo_depth(self, params):
+        # A cycle model of the two processes. The first takes reuse_factor cycles per position of its grid and writes a
+        # block at the end of each block position, waiting while the FIFO is full. The writer writes one pixel per cycle
+        # and takes the next block at the first column of each block in the first output row of a block row. The depth
+        # is the smallest at which four images in a row reach the shortest interval, plus one for the pipeline delays
+        # the model leaves out.
+        rf, grid_w, out_w = params['reuse'], params['grid_width'], params['out_width']
+        n_positions = params['grid_height'] * grid_w
+        n_out = params['out_height'] * out_w
+        blocks = [
+            i_h * grid_w + i_w
+            for i_h in range(params['first_block_height'], params['first_block_height'] + params['n_blocks_height'])
+            for i_w in range(params['first_block_width'], params['first_block_width'] + params['n_blocks_width'])
+        ]
+        needs = [
+            i_h * out_w + i_w
+            for i_h in range(params['out_height'])
+            for i_w in range(out_w)
+            if (i_w == 0 or (i_w + params['crop_left']) % params['stride_width'] == 0)
+            and (i_h == 0 or (i_h + params['crop_top']) % params['stride_height'] == 0)
+        ]
+        n_images = 4
+
+        def interval(depth):
+            consumed = []  # when the writer takes each block
+            t_block = t_write = pixel = 0
+            ends = []
+            for i_image in range(n_images):
+                next_pos = 0
+                for block, need in zip(blocks, needs):
+                    # The positions up to the block position, then a free place in the FIFO
+                    t_block += (block + 1 - next_pos) * rf
+                    next_pos = block + 1
+                    if len(consumed) >= depth:
+                        t_block = max(t_block, consumed[-depth])
+                    # The pixels before the one that needs the block, then the block
+                    t_write += i_image * n_out + need - pixel
+                    pixel = i_image * n_out + need
+                    t_write = max(t_write, t_block)
+                    consumed.append(t_write)
+                t_block += (n_positions - next_pos) * rf
+                t_write += (i_image + 1) * n_out - pixel
+                pixel = (i_image + 1) * n_out
+                ends.append(max(t_block, t_write))
+            return ends[-1] - ends[-2]
+
+        shortest = interval(n_images * len(blocks))
+        low, high = 1, n_images * len(blocks)
+        while low < high:
+            mid = (low + high) // 2
+            if interval(mid) <= shortest:
+                high = mid
+            else:
+                low = mid + 1
+        return max(2, low + 1)
 
 
 class ConvTransposeFunctionTemplate(FunctionCallTemplate):
