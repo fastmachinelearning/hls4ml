@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-
 VITIS_UTILS = Path(__file__).resolve().parents[2] / 'hls4ml' / 'templates' / 'vitis' / 'nnet_utils'
 
 
