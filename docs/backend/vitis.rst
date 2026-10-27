@@ -23,3 +23,12 @@ Fused strategy
 
 The **Vitis** backend also provides ``Strategy: Fused``, which computes a chain of ``Dense`` layers together so that consecutive layers run at the same
 time. See :doc:`Fused Strategy <../advanced/fused>`.
+
+Vivado synthesis and place and route
+====================================
+
+``build(vsynth=True)`` synthesizes the HLS design with Vivado, and ``build(pnr=True)`` also places and routes it. This works the same for the **Vivado**,
+**Vitis** and :doc:`VivadoAccelerator <accelerator>` backends; for VivadoAccelerator the AXI wrapper ``<project_name>_axi`` is synthesized. The design is
+synthesized alone, out of context, and only the clock is constrained. The slack therefore covers the paths between registers of the design, not the paths
+from its input ports or to its output ports. After place and route, the slack includes the delay and skew of the clock from the first clock buffer site of
+the device; another site changes it a little.
