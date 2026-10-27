@@ -999,12 +999,16 @@ class FPGABackend(Backend):
 
         return generated_code
 
-    def generate_conv_transpose_line_buffer_fn(self, layer_idx, n_partitions, in_shape, slot_shifts, first_block, n_blocks):
+    def generate_conv_transpose_line_buffer_fn(
+        self, layer_idx, n_partitions, in_shape, slot_shifts, first_block, n_blocks, binary_input=False
+    ):
         """Generate a C++ function that collects the inputs of each block of a transposed convolution.
 
         Block ``(bh, bw)`` of the output reads, for each kernel element, the input at ``(first_block[0] + bh - shift[0],
         first_block[1] + bw - shift[1])``, or zero outside the input. Blocks are numbered in row-major order and split
-        into ``n_partitions`` consecutive parts, as in ``generate_conv2d_line_buffer_fn``.
+        into ``n_partitions`` consecutive parts, as in ``generate_conv2d_line_buffer_fn``. For a binary input, in which
+        zero stands for -1, the function also sets a flag for each kernel element that tells whether it reads inside the
+        input.
 
         Args:
             layer_idx (int): Index of layer ('index' attribute).
@@ -1013,6 +1017,7 @@ class FPGABackend(Backend):
             slot_shifts (tuple): Input offset (height, width) of each kernel element, in buffer order.
             first_block (tuple): First block (height, width) that is not cropped.
             n_blocks (tuple): Number of blocks (height, width).
+            binary_input (bool): Whether the input is binary.
 
         Returns:
             str: Generated C++ function
@@ -1037,6 +1042,7 @@ class FPGABackend(Backend):
             '    static void fill_buffer(\n'
             '        data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],\n'
             '        data_T buffer[CONFIG_T::n_pixels][CONFIG_T::n_buf],\n'
+            '        bool valid[CONFIG_T::n_pixels][CONFIG_T::n_buf / CONFIG_T::n_chan],\n'
             '        const unsigned partition\n'
             '    ) {{\n'
         ).format(index=layer_idx)
@@ -1058,6 +1064,11 @@ class FPGABackend(Backend):
                     val = '0' if v is None else f'data[{v}]'
                     buffer_stmts.append(f'buffer[{pixel_idx}][{j}] = {val:>10};')
                 generated_code += indent * 3 + ' '.join(buffer_stmts) + '\n'
+                if binary_input:
+                    valid_stmts = [
+                        f'valid[{pixel_idx}][{j}] = {int(row[j * in_C] is not None)};' for j in range(len(slot_shifts))
+                    ]
+                    generated_code += indent * 3 + ' '.join(valid_stmts) + '\n'
             generated_code += indent * 2 + '}\n'
 
         generated_code += indent + '}\n'
@@ -1116,10 +1127,7 @@ class FPGABackend(Backend):
         for partition_idx in range(n_partitions):
             generated_code += indent * 2 + f'if (partition == {partition_idx:>3}) {{\n'
             for pixel_idx, writes in enumerate(blocks[partition_idx * n_pixels : (partition_idx + 1) * n_pixels]):
-                stmts = [
-                    f'res[{r}] = nnet::cast<data_T, res_T, typename CONFIG_T::mult_config>(acc[{pixel_idx}][{a}]);'
-                    for r, a in writes
-                ]
+                stmts = [f'res[{r}] = (res_T)acc[{pixel_idx}][{a}];' for r, a in writes]
                 generated_code += indent * 3 + ' '.join(stmts) + '\n'
             generated_code += '\n' + indent * 2 + '}\n'
 

@@ -210,11 +210,19 @@ class QKerasFactorizeAlpha(OptimizerPass):
         if node.get_attr('bias_quantizer') is not None:
             node.attributes['bias_quantizer'].alpha = 1
 
+        scale_quantizer = scale_precision = None
         if alpha == 'auto_po2':
-            scale_bits = np.maximum(np.abs(np.log2(scale)).max().astype('int') + 1, 2)
-            scale_quantizer = QKerasPO2Quantizer({'class_name': 'quantized_po2', 'config': {'bits': scale_bits}})
-        else:
-            scale_quantizer = None
+            inp = node.get_input_node()
+            if inp.class_name == 'Activation' and inp.get_attr('activation') in ['binary', 'binary_tanh']:
+                # A binary input can reach the scale as 0 for -1 and 1 for +1. A power-of-two scale is applied as a shift,
+                # which would take these as the numbers 0 and 1. A fixed-point scale that holds the powers of two exactly
+                # is multiplied instead, which takes them as -1 and +1.
+                exponents = np.round(np.log2(scale)).astype('int')
+                high, low = int(exponents.max()), int(exponents.min())
+                scale_precision = FixedPrecisionType(high - low + 1, high + 1, signed=False)
+            else:
+                scale_bits = np.maximum(np.abs(np.log2(scale)).max().astype('int') + 1, 2)
+                scale_quantizer = QKerasPO2Quantizer({'class_name': 'quantized_po2', 'config': {'bits': scale_bits}})
 
         alpha_name = node.get_attr('name') + '_alpha'
         alpha_precision = {'Precision': 'auto'}
@@ -230,6 +238,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
             'reuse_factor': node.get_attr('reuse_factor'),
             'scale_data': scale,
             'scale_quantizer': scale_quantizer,
+            'scale_precision': scale_precision,
             'bias_data': np.zeros(scale.shape),
             'trace': node.get_attr('trace', False),
         }

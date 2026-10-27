@@ -1,6 +1,6 @@
 from hls4ml.model.layers import Conv1D, Conv1DTranspose, Conv2D, Conv2DTranspose, SeparableConv1D, SeparableConv2D
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import Source
+from hls4ml.model.types import Source, XnorPrecisionType
 
 
 class GenerateConvIm2col(OptimizerPass):
@@ -56,6 +56,7 @@ class GenerateConvIm2col(OptimizerPass):
             node.get_attr('slot_shifts'),
             (node.get_attr('first_block_height', 0), node.get_attr('first_block_width')),
             (node.get_attr('n_blocks_height', 1), node.get_attr('n_blocks_width')),
+            binary_input=isinstance(node.get_input_variable().type.precision, XnorPrecisionType),
         )
         node.set_attr('line_buffer_codegen', Source(code_str))
 

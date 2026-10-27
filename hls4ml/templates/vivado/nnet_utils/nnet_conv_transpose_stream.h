@@ -90,6 +90,22 @@ FillLoop:
     }
 }
 
+// Whether each kernel element reads inside the input at a grid position, which binary inputs need (see
+// conv_transpose_binary).
+template <typename CONFIG_T>
+void conv_transpose_grid_valid(unsigned i_gh, unsigned i_gw, bool valid[CONFIG_T::n_buf / CONFIG_T::n_chan]) {
+    #pragma HLS INLINE
+ValidLoop:
+    for (unsigned i_slot = 0; i_slot < CONFIG_T::n_buf / CONFIG_T::n_chan; i_slot++) {
+        #pragma HLS UNROLL
+        // The input this kernel element reads is at (i_gh - shift_height, i_gw - shift_width)
+        const unsigned shift_h = CONFIG_T::slot_shift_height[i_slot];
+        const unsigned shift_w = CONFIG_T::slot_shift_width[i_slot];
+        valid[i_slot] = i_gh >= shift_h && i_gh - shift_h < CONFIG_T::in_height && i_gw >= shift_w &&
+                        i_gw - shift_w < CONFIG_T::in_width;
+    }
+}
+
 template <typename CONFIG_T> bool is_conv_transpose_block(unsigned i_gh, unsigned i_gw) {
     #pragma HLS INLINE
     return i_gh >= CONFIG_T::first_block_height && i_gh < CONFIG_T::first_block_height + CONFIG_T::n_blocks_height &&
@@ -125,6 +141,8 @@ GridHeight:
 
             typename data_T::value_type data_buf[mult_n_in];
             #pragma HLS ARRAY_PARTITION variable=data_buf complete
+            bool valid[mult_n_in / CONFIG_T::n_chan];
+            #pragma HLS ARRAY_PARTITION variable=valid complete
 
             typename CONFIG_T::accum_t mult[mult_n_in * mult_n_out];
             #pragma HLS ARRAY_PARTITION variable=mult complete
@@ -133,6 +151,7 @@ GridHeight:
             #pragma HLS ARRAY_PARTITION variable=acc complete
 
             read_conv_transpose_grid<data_T, CONFIG_T>(data, i_gh, i_gw, line_buffer, window, data_buf);
+            conv_transpose_grid_valid<CONFIG_T>(i_gh, i_gw, valid);
 
             if (is_conv_transpose_block<CONFIG_T>(i_gh, i_gw)) {
             Product1:
@@ -141,16 +160,15 @@ GridHeight:
                 Product2:
                     for (unsigned i_out = 0; i_out < mult_n_out; i_out++) {
                         #pragma HLS UNROLL
-                        mult[i_in * mult_n_out + i_out] = CONFIG_T::mult_config::
-                            template product<typename data_T::value_type, typename CONFIG_T::mult_config::weight_t>::product(
-                                data_buf[i_in], weights[i_in * mult_n_out + i_out]);
+                        mult[i_in * mult_n_out + i_out] = conv_transpose_product<typename data_T::value_type, CONFIG_T>(
+                            data_buf[i_in], weights[i_in * mult_n_out + i_out], valid[i_in / CONFIG_T::n_chan]);
                     }
                 }
 
             ResetAccum:
                 for (unsigned i_acc = 0; i_acc < n_acc; i_acc++) {
                     #pragma HLS UNROLL
-                    acc[i_acc] = (typename CONFIG_T::accum_t)biases[i_acc % mult_n_out];
+                    acc[i_acc] = conv_transpose_start<typename data_T::value_type, CONFIG_T>(biases[i_acc % mult_n_out]);
                 }
 
             // Each product adds to the group of its input
@@ -163,6 +181,7 @@ GridHeight:
                         acc[CONFIG_T::group_of[i_in] * mult_n_out + i_out] += mult[i_in * mult_n_out + i_out];
                     }
                 }
+                conv_transpose_count<typename data_T::value_type, CONFIG_T>(acc, valid, biases);
 
                 block_T block;
             CastLoop:
@@ -221,6 +240,9 @@ GridHeight:
                 #pragma HLS PIPELINE II=1 rewind
 
                 const bool is_block = is_conv_transpose_block<CONFIG_T>(i_gh, i_gw);
+                bool valid[mult_n_in / CONFIG_T::n_chan];
+                #pragma HLS ARRAY_PARTITION variable=valid complete
+                conv_transpose_grid_valid<CONFIG_T>(i_gh, i_gw, valid);
 
                 if (i_rf == 0) {
                     read_conv_transpose_grid<data_T, CONFIG_T>(data, i_gh, i_gw, line_buffer, window, data_buf);
@@ -245,10 +267,8 @@ GridHeight:
                         const unsigned group = CONFIG_T::chunk_first_group[i_chunk] == CONFIG_T::chunk_last_group[i_chunk]
                                                    ? CONFIG_T::chunk_first_group[i_chunk]
                                                    : CONFIG_T::group_of[i_in];
-                        partial[i_blk][group] += static_cast<typename CONFIG_T::accum_t>(
-                            CONFIG_T::mult_config::template product<typename data_T::value_type,
-                                                                    typename CONFIG_T::mult_config::weight_t>::
-                                product(data_buf[i_in], weights[i_blk * CONFIG_T::reuse_factor + i_rf]));
+                        partial[i_blk][group] += conv_transpose_product<typename data_T::value_type, CONFIG_T>(
+                            data_buf[i_in], weights[i_blk * CONFIG_T::reuse_factor + i_rf], valid[i_in / CONFIG_T::n_chan]);
                     }
                 }
 
@@ -256,7 +276,7 @@ GridHeight:
                 ResetAccum:
                     for (unsigned i_acc = 0; i_acc < n_acc; i_acc++) {
                         #pragma HLS UNROLL
-                        acc[i_acc] = (typename CONFIG_T::accum_t)biases[i_acc % mult_n_out];
+                        acc[i_acc] = conv_transpose_start<typename data_T::value_type, CONFIG_T>(biases[i_acc % mult_n_out]);
                     }
                 SumBlockLoop:
                     for (unsigned i_blk = 0; i_blk < block_factor; i_blk++) {
@@ -270,6 +290,7 @@ GridHeight:
                             }
                         }
                     }
+                    conv_transpose_count<typename data_T::value_type, CONFIG_T>(acc, valid, biases);
 
                     block_T block;
                 CastLoop:

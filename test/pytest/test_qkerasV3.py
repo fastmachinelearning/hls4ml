@@ -624,6 +624,58 @@ def test_qconv_transpose(test_case_id, qconv_layer, input_shape, layer_kwargs, b
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+@pytest.mark.parametrize(
+    'kernel_quantizer',
+    ['binary(alpha=1)', 'binary()', 'quantized_bits(4, 0, alpha=1)'],
+    ids=['binary', 'binary_po2', 'bits'],
+)
+def test_qconv_transpose_binary_input(test_case_id, kernel_quantizer, strategy, io_type):
+    """
+    Test QConv2DTranspose with a binary input, which hls4ml stores as 0 for -1 and 1 for +1.
+    """
+
+    # Inputs away from zero, so that the binary activation gives the same signs in QKeras and hls4ml
+    rng = np.random.default_rng(12345)
+    X = rng.choice([-1, 1], (100, 6, 6, 1)) * rng.uniform(0.25, 1, (100, 6, 6, 1))
+
+    inputs = Input(shape=(6, 6, 1))
+    # The scale of the binary kernel and the activation make one layer with a binary output
+    x = QConv2D(4, 1, kernel_quantizer=binary(), use_bias=False)(inputs)
+    x = QActivation(binary())(x)
+    outputs = QConv2DTranspose(
+        3,
+        kernel_size=3,
+        strides=2,
+        padding='same',
+        kernel_quantizer=kernel_quantizer,
+        bias_quantizer='quantized_bits(4, 0, alpha=1)',
+        kernel_initializer=keras.initializers.RandomUniform(-1, 1, seed=1),
+        bias_initializer=keras.initializers.RandomUniform(-1, 1, seed=2),
+        name='qconv2d_transpose',
+    )(x)
+    model = Model(inputs, outputs)
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend='Vitis'
+    )
+    config['Model']['Strategy'] = strategy
+    if strategy == 'Resource':
+        config['LayerName']['qconv2d_transpose']['ReuseFactor'] = 4
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend='Vitis', io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
 @pytest.fixture(scope='module')
 def randX_10_32_32_3():
     return np.random.rand(10, 32, 32, 3)

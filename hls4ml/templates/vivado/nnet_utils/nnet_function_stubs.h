@@ -31,7 +31,8 @@ template <class data_T, typename CONFIG_T> class FillConv2DBuffer {
 template <class data_T, typename CONFIG_T> class FillConvTransposeBuffer {
   public:
     static void fill_buffer(data_T data[CONFIG_T::in_height * CONFIG_T::in_width * CONFIG_T::n_chan],
-                            data_T buffer[CONFIG_T::n_pixels][CONFIG_T::n_buf], const unsigned partition) {
+                            data_T buffer[CONFIG_T::n_pixels][CONFIG_T::n_buf],
+                            bool valid[CONFIG_T::n_pixels][CONFIG_T::n_buf / CONFIG_T::n_chan], const unsigned partition) {
         // To be implemented in subclasses
     }
 };
