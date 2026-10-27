@@ -1,10 +1,13 @@
+import ctypes
 import subprocess
 from pathlib import Path
 from warnings import warn
 
 import numpy as np
+import numpy.ctypeslib as npc
 
 from hls4ml.backends import FPGABackend
+from hls4ml.backends.altera.passes.reloadable_weights import get_reloadable_weights
 from hls4ml.model.attributes import ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
@@ -62,6 +65,14 @@ class AlteraBackend(FPGABackend):
             attrs.append(ConfigurableAttribute('parallelization_factor', default=1, description=descriptions.conv_pf))
             self.attribute_map[layer] = attrs
 
+        attrs = self.attribute_map.get(Dense, [])
+        attrs.append(
+            ConfigurableAttribute(
+                'reloadable_weights', value_type=bool, default=False, description=descriptions.reloadable_weights
+            )
+        )
+        self.attribute_map[Dense] = attrs
+
     def _register_flows(self):
         initializers = self._get_layer_initializers()
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
@@ -72,6 +83,7 @@ class AlteraBackend(FPGABackend):
         altera_types = [
             'altera:transform_types',
             'altera:register_bram_weights',
+            'altera:register_reloadable_weights',
             'altera:apply_resource_strategy',
             'altera:apply_winograd_kernel_transformation',
         ]
@@ -152,6 +164,7 @@ class AlteraBackend(FPGABackend):
         io_type='io_parallel',
         namespace=None,
         write_tar=False,
+        weight_sets=1,
         **_,
     ):
         """Create initial configuration of the Altera backend.
@@ -165,6 +178,8 @@ class AlteraBackend(FPGABackend):
             namespace (str, optional): Namespace for the kernel and pipe declarations. If None, the project name is
                 used, with the stamp appended if the project name is the default 'myproject'. Defaults to None.
             write_tar (bool, optional): If True, compresses the output directory into a .tar.gz file. Defaults to False.
+            weight_sets (int, optional): Number of switchable sets of memory for layers with reloadable weights. While
+                one set is used for inference, another can be loaded. Defaults to 1.
 
         Returns:
             dict: initial configuration.
@@ -176,6 +191,8 @@ class AlteraBackend(FPGABackend):
         config['ClockPeriod'] = clock_period
         config['HyperoptHandshake'] = hyperopt_handshake
         config['IOType'] = io_type
+        if weight_sets != 1:
+            config['WeightSets'] = weight_sets
         config['HLSConfig'] = {}
         config['WriterConfig'] = {
             'Namespace': namespace,
@@ -200,6 +217,61 @@ class AlteraBackend(FPGABackend):
         self.build(model, build_type='lib', run=False)
 
         return outdir / f'build/lib{model.config.get_project_name()}-{model.config.get_config_value("Stamp")}.so'
+
+    def load_weights(self, model, source, weight_set=0):
+        """Load new values of the reloadable weights of a compiled model into one of its weight sets.
+
+        The values are taken from ``source``, a model with the same architecture converted with the same
+        configuration, so that they have gone through the same transformations as the original weights.
+
+        Args:
+            model (ModelGraph): The compiled model whose weights are reloaded.
+            source (ModelGraph): The model holding the new weights.
+            weight_set (int, optional): The weight set to load. Defaults to 0.
+        """
+        reloadable = get_reloadable_weights(model)
+        if len(reloadable) == 0:
+            raise Exception('The model has no reloadable weights')
+        self._check_weight_set(model, weight_set)
+
+        source_weights = {w.name: w for w in source.get_weight_variables()}
+        values = []
+        for w in reloadable:
+            if w.name not in source_weights or source_weights[w.name].data.size != w.data_length:
+                raise Exception(f'The source model has no weight {w.name} with {w.data_length} values')
+            values.append(source_weights[w.name].data.flatten())
+        values = np.ascontiguousarray(np.concatenate(values), dtype=np.float64)
+
+        if model._top_function_lib is None:
+            model.compile()
+        load_func = getattr(model._top_function_lib, model.config.get_project_name() + '_load_weights')
+        load_func.argtypes = [ctypes.c_int, npc.ndpointer(ctypes.c_double, flags='C_CONTIGUOUS')]
+        load_func.restype = None
+        load_func(weight_set, values)
+
+    def set_weight_set(self, model, weight_set):
+        """Select the weight set used by ``model.predict`` for a compiled model with reloadable weights.
+
+        Args:
+            model (ModelGraph): The compiled model.
+            weight_set (int): The weight set to use.
+        """
+        self._check_weight_set(model, weight_set)
+        if model.config.get_config_value('WeightSets', 1) == 1:
+            return
+
+        if model._top_function_lib is None:
+            model.compile()
+        set_func = getattr(model._top_function_lib, model.config.get_project_name() + '_set_weight_set')
+        set_func.argtypes = [ctypes.c_int]
+        set_func.restype = None
+        set_func(weight_set)
+
+    @staticmethod
+    def _check_weight_set(model, weight_set):
+        weight_sets = model.config.get_config_value('WeightSets', 1)
+        if not 0 <= weight_set < weight_sets:
+            raise Exception(f'Weight set {weight_set} is out of range, the model has {weight_sets}')
 
     def build(self, model, build_type='fpga_emu', run=False):
         """

@@ -63,3 +63,11 @@ time_distributed_loop = (
     'If set to "unroll", the loop will be unrolled. This may result in excessive resource use and cannot be used in '
     '"io_stream" mode. If set to "pipeline", the loop will be pipelined.'
 )
+
+# Weight-related attributes
+
+reloadable_weights = (
+    'If set to True, the weights are stored in on-chip memory that can be reloaded at run time without '
+    'reprogramming the FPGA. The number of switchable weight sets is set by the backend option weight_sets. '
+    'Currently only supported by the Altera backend.'
+)

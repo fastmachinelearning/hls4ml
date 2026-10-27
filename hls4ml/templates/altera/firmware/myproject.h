@@ -21,6 +21,7 @@ namespace mynamespace {
 class MyProjectID;
 
 struct MyProject {
+    // hls-fpga-machine-learning insert kernel arguments
 
     // kernel property method to config invocation interface
     auto get(sycl::ext::oneapi::experimental::properties_tag) {
