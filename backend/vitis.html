@@ -73,6 +73,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Vivado/Vitis</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#known-issues">Known issues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fused-strategy">Fused strategy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#vivado-synthesis-and-place-and-route">Vivado synthesis and place and route</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="accelerator.html">VivadoAccelerator</a></li>
@@ -163,6 +164,14 @@ clock cycles per time step.</p></li>
 <h2>Fused strategy<a class="headerlink" href="#fused-strategy" title="Link to this heading"></a></h2>
 <p>The <strong>Vitis</strong> backend also provides <code class="docutils literal notranslate"><span class="pre">Strategy:</span> <span class="pre">Fused</span></code>, which computes a chain of <code class="docutils literal notranslate"><span class="pre">Dense</span></code> layers together so that consecutive layers run at the same
 time. See <a class="reference internal" href="../advanced/fused.html"><span class="doc">Fused Strategy</span></a>.</p>
+</section>
+<section id="vivado-synthesis-and-place-and-route">
+<h2>Vivado synthesis and place and route<a class="headerlink" href="#vivado-synthesis-and-place-and-route" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">build(vsynth=True)</span></code> synthesizes the HLS design with Vivado, and <code class="docutils literal notranslate"><span class="pre">build(pnr=True)</span></code> also places and routes it. This works the same for the <strong>Vivado</strong>,
+<strong>Vitis</strong> and <a class="reference internal" href="accelerator.html"><span class="doc">VivadoAccelerator</span></a> backends; for VivadoAccelerator the AXI wrapper <code class="docutils literal notranslate"><span class="pre">&lt;project_name&gt;_axi</span></code> is synthesized. The design is
+synthesized alone, out of context, and only the clock is constrained. The slack therefore covers the paths between registers of the design, not the paths
+from its input ports or to its output ports. After place and route, the slack includes the delay and skew of the clock from the first clock buffer site of
+the device; another site changes it a little.</p>
 </section>
 </section>
 

@@ -179,8 +179,40 @@
 <dd><p>Bases: <a class="reference internal" href="hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend" title="hls4ml.backends.vivado.vivado_backend.VivadoBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">VivadoBackend</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vsynth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bitfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.build" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vsynth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bitfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pnr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.build" title="Link to this definition"></a></dt>
+<dd><p>Build the HLS project, running the steps that are enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – The model to build.</p></li>
+<li><p><strong>reset</strong> (<em>bool</em><em>, </em><em>optional</em>) – Start a new HLS project, removing the previous one. Defaults to False.</p></li>
+<li><p><strong>csim</strong> (<em>bool</em><em>, </em><em>optional</em>) – Run C simulation. Defaults to True.</p></li>
+<li><p><strong>synth</strong> (<em>bool</em><em>, </em><em>optional</em>) – Run C synthesis. Defaults to True.</p></li>
+<li><p><strong>cosim</strong> (<em>bool</em><em>, </em><em>optional</em>) – Run C/RTL co-simulation. Defaults to False.</p></li>
+<li><p><strong>validation</strong> (<em>bool</em><em>, </em><em>optional</em>) – Compare the outputs of C simulation and co-simulation. Defaults to False.</p></li>
+<li><p><strong>export</strong> (<em>bool</em><em>, </em><em>optional</em>) – Export the design as an IP. Defaults to False.</p></li>
+<li><p><strong>vsynth</strong> (<em>bool</em><em>, </em><em>optional</em>) – Synthesize the generated Verilog with Vivado, out of context. If synthesis leaves
+the cascade input of a DSP unconnected (design rule DSPS-2), the design is synthesized again with
+<code class="docutils literal notranslate"><span class="pre">-cascade_dsp</span> <span class="pre">tree</span></code>, which can change the resources. Defaults to False.</p></li>
+<li><p><strong>fifo_opt</strong> (<em>bool</em><em>, </em><em>optional</em>) – Record the FIFO occupancy during co-simulation, used by the FIFO depth
+optimization flow. Defaults to False.</p></li>
+<li><p><strong>pnr</strong> (<em>bool</em><em>, </em><em>optional</em>) – Also place and route the design after Vivado synthesis, for the resources, timing
+and power after implementation. Vivado estimates the power from default switching activity, not
+from a simulation of the design, so most of the total can be the static power of the device.
+Implies <code class="docutils literal notranslate"><span class="pre">vsynth</span></code>. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The reports read from the project, see <code class="docutils literal notranslate"><span class="pre">hls4ml.report.parse_vivado_report</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If vivado_hls is not on PATH, or if a step of the build fails.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.vivado_accelerator.vivado_accelerator_backend.VivadoAcceleratorBackend.create_initial_config">
