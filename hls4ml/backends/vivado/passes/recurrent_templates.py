@@ -85,6 +85,13 @@ recr_config_template = """struct config{index} : nnet::{recr_type}_config {{
     static const bool use_static = {static};
     static const bool pytorch_order = {pytorch};
     static const bool reset_after = {reset_after};
+    static const unsigned strategy = nnet::{strategy};
+    static const unsigned n_unit_par = {n_unit_par};
+    static const unsigned n_cycles = {n_cycles};
+    static const unsigned n_lanes_in = {n_lanes_in};
+    static const unsigned n_lanes_state = {n_lanes_state};
+    static const unsigned n_weight = {n_weight};
+    static const unsigned n_recurrent_weight = {n_recurrent_weight};
 }};\n"""
 
 # SimpleRNN template
@@ -108,6 +115,13 @@ simple_rnn_config_template = """struct config{index} : nnet::simple_rnn_config {
     static const unsigned reuse_factor = {reuse};
     static const bool store_weights_in_bram = false;
     static const bool use_static = {static};
+    static const unsigned strategy = nnet::{strategy};
+    static const unsigned n_unit_par = {n_unit_par};
+    static const unsigned n_cycles = {n_cycles};
+    static const unsigned n_lanes_in = {n_lanes_in};
+    static const unsigned n_lanes_state = {n_lanes_state};
+    static const unsigned n_weight = {n_weight};
+    static const unsigned n_recurrent_weight = {n_recurrent_weight};
 }};\n"""
 
 # Bidirectional templates
@@ -131,6 +145,13 @@ single_config_template = """struct config{index} : nnet::single_layer_config {{
     static const unsigned n_mult = {n_mult};
     static const bool pytorch_order = {pytorch};
     static const bool reset_after = {reset_after};
+    static const unsigned strategy = nnet::{strategy};
+    static const unsigned n_unit_par = {n_unit_par};
+    static const unsigned n_cycles = {n_cycles};
+    static const unsigned n_lanes_in = {n_lanes_in};
+    static const unsigned n_lanes_state = {n_lanes_state};
+    static const unsigned n_weight = {n_weight};
+    static const unsigned n_recurrent_weight = {n_recurrent_weight};
 }};\n"""
 
 bidirectional_config_template = """struct config{index} : nnet::bidirectional_config {{
@@ -195,6 +216,10 @@ class RecurrentConfigTemplate(LayerConfigTemplate):
         params['recr_type'] = node.class_name.lower()
         params['RECR_TYPE'] = node.class_name
         params['reset_after'] = 'true' if node.get_attr('apply_reset_gate', 'after') == 'after' else 'false'
+        for attr in ('n_unit_par', 'n_cycles', 'n_lanes_in', 'n_lanes_state'):
+            params[attr] = node.get_attr(attr, 1)
+        params['n_weight'] = node.get_weights('weight').data_length
+        params['n_recurrent_weight'] = node.get_weights('recurrent_weight').data_length
 
         if node.class_name == 'LSTM':
             n_recr_mult = 4
@@ -311,7 +336,8 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
         params['backward_t'] = f'config{node.index}_backward'
         params['forward_layer'] = node.get_attr('forward_class_name').lower() + '_class'
         params['backward_layer'] = node.get_attr('backward_class_name').lower() + '_class'
-        if node.attributes['static']:
+        # The cell of the Resource strategy keeps no state of its own
+        if node.attributes['static'] and params['strategy'] != 'resource':
             params['forward_layer'] += '_static'
             params['backward_layer'] += '_static'
 
@@ -341,6 +367,11 @@ class BidirectionalConfigTemplate(LayerConfigTemplate):
             layer_params['act_t'] = '{}_config{}'.format(node.get_attr(f'{d}_activation'), str(node.index) + f'_{d[0]}')
             layer_params['RECR_TYPE'] = node.get_attr(f'{d}_class_name')
             layer_params['reset_after'] = 'true' if node.get_attr(f'{d}_apply_reset_gate', 'after') == 'after' else 'false'
+            layer_params['strategy'] = params['strategy']
+            for attr in ('n_unit_par', 'n_cycles', 'n_lanes_in', 'n_lanes_state'):
+                layer_params[attr] = node.get_attr(f'{d}_{attr}', 1)
+            layer_params['n_weight'] = node.get_weights(f'{d}_weight').data_length
+            layer_params['n_recurrent_weight'] = node.get_weights(f'{d}_recurrent_weight').data_length
 
             layer_params['weight_t'] = layer_params[f'{d}_weight_t']
             layer_params['recurrent_weight_t'] = layer_params[f'{d}_recurrent_weight_t']

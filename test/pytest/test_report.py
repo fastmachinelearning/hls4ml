@@ -1,4 +1,6 @@
+import inspect
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -7,6 +9,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
 
 import hls4ml
+from hls4ml.report.vivado_report import _parse_csynth_xml, _parse_vivado_utilization
 
 test_root_path = Path(__file__).parent
 
@@ -164,3 +167,148 @@ def test_altera_report_multiple_targets(tmp_path):
     assert set(report.keys()) == {'report', 'fpga'}
     assert 'Quartus' in report['fpga']
     assert 'Quartus' not in report['report']
+
+
+vivado_report_dir = test_root_path / 'test_report/Vivado'
+
+
+def make_vivado_project_dir(output_dir, project_name, backend):
+    """Create the files parse_vivado_report needs to find an HLS project, without writing a model."""
+    os.makedirs(f'{output_dir}/{project_name}_prj/solution1', exist_ok=True)
+    shutil.copy(vivado_report_dir / 'vivado_hls.app', f'{output_dir}/{project_name}_prj/vivado_hls.app')
+    with open(f'{output_dir}/project.tcl', 'w') as f:
+        f.write(f'set project_name "{project_name}"\nset backend "{backend}"\n')
+
+
+# The utilization reports other than vivado_synth.rpt are of a small Verilog module with one block RAM of 36 Kb and one
+# DSP, cut to the sections that are read.
+@pytest.mark.parametrize(
+    'report_file, expected',
+    [
+        # 7-series after synthesis: 'Slice' names, and a '*' after the name of the LUT row
+        ('vivado_synth.rpt', {'LUT': '1526', 'FF': '2428', 'BRAM_18K': '0', 'DSP48E': '66'}),
+        # UltraScale after synthesis: 'CLB' names, and no URAM on the device
+        ('utilization_ultrascale.rpt', {'LUT': '92', 'FF': '104', 'BRAM_18K': '2', 'DSP48E': '1'}),
+        # UltraScale+ after place and route: the table for each SLR repeats the names with other values
+        ('utilization_ultrascale_plus.rpt', {'LUT': '91', 'FF': '104', 'BRAM_18K': '2', 'URAM': '0', 'DSP48E': '1'}),
+        # Versal after place and route: 'Registers' and 'DSP Slices', then 'CLB Registers' in a later table
+        ('utilization_versal.rpt', {'LUT': '56', 'FF': '56', 'BRAM_18K': '2', 'URAM': '0', 'DSP48E': '1'}),
+    ],
+)
+def test_vivado_utilization(report_file, expected):
+    """The resources are read from the utilization reports of every device family."""
+    assert _parse_vivado_utilization(vivado_report_dir / report_file) == expected
+
+
+def test_vivado_impl_report(tmp_path, capsys):
+    """The resources, slack and power after place and route are read and printed."""
+    make_vivado_project_dir(tmp_path, 'myproject', 'vivado')
+    shutil.copy(vivado_report_dir / 'utilization_ultrascale_plus.rpt', tmp_path / 'vivado_impl.rpt')
+    shutil.copy(vivado_report_dir / 'timing_summary.rpt', tmp_path / 'vivado_impl_timing.rpt')
+    shutil.copy(vivado_report_dir / 'power.rpt', tmp_path / 'vivado_impl_power.rpt')
+
+    report = hls4ml.report.parse_vivado_report(str(tmp_path))
+    capsys.readouterr()
+    hls4ml.report.print_vivado_report(report)
+
+    assert capsys.readouterr().out == (
+        '\n'
+        + '======================================================\n'
+        + '== Vivado Place and Route report\n'
+        + '======================================================\n\n'
+        + ' - Resource utilization:\n'
+        + '    BRAM_18K: 2\n'
+        + '    DSP48E:   1\n'
+        + '    FF:       104\n'
+        + '    LUT:      91\n'
+        + '    URAM:     0\n\n'
+        + ' - Timing:\n'
+        + '    Worst Negative Slack (WNS): 1.452\n'
+        + '    Total Negative Slack (TNS): 0.0\n'
+        + '    Worst Hold Slack (WHS):     0.055\n'
+        + '    Total Hold Slack (THS):     0.0\n\n'
+        + ' - Power:\n'
+        + '    Dynamic (W):             0.012\n'
+        + '    Device Static (W):       2.938\n'
+        + '    Total On-Chip Power (W): 2.95\n\n'
+    )
+
+
+def test_vivado_accelerator_reports(tmp_path, capsys):
+    """The system reports of VivadoAccelerator are read without co-simulation and for a project name with '_'."""
+    make_vivado_project_dir(tmp_path, 'my_project', 'vivadoaccelerator')
+    shutil.copy(vivado_report_dir / 'utilization_hierarchical.rpt', tmp_path / 'util.rpt')
+    timing_dir = tmp_path / 'my_project_vivado_accelerator/project_1.runs/impl_1'
+    timing_dir.mkdir(parents=True)
+    shutil.copy(vivado_report_dir / 'timing_summary.rpt', timing_dir / 'design_1_wrapper_timing_summary_routed.rpt')
+
+    report = hls4ml.report.parse_vivado_report(str(tmp_path))
+
+    assert report['ImplementationReport']['TotLUTs'] == 92
+    assert report['TimingReport']['WNS'] == 1.452
+    capsys.readouterr()
+    hls4ml.report.print_vivado_report(report)
+    assert 'Total LUTs: 92 (0.17%)' in capsys.readouterr().out
+
+
+def test_vitis_unified_bitfile_report(tmp_path):
+    """After a bitfile build, the resources of the kernel and the slack and power of the linked design are read."""
+    with open(tmp_path / 'hls4ml_config.yml', 'w') as f:
+        f.write('ProjectName: myproject\nVitisUnifiedConfig:\n  axi_mode: axi_stream\n')
+    report_dir = tmp_path / 'final_reports'
+    report_dir.mkdir()
+    shutil.copy(
+        test_root_path / 'test_report/VitisUnified/kernel_utilization.rpt', report_dir / 'impl_1_kernel_util_routed.rpt'
+    )
+    shutil.copy(
+        vivado_report_dir / 'timing_summary.rpt', report_dir / 'impl_1_vitis_design_wrapper_timing_summary_routed.rpt'
+    )
+    shutil.copy(vivado_report_dir / 'power.rpt', report_dir / 'impl_1_power_routed.rpt')
+
+    report = hls4ml.report.parse_vitis_unified_report(str(tmp_path))
+
+    assert {key: report['BitfileReport'][key] for key in ['LUT', 'FF', 'BRAM_18K', 'DSP48E', 'WNS', 'TotalPower']} == {
+        'LUT': '6869',
+        'FF': '3769',
+        'BRAM_18K': '16',
+        'DSP48E': '133',
+        'WNS': 1.452,
+        'TotalPower': 2.95,
+    }
+
+
+def test_csynth_worst_case_latency(capsys):
+    """The worst-case latency is printed from WorstLatency."""
+    csynth_report = _parse_csynth_xml(vivado_report_dir / 'myproject_csynth.xml')
+    csynth_report['WorstLatency'] = '12'
+
+    hls4ml.report.print_vivado_report({'CSynthesisReport': csynth_report})
+
+    assert 'Worst-case latency:     12 (60.0 ns)' in capsys.readouterr().out
+
+
+def test_aggregate_graph_reports():
+    """The DSPs of every subgraph are summed, and the clock period comes from C synthesis, with VivadoSynthReport."""
+
+    def subgraph_report(dsp, clock_period):
+        return {
+            'CSynthesisReport': {'EstimatedClockPeriod': clock_period, 'DSP': '0'},
+            'VivadoSynthReport': {'DSP48E': dsp},
+        }
+
+    report = hls4ml.report.aggregate_graph_reports(
+        {'graph1': subgraph_report('3', '4.1'), 'graph2': subgraph_report('5', '4.5')}
+    )
+
+    assert report['StitchedDesignReport']['DSP'] == '8.0'
+    assert report['StitchedDesignReport']['EstimatedClockPeriod'] == '4.500'
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_build_options_have_defaults(backend):
+    """build_prj.tcl sets a default for every option of build(), so a build_opt.tcl without some of them works."""
+    with open(Path(hls4ml.__file__).parent / f'templates/{backend.lower()}/build_prj.tcl') as f:
+        defaults = re.search(r'array set opt \{(.*?)\}', f.read(), re.DOTALL).group(1).split()[::2]
+    options = inspect.signature(hls4ml.backends.get_backend(backend).build).parameters
+
+    assert set(options) - {'model', 'log_to_stdout'} <= set(defaults)
