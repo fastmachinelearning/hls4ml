@@ -11,6 +11,7 @@
     - conda activate "$CONDA_ENV"
     - git config --global --add safe.directory /builds/fastmachinelearning/hls4ml
     - git submodule update --init --recursive hls4ml/templates/catapult/
+    - if [ $COYOTE == 1 ]; then git submodule update --init hls4ml/contrib/Coyote; fi
     - if [ $EXAMPLEMODEL == 1 ]; then git submodule update --init example-models; fi
     - pip install .${EXTRA_DEPS}
 

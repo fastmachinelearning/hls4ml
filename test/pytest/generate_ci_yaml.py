@@ -16,6 +16,7 @@ pytest.{}:
   variables:
     PYTESTFILE: {}
     EXAMPLEMODEL: {}
+    COYOTE: {}
     VIVADO_VERSION: "2020.1"
     VITIS_VERSION: "2024.1"
     RUN_SYNTHESIS: "true"
@@ -90,6 +91,12 @@ def uses_example_model(test_filename):
         return 'example-models' in content
 
 
+def uses_coyote(test_filename):
+    with open(test_filename) as f:
+        content = f.read()
+        return 'Coyote' in content
+
+
 def generate_test_yaml(test_root='.'):
     test_root = Path(test_root)
     test_paths = [
@@ -105,6 +112,7 @@ def generate_test_yaml(test_root='.'):
         )
     ]
     need_example_models = [uses_example_model(path) for path in test_paths]
+    need_coyote = [uses_coyote(path) for path in test_paths]
 
     idxs = list(range(len(need_example_models)))
     idxs = sorted(idxs, key=lambda i: f'{need_example_models[i]}_{path_to_name(test_paths[i])}')
@@ -116,7 +124,8 @@ def generate_test_yaml(test_root='.'):
         name = '+'.join(names)
         test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
         batch_need_example_model = int(any([need_example_models[i] for i in batch_idxs]))
-        diff_yml = yaml.safe_load(template.format(name, '.pytest', test_files, batch_need_example_model))
+        batch_need_coyote = int(any([need_coyote[i] for i in batch_idxs]))
+        diff_yml = yaml.safe_load(template.format(name, '.pytest', test_files, batch_need_example_model, batch_need_coyote))
         if yml is None:
             yml = diff_yml
         else:
@@ -127,7 +136,8 @@ def generate_test_yaml(test_root='.'):
         name = path.stem.replace('test_', '')
         test_file = str(path.relative_to(test_root))
         needs_examples = uses_example_model(path)
-        diff_yml = yaml.safe_load(template.format(name, '.pytest', test_file, int(needs_examples)))
+        needs_coyote = uses_coyote(path)
+        diff_yml = yaml.safe_load(template.format(name, '.pytest', test_file, int(needs_examples), int(needs_coyote)))
         yml.update(diff_yml)
 
     test_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in SPLIT_BY_TEST_CASE]
@@ -138,11 +148,14 @@ def generate_test_yaml(test_root='.'):
         test_ids = collect_test_functions_from_ast(test_file)
         chunk_size = SPLIT_BY_TEST_CASE[stem]
         needs_examples = uses_example_model(path)
+        needs_coyote = uses_coyote(path)
 
         for i, batch in enumerate(batched(test_ids, chunk_size)):
             job_name = f'{name_base}_part{i}'
             test_file_args = ' '.join(batch).strip().replace('\n', ' ')
-            diff_yml = yaml.safe_load(template.format(job_name, '.pytest', test_file_args, int(needs_examples)))
+            diff_yml = yaml.safe_load(
+                template.format(job_name, '.pytest', test_file_args, int(needs_examples), int(needs_coyote))
+            )
             if yml is None:
                 yml = diff_yml
             else:
@@ -150,6 +163,7 @@ def generate_test_yaml(test_root='.'):
 
     keras3_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in KERAS3_LIST]
     keras3_need_examples = [uses_example_model(path) for path in keras3_paths]
+    keras3_need_coyote = [uses_coyote(path) for path in keras3_paths]
 
     k3_idxs = list(range(len(keras3_need_examples)))
     k3_idxs = sorted(k3_idxs, key=lambda i: f'{keras3_need_examples[i]}_{path_to_name(keras3_paths[i])}')
@@ -160,11 +174,15 @@ def generate_test_yaml(test_root='.'):
         name = 'keras3-' + '+'.join(names)
         test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
         batch_need_example_model = int(any([keras3_need_examples[i] for i in batch_idxs]))
-        diff_yml = yaml.safe_load(template.format(name, '.pytest-keras3-only', test_files, batch_need_example_model))
+        batch_need_coyote = int(any([keras3_need_coyote[i] for i in batch_idxs]))
+        diff_yml = yaml.safe_load(
+            template.format(name, '.pytest-keras3-only', test_files, batch_need_example_model, batch_need_coyote)
+        )
         yml.update(diff_yml)
 
     qkeras3_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in QKERAS3_LIST]
     qkeras3_need_examples = [uses_example_model(path) for path in qkeras3_paths]
+    qkeras3_need_coyote = [uses_coyote(path) for path in qkeras3_paths]
 
     qk3_idxs = list(range(len(qkeras3_need_examples)))
     qk3_idxs = sorted(qk3_idxs, key=lambda i: f'{qkeras3_need_examples[i]}_{path_to_name(qkeras3_paths[i])}')
@@ -175,7 +193,10 @@ def generate_test_yaml(test_root='.'):
         name = 'qkerasV3'
         test_files = ' '.join([str(path.relative_to(test_root)) for path in batch_paths])
         batch_need_example_model = int(any([qkeras3_need_examples[i] for i in batch_idxs]))
-        diff_yml = yaml.safe_load(template.format(name, '.pytest-qkeras-v3-only', test_files, batch_need_example_model))
+        batch_need_coyote = int(any([qkeras3_need_coyote[i] for i in batch_idxs]))
+        diff_yml = yaml.safe_load(
+            template.format(name, '.pytest-qkeras-v3-only', test_files, batch_need_example_model, batch_need_coyote)
+        )
         yml.update(diff_yml)
 
     backend_specific_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in KERAS3_BACKEND_SPECIFIC_LIST]
@@ -183,9 +204,12 @@ def generate_test_yaml(test_root='.'):
         name = path.stem.replace('test_', '')
         test_file = str(path.relative_to(test_root))
         needs_examples = uses_example_model(path)
+        needs_coyote = uses_coyote(path)
         backend = KERAS3_BACKEND_SPECIFIC_LIST[path.stem]
         diff_yml = yaml.safe_load(
-            template_keras3_backend.format(name, '.pytest-keras3-only', test_file, int(needs_examples), backend)
+            template_keras3_backend.format(
+                name, '.pytest-keras3-only', test_file, int(needs_examples), int(needs_coyote), backend
+            )
         )
         yml.update(diff_yml)
 
