@@ -206,7 +206,7 @@ void conv_transpose_blocks_resource(hls::stream<data_T> &data, hls::stream<block
     constexpr unsigned block_factor = DIV_ROUNDUP(mult_n_in * mult_n_out, CONFIG_T::reuse_factor);
     constexpr unsigned n_chunks = mult_n_in / CONFIG_T::reuse_factor;
 
-    assert((mult_n_in % CONFIG_T::reuse_factor == 0) && "The reuse factor must divide N_BUF");
+    static_assert(mult_n_in % CONFIG_T::reuse_factor == 0, "The reuse factor must divide N_BUF");
 
     #pragma HLS ARRAY_RESHAPE   variable=weights block factor=block_factor
     #pragma HLS ARRAY_PARTITION variable=biases complete

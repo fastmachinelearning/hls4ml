@@ -24,6 +24,7 @@ conv2d_cases = [
     pytest.param((5, 5), (3, 3), (2, 2), 'valid', None, id='k3x3_s2x2_valid'),
     pytest.param((4, 6), (3, 3), (2, 2), 'same', None, id='in4x6_k3x3_s2x2_same'),
     pytest.param((4, 5), (3, 3), (2, 3), 'same', (1, 2), id='k3x3_s2x3_same_op'),
+    pytest.param((5, 6), (5, 5), (1, 1), 'same', None, id='k5x5_s1_same'),
 ]
 
 
@@ -60,9 +61,8 @@ def check_prediction(model, hls_model, seed=1):
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('in_width, kernel, stride, padding, output_padding', conv1d_cases)
-def test_conv1d_transpose(test_case_id, in_width, kernel, stride, padding, output_padding, backend, strategy, io_type):
+def test_conv1d_transpose(test_case_id, in_width, kernel, stride, padding, output_padding, strategy, io_type):
     model = make_model(
         keras.layers.Conv1DTranspose,
         (in_width, 3),
@@ -72,15 +72,14 @@ def test_conv1d_transpose(test_case_id, in_width, kernel, stride, padding, outpu
         padding=padding,
         output_padding=output_padding,
     )
-    hls_model = convert(model, test_case_id, backend, strategy=strategy, io_type=io_type)
+    hls_model = convert(model, test_case_id, 'Vivado', strategy=strategy, io_type=io_type)
     check_prediction(model, hls_model)
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('in_shape, kernel, strides, padding, output_padding', conv2d_cases)
-def test_conv2d_transpose(test_case_id, in_shape, kernel, strides, padding, output_padding, backend, strategy, io_type):
+def test_conv2d_transpose(test_case_id, in_shape, kernel, strides, padding, output_padding, strategy, io_type):
     model = make_model(
         keras.layers.Conv2DTranspose,
         (*in_shape, 2),
@@ -90,28 +89,46 @@ def test_conv2d_transpose(test_case_id, in_shape, kernel, strides, padding, outp
         padding=padding,
         output_padding=output_padding,
     )
-    hls_model = convert(model, test_case_id, backend, strategy=strategy, io_type=io_type)
+    hls_model = convert(model, test_case_id, 'Vivado', strategy=strategy, io_type=io_type)
+    check_prediction(model, hls_model)
+
+
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+def test_conv_transpose_vitis(test_case_id, strategy, io_type):
+    model = make_model(
+        keras.layers.Conv2DTranspose,
+        (4, 5, 2),
+        filters=3,
+        kernel_size=3,
+        strides=(2, 3),
+        padding='same',
+        output_padding=(1, 2),
+    )
+    hls_model = convert(model, test_case_id, 'Vitis', strategy=strategy, io_type=io_type)
     check_prediction(model, hls_model)
 
 
 @pytest.mark.parametrize(
-    'dim, strategy, layer_config',
+    'dim, strategy, layer_config, io_type',
     [
         # Valid reuse factors depend on the 12 x 4 (1D) and 24 x 3 (2D) weight matrix of all kernel elements of a
         # block. With 4 (1D) and 3 (2D), some multipliers take inputs from two output groups
-        pytest.param('1d', 'Resource', {'ReuseFactor': 4}, id='1d_rf4'),
-        pytest.param('2d', 'Resource', {'ReuseFactor': 3}, id='2d_rf3'),
+        pytest.param('1d', 'Resource', {'ReuseFactor': 4}, 'io_parallel', id='1d_rf4'),
+        pytest.param('2d', 'Resource', {'ReuseFactor': 3}, 'io_parallel', id='2d_rf3'),
+        pytest.param('1d', 'Resource', {'ReuseFactor': 4}, 'io_stream', id='1d_rf4_stream'),
+        pytest.param('2d', 'Resource', {'ReuseFactor': 3}, 'io_stream', id='2d_rf3_stream'),
         # The layer has 9 output blocks, so a parallelization factor of 3 splits them into 3 parts
-        pytest.param('2d', 'Latency', {'ParallelizationFactor': 3}, id='2d_latency_pf3'),
-        pytest.param('2d', 'Resource', {'ParallelizationFactor': 3}, id='2d_resource_pf3'),
+        pytest.param('2d', 'Latency', {'ParallelizationFactor': 3}, 'io_parallel', id='2d_latency_pf3'),
+        pytest.param('2d', 'Resource', {'ParallelizationFactor': 3}, 'io_parallel', id='2d_resource_pf3'),
     ],
 )
-def test_conv_transpose_settings(test_case_id, dim, strategy, layer_config):
+def test_conv_transpose_settings(test_case_id, dim, strategy, layer_config, io_type):
     if dim == '1d':
         model = make_model(keras.layers.Conv1DTranspose, (8, 3), filters=4, kernel_size=4, strides=2)
     else:
         model = make_model(keras.layers.Conv2DTranspose, (2, 2, 2), filters=3, kernel_size=(4, 3), strides=(2, 2))
-    hls_model = convert(model, test_case_id, 'Vivado', strategy=strategy, layer_config=layer_config)
+    hls_model = convert(model, test_case_id, 'Vivado', strategy=strategy, layer_config=layer_config, io_type=io_type)
 
     layer = hls_model.graph['convtr']
     if 'ReuseFactor' in layer_config:
@@ -169,12 +186,13 @@ dilation_cases = [
 ]
 
 
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
 @pytest.mark.parametrize('in_shape, kernel, dilation, padding', dilation_cases)
-def test_conv_transpose_dilation(test_case_id, in_shape, kernel, dilation, padding, strategy):
+def test_conv_transpose_dilation(test_case_id, in_shape, kernel, dilation, padding, strategy, io_type):
     layer = keras.layers.Conv1DTranspose if len(in_shape) == 2 else keras.layers.Conv2DTranspose
     model = make_model(layer, in_shape, filters=3, kernel_size=kernel, dilation_rate=dilation, padding=padding)
-    hls_model = convert(model, test_case_id, 'Vivado', strategy=strategy)
+    hls_model = convert(model, test_case_id, 'Vivado', strategy=strategy, io_type=io_type)
 
     X = np.random.default_rng(1).uniform(-1, 1, (10, *in_shape))
     y_ref = conv_transpose_reference(X, model.get_layer('convtr'))
@@ -203,10 +221,11 @@ pytorch_cases = [
 ]
 
 
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
 @pytest.mark.parametrize('in_shape, kernel, stride, padding, output_padding, dilation, output_size', pytorch_cases)
 def test_conv_transpose_pytorch(
-    test_case_id, in_shape, kernel, stride, padding, output_padding, dilation, output_size, strategy
+    test_case_id, in_shape, kernel, stride, padding, output_padding, dilation, output_size, strategy, io_type
 ):
     layer = torch.nn.ConvTranspose1d if len(in_shape) == 2 else torch.nn.ConvTranspose2d
     torch.manual_seed(0)
@@ -216,16 +235,23 @@ def test_conv_transpose_pytorch(
     )
     model.eval()
 
-    config = hls4ml.utils.config_from_pytorch_model(
-        model, in_shape, default_precision='fixed<32,16>', channels_last_conversion='full', transpose_outputs=True
-    )
+    # As in the other PyTorch tests, io_stream takes and returns channels-last data
+    if io_type == 'io_stream':
+        conversion = {'channels_last_conversion': 'internal', 'transpose_outputs': False}
+    else:
+        conversion = {'channels_last_conversion': 'full', 'transpose_outputs': True}
+    config = hls4ml.utils.config_from_pytorch_model(model, in_shape, default_precision='fixed<32,16>', **conversion)
     config['Model']['Strategy'] = strategy
     hls_model = hls4ml.converters.convert_from_pytorch_model(
-        model, hls_config=config, output_dir=str(test_root_path / test_case_id), backend='Vivado', io_type='io_parallel'
+        model, hls_config=config, output_dir=str(test_root_path / test_case_id), backend='Vivado', io_type=io_type
     )
 
     X = np.random.default_rng(1).uniform(-1, 1, (10, *in_shape)).astype(np.float32)
     y_torch = model(torch.tensor(X)).detach().numpy()
     hls_model.compile()
-    y_hls = hls_model.predict(X).reshape(y_torch.shape)
+    if io_type == 'io_stream':
+        y_hls = hls_model.predict(np.ascontiguousarray(np.moveaxis(X, 1, -1)))
+        y_hls = np.moveaxis(y_hls.reshape(y_torch.shape[0], *y_torch.shape[2:], y_torch.shape[1]), -1, 1)
+    else:
+        y_hls = hls_model.predict(X).reshape(y_torch.shape)
     np.testing.assert_allclose(y_hls, y_torch, rtol=0, atol=atol)

@@ -1048,6 +1048,7 @@ class FPGABackend(Backend):
         ).format(index=layer_idx)
         indent = '    '
 
+        assert len(buffers) % n_partitions == 0, 'The number of partitions must divide the number of blocks'
         # The last part is the else branch, so every path writes the whole buffer and nothing is carried over
         n_pixels = len(buffers) // n_partitions
         for partition_idx in range(n_partitions):
@@ -1123,6 +1124,7 @@ class FPGABackend(Backend):
         ).format(index=layer_idx)
         indent = '    '
 
+        assert len(blocks) % n_partitions == 0, 'The number of partitions must divide the number of blocks'
         n_pixels = len(blocks) // n_partitions
         for partition_idx in range(n_partitions):
             generated_code += indent * 2 + f'if (partition == {partition_idx:>3}) {{\n'

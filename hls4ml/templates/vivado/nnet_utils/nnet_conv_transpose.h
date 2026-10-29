@@ -183,7 +183,7 @@ void conv_transpose_resource_cl(data_T data[CONFIG_T::in_height * CONFIG_T::in_w
     constexpr unsigned block_factor = DIV_ROUNDUP(mult_n_in * mult_n_out, CONFIG_T::reuse_factor);
     constexpr unsigned n_chunks = mult_n_in / CONFIG_T::reuse_factor;
 
-    assert((mult_n_in % CONFIG_T::reuse_factor == 0) && "The reuse factor must divide N_BUF");
+    static_assert(mult_n_in % CONFIG_T::reuse_factor == 0, "The reuse factor must divide N_BUF");
 
     data_T data_buf[CONFIG_T::n_pixels][mult_n_in];
     #pragma HLS ARRAY_PARTITION variable=data_buf complete dim=0

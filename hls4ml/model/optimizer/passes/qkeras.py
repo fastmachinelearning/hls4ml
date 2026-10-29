@@ -224,7 +224,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
                 scale_bits = np.maximum(np.abs(np.log2(scale)).max().astype('int') + 1, 2)
                 scale_quantizer = QKerasPO2Quantizer({'class_name': 'quantized_po2', 'config': {'bits': scale_bits}})
 
-        alpha_name = node.get_attr('name') + '_alpha'
+        alpha_name = node.get_attr('name') + '_input_alpha'
         alpha_precision = {'Precision': 'auto'}
         model.config.set_name_config(alpha_name, alpha_precision)
         model.config.parse_name_config(alpha_name, alpha_precision)
