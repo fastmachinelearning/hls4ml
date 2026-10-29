@@ -288,8 +288,7 @@ def test_rnn_mixed_precision(test_case_id, rnn_layer, backend, io_type, static):
 
 
 def create_model_reuse(rnn_layer):
-    """A small model for which hls4ml adjusts a requested reuse factor differently for the input and the recurrent
-    multiplication."""
+    """A small model of 16 units, or 8 in each direction of the Bidirectional layer, on 6 features."""
 
     model = Sequential()
     model.add(Input(shape=(8, 6)))
@@ -307,11 +306,9 @@ def create_model_reuse(rnn_layer):
 )
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_rnn_resource_reuse_factor(test_case_id, rnn_layer, reuse_factor, backend):
-    """The resource strategy gives the same results as the latency strategy when the reuse factor has to be adjusted.
-
-    At 20, the input multiplication of the SimpleRNN, LSTM and GRU gets a reuse factor above the number of states and the
-    recurrent one gets 16, so each needs a different kernel. At 4, the Bidirectional input multiplications need an
-    adjusted reuse factor; at 12, its recurrent ones get 8, which is the number of states.
+    """The resource strategy gives the same results as the latency strategy when the reuse factor is neither a divisor
+    nor a multiple of the number of units, so the units are computed in groups over several cycles: four units for five
+    cycles at 20, and two units for three cycles at 12 with 8 units in each direction.
     """
 
     model = create_model_reuse(rnn_layer)
@@ -337,24 +334,205 @@ def test_rnn_resource_reuse_factor(test_case_id, rnn_layer, reuse_factor, backen
     np.testing.assert_allclose(predictions[1].flatten(), model.predict(X).flatten(), rtol=0.0, atol=5e-2)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
-def test_bidirectional_reuse_factor_gates(test_case_id, backend):
-    """Each direction's reuse factors are adjusted for its own number of gates: four for the LSTM, three for the GRU."""
+@pytest.mark.parametrize(
+    'rnn_layer, reuse_factor, expected',
+    [
+        (LSTM, 1, (1, 16, 1, 6, 16)),
+        (LSTM, 3, (3, 16, 3, 2, 6)),
+        (LSTM, 8, (8, 2, 1, 6, 16)),
+        (LSTM, 20, (20, 4, 5, 2, 4)),
+        (LSTM, 64, (64, 1, 4, 2, 4)),
+        (LSTM, 1000, (256, 1, 16, 1, 1)),
+        (GRU, 18, (18, 8, 9, 1, 2)),
+    ],
+)
+def test_rnn_resource_schedule(test_case_id, rnn_layer, reuse_factor, expected):
+    """The reuse factor sets how many units the resource strategy computes at a time and for how many cycles: a step
+    takes 16 units / units at a time * cycles. Of the choices giving the reuse factor, the one with the fewest units
+    at a time is used. A reuse factor no choice gives, such as one above 16 units times 16 cycles, is replaced by the
+    closest one that does.
+    """
 
-    model = create_model_reuse(Bidirectional)
+    model = create_model_reuse(rnn_layer)
+    hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+    hls_config['LayerName']['rnn']['Strategy'] = 'Resource'
+    hls_config['LayerName']['rnn']['ReuseFactor'] = reuse_factor
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=hls_config, output_dir=output_dir)
+
+    layer = hls_model.graph['rnn']
+    attributes = ('reuse_factor', 'n_unit_par', 'n_cycles', 'n_lanes_in', 'n_lanes_state')
+    assert tuple(layer.get_attr(a) for a in attributes) == expected
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_bidirectional_resource_schedule(test_case_id, backend):
+    """Each direction of a Bidirectional layer gets the schedule for its own number of units."""
+
+    model = Sequential()
+    model.add(Input(shape=(8, 6)))
+    model.add(Bidirectional(LSTM(8), backward_layer=GRU(4, go_backwards=True), name='rnn'))
     hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
     hls_config['LayerName']['rnn']['Strategy'] = 'Resource'
-    hls_config['LayerName']['rnn']['ReuseFactor'] = 18
+    hls_config['LayerName']['rnn']['ReuseFactor'] = 8
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=hls_config, output_dir=output_dir, backend=backend
     )
 
     layer = hls_model.graph['rnn']
-    valid_reuse_factors = hls4ml.backends.get_backend(backend).get_valid_reuse_factors
-    for d, n_gates in (('forward', 4), ('backward', 3)):
-        assert layer.get_attr(f'{d}_reuse_factor') in valid_reuse_factors(6, 8 * n_gates)
-        assert layer.get_attr(f'{d}_recurrent_reuse_factor') in valid_reuse_factors(8, 8 * n_gates)
+    attributes = ('reuse_factor', 'n_unit_par', 'n_cycles')
+    assert tuple(layer.get_attr(f'forward_{a}') for a in attributes) == (8, 1, 1)
+    assert tuple(layer.get_attr(f'backward_{a}') for a in attributes) == (8, 1, 2)
+
+
+def create_model_resource_cell(kind, return_sequences):
+    """A model with one recurrent layer of 16 units, or 8 in each direction, on 6 features."""
+
+    layers = {
+        'SimpleRNN': lambda: SimpleRNN(16, return_sequences=return_sequences, name='rnn'),
+        'LSTM': lambda: LSTM(16, return_sequences=return_sequences, name='rnn'),
+        'GRU': lambda: GRU(16, return_sequences=return_sequences, name='rnn'),
+        'GRU_reset_before': lambda: GRU(16, return_sequences=return_sequences, reset_after=False, name='rnn'),
+        'Bidirectional': lambda: Bidirectional(
+            LSTM(8, return_sequences=return_sequences),
+            backward_layer=GRU(8, return_sequences=return_sequences, go_backwards=True),
+            name='rnn',
+        ),
+    }
+    model = Sequential()
+    model.add(Input(shape=(8, 6)))
+    model.add(layers[kind]())
+    return model
+
+
+def compare_resource_with_latency(test_case_id, model, reuse_factor, io_type='io_parallel', precision=None):
+    """Convert the model with the latency and with the resource strategy, and check they give the same results."""
+
+    X = np.random.default_rng(0).uniform(-1, 1, (20, 8, 6))
+    predictions = []
+    for strategy in ('Latency', 'Resource'):
+        hls_config = hls4ml.utils.config_from_keras_model(
+            model, granularity='name', default_precision='ap_fixed<16, 6>', backend='Vivado'
+        )
+        hls_config['LayerName']['rnn']['Strategy'] = strategy
+        hls_config['LayerName']['rnn']['ReuseFactor'] = reuse_factor
+        if precision is not None:
+            hls_config['LayerName']['rnn']['Precision'].update(precision)
+        output_dir = str(test_root_path / f'{test_case_id}_{strategy.lower()}')
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=hls_config, output_dir=output_dir, io_type=io_type
+        )
+        hls_model.compile()
+        predictions.append(hls_model.predict(X))
+
+    np.testing.assert_array_equal(predictions[1], predictions[0])
+
+
+@pytest.mark.parametrize('kind', ['SimpleRNN', 'LSTM', 'GRU', 'GRU_reset_before', 'Bidirectional'])
+@pytest.mark.parametrize('reuse_factor', [1, 3, 24, 64])
+def test_rnn_resource_cell(test_case_id, kind, reuse_factor):
+    """The cell of the resource strategy gives the same results as the latency strategy: all units at once (1), all
+    units over three cycles (3), two units at a time over three cycles (24), and one unit at a time over four cycles
+    (64), or over eight for the 8 units in each direction of the Bidirectional layer."""
+
+    compare_resource_with_latency(test_case_id, create_model_resource_cell(kind, False), reuse_factor)
+
+
+@pytest.mark.parametrize('kind', ['SimpleRNN', 'LSTM', 'GRU', 'GRU_reset_before'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('return_sequences', [True, False])
+def test_rnn_resource_cell_io(test_case_id, kind, io_type, return_sequences):
+    """The cell of the resource strategy gives the same results as the latency strategy with both io types, and when
+    every time step is returned."""
+
+    if io_type == 'io_parallel' and not return_sequences:
+        pytest.skip('Covered by test_rnn_resource_cell')
+    compare_resource_with_latency(test_case_id, create_model_resource_cell(kind, return_sequences), 24, io_type)
+
+
+@pytest.mark.parametrize('kind', ['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])
+def test_rnn_resource_cell_mixed_precision(test_case_id, kind):
+    """The cell of the resource strategy gives the same results as the latency strategy when the input, the state,
+    the accumulator and the two weights have different types."""
+
+    precision = {
+        'accum': 'ap_fixed<24, 10>',
+        'result': 'ap_fixed<18, 8>',
+    }
+    if kind == 'Bidirectional':
+        precision.update(forward_recurrent_weight='ap_fixed<12, 4>', backward_recurrent_weight='ap_fixed<12, 4>')
+    else:
+        precision.update(recurrent_weight='ap_fixed<12, 4>')
+    compare_resource_with_latency(test_case_id, create_model_resource_cell(kind, False), 24, precision=precision)
+
+
+@pytest.mark.parametrize(
+    'make_layer',
+    [
+        lambda: LSTM(8, activation='relu', recurrent_activation='linear', name='rnn'),
+        lambda: GRU(8, activation='linear', recurrent_activation='relu', name='rnn'),
+        lambda: SimpleRNN(8, activation='relu', name='rnn'),
+        lambda: LSTM(8, use_bias=False, name='rnn'),
+        lambda: GRU(8, use_bias=False, reset_after=False, name='rnn'),
+        lambda: LSTM(7, name='rnn'),
+        lambda: Bidirectional(GRU(8, reset_after=False), name='rnn'),
+        lambda: Bidirectional(
+            LSTM(8, return_sequences=True), backward_layer=GRU(4, return_sequences=True, go_backwards=True), name='rnn'
+        ),
+    ],
+    ids=[
+        'LSTM-activations',
+        'GRU-activations',
+        'SimpleRNN-relu',
+        'LSTM-no_bias',
+        'GRU_reset_before-no_bias',
+        'LSTM-7_units',
+        'Bidirectional-GRU_reset_before',
+        'Bidirectional-8_4_units-sequences',
+    ],
+)
+def test_rnn_resource_cell_options(test_case_id, make_layer):
+    """The cell of the resource strategy gives the same results as the latency strategy for other activations, without
+    biases, for a number of units that cannot be split into groups, and for Bidirectional layers of GRU layers that apply
+    the reset gate before the recurrent multiplication or of two layers of different sizes."""
+
+    model = Sequential()
+    model.add(Input(shape=(8, 6)))
+    model.add(make_layer())
+    compare_resource_with_latency(test_case_id, model, 24)
+
+
+def test_rnn_initial_state_rejected(test_case_id):
+    """Initial states given to a Keras recurrent layer are not supported and stop the conversion."""
+
+    x, h, c = Input((8, 6)), Input((8,)), Input((8,))
+    model = Model([x, h, c], LSTM(8, name='rnn')(x, initial_state=[h, c]))
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.raises(NotImplementedError, match='initial_state'):
+        hls4ml.converters.convert_from_keras_model(model, output_dir=output_dir, backend='Vivado')
+
+
+def test_rnn_return_state_rejected(test_case_id):
+    """return_state=True is not supported and stops the conversion."""
+
+    x = Input((8, 6))
+    model = Model(x, LSTM(8, return_state=True, name='rnn')(x)[0])
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.raises(Exception, match='return_state'):
+        hls4ml.converters.convert_from_keras_model(model, output_dir=output_dir, backend='Vivado')
+
+
+def test_bidirectional_backward_forward_layer_rejected(test_case_id):
+    """A Bidirectional layer whose forward layer reads backwards puts that layer's outputs first, which is not
+    supported and stops the conversion."""
+
+    model = Sequential()
+    model.add(Input(shape=(8, 6)))
+    model.add(Bidirectional(GRU(8, go_backwards=True), backward_layer=LSTM(8), name='rnn'))
+    output_dir = str(test_root_path / test_case_id)
+    with pytest.raises(NotImplementedError, match='go_backwards'):
+        hls4ml.converters.convert_from_keras_model(model, output_dir=output_dir, backend='Vivado')
 
 
 @pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
@@ -375,6 +553,32 @@ def test_rnn_static_io_stream(test_case_id, rnn_layer, backend, static):
         warnings.simplefilter('always')
         hls_model = hls4ml.converters.convert_from_keras_model(
             model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type='io_stream'
+        )
+
+    warned = any('Static set to False' in str(w.message) for w in caught)
+    assert warned != static
+    assert hls_model.graph['rnn'].get_attr('static')
+
+
+@pytest.mark.parametrize(
+    'rnn_layer', [SimpleRNN, LSTM, GRU, Bidirectional], ids=['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional']
+)
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('static', [True, False])
+def test_rnn_static_resource(test_case_id, rnn_layer, backend, static):
+    """The cell of the resource strategy is always shared across time steps, so only Static set to False gives a
+    warning."""
+
+    model = create_model_reuse(rnn_layer)
+    hls_config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    hls_config['LayerName']['rnn']['Strategy'] = 'Resource'
+    hls_config['LayerName']['rnn']['Static'] = static
+    output_dir = str(test_root_path / test_case_id)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always')
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=hls_config, output_dir=output_dir, backend=backend
         )
 
     warned = any('Static set to False' in str(w.message) for w in caught)

@@ -218,7 +218,7 @@ Backend-specific attributes
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Softmax
-=======
+========
 Base attributes
 ---------------
 * result_t: NamedType
@@ -552,7 +552,7 @@ Backend-specific attributes
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Reshape
-=======
+========
 Base attributes
 ---------------
 * result_t: NamedType
@@ -2171,7 +2171,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2275,7 +2275,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2381,7 +2381,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2511,7 +2511,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
 
@@ -3026,7 +3026,7 @@ Configurable attributes
 * accum_t: NamedType
 
 BiasAdd
-=======
+========
 Base attributes
 ---------------
 * result_t: NamedType
@@ -3393,25 +3393,19 @@ Configurable attributes
 
   * The datatype (precision) of the output tensor.
 
-BatchNormalizationQuantizedTanh
-===============================
+Broadcast
+=========
 Base attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
-* accum_t: NamedType
-
 Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
-
-* n_in: int
-
-* n_filt: int (Default: 0)
 
 Configurable attributes
 -----------------------
@@ -3422,10 +3416,6 @@ Configurable attributes
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-* reuse_factor: int (Default: 1)
 
 PointwiseConv1D
 ===============
@@ -3599,19 +3589,25 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
-Broadcast
-=========
+BatchNormalizationQuantizedTanh
+===============================
 Base attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
+* accum_t: NamedType
+
 Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* n_in: int
+
+* n_filt: int (Default: 0)
 
 Configurable attributes
 -----------------------
@@ -3622,3 +3618,7 @@ Configurable attributes
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
+
+* reuse_factor: int (Default: 1)

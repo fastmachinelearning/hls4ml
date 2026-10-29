@@ -130,5 +130,4 @@ ignore = [
   ".pre-commit-config.yaml",
   "docs/**",
   "hls4ml/_version.py",
-  "Jenkinsfile",
 ]
