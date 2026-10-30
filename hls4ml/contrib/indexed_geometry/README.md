@@ -56,17 +56,24 @@ raises `NotImplementedError`.
 ```python
 import hls4ml
 from hls4ml.contrib.indexed_geometry import (
-    NeighborGatherLayer, IndexedConvolutionLayer, IndexedPoolingLayer,
+    NeighborGatherLayer,
+    IndexedConvolutionLayer,
+    IndexedPoolingLayer,
 )
 
 # ... build a Keras model using these layers ...
 
 hls_config = hls4ml.utils.config_from_keras_model(
-    keras_model, granularity='name', backend='Vitis',
+    keras_model,
+    granularity='name',
+    backend='Vitis',
 )
 hmodel = hls4ml.converters.convert_from_keras_model(
-    keras_model, output_dir='my_hls_project',
-    backend='Vitis', io_type='io_stream', hls_config=hls_config,
+    keras_model,
+    output_dir='my_hls_project',
+    backend='Vitis',
+    io_type='io_stream',
+    hls_config=hls_config,
 )
 ```
 
