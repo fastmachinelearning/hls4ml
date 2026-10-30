@@ -42,22 +42,25 @@ scope rules that decide how a feature is received:
 
 ## Formatting: pre-commit is required
 
-`.pre-commit-config.yaml` runs ruff (with `--fix`) and ruff-format, flake8 with a 125-character line limit
-plus bugbear and print checks, pyupgrade targeting Python 3.10, pyproject-fmt, the standard whitespace and
-YAML hooks, and `p-clang-format` for C and C++ — so edited `nnet_utils` headers are reformatted too.
+`.pre-commit-config.yaml` runs ruff (with `--fix`) and ruff-format, pyupgrade targeting Python 3.10,
+pyproject-fmt, the standard whitespace and YAML hooks, and `p-clang-format` for C and C++ — so edited
+`nnet_utils` headers are reformatted too. Ruff's rules live in `[tool.ruff]` in `pyproject.toml`: a
+125-character line limit plus the pycodestyle, pyflakes, isort and bugbear checks.
 
 ```
 pre-commit run --files <the files you changed>
 ```
 
-The first run of a hook installs its own environment and needs network access. Commit the reformatting the
-hooks apply; pull requests that fail these checks are not reviewed.
+The first run of a hook installs its own environment and needs network access. Hook revisions are pinned, so
+a local run resolves to the same tools CI uses. Commit the reformatting the hooks apply; pull requests that
+fail these checks are not reviewed.
 
-**That command does not run everything CI runs.** Hooks marked `stages: [manual]` in
-`.pre-commit-config.yaml` are skipped by default, and the Format workflow runs pre-commit with
-`--hook-stage manual --all-files`. `check-manifest` is one of those hooks: it builds an sdist and compares it
-against the files git tracks, so **adding, moving or renaming anything outside the packaged directories can
-fail CI while every local check passes**. If your change touches the repository layout, run what CI runs:
+**That command does not run everything CI runs.** CI splits the hooks between two services: pre-commit.ci
+runs the default-stage hooks on every pull request, and the `Check manifest` workflow runs the one hook
+pre-commit.ci cannot, `check-manifest`. That hook is marked `stages: [manual]` in `.pre-commit-config.yaml`,
+so it is skipped by a plain local run. It builds an sdist and compares it against the files git tracks, so
+**adding, moving or renaming anything outside the packaged directories can fail CI while every local check
+passes**. If your change touches the repository layout, run what CI runs:
 
 ```
 pre-commit run --hook-stage manual --all-files
@@ -161,8 +164,8 @@ fails on both is the environment's.
 Run this over your own diff before anyone else sees it. Most review comments on generated contributions come
 from this list, and the linters catch almost none of it.
 
-- **Debug output.** `flake8-print` is configured but `T201` is in `extend-ignore`, so stray `print()` calls
-  pass CI. hls4ml prints deliberately in some passes to warn users; your debugging does not belong there.
+- **Debug output.** No hook checks for `print()`, so stray calls pass CI. hls4ml prints deliberately in some
+  passes to warn users; your debugging does not belong there.
 - **Commented-out code and dead branches.** Delete them. A reviewer cannot tell your leftovers from
   deliberate ones.
 - **Dead copied code.** When a backend, pass or kernel was copied as a starting point, remove everything the

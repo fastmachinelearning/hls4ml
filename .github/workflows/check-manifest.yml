@@ -1,4 +1,4 @@
-name: Run pre-commit
+name: Check manifest
 
 on:
   pull_request:
@@ -7,12 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  pre-commit:
-    name: Format
+  check-manifest:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.8]
 
     steps:
       - name: Checkout
@@ -20,7 +16,9 @@ jobs:
         with:
           submodules: recursive
 
+      # pre-commit.ci runs the default-stage hooks on every pull request, but not
+      # check-manifest, which is manual-stage because it builds an sdist.
       - name: Pre-commit
         uses: pre-commit/action@v3.0.1
         with:
-          extra_args: --hook-stage manual --all-files
+          extra_args: --hook-stage manual --all-files check-manifest

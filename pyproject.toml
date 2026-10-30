@@ -112,14 +112,16 @@ write_to = "hls4ml/_version.py"
 target-version = "py310"
 line-length = 125
 indent-width = 4
-include = [ "hls4ml/**/*.py", "tests/**/*.py" ]
+include = [ "hls4ml/**/*.py", "test/**/*.py" ]
 exclude = [ "hls4ml/_version.py", "hls4ml/templates/**" ]
 format.quote-style = "single"
 format.skip-magic-trailing-comma = false
 format.docstring-code-line-length = 125
 format.docstring-code-format = true
-lint.select = [ "E", "F", "F401", "I", "W" ]
-lint.ignore = [ "E741" ]
+# PLE0100, PLE0101, PLW0129 and RUF024 stand in for flake8-bugbear B037, B044 and B046, which ruff has no B code for
+lint.select = [ "B", "E", "F", "F401", "I", "PLE0100", "PLE0101", "PLW0129", "RUF024", "W" ]
+# B028 and B905 need a per-call judgement (which stacklevel; strict=True or False), not a mechanical fix
+lint.ignore = [ "B028", "B905", "E741" ]
 lint.per-file-ignores = { "__init__.py" = [ "F401" ] }
 lint.fixable = [ "ALL" ]
 lint.unfixable = []
