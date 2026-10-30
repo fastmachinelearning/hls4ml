@@ -377,10 +377,11 @@ class AlteraBackend(FPGABackend):
             self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
             layer.set_attr('strategy', 'resource')
 
-        # Split weights for easier storage in on-chip memory and implementation in HLS
-        weights_data = layer.weights['weight'].data
-        rec_weights_data = layer.weights['recurrent_weight'].data
-        bias_data = layer.weights['bias'].data
+        # Split weights for easier storage in on-chip memory and implementation in HLS. The pieces are quantized
+        # from the unquantized weights, like the whole arrays were.
+        weights_data = layer.weights['weight'].data_unquantized
+        rec_weights_data = layer.weights['recurrent_weight'].data_unquantized
+        bias_data = layer.weights['bias'].data_unquantized
 
         weight_types = ['i', 'f', 'c', 'o']
         for i in range(0, 4):
