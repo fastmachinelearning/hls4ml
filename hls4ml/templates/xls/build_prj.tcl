@@ -1,9 +1,9 @@
 # build_prj.tcl
 # Usage:
-#   vivado -mode batch -nolog -nojournal -source build_prj.tcl --tclargs <project_name> <board_part> <clock_period> <clock_uncertainty> [--pr]
+#   vivado -mode batch -nolog -nojournal -source build_prj.tcl -tclargs <project_name> <board_part> <clock_period> <clock_uncertainty> [--pr]
 
 if {[llength $argv] < 4} {
-    puts stderr "ERROR: missing arguments\nUsage: vivado -mode batch -nolog -nojournal  -source build_prj.tcl -tclargs <project_name> <board_part> <clock_period> <clock_uncertainty> [--pr]"
+    puts stderr "ERROR: missing arguments\nUsage: vivado -mode batch -nolog -nojournal -source build_prj.tcl -tclargs <project_name> <board_part> <clock_period> <clock_uncertainty> [--pr]"
     exit 1
 }
 
@@ -24,8 +24,13 @@ set top_module "__${project_name}__${project_name}"
 
 # Parameters used in xdc
 set xdc_path "${prj_root}/constraints.xdc"
-set uncertainty_hold_r $clock_uncertainty
-set uncertainty_setup_r $clock_uncertainty
+# clock_uncertainty is either absolute (ns) or a percentage of the clock period (e.g. 12.5%)
+if {[string match "*%" $clock_uncertainty]} {
+    set uncertainty_setup [expr {$clock_period * [string trimright $clock_uncertainty "%"] / 100.0}]
+} else {
+    set uncertainty_setup $clock_uncertainty
+}
+set uncertainty_hold $uncertainty_setup
 set delay_max_r 0.4
 set delay_min_r 0.2
 

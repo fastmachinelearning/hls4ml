@@ -13,7 +13,7 @@ def read_vivado_report(hls_dir, full_report=False):
     top_func_name = None
 
     if os.path.isfile(hls_dir + '/project.tcl'):
-        prj_dir, top_func_name = _parse_project_script(hls_dir)
+        prj_dir, top_func_name, _ = _parse_project_script(hls_dir)
 
     if prj_dir is None or top_func_name is None:
         print('Unable to read project data. Exiting.')
@@ -49,7 +49,7 @@ def _parse_project_script(path):
     if 'accelerator' in backend_name:
         top_func_name += '_axi'
 
-    return prj_dir, top_func_name
+    return prj_dir, top_func_name, backend_name
 
 
 def _find_solutions(sln_dir):
@@ -166,6 +166,113 @@ def _parse_cosim_rpt(cosim_file):
     return cosim_report
 
 
+# Rows of a Vivado utilization report that hold each resource. The names depend on the device family: 7-series parts
+# use 'Slice LUTs' and 'Slice Registers', UltraScale and UltraScale+ parts use 'CLB LUTs' and 'CLB Registers', and
+# Versal parts use 'CLB LUTs', 'Registers' and 'DSP Slices'.
+_vivado_utilization_rows = {
+    'LUT': ('Slice LUTs', 'CLB LUTs'),
+    'FF': ('Slice Registers', 'CLB Registers', 'Registers'),
+    'BRAM_18K': ('Block RAM Tile',),
+    'URAM': ('URAM',),
+    'DSP48E': ('DSPs', 'DSP Slices'),
+}
+
+
+def _parse_vivado_utilization(util_file):
+    """Read the resources used from a report written by Vivado's report_utilization.
+
+    Only the first row with a given name is read, because later tables of the report, such as the ones for each SLR,
+    repeat the names. A resource the report has no row for, such as URAM on a device without it, is left out. Vivado
+    counts block RAM in tiles of 36 Kb; it is returned in blocks of 18 Kb, the unit of the C synthesis report.
+    """
+
+    report = {}
+    with open(util_file) as f:
+        for line in f:
+            cells = line.split('|')
+            if len(cells) < 3:
+                continue
+            # After synthesis, Vivado marks the LUT row with '*' because the number is an estimate
+            row_name = cells[1].strip().rstrip('*').rstrip()
+            for key, row_names in _vivado_utilization_rows.items():
+                if key not in report and row_name in row_names:
+                    value = cells[2].strip()
+                    try:
+                        count = float(value)
+                    except ValueError:
+                        continue
+                    report[key] = f'{count * 2:g}' if key == 'BRAM_18K' else value
+    return report
+
+
+def _parse_vivado_timing_summary(timing_file):
+    """Read the design timing summary from a report written by Vivado's report_timing_summary.
+
+    Returns the worst and total negative slack for setup (WNS, TNS) and hold (WHS, THS), and the worst and total pulse
+    width slack (WPWS, TPWS), in ns. A value Vivado did not compute, as for a design without a clock, is left out.
+    """
+
+    columns = {0: 'WNS', 1: 'TNS', 4: 'WHS', 5: 'THS', 8: 'WPWS', 9: 'TPWS'}
+    with open(timing_file) as f:
+        lines = f.readlines()
+    report = {}
+    for i, line in enumerate(lines):
+        if line.split()[:1] == ['WNS(ns)']:
+            # The header is followed by a line of dashes, then the values
+            values = lines[i + 2].split() if i + 2 < len(lines) else []
+            for column, key in columns.items():
+                try:
+                    report[key] = float(values[column])
+                except (IndexError, ValueError):
+                    pass
+            break
+    return report
+
+
+def _parse_vivado_power(power_file):
+    """Read the dynamic, static and total on-chip power, in W, from a report written by Vivado's report_power.
+
+    Vivado estimates the power from default switching activity, not from a simulation of the design, so for a small
+    design on a large device most of the total is the static power of the device.
+    """
+
+    rows = {
+        'Dynamic (W)': 'DynamicPower',
+        'Device Static (W)': 'StaticPower',
+        'Total On-Chip Power (W)': 'TotalPower',
+    }
+    power = {}
+    with open(power_file) as f:
+        for line in f:
+            cells = line.split('|')
+            if len(cells) < 3 or cells[1].strip() not in rows or rows[cells[1].strip()] in power:
+                continue
+            try:
+                power[rows[cells[1].strip()]] = float(cells[2].split()[0])
+            except (IndexError, ValueError):
+                pass
+    # The report lists the total first
+    return {key: power[key] for key in rows.values() if key in power}
+
+
+def _parse_vivado_synth_reports(hls_dir, stage):
+    """Read the reports that vivado_synth.tcl writes for one stage, 'vivado_synth' or 'vivado_impl'.
+
+    Returns the resources from the utilization report together with the slack and, after place and route, the power.
+    Returns None if the utilization report does not exist.
+    """
+
+    util_file = os.path.join(hls_dir, f'{stage}.rpt')
+    if not os.path.isfile(util_file):
+        return None
+    report = _parse_vivado_utilization(util_file)
+    for suffix, parse in [('timing', _parse_vivado_timing_summary), ('power', _parse_vivado_power)]:
+        report_file = os.path.join(hls_dir, f'{stage}_{suffix}.rpt')
+        if os.path.isfile(report_file):
+            report.update(parse(report_file))
+    return report
+
+
 def parse_vivado_report(hls_dir):
     if not os.path.exists(hls_dir):
         print(f'Path {hls_dir} does not exist. Exiting.')
@@ -173,9 +280,10 @@ def parse_vivado_report(hls_dir):
 
     prj_dir = None
     top_func_name = None
+    backend_name = None
 
     if os.path.isfile(hls_dir + '/project.tcl'):
-        prj_dir, top_func_name = _parse_project_script(hls_dir)
+        prj_dir, top_func_name, backend_name = _parse_project_script(hls_dir)
 
     if prj_dir is None or top_func_name is None:
         print('Unable to read project data. Exiting.')
@@ -214,31 +322,15 @@ def parse_vivado_report(hls_dir):
     else:
         print('CSynthesis report not found.')
 
-    vivado_syn_file = hls_dir + '/vivado_synth.rpt'
-    if os.path.isfile(vivado_syn_file):
-        vivado_synth_rpt = {}
-        with open(vivado_syn_file) as f:
-            section = 0
-            for line in f.readlines():
-                match = re.match(r'^(\d)\.', line)
-                if match:
-                    section = int(match.group(1))
-                # Sometimes, phrases such as 'CLB Registers' can show up in the non-tabular sections of the report
-                if '|' in line:
-                    # CLB (2019.X) vs. Slice (2020.X)
-                    if ('CLB LUTs' in line or 'Slice LUTs' in line) and section == 1:
-                        vivado_synth_rpt['LUT'] = line.split('|')[2].strip()
-                    elif ('CLB Registers' in line or 'Slice Registers' in line) and section == 1:
-                        vivado_synth_rpt['FF'] = line.split('|')[2].strip()
-                    elif 'Block RAM Tile' in line and section == 2:
-                        vivado_synth_rpt['BRAM_18K'] = line.split('|')[2].strip()
-                    elif 'URAM' in line and section == 2:
-                        vivado_synth_rpt['URAM'] = line.split('|')[2].strip()
-                    elif 'DSPs' in line and section == 3:
-                        vivado_synth_rpt['DSP48E'] = line.split('|')[2].strip()
-        report['VivadoSynthReport'] = vivado_synth_rpt
+    vivado_synth_report = _parse_vivado_synth_reports(hls_dir, 'vivado_synth')
+    if vivado_synth_report is not None:
+        report['VivadoSynthReport'] = vivado_synth_report
     else:
         print('Vivado synthesis report not found.')
+
+    vivado_impl_report = _parse_vivado_synth_reports(hls_dir, 'vivado_impl')
+    if vivado_impl_report is not None:
+        report['VivadoImplReport'] = vivado_impl_report
 
     cosim_file = sln_dir + '/' + solutions[0] + f'/sim/report/{top_func_name}_cosim.rpt'
     if os.path.isfile(cosim_file):
@@ -309,73 +401,56 @@ def parse_vivado_report(hls_dir):
             report['CosimReport']['IntervalMax'] = cosim_transactions['InitiationInterval']['max']
             report['CosimReport']['IntervalAvg'] = cosim_transactions['InitiationInterval']['avg']
 
-        util_rpt_file = hls_dir + '/util.rpt'
-        if os.path.isfile(util_rpt_file):
-            implementation_report = {}
-            with open(util_rpt_file) as f:
-                for line in f.readlines():
-                    if re.search(r'\(top\)', line):
-                        # Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 (|   URAM   )| DSP48 Blocks
-                        # skipping the first 2 unuseful cells with [:2]
-                        results = [_get_abs_and_percentage_values(elem) for elem in line.replace('|', '').split()[2:]]
-                        implementation_report['TotLUTs'] = results[0][0]
-                        implementation_report['TotLUTs%'] = results[0][1]
+    util_rpt_file = hls_dir + '/util.rpt'
+    if os.path.isfile(util_rpt_file):
+        implementation_report = {}
+        with open(util_rpt_file) as f:
+            for line in f.readlines():
+                if re.search(r'\(top\)', line):
+                    # Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 (|   URAM   )| DSP48 Blocks
+                    # skipping the first 2 unnecessary cells with [:2]
+                    results = [_get_abs_and_percentage_values(elem) for elem in line.replace('|', '').split()[2:]]
+                    implementation_report['TotLUTs'] = results[0][0]
+                    implementation_report['TotLUTs%'] = results[0][1]
 
-                        implementation_report['LogicLUTs'] = results[1][0]
-                        implementation_report['LogicLUTs%'] = results[1][1]
+                    implementation_report['LogicLUTs'] = results[1][0]
+                    implementation_report['LogicLUTs%'] = results[1][1]
 
-                        implementation_report['LUTRAMs'] = results[2][0]
-                        implementation_report['LUTRAMs%'] = results[2][1]
+                    implementation_report['LUTRAMs'] = results[2][0]
+                    implementation_report['LUTRAMs%'] = results[2][1]
 
-                        implementation_report['SRLs'] = results[3][0]
-                        implementation_report['SRLs%'] = results[3][1]
+                    implementation_report['SRLs'] = results[3][0]
+                    implementation_report['SRLs%'] = results[3][1]
 
-                        implementation_report['FFs'] = results[4][0]
-                        implementation_report['FFs%'] = results[4][1]
+                    implementation_report['FFs'] = results[4][0]
+                    implementation_report['FFs%'] = results[4][1]
 
-                        implementation_report['RAMB36s'] = results[5][0]
-                        implementation_report['RAMB36s%'] = results[5][1]
+                    implementation_report['RAMB36s'] = results[5][0]
+                    implementation_report['RAMB36s%'] = results[5][1]
 
-                        implementation_report['RAMB18s'] = results[6][0]
-                        implementation_report['RAMB18s%'] = results[6][1]
+                    implementation_report['RAMB18s'] = results[6][0]
+                    implementation_report['RAMB18s%'] = results[6][1]
 
-                        if len(results) == 9:
-                            implementation_report['URAMs'] = results[7][0]
-                            implementation_report['URAMs%'] = results[7][1]
+                    if len(results) == 9:
+                        implementation_report['URAMs'] = results[7][0]
+                        implementation_report['URAMs%'] = results[7][1]
 
-                            implementation_report['DSPs'] = results[8][0]
-                            implementation_report['DSPs%'] = results[8][1]
-                        else:
-                            implementation_report['DSPs'] = results[7][0]
-                            implementation_report['DSPs%'] = results[7][1]
-            report['ImplementationReport'] = implementation_report
-        else:
-            print('Implementation report not found.')
+                        implementation_report['DSPs'] = results[8][0]
+                        implementation_report['DSPs%'] = results[8][1]
+                    else:
+                        implementation_report['DSPs'] = results[7][0]
+                        implementation_report['DSPs%'] = results[7][1]
+        report['ImplementationReport'] = implementation_report
+    elif 'accelerator' in backend_name:
+        print('Implementation report not found.')
 
+    project_name = prj_dir.removesuffix('_prj')
     timing_report_file = (
-        hls_dir
-        + '/'
-        + prj_dir.split('_')[0]
-        + '_vivado_accelerator/project_1.runs/impl_1/design_1_wrapper_timing_summary_routed.rpt'
+        f'{hls_dir}/{project_name}_vivado_accelerator/project_1.runs/impl_1/design_1_wrapper_timing_summary_routed.rpt'
     )
     if os.path.isfile(timing_report_file):
-        timing_report = {}
-        with open(timing_report_file) as f:
-            while not re.search('WNS', next(f)):
-                pass
-            # skip the successive line
-            next(f)
-            result = next(f).split()
-
-        timing_report['WNS'] = float(result[0])
-        timing_report['TNS'] = float(result[1])
-        timing_report['WHS'] = float(result[4])
-        timing_report['THS'] = float(result[5])
-        timing_report['WPWS'] = float(result[8])
-        timing_report['TPWS'] = float(result[9])
-
-        report['TimingReport'] = timing_report
-    else:
+        report['TimingReport'] = _parse_vivado_timing_summary(timing_report_file)
+    elif 'accelerator' in backend_name:
         print('Timing report not found.')
     return report
 
@@ -412,8 +487,8 @@ def _is_running_in_notebook():
             return False  # Terminal running IPython
         else:
             return False  # Other type (?)
-    except NameError:
-        return False  # Probably standard Python interpreter
+    except ImportError:
+        return False  # IPython is not installed
 
 
 _table_css = """
@@ -521,6 +596,48 @@ def _convert_cycles_to_time(n_cycles, clock_period):
         return str(time_in_s) + ' s'
 
 
+def _format_latency(cycles, clock_period):
+    # Vitis HLS reports 'undef' when the latency depends on a value known only at run time, such as the batch size of
+    # a VitisUnified kernel
+    if not str(cycles).isdigit():
+        return cycles
+    return f'{cycles} ({_convert_cycles_to_time(int(cycles), clock_period)})'
+
+
+def _make_vivado_tables(vivado_report, make_table_template, titles=('Resource utilization', 'Timing', 'Power')):
+    """Make the resource, timing and power tables of a report read by _parse_vivado_synth_reports."""
+
+    area_rows = {
+        'BRAM_18K': 'BRAM_18K',
+        'DSP48E': 'DSP48E',
+        'FF': 'FF',
+        'LUT': 'LUT',
+        'URAM': 'URAM',
+    }
+    timing_rows = {
+        'Worst Negative Slack (WNS)': 'WNS',
+        'Total Negative Slack (TNS)': 'TNS',
+        'Worst Hold Slack (WHS)': 'WHS',
+        'Total Hold Slack (THS)': 'THS',
+    }
+    power_rows = {
+        'Dynamic (W)': 'DynamicPower',
+        'Device Static (W)': 'StaticPower',
+        'Total On-Chip Power (W)': 'TotalPower',
+    }
+
+    tables = make_table_template(titles[0], area_rows)
+    for title, rows in [(titles[1], timing_rows), (titles[2], power_rows)]:
+        rows = {row_title: key for row_title, key in rows.items() if key in vivado_report}
+        if rows:
+            tables += make_table_template(title, rows)
+
+    params = {
+        key: vivado_report.get(key, 'N/A') for key in [*area_rows.values(), *timing_rows.values(), *power_rows.values()]
+    }
+    return tables.format(**params)
+
+
 def _make_report_body(report_dict, make_table_template, make_header_template):
     body = ''
 
@@ -545,8 +662,6 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
 
         csynth_report = report_dict['CSynthesisReport']
         target_clock = float(csynth_report['TargetClockPeriod'])
-        best_latency = int(csynth_report['BestLatency'])
-        worst_latency = int(csynth_report['BestLatency'])
         bram = int(csynth_report['BRAM_18K'])
         avail_bram = int(csynth_report['AvailableBRAM_18K'])
         dsp = int(csynth_report['DSP'])
@@ -561,8 +676,8 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
 
         params = {}
 
-        params['best_latency'] = str(best_latency) + ' (' + _convert_cycles_to_time(best_latency, target_clock) + ')'
-        params['worst_latency'] = str(worst_latency) + ' (' + _convert_cycles_to_time(worst_latency, target_clock) + ')'
+        params['best_latency'] = _format_latency(csynth_report['BestLatency'], target_clock)
+        params['worst_latency'] = _format_latency(csynth_report['WorstLatency'], target_clock)
         params['interval_min'] = csynth_report['IntervalMin']
         params['interval_max'] = csynth_report['IntervalMax']
         params['estimated_clock'] = csynth_report['EstimatedClockPeriod']
@@ -580,25 +695,16 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
 
     if 'VivadoSynthReport' in report_dict:
         body += make_header_template('Vivado Synthesis report')
-        area_rows = {
-            'BRAM_18K': 'bram',
-            'DSP48E': 'dsp',
-            'FF': 'ff',
-            'LUT': 'lut',
-            'URAM': 'uram',
-        }
-        body += make_table_template('Resource utilization', area_rows)
+        body += _make_vivado_tables(report_dict['VivadoSynthReport'], make_table_template)
 
-        vsynth_report = report_dict['VivadoSynthReport']
+    if 'VivadoImplReport' in report_dict:
+        body += make_header_template('Vivado Place and Route report')
+        body += _make_vivado_tables(report_dict['VivadoImplReport'], make_table_template)
 
-        params = {}
-        params['bram'] = vsynth_report['BRAM_18K']
-        params['dsp'] = vsynth_report['DSP48E']
-        params['ff'] = vsynth_report['FF']
-        params['lut'] = vsynth_report['LUT']
-        params['uram'] = vsynth_report['URAM'] if 'URAM' in vsynth_report else 'N/A'
-
-        body = body.format(**params)
+    if 'BitfileReport' in report_dict:
+        body += make_header_template('Bitfile report')
+        titles = ('Kernel resource utilization', 'Timing of the whole design', 'Power of the whole device')
+        body += _make_vivado_tables(report_dict['BitfileReport'], make_table_template, titles)
 
     if 'CosimReport' in report_dict:
         body += make_header_template('Co-Simulation report')
@@ -640,16 +746,16 @@ def _make_report_body(report_dict, make_table_template, make_header_template):
         impl_report = report_dict['ImplementationReport']
 
         params = {}
-        params['lut'] = impl_report['TotLUTs'] + ' (' + impl_report['TotLUTs%'] + '%)'
-        params['logiclut'] = impl_report['LogicLUTs'] + ' (' + impl_report['LogicLUTs%'] + '%)'
-        params['lutram'] = impl_report['LUTRAMs'] + ' (' + impl_report['LUTRAMs%'] + '%)'
-        params['srl'] = impl_report['SRLs'] + ' (' + impl_report['SRLs%'] + '%)'
-        params['ff'] = impl_report['FFs'] + ' (' + impl_report['FFs%'] + '%)'
-        params['bram18'] = impl_report['RAMB18s'] + ' (' + impl_report['RAMB18s%'] + '%)'
-        params['bram36'] = impl_report['RAMB36s'] + ' (' + impl_report['RAMB36s%'] + '%)'
-        params['dsp'] = impl_report['DSPs'] + ' (' + impl_report['DSPs%'] + '%)'
+        params['lut'] = f'{impl_report["TotLUTs"]} ({impl_report["TotLUTs%"]}%)'
+        params['logiclut'] = f'{impl_report["LogicLUTs"]} ({impl_report["LogicLUTs%"]}%)'
+        params['lutram'] = f'{impl_report["LUTRAMs"]} ({impl_report["LUTRAMs%"]}%)'
+        params['srl'] = f'{impl_report["SRLs"]} ({impl_report["SRLs%"]}%)'
+        params['ff'] = f'{impl_report["FFs"]} ({impl_report["FFs%"]}%)'
+        params['bram18'] = f'{impl_report["RAMB18s"]} ({impl_report["RAMB18s%"]}%)'
+        params['bram36'] = f'{impl_report["RAMB36s"]} ({impl_report["RAMB36s%"]}%)'
+        params['dsp'] = f'{impl_report["DSPs"]} ({impl_report["DSPs%"]}%)'
         if 'URAMs' in impl_report:
-            params['uram'] = impl_report['URAMs'] + ' (' + impl_report['URAMs%'] + '%)'
+            params['uram'] = f'{impl_report["URAMs"]} ({impl_report["URAMs%"]}%)'
         else:
             params['uram'] = 'N/A'
 
@@ -710,18 +816,18 @@ def aggregate_graph_reports(graph_reports):
     final_report['AvailableURAM'] = csynth_report.get('AvailableURAM', 'N/A')
 
     for k in keys_to_sum:
-        final_report[k] = float(base_report.get(k, '0'))
+        final_report[k] = 0.0
 
-    for subgraph, data in graph_reports.items():
-        if subgraph == first_subgraph:
-            continue
-        report = data.get(reportChoice, {})
-        est_cp = float(report.get('EstimatedClockPeriod', float('inf')))
+    for data in graph_reports.values():
+        # The clock period is estimated by C synthesis only, so it is not in VivadoSynthReport
+        est_cp = float(data.get('CSynthesisReport', {}).get('EstimatedClockPeriod', float('inf')))
         if est_cp > final_report['EstimatedClockPeriod']:
             final_report['EstimatedClockPeriod'] = est_cp
 
+        report = data.get(reportChoice, {})
         for k in keys_to_sum:
             final_report[k] += float(report.get(k, '0'))
+            # VivadoSynthReport names the DSP count DSP48E
             if k == 'DSP':
                 final_report[k] += float(report.get('DSP48E', '0'))
 

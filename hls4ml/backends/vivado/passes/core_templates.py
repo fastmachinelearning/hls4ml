@@ -73,8 +73,8 @@ class DenseConfigTemplate(LayerConfigTemplate):
         return self.template.format(**params)
 
     def match(self, node):
-        if node.get_attr('strategy') == 'distributed_arithmetic':
-            return False  # DA does not use common dense template
+        if node.get_attr('strategy') in ('distributed_arithmetic', 'fused'):
+            return False  # these have kernels and templates of their own
         return super().match(node)
 
 
@@ -91,8 +91,8 @@ class DenseFunctionTemplate(FunctionCallTemplate):
         return self.template.format(**params)
 
     def match(self, node):
-        if node.get_attr('strategy') == 'distributed_arithmetic':
-            return False  # DA does not use common dense template
+        if node.get_attr('strategy') in ('distributed_arithmetic', 'fused'):
+            return False  # these have kernels and templates of their own
         return super().match(node)
 
 

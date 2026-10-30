@@ -2,6 +2,7 @@ import os
 
 from hls4ml.backends.vitis_unified.vitis_unified_validation import (
     load_supported_boards,
+    memory_config,
     mode_config,
     platform_file,
     platform_generator_tcl,
@@ -27,6 +28,9 @@ class VitisUnifiedConfig:
 
         # Platform is the user's own file, or resolved from supported_boards.json based on board + axi_mode
         board_info = self.supported_boards.get(self.board, {})
+        self.memory = memory_config(board_info)
+        kernel_slr = unified_config.get('KernelSLR')
+        self.kernel_slr = board_info.get('kernel_slr') if kernel_slr is None else (kernel_slr or None)
         platform = unified_config.get('Platform')
         tcl_rel = None if platform else platform_generator_tcl(board_info, self.axi_mode)
         if platform:
@@ -58,10 +62,11 @@ class VitisUnifiedConfig:
             raise Exception(
                 f'No platform file for axi_mode "{self.axi_mode}" in supported_boards.json for board "{self.board}"'
             )
-        # Resolve relative to XILINX_VITIS if path is relative
-        if not os.path.isabs(platform_rel):
-            return os.path.join('${XILINX_VITIS}', platform_rel)
-        return platform_rel
+        # A path already rooted at an environment variable is kept as it is, otherwise a relative
+        # path is taken relative to XILINX_VITIS, where the embedded base platforms live
+        if platform_rel.startswith('${') or os.path.isabs(platform_rel):
+            return platform_rel
+        return os.path.join('${XILINX_VITIS}', platform_rel)
 
     def get_board_info(self, board=None):
         board = board or self.board
@@ -78,7 +83,8 @@ class VitisUnifiedConfig:
 
     def get_driver_template_path(self):
         template_dir = os.path.join(os.path.dirname(__file__), '../../templates/vitis_unified/drivers')
-        return os.path.join(template_dir, f'{self.get_driver_file()}.hls4ml')
+        suffix = '' if self.driver == 'python' else f'_{self.driver}'
+        return os.path.join(template_dir, f'{self.axi_mode}{suffix}_driver.py.hls4ml')
 
     def get_corrected_types(self):
         return self.input_type, self.output_type, self.inps, self.outs
@@ -91,6 +97,14 @@ class VitisUnifiedConfig:
 
     def get_axi_mode(self):
         return self.axi_mode
+
+    def get_memory(self):
+        """Empty for boards whose platform maps the kernel pointers by itself."""
+        return self.memory
+
+    def get_kernel_slr(self):
+        """SLR the kernel is assigned to on a card, or None to leave placement to Vivado."""
+        return self.kernel_slr if self.memory else None
 
     def get_input_type(self):
         return self.input_type

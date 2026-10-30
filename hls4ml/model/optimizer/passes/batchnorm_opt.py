@@ -120,7 +120,7 @@ class ConstantBatchNormFusion(OptimizerPass):
                 scale_q = node.get_attr('scale_quantizer')
                 bias_q = node.get_attr('bias_quantizer')
                 if scale_q and bias_q:
-                    # propagate precsion
+                    # propagate precision
                     scale_prec = scale_q.hls_type
                     bias_prec = bias_q.hls_type
                     if scale_prec not in (IntegerPrecisionType, FixedPrecisionType) or bias_prec not in (

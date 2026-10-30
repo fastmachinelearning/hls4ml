@@ -38,7 +38,7 @@ def get_model_masks(
 
     If a layer supports both weight sharing and pruning, both the norm and variance of the group are calculated
     And the smaller one is considered; so if the norm is smaller, the group will be considered for pruning
-    Otherise, the group will be considered for weight sharing.
+    Otherwise, the group will be considered for weight sharing.
     Both the norm and variance are normalized, to avoid magnitude biases.
 
     Args:
@@ -129,7 +129,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                     # Since no norm is taken, calculate absolute value [avoids removing large negative weights]
                     value = np.abs(value)
 
-                    # Get all posible indices in the weight tensor
+                    # Get all possible indices in the weight tensor
                     indices = np.indices(value.shape).reshape(value.ndim, -1).T
 
                     # Find weights with the lowest loss
@@ -161,7 +161,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                     else:
                         vals_norm = np.full((value.shape[1]), sys.float_info.max, dtype=value.dtype)
 
-                    # If weight sharing enabled, find cost asociated with quantizing nerons to their mean
+                    # If weight sharing enabled, find cost associated with quantizing neurons to their mean
                     if model_attributes[layer.name].optimization_attributes.weight_sharing:
                         vals_var = np.var(value, axis=0)
                     else:
@@ -282,7 +282,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                 else:
                     vals_norm = np.full((blocks.shape[0],), sys.float_info.max, dtype=value.dtype)
 
-                # If weight sharing enabled, find cost asociated with quantizing nerons to their mean
+                # If weight sharing enabled, find cost associated with quantizing neurons to their mean
                 if model_attributes[layer.name].optimization_attributes.weight_sharing:
                     vals_var = np.var(blocks, axis=1)
                 else:
@@ -339,7 +339,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                 if (value.shape[0] % block_shape[0]) != 0 or (value.shape[1] % block_shape[1] != 0):
                     raise Exception('Block sizes need to be fators of weight matrix dimensions')
 
-                # TensorFlow has a built-in method for exctracting sub-tensors of given shape and stride
+                # TensorFlow has a built-in method for extracting sub-tensors of given shape and stride
                 # This method is commonly used to perform im2col,
                 # Docs: https://www.tensorflow.org/api_docs/python/tf/image/extract_patches
                 total_blocks = (value.shape[0] * value.shape[1]) // (block_shape[0] * block_shape[1])
@@ -361,7 +361,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                 else:
                     vals_norm = np.full((blocks.shape[0],), sys.float_info.max, dtype=value.dtype)
 
-                # If weight sharing enabled, find cost asociated with quantizing nerons to their mean
+                # If weight sharing enabled, find cost associated with quantizing neurons to their mean
                 if model_attributes[layer.name].optimization_attributes.weight_sharing:
                     vals_var = np.var(blocks, axis=1)
                 else:
@@ -431,7 +431,7 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
     for layer in keras_model.layers:
         # Optimizable should be always enabled if either pruning or weight sharing are enabled
         # However, if the objectives are implemented incorrectly,
-        # It is possible to have optimizatons enabled without any types of optimization (pruning, weight sharing) enabled
+        # It is possible to have optimizations enabled without any types of optimization (pruning, weight sharing) enabled
         layer_optimizable = model_attributes[layer.name].optimizable and (
             model_attributes[layer.name].optimization_attributes.weight_sharing
             or model_attributes[layer.name].optimization_attributes.pruning
@@ -564,7 +564,7 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                 else:
                     vals_norm = np.full((blocks.shape[0],), sys.float_info.max, dtype=value.dtype)
 
-                # If weight sharing enabled, find cost asociated with quantizing nerons to their mean
+                # If weight sharing enabled, find cost associated with quantizing neurons to their mean
                 if model_attributes[layer.name].optimization_attributes.weight_sharing:
                     vals_var = np.var(blocks, axis=1)
                 else:
@@ -630,7 +630,7 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                             )
                         )
 
-    # The goal is to maximize network accuracy (values) subject to resorces (objective) staying under some threshold
+    # The goal is to maximize network accuracy (values) subject to resources (objective) staying under some threshold
     # This is a Knapsack problem; several implementations are provided in the helper functions
     # The selected values correspond to weight / groups being kept in the network; the rest are pruned / weight shared
     total_resources = np.sum(np.array(total_resources), axis=0)

@@ -10,13 +10,13 @@ from hls4ml.optimization.dsp_aware_pruning.keras.masking import get_model_masks
 from hls4ml.optimization.dsp_aware_pruning.objectives import ParameterEstimator
 
 """
-In all the tests, an artifical network with one Dense/Conv2D layer and pre-determined weights is created
+In all the tests, an artificial network with one Dense/Conv2D layer and pre-determined weights is created
 Then, the tests assert zeros occur in the correct places, based on the masking structure (unstructured, block etc.)
 Furthermore, tests assert the masks are binary, so only zeros and ones occur
 Masking is such that:
         * non_zero_params <= (1 - sparsity) * total_params OR
         * zero_params > sparsity * total_params
-Since the targetted objective is ParameterEstimator, weight sharing is not suitable [does not decrease the number of weights]
+Since the targeted objective is ParameterEstimator, weight sharing is not suitable [does not decrease the number of weights]
 Therefore, all the test verify offsets are zero
 """
 sparsity = 0.33
@@ -426,7 +426,7 @@ def test_consecutive_pattern_masking(local_masking, dense):
 
     # Set 4th pattern lower than second
     # This pattern should still remain unmasked [even if it has a lower value than the 2nd pattern],
-    # As its neigbouring block has a larger value than the 2nd pattern
+    # As its neighbouring block has a larger value than the 2nd pattern
     weights[0][0, 3] = 1e-6
     weights[0][1, 3] = 1e-6
     weights[0][2, 3] = 1e-6

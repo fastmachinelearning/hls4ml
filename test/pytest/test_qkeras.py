@@ -3,13 +3,14 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from keras.layers import BatchNormalization, Input
+from keras.layers import GRU, LSTM, BatchNormalization, Bidirectional, Input, SimpleRNN
 from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
-from qkeras.qconvolutional import QConv2D, QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
+from qkeras.qconvolutional import QConv1D, QConv2D, QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
 from qkeras.qlayers import QActivation, QDense
+from qkeras.qnormalization import QBatchNormalization
 from qkeras.quantizers import (
     binary,
     quantized_bits,
@@ -68,7 +69,7 @@ def load_jettagging_model():
     return model
 
 
-# TODO - Paramaterize for Quartus (different strategies?)
+# TODO - Parameterize for Quartus (different strategies?)
 @pytest.fixture
 def convert(load_jettagging_model, request, test_case_id):
     """
@@ -135,7 +136,7 @@ def randX_100_16():
 # https://github.com/fastmachinelearning/hls4ml/issues/381
 # @pytest.mark.parametrize('bits', [4, 6, 8])
 @pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_single_dense_activation_exact(test_case_id, randX_100_16, bits, alpha, backend, io_type):
     """
@@ -200,7 +201,7 @@ def randX_100_10():
 @pytest.mark.parametrize(
     'quantizer', [(quantized_tanh(8)), (quantized_sigmoid(5)), (quantized_sigmoid(7, use_real_sigmoid=True))]
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer_special(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -239,7 +240,7 @@ def test_quantizer_special(test_case_id, randX_1000_1, quantizer, backend, io_ty
         (7, 10, binary(), quantized_bits(5, 2), binary(), False, True),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_btnn(test_case_id, make_btnn, randX_100_10, backend, io_type):
     model, is_xnor, test_no = make_btnn
@@ -282,7 +283,7 @@ def randX_1000_1():
         (quantized_relu(10, 5)),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -317,11 +318,11 @@ def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
         (quantized_relu(10, 2, negative_slope=0.25)),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_relu_negative_slope(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
-    Test a a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
+    Test a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
     """
     X = randX_1000_1
     X = -X  # Make it negative so leaky relu does something
@@ -398,24 +399,65 @@ def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, wei
         assert sum(wrong) / len(wrong) <= 0.005
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+ALL_BACKENDS = ['Vivado', 'Vitis', 'Quartus', 'Altera']
+RNN_LAYERS = ('QSimpleRNN', 'QLSTM', 'QGRU')
+
+# Q layers built without quantizers: name -> (input shape, layer factory, supported backends)
+NO_QUANT_LAYERS = {
+    'QDense': (
+        (10,),
+        lambda: QDense(8, kernel_initializer='ones', bias_initializer='zeros', activation='quantized_relu(8, 0)'),
+        ALL_BACKENDS,
+    ),
+    'QConv1D': ((8, 3), lambda: QConv1D(4, 3), ALL_BACKENDS),
+    'QConv2D': ((8, 8, 3), lambda: QConv2D(4, (3, 3)), ALL_BACKENDS),
+    'QDepthwiseConv2D': ((8, 8, 3), lambda: QDepthwiseConv2D((3, 3)), ['Vivado', 'Vitis']),
+    'QSeparableConv1D': ((8, 3), lambda: QSeparableConv1D(4, 3), ['Vivado', 'Vitis']),
+    'QSeparableConv2D': ((8, 8, 3), lambda: QSeparableConv2D(4, (3, 3)), ['Vivado', 'Vitis']),
+    'QSimpleRNN': ((5, 3), lambda: QSimpleRNN(4, activation='relu'), ['Quartus', 'Altera']),
+    'QLSTM': (
+        (5, 3),
+        lambda: QLSTM(4, activation='tanh', recurrent_activation='sigmoid'),
+        ['Vivado', 'Quartus', 'Altera'],
+    ),
+    'QGRU': (
+        (5, 3),
+        # QKeras' QGRUCell falls back to the input kernel when recurrent_quantizer is None
+        # match the default fixed<24,8> since the Quartus GRU kernel shares one weight type
+        lambda: QGRU(
+            4,
+            activation='tanh',
+            recurrent_activation='sigmoid',
+            reset_after=True,
+            recurrent_quantizer='quantized_bits(24, 7, alpha=1)',
+        ),
+        ['Vivado', 'Quartus', 'Altera'],
+    ),
+    'QBatchNormalization': (
+        (10,),
+        lambda: QBatchNormalization(beta_quantizer=None, gamma_quantizer=None, mean_quantizer=None, variance_quantizer=None),
+        ALL_BACKENDS,
+    ),
+    'QConv2DBatchnorm': ((8, 8, 3), lambda: QConv2DBatchnorm(4, (3, 3)), ALL_BACKENDS),
+}
+
+
+@pytest.mark.parametrize('layer', NO_QUANT_LAYERS)
+@pytest.mark.parametrize('backend', ALL_BACKENDS)
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_quantizer_parsing(test_case_id, randX_100_10, backend, io_type):
-    X = randX_100_10
-    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
-    model = Sequential()
-    model.add(
-        QDense(
-            8,
-            input_shape=(10,),
-            kernel_quantizer=None,  # Incorrect usage, but shouldn't break hls4ml
-            kernel_initializer='ones',
-            bias_quantizer=None,
-            bias_initializer='zeros',
-            activation='quantized_relu(8, 0)',
-        )
-    )
+def test_quantizer_parsing(test_case_id, layer, backend, io_type):
+    shape, make_layer, backends = NO_QUANT_LAYERS[layer]
+    if backend not in backends:
+        pytest.skip(f'{layer} is not supported on {backend}')
+    if io_type == 'io_stream' and layer in RNN_LAYERS:
+        pytest.skip('RNN layers are only tested with io_parallel')
+
+    x_in = Input(shape)
+    model = Model(x_in, make_layer()(x_in))
     model.compile()
+
+    X = np.random.rand(100, *shape)
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
 
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='fixed<24,8>', backend=backend
@@ -427,9 +469,12 @@ def test_quantizer_parsing(test_case_id, randX_100_10, backend, io_type):
     hls_model.compile()
 
     y_qkeras = model.predict(X)
-    y_hls4ml = hls_model.predict(X)
+    y_hls4ml = hls_model.predict(X).reshape(y_qkeras.shape)
 
-    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+    if layer == 'QDense':
+        np.testing.assert_array_equal(y_qkeras, y_hls4ml)
+    else:
+        np.testing.assert_allclose(y_hls4ml, y_qkeras, rtol=2e-2, atol=2e-2)
 
 
 @pytest.fixture(scope='module')
@@ -437,7 +482,7 @@ def randX_100_8_8_1():
     return np.random.rand(100, 8, 8, 1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     """
@@ -473,6 +518,50 @@ def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_qconv2dbn_no_quantizer(test_case_id, randX_100_8_8_1, backend, io_type):
+    """
+    QConv2DBatchnorm without kernel_quantizer/bias_quantizer used to either crash
+    (weight_quantizer called as None) or silently skip BN folding for the bias
+    (bias_quantizer is None), see #928.
+    """
+    X = randX_100_8_8_1
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    model = Sequential()
+    model.add(
+        QConv2DBatchnorm(
+            4,
+            kernel_size=(3, 3),
+            input_shape=(8, 8, 1),
+            kernel_initializer='ones',
+            bias_initializer='zeros',
+        )
+    )
+    model.compile()
+
+    # Non-trivial BN stats so folding actually changes the weights/bias
+    bn = model.layers[0].batchnorm
+    bn.moving_mean.assign(np.array([1.0, -2.0, 0.5, 0.2], dtype=np.float32))
+    bn.moving_variance.assign(np.array([4.0, 9.0, 1.0, 0.25], dtype=np.float32))
+    bn.gamma.assign(np.array([2.0, 0.5, 1.5, 1.0], dtype=np.float32))
+    bn.beta.assign(np.array([0.1, 0.2, -0.3, 0.05], dtype=np.float32))
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=0, atol=2e-2)
 
 
 @pytest.fixture(scope='module')
@@ -518,7 +607,7 @@ def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
 def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
@@ -556,7 +645,7 @@ def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
     np.testing.assert_allclose(y_hls.flatten(), y_keras.flatten(), rtol=2e-2)
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Altera'])
 def test_qsimplernn(test_case_id, backend):
     """
     Test proper handling of QSimpleRNN.
@@ -591,7 +680,7 @@ def test_qsimplernn(test_case_id, backend):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
 def test_qlstm(test_case_id, backend):
     """
     Test proper handling of QLSTM.
@@ -627,7 +716,7 @@ def test_qlstm(test_case_id, backend):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
 def test_qgru(test_case_id, backend):
     """
     Test proper handling of QGRU.
@@ -662,6 +751,50 @@ def test_qgru(test_case_id, backend):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+
+
+@pytest.mark.parametrize('rnn_layer', ['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+def test_binary_input_rnn(test_case_id, rnn_layer, backend, io_type, strategy):
+    """A binary input to a recurrent layer does not make its recurrent multiplication treat the state as binary.
+
+    BatchNormalization followed by a binary activation is merged into one layer whose output has the 1-bit binary type.
+    """
+    if rnn_layer == 'Bidirectional' and io_type == 'io_stream':
+        pytest.skip('Bidirectional is only supported with io_parallel')
+
+    layers = {
+        'SimpleRNN': lambda: SimpleRNN(8, name='rnn'),
+        'LSTM': lambda: LSTM(8, name='rnn'),
+        'GRU': lambda: GRU(8, name='rnn'),
+        'Bidirectional': lambda: Bidirectional(LSTM(8), name='rnn'),
+    }
+    x_in = Input((6, 4))
+    x = BatchNormalization()(x_in)
+    x = QActivation('binary')(x)
+    model = Model(x_in, layers[rnn_layer]()(x))
+    model.compile()
+
+    # Exact in the input type and never zero, so the binary activation gives the same sign in Keras and hls4ml
+    X = np.round((np.random.rand(50, 6, 4) * 2 - 1) * 2**8) * 2**-8
+    X[X == 0] = 2**-8
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<24,10>', backend=backend
+    )
+    config['LayerName']['rnn']['Strategy'] = strategy
+    config['LayerName']['rnn']['ReuseFactor'] = 1 if strategy == 'Latency' else 4
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
+    np.testing.assert_allclose(y_hls4ml, y_keras, rtol=0, atol=5e-2)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
@@ -854,9 +987,8 @@ def test_qlstm_no_bias(test_case_id, backend):
 
 
 def test_qgru_reset_after_false_parse(test_case_id):
-    """reset_after=False is parsed faithfully (apply_reset_gate='before', flat bias, zero
-    recurrent bias); the kernels implement only the 'after' formulation and the backends
-    are responsible for rejecting 'before'."""
+    """reset_after=False is parsed faithfully (apply_reset_gate='before', flat bias,
+    zero recurrent bias); backends are responsible for implementing or rejecting it."""
     model = Sequential()
     model.add(
         QGRU(
