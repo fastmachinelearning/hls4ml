@@ -39,7 +39,6 @@ from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedTy
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.einsum_utils import parse_einsum
-from hls4ml.utils.string_utils import convert_to_pascal_case
 
 
 class VivadoBackend(FPGABackend):
@@ -691,16 +690,6 @@ class VivadoBackend(FPGABackend):
                 raise NotImplementedError(
                     f'{attribute.replace("_", " ").capitalize()} "{activation}" of layer "{layer.name}" '
                     f'({layer.class_name}) is not supported. Use "linear", "relu", "sigmoid" or "tanh".'
-                )
-
-    def _warn_removed_reuse_factors(self, layer, attributes):
-        """Warn about reuse factor settings that are no longer used but are still in the config."""
-
-        for attribute in attributes:
-            if attribute in layer.attributes:
-                warn(
-                    f'{convert_to_pascal_case(attribute)} of layer "{layer.name}" ({layer.class_name}) is no longer used. '
-                    'The ReuseFactor of the layer applies to all of its multiplications.'
                 )
 
     def _set_recurrent_cell_schedule(self, layer, n_in, n_state, prefix=''):

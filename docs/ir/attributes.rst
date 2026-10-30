@@ -2201,7 +2201,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult, Altera
+  * Available in: Quartus, Catapult
 
 LSTM
 ====
@@ -2305,7 +2305,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult, Altera
+  * Available in: Quartus, Catapult
 
 GRU
 ===
@@ -2411,7 +2411,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult, Altera
+  * Available in: Quartus, Catapult
 
 Bidirectional
 =============
