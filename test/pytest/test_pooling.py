@@ -223,3 +223,23 @@ def test_pool2d_stream(test_case_id, backend, keras_model_2d, data_2d, io_type):
     y_keras = model.predict(data_2d)
     y_hls = hls_model.predict(data_2d).reshape(y_keras.shape)
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
+
+
+def test_vitis_pooling2d_stream_line_buffer_depth(tmp_path):
+    """Regression for the Vitis 2025.1 2x2 pooling line-buffer synthesis workaround."""
+    model = Sequential([MaxPooling2D(pool_size=2, input_shape=(8, 8, 1))])
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vitis')
+    output_dir = tmp_path / 'pooling2d_vitis'
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        io_type='io_stream',
+        backend='Vitis',
+        output_dir=str(output_dir),
+    )
+    hls_model.write()
+
+    header = (output_dir / 'firmware' / 'nnet_utils' / 'nnet_pooling_stream.h').read_text()
+    # The function argument and the actual static buffer must use the same bound.
+    # A single-row declaration is the synthesis trigger reported in issue #1592.
+    assert header.count('line_buffer[MAX(CONFIG_T::pool_height - 1, 2)]') == 2

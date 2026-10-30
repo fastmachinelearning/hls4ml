@@ -2191,7 +2191,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Catapult, Altera
+  * Available in: Catapult
 
 LSTM
 ====
@@ -2295,7 +2295,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Catapult, Altera
+  * Available in: Catapult
 
 GRU
 ===
@@ -2401,7 +2401,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Catapult, Altera
+  * Available in: Catapult
 
 Bidirectional
 =============
@@ -3393,19 +3393,25 @@ Configurable attributes
 
   * The datatype (precision) of the output tensor.
 
-Broadcast
-=========
+BatchNormalizationQuantizedTanh
+===============================
 Base attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
+* accum_t: NamedType
+
 Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* n_in: int
+
+* n_filt: int (Default: 0)
 
 Configurable attributes
 -----------------------
@@ -3416,6 +3422,10 @@ Configurable attributes
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
+
+* reuse_factor: int (Default: 1)
 
 PointwiseConv1D
 ===============
@@ -3589,25 +3599,19 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
-BatchNormalizationQuantizedTanh
-===============================
+Broadcast
+=========
 Base attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
-* accum_t: NamedType
-
 Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
-
-* n_in: int
-
-* n_filt: int (Default: 0)
 
 Configurable attributes
 -----------------------
@@ -3618,7 +3622,3 @@ Configurable attributes
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-* reuse_factor: int (Default: 1)

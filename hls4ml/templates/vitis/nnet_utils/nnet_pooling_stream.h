@@ -29,7 +29,7 @@ template <class T, int N, class CONFIG_T> T reduce_pool(T x[N]) {
 template <class data_T, class res_T, typename CONFIG_T>
 void compute_pool_buffer_2d(const data_T &in_elem,
                             ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width>
-                                line_buffer[MAX(CONFIG_T::pool_height - 1, 1)][CONFIG_T::n_filt],
+                                line_buffer[MAX(CONFIG_T::pool_height - 1, 2)][CONFIG_T::n_filt],
                             hls::stream<res_T> &res) {
     #pragma HLS INLINE
     const static int lShiftX = CONFIG_T::pool_width - 1;
@@ -101,7 +101,9 @@ void pooling2d_cl(hls::stream<data_T> &data, hls::stream<res_T> &res) {
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
     assert(CONFIG_T::pool_height == CONFIG_T::stride_height && CONFIG_T::pool_width == CONFIG_T::stride_width);
 
-    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::pool_height - 1, 1)]
+    // Vitis HLS 2025.1 may synthesize a single-row shift-register array with depth 1.
+    // Keep at least two rows; only pool_height - 1 rows are accessed.
+    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::pool_height - 1, 2)]
                                                                                     [CONFIG_T::n_filt];
     #pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 
