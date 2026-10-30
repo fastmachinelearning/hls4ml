@@ -1,5 +1,6 @@
 import glob
 import os
+import re
 import tarfile
 from collections import OrderedDict
 from shutil import copyfile
@@ -104,6 +105,39 @@ class AlteraWriter(Writer):
             return var.pragma[1]
         return 0
 
+    @staticmethod
+    def _get_traced_variables(model):
+        """Layers and output variables that are sent to the host through trace pipes when tracing is enabled."""
+        if not model.config.trace_output:
+            return []
+        traced = [
+            (layer, var)
+            for layer in model.get_layers()
+            if layer.get_attr('function_cpp') and layer.get_attr('trace', False)
+            for var in layer.get_variables()
+        ]
+        if model.config.get_config_value('IOType') == 'io_stream':
+            for layer, _ in traced:
+                if not layer.get_attr('task_sequence_cpp'):
+                    raise NotImplementedError(f'Tracing layer {layer.name} is not supported in io_stream')
+        return traced
+
+    @staticmethod
+    def _get_trace_pipe_name(var):
+        return f'{convert_to_pascal_case(var.name)}TracePipe'
+
+    @staticmethod
+    def _get_trace_pipe_size(var):
+        """In io_stream, a trace pipe holds the whole tensor so the kernel never waits for the host to read it"""
+        if isinstance(var.pragma, tuple) and var.pragma[0] == 'stream':
+            return np.prod(var.shape) // var.shape[-1]
+        return 0
+
+    @staticmethod
+    def _get_pre_trace_pipe_name(var):
+        """In io_stream, the traced layer writes to this pipe and a clone task copies it to the original and trace pipes"""
+        return f'{convert_to_pascal_case(var.name)}PreTracePipe'
+
     def write_project_dir(self, model):
         """Write the base project directory
 
@@ -155,6 +189,17 @@ class AlteraWriter(Writer):
                             for var in vars:
                                 if var not in model_inputs and var not in model_outputs:
                                     newline += var.declare_cpp()
+                        traced = self._get_traced_variables(model)
+                        if traced:
+                            newline += '#ifdef HLS4ML_TRACE\n'
+                            for _, var in traced:
+                                pipe_name = self._get_pre_trace_pipe_name(var)
+                                newline += f'class {pipe_name}ID;\n'
+                                newline += (
+                                    f'using {pipe_name} = sycl::ext::altera::experimental::pipe<{pipe_name}ID, '
+                                    f'{var.type.name}, {var.pragma[-1]}>;\n'
+                                )
+                            newline += '#endif\n'
 
                 # Read in inputs
                 elif '// hls-fpga-machine-learning read in' in line:
@@ -176,14 +221,34 @@ class AlteraWriter(Writer):
                 elif '// hls-fpga-machine-learning declare task sequences' in line:
                     newline = line
                     if io_type == 'io_stream':  # only need this for io_stream
+                        traced = self._get_traced_variables(model)
                         for layer in model.get_layers():
                             ts = layer.get_attr('task_sequence_cpp')
-                            if ts:
+                            if not ts:
+                                continue
+                            traced_vars = [var for traced_layer, var in traced if traced_layer is layer]
+                            if not traced_vars:
                                 newline += '    ' + ts + '\n'
+                                continue
+                            traced_ts = ts
+                            for var in traced_vars:
+                                traced_ts = re.sub(rf'\b{var.pipe_name}\b', self._get_pre_trace_pipe_name(var), traced_ts)
+                            newline += '#ifdef HLS4ML_TRACE\n'
+                            newline += '    ' + traced_ts + '\n'
+                            for var in traced_vars:
+                                newline += (
+                                    f'    task_sequence<nnet::clone_stream<{self._get_pre_trace_pipe_name(var)}, '
+                                    f'{var.pipe_name}, {self._get_trace_pipe_name(var)}, {var.size_cpp()}>> '
+                                    f'{var.name}_trace;\n'
+                                )
+                            newline += '#else\n'
+                            newline += '    ' + ts + '\n'
+                            newline += '#endif\n'
 
                 # Neural net instantiation
                 elif '// hls-fpga-machine-learning insert layers' in line:
                     newline = line + '\n'
+                    traced = self._get_traced_variables(model)
                     for layer in model.get_layers():
                         if io_type != 'io_stream':
                             vars = layer.get_variables()
@@ -199,12 +264,14 @@ class AlteraWriter(Writer):
                         )
                         if func:
                             newline += '    ' + func + '\n'
-                            if model.config.trace_output and layer.get_attr('trace', False):
-                                newline += '#ifndef HLS_SYNTHESIS\n'
-                                for var in vars:
-                                    newline += '    nnet::save_layer_output<{}>({}, "{}", {});\n'.format(
-                                        var.type.name, var.name, layer.name, var.size_cpp()
-                                    )
+                            traced_vars = [var for traced_layer, var in traced if traced_layer is layer]
+                            if traced_vars:
+                                newline += '#ifdef HLS4ML_TRACE\n'
+                                for var in traced_vars:
+                                    if io_type == 'io_stream':
+                                        newline += f'    {var.name}_trace.async();\n'
+                                    else:
+                                        newline += f'    {self._get_trace_pipe_name(var)}::write({var.name});\n'
                                 newline += '#endif\n'
 
                 # Write the output
@@ -270,6 +337,20 @@ class AlteraWriter(Writer):
                     for out in model_outputs:
                         newline += out.declare_cpp(pipe_min_size=self._get_interface_pipe_size(out))
 
+                elif '// hls-fpga-machine-learning insert trace pipes' in line:
+                    newline = line
+                    traced = self._get_traced_variables(model)
+                    if traced:
+                        newline += '#ifdef HLS4ML_TRACE\n'
+                        for _, var in traced:
+                            pipe_name = self._get_trace_pipe_name(var)
+                            newline += f'class {pipe_name}ID;\n'
+                            newline += (
+                                f'using {pipe_name} = sycl::ext::altera::experimental::pipe<{pipe_name}ID, '
+                                f'{var.type.name}, {self._get_trace_pipe_size(var)}, PipeProps>;\n'
+                            )
+                        newline += '#endif\n'
+
                 # Simply copy line, if no inserts are required
                 else:
                     newline = line
@@ -319,9 +400,10 @@ class AlteraWriter(Writer):
             for line in f.readlines():
                 if '// hls-fpga-machine-learning insert includes' in line:
                     newline = line
-                    for include in sorted(
-                        set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))
-                    ):
+                    includes = set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))
+                    if model.config.get_config_value('IOType') == 'io_stream' and self._get_traced_variables(model):
+                        includes.add('nnet_utils/nnet_stream.h')  # for clone_stream
+                    for include in sorted(includes):
                         newline += '#include "%s"\n' % include
 
                 elif '// hls-fpga-machine-learning insert layer-config' in line:
@@ -494,6 +576,18 @@ class AlteraWriter(Writer):
 
                     for i in model_inputs:
                         newline += indent + f'nnet::convert_data<{dtype}, {i.pipe_name}, {i.size_cpp()}>(q, {i.name});\n'
+
+                    # In io_parallel the kernel writes the trace pipes in layer order before the outputs, so read them in
+                    # that order. In io_stream the trace pipes hold a whole tensor, so the kernel never waits for them.
+                    traced = self._get_traced_variables(model)
+                    if traced:
+                        newline += '#ifdef HLS4ML_TRACE\n'
+                        for layer, var in traced:
+                            newline += (
+                                indent + f'nnet::collect_trace_data<{self._get_trace_pipe_name(var)}, {dtype}, '
+                                f'{var.size_cpp()}>(q, "{layer.name}");\n'
+                            )
+                        newline += '#endif\n'
 
                     for o in model_outputs:
                         newline += (
