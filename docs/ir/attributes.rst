@@ -218,7 +218,7 @@ Backend-specific attributes
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Softmax
-=======
+========
 Base attributes
 ---------------
 * result_t: NamedType
@@ -285,23 +285,33 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
-* exp_table_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
+* exp_table_t: NamedType (Default: auto)
 
   * The datatype (precision) used for the values of the lookup table.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
-* inv_table_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
+* inv_table_t: NamedType (Default: auto)
 
   * The datatype (precision) used for the values of the lookup table.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
-* inv_inp_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
+* inv_inp_t: NamedType (Default: auto)
+
+  * What the accumulated value is cast to before accessing the inversion table (only in stable)
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
-* accum_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
+* inp_norm_t: NamedType (Default: auto)
+
+  * The internal width used for the exp table lookup (only in stable)
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* accum_t: NamedType (Default: auto)
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
@@ -552,7 +562,7 @@ Backend-specific attributes
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Reshape
-=======
+========
 Base attributes
 ---------------
 * result_t: NamedType
@@ -3026,7 +3036,7 @@ Configurable attributes
 * accum_t: NamedType
 
 BiasAdd
-=======
+========
 Base attributes
 ---------------
 * result_t: NamedType
@@ -3345,30 +3355,6 @@ Configurable attributes
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
-Clone
-=====
-Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
-* index: int
-
-  * Internal node counter used for bookkeeping and variable/tensor naming.
-
-Configurable attributes
------------------------
-* trace: int (Default: False)
-
-  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
-
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
 Repack
 ======
 Base attributes
@@ -3393,25 +3379,19 @@ Configurable attributes
 
   * The datatype (precision) of the output tensor.
 
-BatchNormalizationQuantizedTanh
-===============================
+Clone
+=====
 Base attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
-* accum_t: NamedType
-
 Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
-
-* n_in: int
-
-* n_filt: int (Default: 0)
 
 Configurable attributes
 -----------------------
@@ -3422,10 +3402,6 @@ Configurable attributes
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-* reuse_factor: int (Default: 1)
 
 Broadcast
 =========
@@ -3622,3 +3598,37 @@ Backend-specific attributes
   * "LineBuffer" implementation is preferred over "Encoded" for most use cases. This attribute only applies to io_stream.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
+
+BatchNormalizationQuantizedTanh
+===============================
+Base attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
+
+Type attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* n_in: int
+
+* n_filt: int (Default: 0)
+
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
+
+* reuse_factor: int (Default: 1)

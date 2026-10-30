@@ -434,6 +434,9 @@ class UnspecifiedPrecisionType(PrecisionType):
     def __init__(self):
         super().__init__(width=0, signed=False)
 
+    def __str__(self):
+        return 'auto'
+
 
 def find_minimum_width(data, signed=True):
     """

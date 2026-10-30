@@ -201,27 +201,91 @@ pub fn dot
     <OUT_NB: u32, OUT_BE: s32,
     ROUNDING: RoundingMode,
     OVERFLOW: OverflowMode,
+    ACCUM_NB: u32, ACCUM_BE: s32,
+    ACCUM_ROUNDING: RoundingMode, ACCUM_OVERFLOW: OverflowMode,
     X_NB: u32, X_BE: s32,
     Y_NB: u32, Y_BE: s32,
-    DIM: u32
+    DIM: u32,
+    // Precision of an exact dot product over DIM elements
+    MUL_NB: u32 = {X_NB + Y_NB},
+    MUL_BE: s32 = {X_BE + Y_BE},
+    DOT_NB: u32 = {MUL_NB + std::clog2(DIM)},
+    DOT_BE: s32 = {MUL_BE},
 >
 (
     x: FixedPoint<X_NB, X_BE>[DIM],
     y: FixedPoint<Y_NB, Y_BE>[DIM]
 )
 -> FixedPoint<OUT_NB, OUT_BE>[1] {
-    [fixed_point_util::resize<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(
-        fixed_point_util::dot_prod(x,y)
-    )]
+    let acc = for (i, acc) in 0..DIM {
+        let val_x = x[i];
+        let val_y = y[i];
+        if (ACCUM_NB >= DOT_NB && ACCUM_BE <= DOT_BE) {
+            // ACCUM_T is wide enough, no need for rounding/overflow on each iteration
+            fixed_point_util::fmadd_already_widened(val_x, val_y, acc)
+        } else {
+            let prod = fixed_point_util::resize<ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW>(
+                fixed_point::mul(val_x, val_y)
+            );
+            fixed_point_util::resize<ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW>(
+                fixed_point::add(prod, acc)
+            )
+        }
+    }(zero!<FixedPoint<ACCUM_NB, ACCUM_BE>>());
+    [fixed_point_util::resize<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(acc)]
+}
+
+// ACCUM_T is the full-precision dot-product type, so accumulation is exact.
+fn dot_default
+    <OUT_NB: u32, OUT_BE: s32,
+    ROUNDING: RoundingMode,
+    OVERFLOW: OverflowMode,
+    X_NB: u32, X_BE: s32,
+    Y_NB: u32, Y_BE: s32,
+    DIM: u32,
+    // Precision inference MUL
+    MUL_NB: u32 = {X_NB + Y_NB},
+    MUL_BE: s32 = {X_BE + Y_BE},
+    // Precision inference DOT PROD
+    ACCUM_NB: u32 = {MUL_NB + std::clog2(DIM)},
+    ACCUM_BE: s32 = {MUL_BE},
+>
+(
+    x: FixedPoint<X_NB, X_BE>[DIM],
+    y: FixedPoint<Y_NB, Y_BE>[DIM]
+)
+-> FixedPoint<OUT_NB, OUT_BE>[1] {
+    dot<OUT_NB, OUT_BE, ROUNDING, OVERFLOW, ACCUM_NB, ACCUM_BE, ROUNDING, OVERFLOW>(x, y)
 }
 
 #[test]
 fn test_dot() {
     let x = fixed_point_util::make_fixed_points_1d<0>([s8:1, 2, 3]);
     let y = fixed_point_util::make_fixed_points_1d<-1>([s16:2, 4, 10]);
-    let result = dot<8, 0, RoundingMode::TRN, OverflowMode::WRAP>(x, y);
+    let result = dot_default<8, 0, RoundingMode::TRN, OverflowMode::WRAP>(x, y);
     let expected = fixed_point_util::make_fixed_points_1d<0>([s8:20]);
     assert_eq(result, expected);
+}
+
+// Regression test: accum_t is coarser than the products, so each one must be truncated into
+// accum_t every iteration instead of accumulated at full width.
+#[test]
+fn test_dot_out_accum() {
+    // x = [1.5, 1.5, 1.5]
+    let x = fixed_point_util::make_fixed_points_1d<-10>([s16:1536, 1536, 1536]);
+    // y = [2^-10, 2^-10, 2^-10] (one LSB each)
+    let y = fixed_point_util::make_fixed_points_1d<-10>([s16:1, 1, 1]);
+
+    // Each product is 1.5 LSB, truncated to 1 LSB in accum_t, so the 3 taps give 3 LSB.
+    // Accumulating at full width would instead give 4.5 LSB, truncated to 4 LSB at the output.
+    let expected = fixed_point_util::make_fixed_points_1d<-10>([s16:3]);
+    assert_eq(
+        expected,
+        // accum_t == output type
+        dot<u32:16, s32:-10, RoundingMode::TRN, OverflowMode::WRAP, u32:16, s32:-10, RoundingMode::TRN, OverflowMode::WRAP>(
+            x, y
+        )
+    );
 }
 
 pub fn concatenate1d
