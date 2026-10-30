@@ -192,17 +192,19 @@ class Layer(Serializable):
 
     def _set_accum_t(self):
         """Set the accumulator, but don't overwrite an existing one"""
-        if self.get_attr('accum_t') is None:
-            has_accum_t = any(a for a in self.expected_attributes if a.name == 'accum_t' and isinstance(a, TypeAttribute))
-            if has_accum_t:
-                accum_t = NamedType(*reversed(self.model.config.get_precision(self, 'accum')))
-                self.set_attr('accum_t', accum_t)
+        self._set_type_t('accum')
 
     def _set_type_t(self, name):
-        has_type_t = any(a for a in self.expected_attributes if a.name == name + '_t' and isinstance(a, TypeAttribute))
-        if has_type_t:
-            type_t = NamedType(*reversed(self.model.config.get_precision(self, name)))
-            self.set_attr(name + '_t', type_t)
+        """Set the precision, but don't overwrite an existing one"""
+        if self.get_attr(f'{name}_t') is None:
+            type_attr = next(
+                (a for a in self.expected_attributes if a.name == name + '_t' and isinstance(a, TypeAttribute)), None
+            )
+            if type_attr is not None:
+                precision, type_name = self.model.config.get_precision(self, name)
+                # The model-wide default does not override the attribute's own default, which is applied later
+                if type_name != 'model_default_t' or type_attr.default is None:
+                    self.set_attr(name + '_t', NamedType(type_name, precision))
 
     def get_input_node(self, input_name=None):
         if input_name is None:
@@ -979,6 +981,9 @@ class Activation(Layer):
         if 'n_in' not in self.attributes:
             self.set_attr('n_in', self.get_input_variable().size())
 
+        # set the needed types if needed
+        self._set_type_t('table')
+
 
 class ParametrizedActivation(Activation):
     _expected_attributes = [
@@ -1044,6 +1049,15 @@ class PReLU(Activation):
 class Softmax(Activation):
     def initialize(self):
         super().initialize()
+
+        # A standalone Keras Softmax layer arrives as 'Softmax'
+        self.set_attr('activation', self.get_attr('activation').lower())
+
+        # set the needed types if needed
+        self._set_type_t('exp_table')
+        self._set_type_t('inv_table')
+        self._set_type_t('inv_inp')
+        self._set_type_t('inp_norm')
 
 
 class TernaryTanh(Activation):
