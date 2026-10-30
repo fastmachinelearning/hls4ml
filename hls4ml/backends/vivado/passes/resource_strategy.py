@@ -7,7 +7,9 @@ from hls4ml.model.layers import (
     LSTM,
     Bidirectional,
     Conv1D,
+    Conv1DTranspose,
     Conv2D,
+    Conv2DTranspose,
     Dense,
     SeparableConv1D,
     SeparableConv2D,
@@ -58,14 +60,27 @@ class ApplyResourceStrategy(OptimizerPass):
 
     def match(self, node):
         node_matches = isinstance(
-            node, (Dense, Conv1D, SeparableConv1D, Conv2D, SeparableConv2D, SimpleRNN, LSTM, GRU, Bidirectional)
+            node,
+            (
+                Dense,
+                Conv1D,
+                SeparableConv1D,
+                Conv2D,
+                SeparableConv2D,
+                Conv1DTranspose,
+                Conv2DTranspose,
+                SimpleRNN,
+                LSTM,
+                GRU,
+                Bidirectional,
+            ),
         )
         is_resource_strategy = node.get_attr('strategy', '').lower() in ['resource', 'resource_unrolled']
         already_transformed = node.get_attr('_weights_transposed', False) is True
         return node_matches and is_resource_strategy and not already_transformed
 
     def transform(self, model, node):
-        if isinstance(node, Dense):
+        if isinstance(node, (Dense, Conv1DTranspose, Conv2DTranspose)):
             node.weights['weight'].data = np.transpose(node.weights['weight'].data)
         elif isinstance(node, Conv1D):
             node.weights['weight'].data = np.transpose(node.weights['weight'].data, axes=[2, 0, 1])  # (W,C,F) => (F,W,C)

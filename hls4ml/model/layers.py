@@ -801,6 +801,64 @@ class DepthwiseConv2D(Conv2D):
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
+class Conv1DTranspose(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+        Attribute('filt_width'),
+        Attribute('stride_width'),
+        Attribute('dilation_width', default=1),
+        Attribute('crop_left'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_width']]
+        self.add_output_variable(shape)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+
+class Conv2DTranspose(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+        Attribute('dilation_height', default=1),
+        Attribute('dilation_width', default=1),
+        Attribute('crop_top'),
+        Attribute('crop_left'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
+        self.add_output_variable(shape)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+
 class Pooling1D(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -2028,6 +2086,10 @@ layer_map = {
     'QSeparableConv2D': SeparableConv2D,
     'DepthwiseConv2D': DepthwiseConv2D,
     'QDepthwiseConv2D': DepthwiseConv2D,
+    'Conv1DTranspose': Conv1DTranspose,
+    'Conv2DTranspose': Conv2DTranspose,
+    'QConv1DTranspose': Conv1DTranspose,
+    'QConv2DTranspose': Conv2DTranspose,
     'BatchNormalization': BatchNormalization,
     'QBatchNormalization': BatchNormalization,
     'MaxPooling1D': Pooling1D,
