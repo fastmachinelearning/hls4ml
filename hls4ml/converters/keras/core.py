@@ -168,6 +168,54 @@ def parse_batchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
     return layer, [shape for shape in input_shapes[0]]
 
 
+@keras_handler('InstanceNormalization')
+def parse_instancenorm_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert 'InstanceNormalization' in keras_layer['class_name']
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+
+    shape = input_shapes[0]
+    if len(shape) not in (3, 4):
+        raise NotImplementedError(
+            f'Layer {layer["name"]}: InstanceNormalization is only supported for 1D and 2D spatial inputs '
+            '(i.e., 3- or 4-dimensional input including the batch dimension)'
+        )
+
+    # Statistics must be computed over the spatial dimensions, i.e., all axes except the channel axis
+    axis = keras_layer['config'].get('axis', list(range(1, len(shape) - 1)))
+    if isinstance(axis, int):
+        axis = [axis]
+    axis = sorted(a % len(shape) for a in axis)
+    if axis != list(range(1, len(shape) - 1)):
+        raise NotImplementedError(
+            f'Layer {layer["name"]}: InstanceNormalization is only supported when the statistics are '
+            'computed over the spatial dimensions (per-channel normalization)'
+        )
+
+    layer['n_in'] = int(np.prod(shape[1:]))
+    layer['n_out'] = layer['n_in']
+    layer['n_filt'] = shape[-1]
+    layer['n_spatial'] = layer['n_in'] // layer['n_filt']
+
+    if keras_layer['config'].get('epsilon', 1e-3) <= 0:
+        raise Exception('epsilon must be positive')
+    layer['epsilon'] = keras_layer['config'].get('epsilon', 1e-3)
+
+    layer['use_gamma'] = keras_layer['config'].get('scale', True)
+    if layer['use_gamma']:
+        layer['gamma_data'] = get_weights_data(data_reader, layer['name'], 'gamma')
+    else:
+        layer['gamma_data'] = np.ones(layer['n_filt'])
+
+    layer['use_beta'] = keras_layer['config'].get('center', True)
+    if layer['use_beta']:
+        layer['beta_data'] = get_weights_data(data_reader, layer['name'], 'beta')
+    else:
+        layer['beta_data'] = np.zeros(layer['n_filt'])
+
+    return layer, [shape for shape in input_shapes[0]]
+
+
 @keras_handler('LayerNormalization')
 def parse_layernorm_layer(keras_layer, input_names, input_shapes, data_reader):
     assert 'LayerNormalization' in keras_layer['class_name']
