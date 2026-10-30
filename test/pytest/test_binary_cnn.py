@@ -15,8 +15,6 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize(
     'backend,io_type,strategy',
     [
-        ('Quartus', 'io_parallel', 'resource'),
-        ('Quartus', 'io_stream', 'resource'),
         ('Vivado', 'io_parallel', 'resource'),
         ('Vivado', 'io_parallel', 'latency'),
         ('Vivado', 'io_stream', 'latency'),
@@ -85,12 +83,6 @@ def test_binary_cnn(test_case_id, backend, io_type, strategy):
     hls_config['LayerName']['conv2d_3']['ReuseFactor'] = 72
     hls_config['LayerName']['q_dense_6']['ReuseFactor'] = 2000
     hls_config['LayerName']['q_dense_7']['ReuseFactor'] = 100
-
-    if backend == 'Quartus' and io_type == 'io_parallel':
-        # Winegrad imp[lementation does not support binary
-        hls_config['LayerName']['conv2d_1']['Implementation'] = 'im2col'
-        hls_config['LayerName']['conv2d_2']['Implementation'] = 'im2col'
-        hls_config['LayerName']['conv2d_3']['Implementation'] = 'im2col'
 
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(

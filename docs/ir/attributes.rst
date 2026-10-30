@@ -87,19 +87,19 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 ParametrizedActivation
 ======================
@@ -143,19 +143,19 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 PReLU
 =====
@@ -203,22 +203,22 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Softmax
-=======
+========
 Base attributes
 ---------------
 * result_t: NamedType
@@ -251,59 +251,59 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * n_outer: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * n_inner: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * implementation: list [latency,stable,argmax,legacy] (Default: stable)
 
   * Choice of implementation of softmax function. "latency" provides good latency at the expense of extra resources. It performs well with a small number of classes. "stable" may require extra clock cycles but has better accuracy. "legacy" is the older implementation which has bad accuracy, but is fast and has low resource use. It is superseded by the "latency" implementation for most applications. "argmax" is a special implementation that can be used if only the output with the highest probability is important. Using this implementation will save resources and clock cycles.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * skip: bool (Default: False)
 
   * If enabled, skips the softmax node and returns the raw outputs.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * exp_table_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * inv_table_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * inv_inp_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * accum_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 IFNeuron
 ========
@@ -477,19 +477,19 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 HardActivation
 ==============
@@ -537,22 +537,22 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Reshape
-=======
+========
 Base attributes
 ---------------
 * result_t: NamedType
@@ -625,13 +625,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * strategy: list [latency,resource] (Default: latency)
 
@@ -667,13 +667,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Conv1D
 ======
@@ -735,13 +735,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -827,13 +827,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -919,13 +919,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -1005,23 +1005,23 @@ Backend-specific attributes
 ---------------------------
 * depthwise_accum_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * pointwise_accum_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * depthwise_result_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * depthwise_reuse_factor: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * pointwise_reuse_factor: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)
 
@@ -1123,13 +1123,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -1221,23 +1221,23 @@ Backend-specific attributes
 ---------------------------
 * depthwise_accum_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * pointwise_accum_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * depthwise_result_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * depthwise_reuse_factor: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * pointwise_reuse_factor: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)
 
@@ -1363,13 +1363,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -1435,7 +1435,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Pooling1D
 =========
@@ -1485,13 +1485,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)
 
@@ -1559,13 +1559,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)
 
@@ -1611,13 +1611,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 GlobalPooling2D
 ===============
@@ -1659,13 +1659,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 ZeroPadding1D
 =============
@@ -1849,7 +1849,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 MatMul
 ======
@@ -1881,13 +1881,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Dot
 ===
@@ -1935,13 +1935,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
+  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
 
 Concatenate
 ===========
@@ -1989,7 +1989,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Resize
 ======
@@ -2097,7 +2097,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 SimpleRNN
 =========
@@ -2161,13 +2161,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * static: bool (Default: True)
 
@@ -2179,19 +2179,19 @@ Backend-specific attributes
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * recurrent_reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult
+  * Available in: Catapult
 
 LSTM
 ====
@@ -2265,13 +2265,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * static: bool (Default: True)
 
@@ -2283,19 +2283,19 @@ Backend-specific attributes
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * recurrent_reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult
+  * Available in: Catapult
 
 GRU
 ===
@@ -2371,13 +2371,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * static: bool (Default: True)
 
@@ -2389,19 +2389,19 @@ Backend-specific attributes
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * recurrent_reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult
+  * Available in: Catapult
 
 Bidirectional
 =============
@@ -2501,13 +2501,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * static: bool (Default: True)
 
@@ -2595,7 +2595,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
+  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
 
 GarNetStack
 ===========
@@ -2643,7 +2643,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
+  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
 
 Quant
 =====
@@ -2681,7 +2681,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 BipolarQuant
 ============
@@ -2759,7 +2759,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 BatchNormOnnx
 =============
@@ -2791,7 +2791,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 LayerGroup
 ==========
@@ -2909,13 +2909,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_range_power2: int (Default: 0)
 
@@ -3026,7 +3026,7 @@ Configurable attributes
 * accum_t: NamedType
 
 BiasAdd
-=======
+========
 Base attributes
 ---------------
 * result_t: NamedType
@@ -3071,7 +3071,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 DACombinational
 ===============
@@ -3345,8 +3345,8 @@ Configurable attributes
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
-Clone
-=====
+Repack
+======
 Base attributes
 ---------------
 * result_t: NamedType
@@ -3369,8 +3369,8 @@ Configurable attributes
 
   * The datatype (precision) of the output tensor.
 
-Repack
-======
+Clone
+=====
 Base attributes
 ---------------
 * result_t: NamedType
@@ -3426,30 +3426,6 @@ Configurable attributes
 * accum_t: NamedType
 
 * reuse_factor: int (Default: 1)
-
-Broadcast
-=========
-Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
-* index: int
-
-  * Internal node counter used for bookkeeping and variable/tensor naming.
-
-Configurable attributes
------------------------
-* trace: int (Default: False)
-
-  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
-
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
 
 PointwiseConv1D
 ===============
@@ -3511,13 +3487,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -3603,13 +3579,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -3622,3 +3598,27 @@ Backend-specific attributes
   * "LineBuffer" implementation is preferred over "Encoded" for most use cases. This attribute only applies to io_stream.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
+
+Broadcast
+=========
+Base attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+Type attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
