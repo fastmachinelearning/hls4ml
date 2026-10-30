@@ -13,6 +13,7 @@ from qkeras.qconvolutional import QConv1D, QConv2D, QDepthwiseConv2D, QSeparable
 from qkeras.qlayers import QActivation, QDense
 from qkeras.quantizers import (
     binary,
+    get_quantizer,
     quantized_bits,
     quantized_po2,
     quantized_relu,
@@ -26,6 +27,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 import hls4ml
+from hls4ml.model.types import ExponentWeightVariable
 
 _original_init = QDense.__init__
 
@@ -659,7 +661,20 @@ def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
     np.testing.assert_allclose(y_hls.flatten(), y_keras.flatten(), rtol=2e-2)
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Altera'])
+def assert_rnn_weights_quantized(hls_layer, quantizers, backend):
+    """Check that the weights of a recurrent layer are the QKeras-quantized values of the model's weights.
+
+    ``quantizers`` maps weight names to quantizers. Quartus and Altera store the kernels transposed.
+    """
+    for name, quantizer in quantizers.items():
+        w = hls_layer.weights[name]
+        expected = np.asarray(quantizer(w.data_unquantized))
+        if backend in ('Quartus', 'Altera') and expected.ndim == 2:
+            expected = expected.T
+        np.testing.assert_array_equal(w.data, expected)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 def test_qsimplernn(test_case_id, backend):
     """
     Test proper handling of QSimpleRNN.
@@ -692,9 +707,13 @@ def test_qsimplernn(test_case_id, backend):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+    q = quantized_bits(16, 0, alpha=1)
+    assert_rnn_weights_quantized(
+        hls_model.graph[model.layers[0].name], {'weight': q, 'recurrent_weight': q, 'bias': q}, backend
+    )
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 def test_qlstm(test_case_id, backend):
     """
     Test proper handling of QLSTM.
@@ -728,9 +747,13 @@ def test_qlstm(test_case_id, backend):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+    q = quantized_bits(8, 0, alpha=1)
+    assert_rnn_weights_quantized(
+        hls_model.graph[model.layers[0].name], {'weight': q, 'recurrent_weight': q, 'bias': q}, backend
+    )
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 def test_qgru(test_case_id, backend):
     """
     Test proper handling of QGRU.
@@ -765,6 +788,107 @@ def test_qgru(test_case_id, backend):
     y_hls4ml = hls_model.predict(X)
 
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
+    q = quantized_bits(8, 0, alpha=1)
+    assert_rnn_weights_quantized(
+        hls_model.graph[model.layers[0].name],
+        {'weight': q, 'recurrent_weight': q, 'bias': q, 'recurrent_bias': q},
+        backend,
+    )
+
+
+RNN_QUANTIZERS = {
+    'quantized_bits': {
+        'weight': 'quantized_bits(8, 0, alpha=1)',
+        'recurrent_weight': 'quantized_bits(6, 0, alpha=1)',
+        'bias': 'quantized_bits(4, 0, alpha=1)',
+    },
+    'quantized_po2': {
+        'weight': 'quantized_po2(4)',
+        'recurrent_weight': 'quantized_po2(5)',
+        'bias': 'quantized_bits(8, 0, alpha=1)',
+    },
+}
+
+
+def make_qrnn_model(layer, quantizers):
+    """The model of #1579: one QKeras recurrent layer of 8 units on a (6, 4) input, with the given kernel, recurrent
+    and bias quantizers. The weights are drawn from (-0.5, 0.5), so the bias is not zero and the model is the same
+    with every Keras version."""
+    kwargs = dict(
+        kernel_quantizer=quantizers['weight'],
+        recurrent_quantizer=quantizers['recurrent_weight'],
+        bias_quantizer=quantizers['bias'],
+    )
+    layers = {
+        'QSimpleRNN': lambda: QSimpleRNN(8, activation='relu', **kwargs),
+        'QLSTM': lambda: QLSTM(8, activation='tanh', recurrent_activation='sigmoid', **kwargs),
+        'QGRU': lambda: QGRU(8, activation='tanh', recurrent_activation='sigmoid', reset_after=True, **kwargs),
+    }
+    x_in = Input((6, 4))
+    model = Model(x_in, layers[layer]()(x_in))
+    rng = np.random.default_rng(1)
+    model.layers[1].set_weights([rng.uniform(-0.5, 0.5, w.shape).astype('float32') for w in model.layers[1].get_weights()])
+    return model
+
+
+@pytest.mark.parametrize('layer', ['QSimpleRNN', 'QLSTM', 'QGRU'])
+@pytest.mark.parametrize('quantizers', list(RNN_QUANTIZERS))
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_qrnn_weight_quantizers(test_case_id, layer, quantizers, strategy, backend):
+    """The kernel, recurrent and bias quantizers of a QKeras recurrent layer are applied to its weights, so hls4ml
+    computes with the same weights as QKeras. The three quantizers differ, so each weight has to get its own."""
+    quantizers = RNN_QUANTIZERS[quantizers]
+    model = make_qrnn_model(layer, quantizers)
+    X = np.round(np.random.default_rng(0).uniform(-0.5, 0.5, (50, 6, 4)) * 2**7) * 2**-7
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', backend=backend, default_precision='ap_fixed<24,10>'
+    )
+    config['LayerName'][model.layers[1].name]['Strategy'] = strategy
+    if strategy == 'Resource':
+        # 4 inputs in 2 lanes over 3 cycles: the weights are padded with zeros
+        config['LayerName'][model.layers[1].name]['ReuseFactor'] = 3
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, backend=backend, output_dir=output_dir)
+    hls_model.compile()
+
+    hls_layer = hls_model.graph[model.layers[1].name]
+    if strategy == 'Latency':  # the Resource strategy lays the weights out in the order its cell reads them
+        expected = {name: get_quantizer(q) for name, q in quantizers.items()}
+        if layer == 'QGRU':
+            expected['recurrent_bias'] = get_quantizer(quantizers['bias'])
+        assert_rnn_weights_quantized(hls_layer, expected, backend)
+    for w in hls_layer.weights.values():
+        if isinstance(w, ExponentWeightVariable):  # every exponent written to the project fits the type, zero padding too
+            assert w._format()[..., 1].min() >= -(2 ** (w.type.precision.width - 1))
+
+    y_qkeras = model.predict(X, verbose=0)
+    y_hls4ml = hls_model.predict(X).reshape(y_qkeras.shape)
+    np.testing.assert_allclose(y_hls4ml, y_qkeras, rtol=0, atol=0.05)
+
+
+def test_qlstm_altera_gate_quantizers(test_case_id):
+    """On Altera the LSTM weights are split per gate, and each piece gets the quantizer and the type of the array it
+    comes from: the kernel, the recurrent kernel or the bias. Conversion only; compiling needs the Altera toolchain."""
+    bits = {'weight': 8, 'recurrent_weight': 4, 'bias': 3}
+    quantizers = {name: f'quantized_bits({b}, 0, alpha=1)' for name, b in bits.items()}
+    model = make_qrnn_model('QLSTM', quantizers)
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', backend='Altera', default_precision='ap_fixed<24,10>'
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, backend='Altera', output_dir=output_dir)
+
+    hls_layer = hls_model.graph[model.layers[1].name]
+    assert_rnn_weights_quantized(hls_layer, {name: get_quantizer(q) for name, q in quantizers.items()}, 'Altera')
+    arrays = dict(zip(('weight', 'recurrent_weight', 'bias'), model.layers[1].get_weights()))
+    for i, gate in enumerate('ifco'):
+        for name, q in quantizers.items():
+            w = hls_layer.weights[f'{name}_{gate}']
+            expected = np.asarray(get_quantizer(q)(arrays[name][..., 8 * i : 8 * (i + 1)]))
+            np.testing.assert_array_equal(w.data, expected.T if expected.ndim == 2 else expected)
+            assert (w.type.precision.width, w.type.precision.integer) == (bits[name], 1)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
