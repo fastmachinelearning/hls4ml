@@ -341,7 +341,7 @@ def write_verilog_testbench(nn_config, testbench_output_path):
             batch_size = layer['batch_size']
             fifo_depth = layer['fifo_depth']
             name = layer['name']
-            f.write(f'        // Sending first patern of inputs for {name}\n')
+            f.write(f'        // Sending first pattern of inputs for {name}\n')
             if pragma == 'stream':
                 f.write(f'        {name}_tvalid = 1;\n')
             f.write(f'        for (j = 0; j < {fifo_depth}; j = j + 1) begin\n')

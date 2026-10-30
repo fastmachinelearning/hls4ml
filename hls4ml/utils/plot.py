@@ -31,7 +31,7 @@ def add_edge(dot, src, dst):
 def model_to_dot(
     model, show_shapes=False, show_layer_names=True, show_precision=False, rankdir='TB', dpi=96, subgraph=False
 ):
-    """Convert a HLS model to dot format.
+    """Convert an HLS model to dot format.
 
     Arguments:
         model: A HLS model instance.
@@ -181,7 +181,7 @@ def model_to_dot(
 def plot_model(
     model, to_file='model.png', show_shapes=False, show_layer_names=True, show_precision=False, rankdir='TB', dpi=96
 ):
-    """Converts a HLS model to dot format and save to a file.
+    """Converts an HLS model to dot format and saves it to a file.
 
     Arguments:
         model: A HLS model instance

@@ -8,7 +8,7 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
     """
     This matches all multidimensional Dense layers and changes them to a convolution.
     Note:  the convolution may subsequently be changed to a pointwise convolution for
-    bakends that implement special pointwise convolutions.
+    backends that implement special pointwise convolutions.
     """
 
     def match(self, node):

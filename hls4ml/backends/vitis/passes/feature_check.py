@@ -1,3 +1,4 @@
+from hls4ml.model.layers import Dense
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import StandardFloatPrecisionType
 
@@ -37,7 +38,7 @@ class ValidateResourceStrategy(OptimizerPass):
 
 
 class ValidateResourceUnrolledStrategy(OptimizerPass):
-    _unrolled_layer_cls = ['Conv1D', 'Conv2D', 'Dense', 'GRU', 'LSTM']
+    _unrolled_layer_cls = ['Conv1D', 'Conv2D', 'Dense', 'GRU', 'LSTM', 'SimpleRNN']
 
     def match(self, node):
         is_unrolled_layer = len([layer_cls for layer_cls in self._unrolled_layer_cls if layer_cls in node.class_name]) > 0
@@ -52,41 +53,18 @@ class ValidateResourceUnrolledStrategy(OptimizerPass):
         )
 
 
-class ValidateBidirectionalMergeMode(OptimizerPass):
-    _unrolled_layer_cls = ['Bidirectional']
-
+class ValidateFusedIoType(OptimizerPass):
     def match(self, node):
-        is_bidirectional_rnn_layer = (
-            len([layer_cls for layer_cls in self._unrolled_layer_cls if layer_cls in node.class_name]) > 0
+        return (
+            isinstance(node, Dense)
+            and str(node.model.config.get_strategy(node)).lower() == 'fused'
+            and node.model.config.get_config_value('IOType') != 'io_parallel'
         )
-        is_merge_mode_not_concat = node.get_attr('merge_mode', 'concat') != 'concat'
-
-        return is_bidirectional_rnn_layer and is_merge_mode_not_concat
-
-    def transform(self, model, node):
-        merge_mode = node.get_attr('merge_mode', 'concat')
-        print(
-            f'WARNING: "{merge_mode}" merge mode in "{node.name}" ({node.class_name}) is not supported in Vitis backend. '
-            'Switching to "concat" merge mode.'
-        )
-        node.set_attr('merge_mode', 'concat')
-
-
-class ValidateBidirectionalIoType(OptimizerPass):
-    _unrolled_layer_cls = ['Bidirectional']
-
-    def match(self, node):
-        is_bidirectional_rnn_layer = (
-            len([layer_cls for layer_cls in self._unrolled_layer_cls if layer_cls in node.class_name]) > 0
-        )
-        is_layer_io_type_stream = node.model.config.config['IOType'] != 'io_parallel'
-
-        return is_bidirectional_rnn_layer and is_layer_io_type_stream
 
     def transform(self, model, node):
         raise Exception(
-            f'WARNING: "{node.model.config.config["IOType"]}" IO Type is not supported in Vitis backend '
-            f'for "{node.name}" ({node.class_name}). Please use "io_parallel".'
+            f'Layer "{node.name}" ({node.class_name}) has strategy "fused", which needs io_type "io_parallel"; '
+            f'this model uses "{model.config.get_config_value("IOType")}".'
         )
 
 

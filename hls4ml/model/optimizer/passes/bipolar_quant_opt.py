@@ -45,7 +45,7 @@ class BipolarQuantConstantParameters(OptimizerPass):
 
 class BipolarQuantToActivation(OptimizerPass):
     """
-    This is for the case when scale is 1. It is a a 1:1 transformation of a BipolarQuant to an Activation.
+    This is for the case when scale is 1. It is a 1:1 transformation of a BipolarQuant to an Activation.
     This is not called when the input is constant.
     """
 

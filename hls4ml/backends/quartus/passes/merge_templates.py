@@ -4,7 +4,7 @@ from hls4ml.model.layers import Concatenate, Dot, Merge
 
 # TODO - Very similar to vivado/merge_templates.py - only difference is on line 67:
 # TODO -    get_backend('vivado').product_type(inp1.type.precision, inp2.type.precision)
-# TODO - Look into ways of having passes similar accross many backends in a shared folder thorugh inheritance and overriding.
+# TODO - Look into ways of having passes similar across many backends in a shared folder through inheritance and overriding.
 
 # Merge templates
 merge_config_template = """struct config{index} : nnet::merge_config {{

@@ -46,7 +46,7 @@ def test_binary_scheduler():
     s3 = 0.5 * (s2 + s1)
     np.testing.assert_allclose(scheduler.update_step(), (True, s3))
 
-    # Assert 2nd repair step doest not take place, difference < threshold
+    # Assert 2nd repair step does not take place, difference < threshold
     np.testing.assert_allclose(scheduler.repair_step(), (False, s3))
 
     # Assert final (achievable) sparsity is correct

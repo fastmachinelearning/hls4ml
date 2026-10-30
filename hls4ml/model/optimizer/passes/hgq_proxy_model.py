@@ -58,7 +58,7 @@ def userconf_ifdef(key: str, layer_name: str, model):
     # return key in layer_conf # Ideal case. Not for now.
     if key.endswith('_t') and key != 'table_t':
         # table_t cannot be defined in Precision, for some reason.
-        # On the other hand, result_t, weight_t, bias_t, accum_t cannot be decleared explicitly outside Precision, for now.
+        # On the other hand, result_t, weight_t, bias_t, accum_t cannot be declared explicitly outside Precision, for now.
         # However, still assume that they can be defined explicitly outside Precision.
         precision_conf = layer_conf.get('Precision', None)
         if not precision_conf:

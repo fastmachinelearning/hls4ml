@@ -29,7 +29,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -93,7 +93,7 @@ def test_dense(test_case_id, backend, io_type):
         Activation(activation='sigmoid', name='sigmoid'),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(test_case_id, activation_function, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -129,7 +129,7 @@ padds_options = ['same', 'valid']
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('activation', ['elu', 'relu'])
 def test_conv1d(test_case_id, padds, backend, io_type, activation):
@@ -216,7 +216,7 @@ padds_options = ['same', 'valid']
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(test_case_id, chans, padds, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -383,7 +383,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 @pytest.mark.parametrize('pooling', pooling_layers)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'Catapult', 'XLS'])
 def test_pooling(test_case_id, pooling, padds, chans, backend):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 
@@ -504,7 +504,7 @@ def test_pooling(test_case_id, pooling, padds, chans, backend):
     #         assert hls_pool.attributes['pad_right'] == 0
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'oneAPI', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_reused_layer(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -627,8 +627,8 @@ def test_rnn_rejects_go_backwards(test_case_id):
 
 
 def test_gru_reset_after_false_parsed(test_case_id):
-    # The GRU kernels implement only the reset_after=True formulation; the parser
-    # represents 'before' faithfully and the backends are responsible for rejecting it
+    # reset_after=False has a flat bias and a zero recurrent bias;
+    # backends are responsible for implementing or rejecting it
     model = keras.Sequential([keras.layers.Input((5, 8)), keras.layers.GRU(4, reset_after=False)])
     hls_model = _convert_parse_only(model, test_case_id)
     gru_layer = [layer for layer in hls_model.get_layers() if layer.class_name == 'GRU'][0]
@@ -646,17 +646,16 @@ def test_rnn_no_bias_parsed(test_case_id):
     assert bias.shape == (16,) and not bias.any()
 
 
-def test_bidirectional_merge_mode_parsed(test_case_id):
+def test_bidirectional_merge_mode_parsed():
     # Non-concat merge modes keep the sub-layer width; no kernel merges yet and the
-    # backends are responsible for rejecting non-concat modes
+    # backends reject non-concat modes, so only the parser is run here
     model = keras.Sequential(
         [keras.layers.Input((5, 8)), keras.layers.Bidirectional(keras.layers.LSTM(4), merge_mode='sum')]
     )
-    hls_model = _convert_parse_only(model, test_case_id)
-    bidir_layer = [layer for layer in hls_model.get_layers() if layer.class_name == 'Bidirectional'][0]
-    assert bidir_layer.get_attr('merge_mode') == 'sum'
-    assert bidir_layer.get_attr('n_out') == 4
-    assert list(hls_model.get_output_variables()[0].shape) == [4]
+    layer_list, *_ = hls4ml.converters.parse_keras_v3_model(model)
+    bidir_layer = [layer for layer in layer_list if layer['class_name'] == 'Bidirectional'][0]
+    assert bidir_layer['merge_mode'] == 'sum'
+    assert bidir_layer['n_out'] == 4
 
 
 def test_bidirectional_rejects_simple_rnn(test_case_id):

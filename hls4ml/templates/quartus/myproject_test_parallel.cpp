@@ -17,7 +17,7 @@
 // requires a const_cast or allocation to use with std::strings.
 // This function returns the next float (by argument) at position pos,
 // updating pos. True is returned if conversion done, false if the string
-// has ended, and std::invalid_argument exception if the sting was bad.
+// has ended, and std::invalid_argument exception if the string was bad.
 bool nextToken(const std::string &str, std::size_t &pos, float &val) {
     while (pos < str.size() && std::isspace(static_cast<unsigned char>(str[pos]))) {
         pos++;

@@ -50,7 +50,7 @@ void normalize(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in],
     int multiplier_limit = ceil(float(CONFIG_T::n_in) / float(CONFIG_T::reuse_factor));
     CONFIG_T::template product<data_T, typename CONFIG_T::scale_t>::limit(multiplier_limit);
 
-    // Calcuate result
+    // Calculate result
 Result:
     for (int ires = 0; ires < CONFIG_T::n_in; ires++) {
         if (CONFIG_T::n_filt == -1) {

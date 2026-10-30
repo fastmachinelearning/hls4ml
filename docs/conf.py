@@ -71,6 +71,7 @@ extensions = [
     'sphinx_contributors',
     'sphinx_github_changelog',
     'sphinx_tabs.tabs',
+    'myst_parser',
 ]
 
 autodoc_mock_imports = ['keras_tuner']
