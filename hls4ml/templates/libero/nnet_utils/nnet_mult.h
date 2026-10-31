@@ -89,6 +89,18 @@ template <class x_T, class w_T> class weight_exponential : public Product {
     }
 };
 
+template <class x_T, class w_T> class data_binary_weight_exponential : public Product {
+  public:
+    // Holds 2^e exactly for every exponent e of the weight type
+    static const int max_shift = 1 << (decltype(w_T::weight)::width - 1);
+    using r_T = hls::ap_fixpt<2 * max_shift + 1, max_shift + 1>;
+    static r_T product(x_T a, w_T w) {
+        // Specialisation for 1-bit data (0 stands for -1) and exponential weights
+        #pragma HLS function inline
+        r_T y = static_cast<r_T>(1) << w.weight;
+        return (a == 1) == (w.sign == 1) ? y : static_cast<r_T>(-y);
+    }
+};
 } // namespace product
 
 template <class data_T, class res_T, typename CONFIG_T>
