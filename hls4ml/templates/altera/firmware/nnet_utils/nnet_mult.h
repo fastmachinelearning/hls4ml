@@ -83,6 +83,17 @@ template <class x_T, class w_T> class weight_exponential : public Product {
         return w.first == 1 ? y : static_cast<r_T>(-y);
     }
 };
+template <class x_T, class w_T> class data_binary_weight_exponential : public Product {
+  public:
+    // Holds 2^e exactly for every exponent e of the weight type
+    static const int max_shift = 1 << (w_T::second_type::width - 1);
+    using r_T = ac_fixed<2 * max_shift + 1, max_shift + 1, true>;
+    inline static r_T product(x_T a, w_T w) {
+        // Specialisation for 1-bit data (0 stands for -1) and exponential weights
+        r_T y = static_cast<r_T>(1) << w.second;
+        return (a == 1) == (w.first == 1) ? y : static_cast<r_T>(-y);
+    }
+};
 } // namespace product
 
 // TO-DO: These may need extra variants if ac_int types are used in more places
