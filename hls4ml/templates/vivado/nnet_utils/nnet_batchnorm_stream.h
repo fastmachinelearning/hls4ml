@@ -52,7 +52,7 @@ BatchNormLoop:
 // ****************************************************
 template <class data_T, typename CONFIG_T>
 void normalize_binary_tanh(hls::stream<data_T> &data, hls::stream<nnet::array<ap_uint<1>, CONFIG_T::n_scale_bias>> &res,
-                           typename data_T::value_type threshold[CONFIG_T::n_scale_bias],
+                           typename CONFIG_T::threshold_t threshold[CONFIG_T::n_scale_bias],
                            ap_uint<1> flip[CONFIG_T::n_scale_bias]) {
     #pragma HLS ARRAY_PARTITION variable=threshold complete
     #pragma HLS ARRAY_PARTITION variable=flip complete
@@ -85,8 +85,8 @@ BinaryNormLoop:
 
 template <class data_T, typename CONFIG_T>
 void normalize_ternary_tanh(hls::stream<data_T> &data, hls::stream<nnet::array<ap_int<2>, CONFIG_T::n_scale_bias>> &res,
-                            typename data_T::value_type threshold_hi[CONFIG_T::n_scale_bias],
-                            typename data_T::value_type threshold_lo[CONFIG_T::n_scale_bias],
+                            typename CONFIG_T::threshold_hi_t threshold_hi[CONFIG_T::n_scale_bias],
+                            typename CONFIG_T::threshold_lo_t threshold_lo[CONFIG_T::n_scale_bias],
                             ap_uint<1> flip[CONFIG_T::n_scale_bias]) {
     #pragma HLS ARRAY_PARTITION variable=threshold_hi complete
     #pragma HLS ARRAY_PARTITION variable=threshold_lo complete

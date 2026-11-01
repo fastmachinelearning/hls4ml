@@ -217,9 +217,11 @@ class QuantizeDenseOutput(OptimizerPass):
                 else:
                     rounding = {'threshold_hi': (np.floor, np.ceil), 'threshold_lo': (np.floor, np.ceil)}
                 flip = out_node.get_weights('flip').data.astype(bool)
+                low, high, threshold_precision = out_node.threshold_range(out_type)
                 for var_name, (round_normal, round_flipped) in rounding.items():
                     threshold_var = out_node.weights[var_name]
-                    threshold_var.update_precision(out_type)
-                    threshold_var.data = np.where(flip, round_flipped(threshold_var.data), round_normal(threshold_var.data))
+                    threshold_var.update_precision(threshold_precision)
+                    data = np.where(flip, round_flipped(threshold_var.data), round_normal(threshold_var.data))
+                    threshold_var.data = np.clip(data, low, high)
 
         return False

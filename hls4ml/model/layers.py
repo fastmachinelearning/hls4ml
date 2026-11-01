@@ -1194,20 +1194,27 @@ class BatchNormalization(Layer):
         self.add_output_variable(shape)
 
         if self.get_attr('scale_data') is None:
-            gamma = self.get_attr('gamma_data')
-            var = self.get_attr('variance_data')
+            gamma = self.quantized_data('gamma') if self.get_attr('use_gamma') else self.get_attr('gamma_data')
+            var = self.quantized_data('variance')
             scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+            if self.get_attr('inverse_quantizer') is not None:
+                scale = self.get_attr('inverse_quantizer')(scale)
             self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         else:
             self.add_weights_variable(name='scale', var_name='s{index}')
 
         if self.get_attr('bias_data') is None:
-            beta = self.get_attr('beta_data')
-            mean = self.get_attr('mean_data')
+            beta = self.quantized_data('beta') if self.get_attr('use_beta') else self.get_attr('beta_data')
+            mean = self.quantized_data('mean')
             bias = beta - scale * mean
             self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
         else:
             self.add_weights_variable(name='bias', var_name='b{index}')
+
+    def quantized_data(self, name):
+        quantizer = self.get_attr(f'{name}_quantizer')
+        data = self.get_attr(f'{name}_data')
+        return data if quantizer is None else quantizer(data)
 
 
 # TODO:  discuss whether this should be renamed to something more descriptive, and whether the class hierarchy makes sense

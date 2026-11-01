@@ -55,7 +55,7 @@ BatchNormLoop:
 // ****************************************************
 template <class data_T, typename CONFIG_T>
 void normalize_binary_tanh(ac_channel<data_T> &data, ac_channel<nnet::array<ac_int<1, false>, CONFIG_T::n_in>> &res,
-                           typename data_T::value_type threshold[CONFIG_T::n_in], ac_int<1, false> flip[CONFIG_T::n_in]) {
+                           typename CONFIG_T::threshold_t threshold[CONFIG_T::n_in], ac_int<1, false> flip[CONFIG_T::n_in]) {
     //#pragma HLS ARRAY_PARTITION variable=threshold complete
 
 BinaryNormLoop:
@@ -80,8 +80,8 @@ BinaryNormLoop:
 
 template <class data_T, typename CONFIG_T>
 void normalize_ternary_tanh(ac_channel<data_T> &data, ac_channel<nnet::array<ac_int<2, true>, CONFIG_T::n_in>> &res,
-                            typename data_T::value_type threshold_hi[CONFIG_T::n_in],
-                            typename data_T::value_type threshold_lo[CONFIG_T::n_in],
+                            typename CONFIG_T::threshold_hi_t threshold_hi[CONFIG_T::n_in],
+                            typename CONFIG_T::threshold_lo_t threshold_lo[CONFIG_T::n_in],
                             ac_int<1, false> flip[CONFIG_T::n_in]) {
     //#pragma HLS ARRAY_PARTITION variable=threshold_hi complete
     //#pragma HLS ARRAY_PARTITION variable=threshold_lo complete

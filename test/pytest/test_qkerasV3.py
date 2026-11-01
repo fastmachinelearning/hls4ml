@@ -11,6 +11,7 @@ from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
 from qkeras.qconvolutional import QConv1D, QConv2D, QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
 from qkeras.qlayers import QActivation, QDense
+from qkeras.qnormalization import QBatchNormalization
 from qkeras.quantizers import (
     binary,
     quantized_bits,
@@ -1032,6 +1033,31 @@ def test_binary_activation_scale_sign(test_case_id, layer, activation, backend, 
 
     _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
     np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('activation', [None, binary(), ternary()], ids=['none', 'binary', 'ternary'])
+def test_qbatchnorm(test_case_id, activation, backend, io_type):
+    """
+    Test QBatchNormalization with its default quantizers, which make negative scales zero, alone or followed by a
+    binary or ternary activation.
+    """
+
+    keras.utils.set_random_seed(0)
+    dense = QDense(16, kernel_quantizer=quantized_bits(4, 0, alpha=1), bias_quantizer=quantized_bits(8, 3))
+    bn = QBatchNormalization()
+    model = Sequential([Input((8,)), dense, bn] + ([QActivation(activation)] if activation is not None else []))
+    rng = np.random.default_rng(0)
+    dense.set_weights([rng.uniform(-1, 1, w.shape) for w in dense.get_weights()])
+    gamma = rng.uniform(0.5, 1.5, 16) * np.tile([1, -1], 8)
+    bn.set_weights([gamma, rng.uniform(-0.3, 0.3, 16), rng.uniform(-0.3, 0.3, 16), rng.uniform(0.5, 1.5, 16)])
+
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    if activation is None:
+        np.testing.assert_allclose(y_hls4ml, y_keras, atol=0.01)
+    else:
+        np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
