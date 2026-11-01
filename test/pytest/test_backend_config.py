@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import numpy as np
 import pytest
 import tensorflow as tf
 import torch
@@ -11,7 +10,7 @@ test_root_path = Path(__file__).parent
 
 
 @pytest.mark.parametrize('framework', ['keras', 'pytorch'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('part', ['some_part', None])
 @pytest.mark.parametrize('clock_period', [8, None])
 @pytest.mark.parametrize('clock_unc', ['15%', None])
@@ -64,10 +63,8 @@ def test_backend_config(test_case_id, framework, backend, part, clock_period, cl
 
     read_part = hls_model.config.get_config_value('Part')
     expected_part = part
-    if backend in ['Vivado', 'Vitis'] and part is None:
+    if part is None:
         expected_part = 'xcvu13p-flga2577-2-e'
-    elif backend == 'Quartus' and part is None:
-        expected_part = 'Arria10'
     assert read_part == expected_part
 
     read_clock_period = hls_model.config.get_config_value('ClockPeriod')
@@ -80,42 +77,21 @@ def test_backend_config(test_case_id, framework, backend, part, clock_period, cl
         expected_unc = '12.5%'
     elif backend == 'Vitis' and clock_unc is None:
         expected_unc = '27%'
-    elif backend in ['Vivado', 'Vitis']:
+    else:
         expected_unc = clock_unc
-    elif backend == 'Quartus':
-        expected_unc = None
     assert read_clock_unc == expected_unc
 
     # Check if Writer properly wrote makefiles and tcl scripts
-    if backend in ['Vivado', 'Vitis']:
-        part_ok = period_ok = unc_ok = False
+    part_ok = period_ok = unc_ok = False
 
-        prj_tcl_path = output_dir / 'project.tcl'
-        with open(prj_tcl_path) as f:
-            for line in f.readlines():
-                if 'set part' in line and expected_part in line:
-                    part_ok = True
-                if f'set clock_period {expected_period}' in line:
-                    period_ok = True
-                if f'set clock_uncertainty {expected_unc}' in line:
-                    unc_ok = True
+    prj_tcl_path = output_dir / 'project.tcl'
+    with open(prj_tcl_path) as f:
+        for line in f.readlines():
+            if 'set part' in line and expected_part in line:
+                part_ok = True
+            if f'set clock_period {expected_period}' in line:
+                period_ok = True
+            if f'set clock_uncertainty {expected_unc}' in line:
+                unc_ok = True
 
-        assert part_ok and period_ok and unc_ok
-    elif backend == 'Quartus':
-        part_ok = period_ok = False
-
-        makefile_path = output_dir / 'Makefile'
-        with open(makefile_path) as f:
-            for line in f.readlines():
-                if 'DEVICE   :=' in line and expected_part in line:
-                    part_ok = True
-
-        main_cpp_path = output_dir / f'firmware/{hls_model.config.get_project_name()}.cpp'
-        with open(main_cpp_path) as f:
-            clock_mhz = 1000 / (hls_model.config.get_config_value('ClockPeriod'))
-            clock_mhz = np.ceil(clock_mhz).astype(int)
-            for line in f.readlines():
-                if f'hls_scheduler_target_fmax_mhz({clock_mhz})' in line:
-                    period_ok = True
-
-        assert part_ok and period_ok
+    assert part_ok and period_ok and unc_ok

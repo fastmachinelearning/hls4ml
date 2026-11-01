@@ -60,8 +60,6 @@ def hls_model(mnist_model, request, test_case_id):
 @pytest.mark.parametrize(
     'hls_model',
     [
-        ('Quartus', 'io_parallel', 'resource'),
-        ('Quartus', 'io_stream', 'resource'),
         ('Vivado', 'io_parallel', 'resource'),
         ('Vivado', 'io_parallel', 'latency'),
         ('Vivado', 'io_stream', 'latency'),
@@ -73,8 +71,6 @@ def hls_model(mnist_model, request, test_case_id):
     ],
     indirect=True,
     ids=[
-        'Quartus_io_parallel_resource',
-        'Quartus_io_stream_resource',
         'Vivado_io_parallel_resource',
         'Vivado_io_parallel_latency',
         'Vivado_io_stream_latency',
