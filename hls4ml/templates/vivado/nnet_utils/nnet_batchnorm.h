@@ -79,7 +79,8 @@ struct batchnorm_quantized_tanh_config {
 
 template <class data_T, typename CONFIG_T>
 void normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T::n_in],
-                           data_T threshold[CONFIG_T::n_scale_bias], ap_uint<1> flip[CONFIG_T::n_scale_bias]) {
+                           typename CONFIG_T::threshold_t threshold[CONFIG_T::n_scale_bias],
+                           ap_uint<1> flip[CONFIG_T::n_scale_bias]) {
     #pragma HLS PIPELINE
     #pragma HLS ARRAY_PARTITION variable=res complete
 
@@ -100,7 +101,8 @@ void normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T:
 
 template <class data_T, typename CONFIG_T>
 void normalize_ternary_tanh(data_T data[CONFIG_T::n_in], ap_int<2> res[CONFIG_T::n_in],
-                            data_T threshold_hi[CONFIG_T::n_scale_bias], data_T threshold_lo[CONFIG_T::n_scale_bias],
+                            typename CONFIG_T::threshold_hi_t threshold_hi[CONFIG_T::n_scale_bias],
+                            typename CONFIG_T::threshold_lo_t threshold_lo[CONFIG_T::n_scale_bias],
                             ap_uint<1> flip[CONFIG_T::n_scale_bias]) {
     #pragma HLS PIPELINE
     #pragma HLS ARRAY_PARTITION variable=res complete
