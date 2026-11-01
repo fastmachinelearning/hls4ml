@@ -35,10 +35,14 @@ class BatchNormalizationQuantizedTanh(Layer):
         shape = inp.shape
         precision = self.model.config.backend.convert_precision_string(inp.type.precision)
         F = precision.fractional
+        # A negative scale reverses the comparisons with the thresholds, which the flip of the channel tells the kernel
+        flip = scale < 0
         threshold = -bias / scale
         if self.get_attr('quantize') == 2:
             self.add_output_variable(shape, precision=XnorPrecisionType())
-            threshold = np.floor(threshold * 2**F) / 2**F
+            # The output is 1 where the input is at least the threshold (at most, if flipped), so the threshold is rounded
+            # up (down) to the resolution of the input
+            threshold = np.where(flip, np.floor(threshold * 2**F), np.ceil(threshold * 2**F)) / 2**F
             self.add_weights_variable(
                 name='threshold',
                 var_name='t{index}',
@@ -50,8 +54,10 @@ class BatchNormalizationQuantizedTanh(Layer):
             self.add_output_variable(shape, precision=IntegerPrecisionType(width=2))
             threshold_hi = ternary_threshold / scale + threshold
             threshold_lo = -ternary_threshold / scale + threshold
-            threshold_hi = np.floor(threshold_hi * 2**F) / 2**F
-            threshold_lo = np.floor(threshold_lo * 2**F) / 2**F
+            # The output is 1 above the high threshold and -1 at or below the low one (below, and at or above, if
+            # flipped), so the thresholds are rounded down (up) to the resolution of the input
+            threshold_hi = np.where(flip, np.ceil(threshold_hi * 2**F), np.floor(threshold_hi * 2**F)) / 2**F
+            threshold_lo = np.where(flip, np.ceil(threshold_lo * 2**F), np.floor(threshold_lo * 2**F)) / 2**F
             self.add_weights_variable(
                 name='threshold_hi',
                 var_name='th{index}',
@@ -66,6 +72,13 @@ class BatchNormalizationQuantizedTanh(Layer):
                 type_name='threshold_lo_{index}_t',
                 precision=inp.type.precision,
             )
+        self.add_weights_variable(
+            name='flip',
+            var_name='f{index}',
+            data=flip.astype(int),
+            type_name='flip{index}_t',
+            precision=IntegerPrecisionType(width=1, signed=False),
+        )
 
 
 class PointwiseConv1D(Conv1D):

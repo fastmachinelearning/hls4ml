@@ -330,7 +330,10 @@ class Layer(Serializable):
             precision = quantizer.hls_type
             type_name = name + '{index}_t'
             data = quantizer(data)
-            if isinstance(quantizer.hls_type, ExponentPrecisionType):
+            if isinstance(quantizer.hls_type, ExponentPrecisionType) and name == 'bias':
+                max_shift = 2 ** (quantizer.hls_type.width - 1)
+                precision = FixedPrecisionType(2 * max_shift + 1, max_shift + 1, signed=True)
+            elif isinstance(quantizer.hls_type, ExponentPrecisionType):
                 exponent_type = True
 
         if compression:

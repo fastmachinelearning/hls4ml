@@ -14,6 +14,7 @@ batchnorm_quantized_tanh_binary_config_template = """struct config{index} : nnet
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     typedef {threshold_t.name} threshold_t;
+    typedef {flip_t.name} flip_t;
 }};\n"""
 
 batchnorm_quantized_tanh_ternary_config_template = """struct config{index} : nnet::batchnorm_quantized_tanh_config {{
@@ -24,6 +25,7 @@ batchnorm_quantized_tanh_ternary_config_template = """struct config{index} : nne
     static const unsigned reuse_factor = {reuse};
     typedef {threshold_hi_t.name} threshold_hi_t;
     typedef {threshold_lo_t.name} threshold_lo_t;
+    typedef {flip_t.name} flip_t;
 }};\n"""
 
 batchnorm_quantized_tanh_function_template = (
@@ -63,10 +65,10 @@ class BatchNormalizationQuantizedTanhFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         if node.get_attr('quantize') == 2:
             params['quantize'] = 'binary'
-            params['threshold'] = node.get_weights('threshold').name
+            params['threshold'] = node.get_weights('threshold').name + ', ' + node.get_weights('flip').name
         elif node.get_attr('quantize') == 3:
             params['quantize'] = 'ternary'
-            params['threshold'] = node.get_weights('threshold_hi').name + ', ' + node.get_weights('threshold_lo').name
+            params['threshold'] = ', '.join(node.get_weights(name).name for name in ('threshold_hi', 'threshold_lo', 'flip'))
 
         return self.template.format(**params)
 
@@ -94,9 +96,9 @@ class BatchNormalizationQuantizedTanhStreamFunctionTemplate(StreamFunctionCallTe
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('quantize') == 2:
-            params['threshold'] = node.get_weights('threshold').name
+            params['threshold'] = node.get_weights('threshold').name + ', ' + node.get_weights('flip').name
         elif node.get_attr('quantize') == 3:
-            params['threshold'] = node.get_weights('threshold_hi').name + ', ' + node.get_weights('threshold_lo').name
+            params['threshold'] = ', '.join(node.get_weights(name).name for name in ('threshold_hi', 'threshold_lo', 'flip'))
 
         return self.template.format(**params)
 
@@ -208,15 +210,16 @@ class QuantizeDenseOutput(OptimizerPass):
         bd_out_nodes = node.get_output_nodes()
         for out_node in bd_out_nodes:
             if isinstance(out_node, BatchNormalizationQuantizedTanh):
-                var_names = []
-                if quantizer.__class__.__name__ == 'BinaryQuantizer':
-                    var_names.append('threshold')
-                elif quantizer.__class__.__name__ == 'TernaryQuantizer':
-                    var_names.append('threshold_hi')
-                    var_names.append('threshold_lo')
-                for var_name in var_names:
+                # Round the thresholds to integers in the direction that keeps their comparisons exact, as in
+                # BatchNormalizationQuantizedTanh.set_thresholds: binary up (down if flipped), ternary down (up if flipped)
+                if out_node.get_attr('quantize') == 2:
+                    rounding = {'threshold': (np.ceil, np.floor)}
+                else:
+                    rounding = {'threshold_hi': (np.floor, np.ceil), 'threshold_lo': (np.floor, np.ceil)}
+                flip = out_node.get_weights('flip').data.astype(bool)
+                for var_name, (round_normal, round_flipped) in rounding.items():
                     threshold_var = out_node.weights[var_name]
                     threshold_var.update_precision(out_type)
-                    threshold_var.data = np.floor(threshold_var.data)
+                    threshold_var.data = np.where(flip, round_flipped(threshold_var.data), round_normal(threshold_var.data))
 
         return False

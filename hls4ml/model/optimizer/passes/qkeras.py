@@ -203,7 +203,7 @@ class ExtractTernaryThreshold(OptimizerPass):
 
     def transform(self, model, node):
         shape = node.get_input_variable().shape
-        scale = np.full(shape, 0.5 / node.get_attr('threshold', 0.5))
+        scale = np.full(shape[-1], 0.5 / node.get_attr('threshold', 0.5))
         bias = np.zeros_like(scale)
         node.set_attr('threshold', 0.5)
 
@@ -213,7 +213,7 @@ class ExtractTernaryThreshold(OptimizerPass):
             'inputs': node.get_input_node().outputs,
             'outputs': node.inputs,
             'n_in': node.get_attr('n_in'),
-            'n_filt': node.get_attr('n_filt', -1),
+            'n_filt': shape[-1] if len(shape) > 1 else -1,
             'reuse_factor': node.get_attr('reuse_factor'),
             'scale_data': scale,
             'bias_data': bias,

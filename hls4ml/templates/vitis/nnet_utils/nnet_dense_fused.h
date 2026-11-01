@@ -192,7 +192,7 @@ FusedAccum:
 FusedResult:
     for (unsigned j = 0; j < CONFIG_T::n_out; j++) {
         #pragma HLS UNROLL factor=PAR
-        typename CONFIG_T::accum_t sum = acc[j] + (typename CONFIG_T::accum_t)biases[j];
+        typename CONFIG_T::accum_t sum = acc[j] + init<data_T, CONFIG_T>(biases[j]);
         acc[j] = 0;
         typename CONFIG_T::preact_t value = cast<data_T, typename CONFIG_T::preact_t, CONFIG_T>(sum);
         res[j] = fused_activate<typename CONFIG_T::preact_t, res_T, CONFIG_T>(value, table);
@@ -234,7 +234,7 @@ FusedDotOut:
             }
         }
 
-        typename CONFIG_T::accum_t acc = (typename CONFIG_T::accum_t)biases[j];
+        typename CONFIG_T::accum_t acc = init<data_T, CONFIG_T>(biases[j]);
     FusedDotDrain:
         for (unsigned p = 0; p < PAR; p++) {
             #pragma HLS UNROLL
@@ -284,7 +284,7 @@ FusedAxpyAccum:
 FusedAxpyResult:
     for (unsigned j = 0; j < CONFIG_T::n_out; j++) {
         #pragma HLS UNROLL factor=PAR
-        typename CONFIG_T::accum_t sum = acc[j] + (typename CONFIG_T::accum_t)biases[j];
+        typename CONFIG_T::accum_t sum = acc[j] + init<data_T, CONFIG_T>(biases[j]);
         acc[j] = 0;
         typename CONFIG_T::preact_t value = cast<data_T, typename CONFIG_T::preact_t, CONFIG_T>(sum);
         res[j] = fused_activate<typename CONFIG_T::preact_t, res_T, CONFIG_T>(value, table);
