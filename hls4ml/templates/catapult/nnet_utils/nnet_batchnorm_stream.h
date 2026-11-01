@@ -55,7 +55,7 @@ BatchNormLoop:
 // ****************************************************
 template <class data_T, typename CONFIG_T>
 void normalize_binary_tanh(ac_channel<data_T> &data, ac_channel<nnet::array<ac_int<1, false>, CONFIG_T::n_in>> &res,
-                           typename data_T::value_type threshold[CONFIG_T::n_in]) {
+                           typename data_T::value_type threshold[CONFIG_T::n_in], ac_int<1, false> flip[CONFIG_T::n_in]) {
     //#pragma HLS ARRAY_PARTITION variable=threshold complete
 
 BinaryNormLoop:
@@ -68,7 +68,10 @@ BinaryNormLoop:
 
     BatchNormPack:
         for (int j = 0; j < data_T::size; j++) {
-            out_data[j] = (in_data[j] >= threshold[i * data_T::size + j]) ? 1 : 0;
+            int norm_index = CONFIG_T::n_filt == -1 ? i * data_T::size + j : j % CONFIG_T::n_filt;
+            // A flipped channel (negative scale) is 1 at or below its threshold
+            out_data[j] =
+                (flip[norm_index] ? in_data[j] <= threshold[norm_index] : in_data[j] >= threshold[norm_index]) ? 1 : 0;
         }
 
         res.write(out_data);
@@ -78,7 +81,8 @@ BinaryNormLoop:
 template <class data_T, typename CONFIG_T>
 void normalize_ternary_tanh(ac_channel<data_T> &data, ac_channel<nnet::array<ac_int<2, true>, CONFIG_T::n_in>> &res,
                             typename data_T::value_type threshold_hi[CONFIG_T::n_in],
-                            typename data_T::value_type threshold_lo[CONFIG_T::n_in]) {
+                            typename data_T::value_type threshold_lo[CONFIG_T::n_in],
+                            ac_int<1, false> flip[CONFIG_T::n_in]) {
     //#pragma HLS ARRAY_PARTITION variable=threshold_hi complete
     //#pragma HLS ARRAY_PARTITION variable=threshold_lo complete
 
@@ -93,11 +97,12 @@ TernaryNormLoop:
     BatchNormPack:
         for (int j = 0; j < data_T::size; j++) {
 
-            int norm_index = i * data_T::size + j;
+            int norm_index = CONFIG_T::n_filt == -1 ? i * data_T::size + j : j % CONFIG_T::n_filt;
 
-            if (in_data[j] > threshold_hi[norm_index]) {
+            // A flipped channel (negative scale) is 1 below the high threshold and -1 at or above the low one
+            if (flip[norm_index] ? in_data[j] < threshold_hi[norm_index] : in_data[j] > threshold_hi[norm_index]) {
                 out_data[j] = 1;
-            } else if (in_data[j] <= threshold_lo[norm_index]) {
+            } else if (flip[norm_index] ? in_data[j] >= threshold_lo[norm_index] : in_data[j] <= threshold_lo[norm_index]) {
                 out_data[j] = -1;
             } else {
                 out_data[j] = 0;

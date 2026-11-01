@@ -40,7 +40,7 @@ void dense_resource_rf_leq_nin(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::
 InitAccum:
     #pragma HLS loop unroll
     for (int iacc = 0; iacc < nout; iacc++) {
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+        acc[iacc] = init<data_T, CONFIG_T>(biases[iacc]);
     }
 
 ReuseLoop:
@@ -114,7 +114,7 @@ void dense_resource_rf_gt_nin_rem0(data_T data[CONFIG_T::n_in], res_T res[CONFIG
 InitAccum:
     #pragma HLS loop unroll
     for (int iacc = 0; iacc < nout; iacc++) {
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+        acc[iacc] = init<data_T, CONFIG_T>(biases[iacc]);
     }
 
     int w_index;
@@ -195,7 +195,7 @@ void dense_resource_rf_gt_nin(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n
 InitAccum:
     #pragma HLS loop unroll
     for (int iacc = 0; iacc < nout; iacc++) {
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+        acc[iacc] = init<data_T, CONFIG_T>(biases[iacc]);
     }
 
 ReuseLoop:

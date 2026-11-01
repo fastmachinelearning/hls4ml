@@ -47,7 +47,7 @@ void dense_rf_gt(const data_T &data, res_T &res, const typename CONFIG_T::weight
 Load:
     #pragma unroll
     for (int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+        acc[iacc] = init<typename data_T::value_type, CONFIG_T>(biases[iacc]);
     }
     [[intel::fpga_register]] int out_index[CONFIG_T::reuse_factor][CONFIG_T::block_factor];
     [[intel::fpga_register]] int d_index[CONFIG_T::reuse_factor][CONFIG_T::block_factor];
@@ -113,7 +113,7 @@ void dense_rf_lt(const data_T &data, res_T &res, const typename CONFIG_T::weight
 InitAccum:
     #pragma unroll
     for (int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+        acc[iacc] = init<typename data_T::value_type, CONFIG_T>(biases[iacc]);
     }
 ReuseLoop:
     [[intel::nofusion, intel::speculated_iterations(0)]] for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {

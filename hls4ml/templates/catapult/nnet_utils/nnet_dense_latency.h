@@ -65,7 +65,7 @@ void dense_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
     // Initialize accumulator with input biases
     ResetAccum:
         for (unsigned int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-            acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+            acc[iacc] = init<data_T, CONFIG_T>(biases[iacc]);
         }
 
     // Accumulate multiplication result
