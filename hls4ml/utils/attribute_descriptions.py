@@ -41,6 +41,24 @@ conv_pf = (
 conv_implementation = (
     '"LineBuffer" implementation is preferred over "Encoded" for most use cases. This attribute only applies to io_stream.'
 )
+conv_transpose_slot_groups = (
+    'Set by the backend. The output is computed in blocks of stride positions, one block for each input position. For '
+    'each kernel element, in the order of the rows of the weight matrix, the position in the block that it adds to.'
+)
+conv_transpose_slot_shifts = (
+    'Set by the backend. For each kernel element, in the order of the rows of the weight matrix, how many blocks '
+    'before the current block its input is, as (height, width).'
+)
+conv_transpose_n_buf = (
+    'Set by the backend. The number of inputs multiplied for each block of outputs, which is the number of kernel '
+    'elements times the number of input channels.'
+)
+conv_transpose_first_block = (
+    'Set by the backend. The index of the first block of outputs along this axis that cropping does not remove entirely.'
+)
+conv_transpose_n_blocks = (
+    'Set by the backend. The number of blocks of outputs along this axis that cropping does not remove entirely.'
+)
 
 # Recurrent-related attributes
 
