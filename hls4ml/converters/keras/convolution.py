@@ -1,5 +1,10 @@
 from hls4ml.converters.keras_v2_to_hls import get_weights_data, keras_handler, parse_default_keras_layer
-from hls4ml.converters.utils import compute_padding_1d, compute_padding_2d, parse_data_format
+from hls4ml.converters.utils import (
+    compute_conv_transpose_output,
+    compute_padding_1d,
+    compute_padding_2d,
+    parse_data_format,
+)
 
 
 @keras_handler('Conv1D', 'SeparableConv1D', 'DepthwiseConv1D')
@@ -146,5 +151,39 @@ def parse_conv2d_layer(keras_layer, input_names, input_shapes, data_reader):
         output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
     else:
         output_shape = [input_shapes[0][0], layer['out_height'], layer['out_width'], layer['n_filt']]
+
+    return layer, output_shape
+
+
+@keras_handler('Conv1DTranspose', 'Conv2DTranspose')
+def parse_conv_transpose_layer(keras_layer, input_names, input_shapes, data_reader):
+    assert keras_layer['class_name'] in ['Conv1DTranspose', 'Conv2DTranspose', 'QConv1DTranspose', 'QConv2DTranspose']
+
+    layer = parse_default_keras_layer(keras_layer, input_names)
+    if layer['data_format'] != 'channels_last':
+        raise NotImplementedError(f'Layer {layer["name"]}: only data_format="channels_last" is supported.')
+
+    config = keras_layer['config']
+    *px_in_shape, layer['n_chan'] = input_shapes[0][1:]
+    layer['n_filt'] = config['filters']
+    layer['weight_data'] = get_weights_data(data_reader, layer['name'], 'kernel')
+    layer['bias_data'] = get_weights_data(data_reader, layer['name'], 'bias')
+
+    axes = [('width', 'left')] if len(px_in_shape) == 1 else [('height', 'top'), ('width', 'left')]
+    output_padding = config.get('output_padding') or [None] * len(px_in_shape)
+    px_out_shape = []
+    for (axis, side), n_in, k, s, d, op in zip(
+        axes, px_in_shape, config['kernel_size'], config['strides'], config['dilation_rate'], output_padding
+    ):
+        n_out, crop = compute_conv_transpose_output(config['padding'], n_in, s, k, d, op)
+        layer[f'in_{axis}'] = n_in
+        layer[f'out_{axis}'] = n_out
+        layer[f'filt_{axis}'] = k
+        layer[f'stride_{axis}'] = s
+        layer[f'dilation_{axis}'] = d
+        layer[f'crop_{side}'] = crop
+        px_out_shape.append(n_out)
+
+    output_shape = [input_shapes[0][0], *px_out_shape, layer['n_filt']]
 
     return layer, output_shape
