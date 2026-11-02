@@ -584,6 +584,8 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.compute_conv2d_instructions">compute_conv2d_instructions() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.compute_conv_transpose_output">compute_conv_transpose_output() (in module hls4ml.converters.utils)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.compute_padding_1d">compute_padding_1d() (in module hls4ml.converters.utils)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.html#hls4ml.converters.utils.compute_padding_1d_pytorch">compute_padding_1d_pytorch() (in module hls4ml.converters.utils)</a>
@@ -658,6 +660,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.altera.passes.html#hls4ml.backends.altera.passes.convolution_templates.Conv1DTaskSequenceTemplate">Conv1DTaskSequenceTemplate (class in hls4ml.backends.altera.passes.convolution_templates)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv1DTranspose">Conv1DTranspose (class in hls4ml.model.layers)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2D">Conv2D (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2DBatchnorm">Conv2DBatchnorm (class in hls4ml.model.layers)</a>
@@ -683,6 +687,8 @@
 </li>
       </ul></li>
       <li><a href="autodoc/hls4ml.backends.altera.passes.html#hls4ml.backends.altera.passes.convolution_templates.Conv2DTaskSequenceTemplate">Conv2DTaskSequenceTemplate (class in hls4ml.backends.altera.passes.convolution_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2DTranspose">Conv2DTranspose (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.altera.passes.html#hls4ml.backends.altera.passes.convolution_templates.conv_mult_config_template">conv_mult_config_template (in module hls4ml.backends.altera.passes.convolution_templates)</a>
 
@@ -763,6 +769,12 @@
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.conv_to_convxd.ConvToConvXD">ConvToConvXD (class in hls4ml.model.optimizer.passes.conv_to_convxd)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd.ConvToDepthwiseConvXD">ConvToDepthwiseConvXD (class in hls4ml.model.optimizer.passes.conv_to_depthwiseconvxd)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.ConvTransposeConfigTemplate">ConvTransposeConfigTemplate (class in hls4ml.backends.vivado.passes.convolution_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.ConvTransposeFunctionTemplate">ConvTransposeFunctionTemplate (class in hls4ml.backends.vivado.passes.convolution_templates)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvTransposeHandler">ConvTransposeHandler (class in hls4ml.converters.keras_v3.conv)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.coyote.html#hls4ml.backends.coyote.coyote_backend.CoyoteBackend">CoyoteBackend (class in hls4ml.backends.coyote.coyote_backend)</a>
 </li>
@@ -1523,6 +1535,10 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate.format">(hls4ml.backends.vivado.passes.convolution_templates.Conv2DFunctionTemplate method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.ConvTransposeConfigTemplate.format">(hls4ml.backends.vivado.passes.convolution_templates.ConvTransposeConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.ConvTransposeFunctionTemplate.format">(hls4ml.backends.vivado.passes.convolution_templates.ConvTransposeFunctionTemplate method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DConfigTemplate.format">(hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DConfigTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DFunctionTemplate.format">(hls4ml.backends.vivado.passes.convolution_templates.SeparableConv1DFunctionTemplate method)</a>
@@ -1732,6 +1748,10 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.generate_conv2d_line_buffer_fn">generate_conv2d_line_buffer_fn() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.generate_conv_transpose_line_buffer_fn">generate_conv_transpose_line_buffer_fn() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_backend.FPGABackend.generate_conv_transpose_place_fn">generate_conv_transpose_place_fn() (hls4ml.backends.fpga.fpga_backend.FPGABackend method)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fifo_depth_optimization.generate_depths_file">generate_depths_file() (in module hls4ml.backends.vitis.passes.fifo_depth_optimization)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.passes.html#hls4ml.backends.fpga.passes.hgq_proxy_model.generate_mask_fn">generate_mask_fn() (in module hls4ml.backends.fpga.passes.hgq_proxy_model)</a>
@@ -1882,10 +1902,10 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_layer_output_variable">get_layer_output_variable() (hls4ml.model.graph.ModelGraph method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_layer_precision">get_layer_precision() (hls4ml.model.layers.Layer method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.get_layer_precision">get_layer_precision() (hls4ml.model.layers.Layer method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.graph.ModelGraph.get_layers">get_layers() (hls4ml.model.graph.ModelGraph method)</a>
 
       <ul>
@@ -2083,6 +2103,8 @@
       <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvHandler.handle">handle() (hls4ml.converters.keras_v3.conv.ConvHandler method)</a>
 
       <ul>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvTransposeHandler.handle">(hls4ml.converters.keras_v3.conv.ConvTransposeHandler method)</a>
+</li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.ActivationHandler.handle">(hls4ml.converters.keras_v3.core.ActivationHandler method)</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.DenseHandler.handle">(hls4ml.converters.keras_v3.core.DenseHandler method)</a>
@@ -2141,6 +2163,8 @@
       <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvHandler.handles">handles (hls4ml.converters.keras_v3.conv.ConvHandler attribute)</a>
 
       <ul>
+        <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvTransposeHandler.handles">(hls4ml.converters.keras_v3.conv.ConvTransposeHandler attribute)</a>
+</li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.ActivationHandler.handles">(hls4ml.converters.keras_v3.core.ActivationHandler attribute)</a>
 </li>
         <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.core.DenseHandler.handles">(hls4ml.converters.keras_v3.core.DenseHandler attribute)</a>
@@ -4151,6 +4175,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_conv1d">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_conv1d_transpose">init_conv1d_transpose() (hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.altera.html#hls4ml.backends.altera.altera_backend.AlteraBackend.init_conv2d">init_conv2d() (hls4ml.backends.altera.altera_backend.AlteraBackend method)</a>
 
       <ul>
@@ -4161,6 +4187,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_conv2d">(hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vivado.html#hls4ml.backends.vivado.vivado_backend.VivadoBackend.init_conv2d_transpose">init_conv2d_transpose() (hls4ml.backends.vivado.vivado_backend.VivadoBackend method)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.altera.html#hls4ml.backends.altera.altera_backend.AlteraBackend.init_dense">init_dense() (hls4ml.backends.altera.altera_backend.AlteraBackend method)</a>
 
       <ul>
@@ -4320,9 +4348,13 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv1D.initialize">(hls4ml.model.layers.Conv1D method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv1DTranspose.initialize">(hls4ml.model.layers.Conv1DTranspose method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2D.initialize">(hls4ml.model.layers.Conv2D method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2DBatchnorm.initialize">(hls4ml.model.layers.Conv2DBatchnorm method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Conv2DTranspose.initialize">(hls4ml.model.layers.Conv2DTranspose method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Cropping1D.initialize">(hls4ml.model.layers.Cropping1D method)</a>
 </li>
@@ -5638,6 +5670,12 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.convolution.parse_conv_layer">parse_conv_layer() (in module hls4ml.converters.onnx.convolution)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.convolution.parse_conv_transpose_layer">parse_conv_transpose_layer() (in module hls4ml.converters.keras.convolution)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.convolution.parse_conv_transpose_layer">(in module hls4ml.converters.pytorch.convolution)</a>
+</li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshaping.parse_cropping1d_layer">parse_cropping1d_layer() (in module hls4ml.converters.keras.reshaping)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshaping.parse_cropping2d_layer">parse_cropping2d_layer() (in module hls4ml.converters.keras.reshaping)</a>
@@ -5744,6 +5782,8 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qconv_layer">parse_qconv_layer() (in module hls4ml.converters.keras.qkeras)</a>
 </li>
+      <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qconv_transpose_layer">parse_qconv_transpose_layer() (in module hls4ml.converters.keras.qkeras)</a>
+</li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qdense_layer">parse_qdense_layer() (in module hls4ml.converters.keras.qkeras)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qdepthwiseqconv_layer">parse_qdepthwiseqconv_layer() (in module hls4ml.converters.keras.qkeras)</a>
@@ -5760,6 +5800,8 @@
 </li>
       <li><a href="autodoc/hls4ml.report.html#hls4ml.report.quartus_report.parse_quartus_report">parse_quartus_report() (in module hls4ml.report.quartus_report)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.reshape.parse_reshape_layer">parse_reshape_layer() (in module hls4ml.converters.keras.reshape)</a>
 
       <ul>
@@ -5768,8 +5810,6 @@
         <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_reshape_layer">(in module hls4ml.converters.pytorch.reshape)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.converters.onnx.html#hls4ml.converters.onnx.reshape.parse_resize_layer">parse_resize_layer() (in module hls4ml.converters.onnx.reshape)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_rnn_layer">parse_rnn_layer() (in module hls4ml.converters.keras.recurrent)</a>

@@ -159,6 +159,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.convolution">hls4ml.converters.keras.convolution module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.convolution.parse_conv1d_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv1d_layer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.convolution.parse_conv2d_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv2d_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.convolution.parse_conv_transpose_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv_transpose_layer()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.keras.html#module-hls4ml.converters.keras.core">hls4ml.converters.keras.core module</a><ul>
@@ -199,6 +200,7 @@
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qbatchnorm_layer"><code class="docutils literal notranslate"><span class="pre">parse_qbatchnorm_layer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qconv2dbatchnorm_layer"><code class="docutils literal notranslate"><span class="pre">parse_qconv2dbatchnorm_layer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qconv_layer"><code class="docutils literal notranslate"><span class="pre">parse_qconv_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qconv_transpose_layer"><code class="docutils literal notranslate"><span class="pre">parse_qconv_transpose_layer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qdense_layer"><code class="docutils literal notranslate"><span class="pre">parse_qdense_layer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qdepthwiseqconv_layer"><code class="docutils literal notranslate"><span class="pre">parse_qdepthwiseqconv_layer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.parse_qrnn_layer"><code class="docutils literal notranslate"><span class="pre">parse_qrnn_layer()</span></code></a></li>
@@ -263,6 +265,11 @@
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvHandler"><code class="docutils literal notranslate"><span class="pre">ConvHandler</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvHandler.handle"><code class="docutils literal notranslate"><span class="pre">ConvHandler.handle()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvHandler.handles"><code class="docutils literal notranslate"><span class="pre">ConvHandler.handles</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvTransposeHandler"><code class="docutils literal notranslate"><span class="pre">ConvTransposeHandler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvTransposeHandler.handle"><code class="docutils literal notranslate"><span class="pre">ConvTransposeHandler.handle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.ConvTransposeHandler.handles"><code class="docutils literal notranslate"><span class="pre">ConvTransposeHandler.handles</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.conv.gen_conv_config"><code class="docutils literal notranslate"><span class="pre">gen_conv_config()</span></code></a></li>
@@ -419,6 +426,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.convolution">hls4ml.converters.pytorch.convolution module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.convolution.parse_conv1d_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv1d_layer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.convolution.parse_conv2d_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv2d_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.convolution.parse_conv_transpose_layer"><code class="docutils literal notranslate"><span class="pre">parse_conv_transpose_layer()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="hls4ml.converters.pytorch.html#module-hls4ml.converters.pytorch.core">hls4ml.converters.pytorch.core module</a><ul>
@@ -1008,6 +1016,39 @@ output_layers (list):  The output layers</p>
 <span class="sig-name descname"><span class="pre">get_weights_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.IsolatedLayerReader.get_weights_data" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hls4ml.converters.utils.compute_conv_transpose_output">
+<span class="sig-prename descclassname"><span class="pre">hls4ml.converters.utils.</span></span><span class="sig-name descname"><span class="pre">compute_conv_transpose_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pad_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.converters.utils.compute_conv_transpose_output" title="Link to this definition"></a></dt>
+<dd><p>Computes the output size of a Keras transposed convolution along one axis, and the number of positions removed
+from the start of its full output.</p>
+<p>The full output has <code class="docutils literal notranslate"><span class="pre">(in_size</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">*</span> <span class="pre">stride</span> <span class="pre">+</span> <span class="pre">(filt_size</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">*</span> <span class="pre">dilation</span> <span class="pre">+</span> <span class="pre">1</span></code> positions. With <code class="docutils literal notranslate"><span class="pre">same</span></code> padding, the
+positions removed from the start follow TensorFlow’s rule for the convolution that the transposed convolution is the
+gradient of. With <code class="docutils literal notranslate"><span class="pre">valid</span></code> padding nothing is removed, and the output is longer than the full output when the kernel
+is shorter than the stride.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pad_type</strong> (<em>str</em>) – Padding type, one of <code class="docutils literal notranslate"><span class="pre">same</span></code> or <code class="docutils literal notranslate"><span class="pre">valid</span></code> (case insensitive).</p></li>
+<li><p><strong>in_size</strong> (<em>int</em>) – Input size.</p></li>
+<li><p><strong>stride</strong> (<em>int</em>) – Stride length.</p></li>
+<li><p><strong>filt_size</strong> (<em>int</em>) – Length of the kernel window.</p></li>
+<li><p><strong>dilation</strong> (<em>int</em><em>, </em><em>optional</em>) – Dilation factor of the kernel. Defaults to 1.</p></li>
+<li><p><strong>output_padding</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of positions added to the end of the output, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to let Keras
+choose it. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – Raised if the padding type is unknown.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing the output size and the number of positions removed from the start of the full output.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">

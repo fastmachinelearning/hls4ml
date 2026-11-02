@@ -158,6 +158,21 @@ the <strong>Vivado</strong> backend.</p>
 they use <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> and the <code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy, or the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy with a reuse factor of 1. <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2024.1 is not affected. With
 2023.2, raising the clock uncertainty to 35% (<code class="docutils literal notranslate"><span class="pre">clock_uncertainty='35%'</span></code>) was enough for the models tested, at the cost of one to three extra
 clock cycles per time step.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">Vivado</span> <span class="pre">HLS</span></code> 2020.1, <code class="docutils literal notranslate"><span class="pre">Conv1DTranspose</span></code> and <code class="docutils literal notranslate"><span class="pre">Conv2DTranspose</span></code> layers with the <code class="docutils literal notranslate"><span class="pre">Latency</span></code> strategy may not meet the target clock at the
+default clock uncertainty. Raising the clock uncertainty to 27% (<code class="docutils literal notranslate"><span class="pre">clock_uncertainty='27%'</span></code>) was enough for most of the models tested, though some
+layers required more. The same can happen with <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> and the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy at a small reuse factor. <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2024.1 is not affected.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2024.1, the <code class="docutils literal notranslate"><span class="pre">io_stream</span></code> implementation of <code class="docutils literal notranslate"><span class="pre">Conv1DTranspose</span></code> and <code class="docutils literal notranslate"><span class="pre">Conv2DTranspose</span></code> takes one clock cycle more per input
+than the interval given in <a class="reference internal" href="../ir/ir.html#transposed-convolution"><span class="std std-ref">Transposed convolution</span></a> in some layers where the first of its two processes is the slower one.</p></li>
+<li><p>The following are not supported with <code class="docutils literal notranslate"><span class="pre">Vitis</span> <span class="pre">HLS</span></code> 2025.1:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Conv1D</span></code> and <code class="docutils literal notranslate"><span class="pre">Conv2D</span></code> with <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code>: co-simulation does not finish when the model is a dataflow region, which is the default for
+models with convolutions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Dense</span></code> with <code class="docutils literal notranslate"><span class="pre">io_parallel</span></code> and the <code class="docutils literal notranslate"><span class="pre">Resource</span></code> strategy: C synthesis did not finish in six hours for most of the models tested,
+even small ones.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Conv1DTranspose</span></code> and <code class="docutils literal notranslate"><span class="pre">Conv2DTranspose</span></code>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Fused</span></code> strategy, whose interval is less predictable with this version (see <a class="reference internal" href="../advanced/fused.html"><span class="doc">Fused Strategy</span></a>).</p></li>
+</ul>
+</li>
 </ul>
 </section>
 <section id="fused-strategy">

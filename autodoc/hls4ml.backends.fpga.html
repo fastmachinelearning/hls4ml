@@ -406,6 +406,64 @@ Specified as either a number or a list [top_pad, bottom_pad, left_pad, right_pad
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_backend.FPGABackend.generate_conv_transpose_line_buffer_fn">
+<span class="sig-name descname"><span class="pre">generate_conv_transpose_line_buffer_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_partitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slot_shifts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_block</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_blocks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend.generate_conv_transpose_line_buffer_fn" title="Link to this definition"></a></dt>
+<dd><p>Generate a C++ function that collects the inputs of each block of a transposed convolution.</p>
+<p>Block <code class="docutils literal notranslate"><span class="pre">(bh,</span> <span class="pre">bw)</span></code> of the output reads, for each kernel element, the input at <code class="docutils literal notranslate"><span class="pre">(first_block[0]</span> <span class="pre">+</span> <span class="pre">bh</span> <span class="pre">-</span> <span class="pre">shift[0],</span>
+<span class="pre">first_block[1]</span> <span class="pre">+</span> <span class="pre">bw</span> <span class="pre">-</span> <span class="pre">shift[1])</span></code>, or zero outside the input. Blocks are numbered in row-major order and split
+into <code class="docutils literal notranslate"><span class="pre">n_partitions</span></code> consecutive parts, as in <code class="docutils literal notranslate"><span class="pre">generate_conv2d_line_buffer_fn</span></code>. For a binary input, in which
+zero stands for -1, the function also sets a flag for each kernel element that tells whether it reads inside the
+input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer_idx</strong> (<em>int</em>) – Index of layer (‘index’ attribute).</p></li>
+<li><p><strong>n_partitions</strong> (<em>int</em>) – Number of partitions to divide the blocks into.</p></li>
+<li><p><strong>in_shape</strong> (<em>tuple</em>) – Input height, width and channels; height 1 for 1D.</p></li>
+<li><p><strong>slot_shifts</strong> (<em>tuple</em>) – Input offset (height, width) of each kernel element, in buffer order.</p></li>
+<li><p><strong>first_block</strong> (<em>tuple</em>) – First block (height, width) that is not cropped.</p></li>
+<li><p><strong>n_blocks</strong> (<em>tuple</em>) – Number of blocks (height, width).</p></li>
+<li><p><strong>binary_input</strong> (<em>bool</em>) – Whether the input is binary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Generated C++ function</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_backend.FPGABackend.generate_conv_transpose_place_fn">
+<span class="sig-name descname"><span class="pre">generate_conv_transpose_place_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_partitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strides</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_block</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_blocks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend.generate_conv_transpose_place_fn" title="Link to this definition"></a></dt>
+<dd><p>Generate a C++ function that writes the results of each block of a transposed convolution.</p>
+<p>Group <code class="docutils literal notranslate"><span class="pre">(gh,</span> <span class="pre">gw)</span></code> of block <code class="docutils literal notranslate"><span class="pre">(bh,</span> <span class="pre">bw)</span></code> is output position <code class="docutils literal notranslate"><span class="pre">((first_block[0]</span> <span class="pre">+</span> <span class="pre">bh)</span> <span class="pre">*</span> <span class="pre">strides[0]</span> <span class="pre">+</span> <span class="pre">gh</span> <span class="pre">-</span> <span class="pre">crop[0],</span>
+<span class="pre">(first_block[1]</span> <span class="pre">+</span> <span class="pre">bw)</span> <span class="pre">*</span> <span class="pre">strides[1]</span> <span class="pre">+</span> <span class="pre">gw</span> <span class="pre">-</span> <span class="pre">crop[1])</span></code>; positions outside the output are left out. Blocks are
+split into partitions as in <code class="docutils literal notranslate"><span class="pre">generate_conv_transpose_line_buffer_fn</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer_idx</strong> (<em>int</em>) – Index of layer (‘index’ attribute).</p></li>
+<li><p><strong>n_partitions</strong> (<em>int</em>) – Number of partitions to divide the blocks into.</p></li>
+<li><p><strong>out_shape</strong> (<em>tuple</em>) – Output height, width and filters; height 1 for 1D.</p></li>
+<li><p><strong>strides</strong> (<em>tuple</em>) – Stride (height, width).</p></li>
+<li><p><strong>crop</strong> (<em>tuple</em>) – Positions removed from the top and the left of the full output.</p></li>
+<li><p><strong>first_block</strong> (<em>tuple</em>) – First block (height, width) that is not cropped.</p></li>
+<li><p><strong>n_blocks</strong> (<em>tuple</em>) – Number of blocks (height, width).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Generated C++ function</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_backend.FPGABackend.get_closest_reuse_factor">
 <span class="sig-name descname"><span class="pre">get_closest_reuse_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">valid_rf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chosen_rf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_backend.FPGABackend.get_closest_reuse_factor" title="Link to this definition"></a></dt>
 <dd><p>Returns closest value to chosen_rf. valid_rf is sorted (obtained from get_valid_reuse_factors())
