@@ -15,11 +15,20 @@ def to_apfixed(k, b, i, RND, SAT):
 
 def to_acfixed(k, b, i, RND, SAT):
     k = 'false' if k == 0 else 'true'
-    if b == 1:
-        # Currently Altera ac_fixed requires at least two bits for both signed and unsigned cases
-        # Should be fixed in the future once Altera supports 1-bit unsigned ac_fixed
-        b = 2
     return f'ac_fixed<{b},{i},{k},AC_{RND},AC_{SAT}>'
+
+
+def acfixed_1bit_mask(idx, k, i, RND, SAT):
+    """ac_fixed needs at least two bits, so quantize to a 2-bit type with the same step and select the 1-bit value"""
+    t = f'{to_acfixed(k, 2, i + 1, RND, SAT)}(inp[{idx}])'
+    value = float(-(2.0 ** (i - 1)) if k else 2.0 ** (i - 1))
+    if SAT == 'WRAP':
+        cond = f'{t}[0]'
+    elif k:
+        cond = f'{t} < 0'
+    else:
+        cond = f'{t} != 0'
+    return f'out[{idx}] = ({cond}) ? {value!r} : 0.0;'
 
 
 def generate_mask_fn(
@@ -36,6 +45,8 @@ def generate_mask_fn(
     for idx, (k, b, i) in enumerate(zip(Ks, Bs, Is)):
         if b == 0:
             fn = f'out[{idx}] = 0;'
+        elif b == 1 and to_fixed is to_acfixed:
+            fn = acfixed_1bit_mask(idx, k, i, RND, SAT)
         else:
             fn = f'out[{idx}] = {to_fixed(k, b, i, RND, SAT)}(inp[{idx}]);'
         masks.append(f'    {fn}')
