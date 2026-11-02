@@ -90,13 +90,13 @@ class QKerasFactorizeAlpha(OptimizerPass):
     """
 
     def match(self, node):
-        q_layer = node.class_name in ['Dense', 'Conv1D', 'Conv2D', 'Conv2DBatchnorm']
-        has_w_quant = node.get_attr('weight_quantizer') is not None
+        q_layer = node.class_name in ['Dense', 'Conv1D', 'Conv2D', 'Conv2DBatchnorm', 'DepthwiseConv1D', 'DepthwiseConv2D']
+        has_w_quant = self.weight_quantizer(node) is not None
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False
         if has_w_quant:
-            if hasattr(node.get_attr('weight_quantizer'), 'alpha'):
-                w_alpha = node.get_attr('weight_quantizer').alpha
+            if hasattr(self.weight_quantizer(node), 'alpha'):
+                w_alpha = self.weight_quantizer(node).alpha
                 has_w_alpha = w_alpha != 1 and w_alpha is not None
             else:
                 has_w_alpha = False
@@ -108,6 +108,9 @@ class QKerasFactorizeAlpha(OptimizerPass):
                 has_b_alpha = False
         is_match = q_layer and ((has_w_quant and has_w_alpha) or (has_b_quant and has_b_alpha))
         return is_match
+
+    def weight_quantizer(self, node):
+        return node.get_attr('depthwise_quantizer' if 'Depthwise' in node.class_name else 'weight_quantizer')
 
     def transform(self, model, node):
         # The quantizer has to be applied to set the scale attribute
@@ -124,6 +127,10 @@ class QKerasFactorizeAlpha(OptimizerPass):
         unscale = 1.0 / scale
 
         new_weights = unscale * qweights  # use the quantized weights for safety
+        if 'Depthwise' in node.class_name and not isinstance(quantizer.scale, (int, float)):
+            # QKeras scales a depthwise kernel along its last axis, the depth multiplier, while each output channel is an
+            # input channel times a depth multiplier
+            scale = np.broadcast_to(scale, weights.shape)[(0,) * (weights.ndim - 2)].reshape(-1)
 
         qcfg = quantizer.get_config()
         alpha = qcfg['alpha']
@@ -143,10 +150,10 @@ class QKerasFactorizeAlpha(OptimizerPass):
             bias_quantizer = node.weights['bias'].quantizer
         node.weights['bias'].data = np.zeros(bias.shape)
 
-        has_w_quant = node.get_attr('weight_quantizer') is not None
+        has_w_quant = self.weight_quantizer(node) is not None
         has_b_quant = node.get_attr('bias_quantizer') is not None
         if has_w_quant:
-            node.attributes['weight_quantizer'].alpha = 1
+            self.weight_quantizer(node).alpha = 1
         if has_b_quant:
             node.attributes['bias_quantizer'].alpha = 1
 
@@ -165,7 +172,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
             n_in = node.get_attr('n_out')
 
         # the name of the new ApplyAlpha node
-        alpha_name = node.get_attr('name') + '_alpha'
+        alpha_name = node.name + '_alpha'
 
         # make the precision auto
         alpha_precision = {'Precision': 'auto'}

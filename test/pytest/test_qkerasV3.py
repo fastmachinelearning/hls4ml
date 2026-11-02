@@ -1037,7 +1037,9 @@ def test_binary_activation_scale_sign(test_case_id, layer, activation, backend, 
 
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('activation', [None, binary(), ternary()], ids=['none', 'binary', 'ternary'])
+@pytest.mark.parametrize(
+    'activation', [None, binary(), binary(use_01=True), ternary()], ids=['none', 'binary', 'binary_01', 'ternary']
+)
 def test_qbatchnorm(test_case_id, activation, backend, io_type):
     """
     Test QBatchNormalization with its default quantizers, which make negative scales zero, alone or followed by a
@@ -1078,3 +1080,47 @@ def test_po2_bias(test_case_id, layer, backend, io_type):
     model.set_weights([rng.uniform(-1, 1, w.shape) for w in model.get_weights()])
     _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
     np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize(
+    'activation',
+    [binary(use_01=True), ternary(), ternary(threshold=0.25), ternary(threshold=0.5)],
+    ids=['binary_01', 'ternary', 'ternary_t025', 'ternary_t05'],
+)
+def test_binary_activation_without_batchnorm(test_case_id, activation, backend, io_type):
+    """
+    Test binary and ternary activations that follow a layer directly, without batch normalization.
+    """
+
+    keras.utils.set_random_seed(0)
+    q = {'kernel_quantizer': quantized_bits(4, 0, alpha=1), 'bias_quantizer': quantized_bits(8, 3)}
+    model = Sequential([Input((8,)), QDense(16, **q), QActivation(activation)])
+    rng = np.random.default_rng(0)
+    model.set_weights([rng.uniform(-1, 1, w.shape) for w in model.get_weights()])
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize(
+    'kernel_quantizer', [binary(alpha='auto'), quantized_bits(4, 0, alpha='auto')], ids=['binary', 'bits']
+)
+@pytest.mark.parametrize('layer', ['depthwise', 'separable'])
+def test_depthwise_weight_scale(test_case_id, layer, kernel_quantizer, backend):
+    """
+    Test depthwise and separable convolutions with a weight scale (alpha) computed by QKeras.
+    """
+
+    keras.utils.set_random_seed(0)
+    bias = {'bias_quantizer': quantized_bits(8, 3)}
+    if layer == 'depthwise':
+        conv = QDepthwiseConv2D(3, depthwise_quantizer=kernel_quantizer, **bias)
+    else:
+        conv = QSeparableConv2D(4, 3, depthwise_quantizer=kernel_quantizer, pointwise_quantizer=kernel_quantizer, **bias)
+    model = Sequential([Input((6, 6, 3)), conv])
+    rng = np.random.default_rng(0)
+    model.set_weights([rng.uniform(-1, 1, w.shape) for w in model.get_weights()])
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, 'io_stream')
+    np.testing.assert_allclose(y_hls4ml, y_keras, atol=0.01)

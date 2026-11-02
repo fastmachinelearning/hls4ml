@@ -22,7 +22,7 @@ class BatchNormalizationQuantizedTanh(Layer):
         inp = self.get_input_variable()
         shape = inp.shape
         if self.get_attr('quantize') == 2:
-            self.add_output_variable(shape, precision=XnorPrecisionType())
+            self.add_output_variable(shape, precision=self.binary_precision())
         elif self.get_attr('quantize') == 3:
             self.add_output_variable(shape, precision=IntegerPrecisionType(width=2))
         else:
@@ -43,7 +43,7 @@ class BatchNormalizationQuantizedTanh(Layer):
         with np.errstate(divide='ignore', invalid='ignore'):
             threshold = -bias / scale
         if self.get_attr('quantize') == 2:
-            self.add_output_variable(shape, precision=XnorPrecisionType())
+            self.add_output_variable(shape, precision=self.binary_precision())
             # The output is 1 where the input is at least the threshold (at most, if flipped), so the threshold is rounded
             # up (down) to the resolution of the input
             threshold = np.where(flip, np.floor(threshold * 2**F), np.ceil(threshold * 2**F)) / 2**F
@@ -60,9 +60,10 @@ class BatchNormalizationQuantizedTanh(Layer):
             with np.errstate(divide='ignore', invalid='ignore'):
                 threshold_hi = ternary_threshold / scale + threshold
                 threshold_lo = -ternary_threshold / scale + threshold
-            # The output is 1 above the high threshold and -1 at or below the low one (below, and at or above, if
-            # flipped), so the thresholds are rounded down (up) to the resolution of the input
-            threshold_hi = np.where(flip, np.ceil(threshold_hi * 2**F), np.floor(threshold_hi * 2**F)) / 2**F
+            # The output is 1 at or above the high threshold and -1 at or below the low one (at or below, and at or
+            # above, if flipped). The kernel tests the high threshold with > (< if flipped), so it is moved to the last
+            # step of the input below it (the first above it); the low one is rounded down (up)
+            threshold_hi = np.where(flip, np.floor(threshold_hi * 2**F) + 1, np.ceil(threshold_hi * 2**F) - 1) / 2**F
             threshold_lo = np.where(flip, np.ceil(threshold_lo * 2**F), np.floor(threshold_lo * 2**F)) / 2**F
             threshold_hi = np.clip(np.where(zero, np.where(bias >= ternary_threshold, low, high), threshold_hi), low, high)
             threshold_lo = np.clip(np.where(zero, np.where(bias <= -ternary_threshold, high, low), threshold_lo), low, high)
@@ -87,6 +88,11 @@ class BatchNormalizationQuantizedTanh(Layer):
             type_name='flip{index}_t',
             precision=IntegerPrecisionType(width=1, signed=False),
         )
+
+    def binary_precision(self):
+        """The output type of a binary activation: 1-bit binary, where 0 stands for -1, or 0 and 1 with use_01."""
+
+        return IntegerPrecisionType(width=1, signed=False) if self.get_attr('use_01', False) else XnorPrecisionType()
 
     def threshold_range(self, precision):
         """The thresholds one step beyond the range of an input of the given precision, at which a comparison is always
