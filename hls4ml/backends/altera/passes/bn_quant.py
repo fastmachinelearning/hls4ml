@@ -168,7 +168,11 @@ class QuantizeDenseOutput(OptimizerPass):
         is_binary_ternary = quantizer is not None and (
             quantizer.__class__.__name__ == 'BinaryQuantizer' or quantizer.__class__.__name__ == 'TernaryQuantizer'
         )
-        return is_dense and is_input_bnqt and is_binary_ternary
+        if not (is_dense and is_input_bnqt and is_binary_ternary):
+            return False
+        # The bias of the layer moves to the batch normalizations that follow it, so a layer with a bias may only feed those
+        has_bias = np.any(node.get_weights('bias').data != 0)
+        return not has_bias or all(isinstance(n, BatchNormalizationQuantizedTanh) for n in node.get_output_nodes())
 
     def transform(self, model, node):
         # Compute the required precision and update the variables
@@ -193,7 +197,7 @@ class QuantizeDenseOutput(OptimizerPass):
             return False
         quantizer.bits = quantized_precision.width
         quantizer.hls_type = quantized_precision
-        quantized_data = quantizer(node.weights['weight'].data)
+        quantized_data = quantizer(node.weights['weight'].data_unquantized)
 
         weights = node.weights['weight']
         weights.data = quantized_data
@@ -201,28 +205,18 @@ class QuantizeDenseOutput(OptimizerPass):
         weights.update_precision(quantized_precision)
 
         bias = node.weights['bias']
+        layer_bias = bias.data
         bias.data = np.zeros(shape=(node.get_attr('n_out')))
         bias.type.name = f'bias{node.index}_t'
         bias.nzeros = 0
         bias.update_precision(quantized_precision)
 
-        # If followed by the BatchNormalizationBinaryTanh, update its input
-        # Also requantise the weights
-        bd_out_nodes = node.get_output_nodes()
-        for out_node in bd_out_nodes:
+        # Add the bias to the batch normalizations that follow, and compute their thresholds again for the new input type
+        for out_node in node.get_output_nodes():
             if isinstance(out_node, BatchNormalizationQuantizedTanh):
-                # Round the thresholds to integers in the direction that keeps their comparisons exact, as in
-                # BatchNormalizationQuantizedTanh.set_thresholds: binary up (down if flipped), ternary down (up if flipped)
-                if out_node.get_attr('quantize') == 2:
-                    rounding = {'threshold': (np.ceil, np.floor)}
-                else:
-                    rounding = {'threshold_hi': (np.floor, np.ceil), 'threshold_lo': (np.floor, np.ceil)}
-                flip = out_node.get_weights('flip').data.astype(bool)
-                low, high, threshold_precision = out_node.threshold_range(out_type)
-                for var_name, (round_normal, round_flipped) in rounding.items():
-                    threshold_var = out_node.weights[var_name]
-                    threshold_var.update_precision(threshold_precision)
-                    data = np.where(flip, round_flipped(threshold_var.data), round_normal(threshold_var.data))
-                    threshold_var.data = np.clip(data, low, high)
+                scale = out_node.get_attr('scale_data')
+                out_node.set_thresholds(
+                    scale, out_node.get_attr('bias_data') + scale * layer_bias, out_node.get_attr('ternary_threshold')
+                )
 
         return False
