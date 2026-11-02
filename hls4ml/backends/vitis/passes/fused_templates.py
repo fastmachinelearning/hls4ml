@@ -90,7 +90,9 @@ class DenseFusedConfigTemplate(LayerConfigTemplate):
         params['slope'] = node.get_attr('fused_activation_slope', 0.0)
         params['shift'] = node.get_attr('fused_activation_shift', 0.0)
         params['product_type'] = get_backend('vivado').product_type(
-            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
+            node.get_input_variable().type.precision,
+            node.get_weights('weight').type.precision,
+            sum_starts_with_init=True,
         )
 
         return self.template.format(**params)

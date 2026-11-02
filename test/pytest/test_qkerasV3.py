@@ -4,7 +4,7 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-from keras.layers import BatchNormalization, EinsumDense, Input
+from keras.layers import BatchNormalization, Dot, EinsumDense, Input
 from keras.models import Model, Sequential
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
@@ -890,13 +890,18 @@ def binary_input_model(input_shape, layer, seed=0):
     return model
 
 
-def predict_exact(model, test_case_id, backend, io_type, precision='fixed<24,12>', strategy='Latency', reuse_factor=1):
+def predict_exact(
+    model, test_case_id, backend, io_type, precision='fixed<24,12>', strategy='Latency', reuse_factor=1, granularity='name'
+):
     """The hls4ml model, its output and the Keras output, for inputs that are multiples of 1/16. The values that reach
     a binary or ternary activation are then exact in both, so the two outputs must be equal."""
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend, default_precision=precision)
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity=granularity, backend=backend, default_precision=precision
+    )
     config['Model']['Strategy'] = strategy
-    for layer_config in config['LayerName'].values():
+    config['Model']['ReuseFactor'] = reuse_factor
+    for layer_config in config.get('LayerName', {}).values():
         layer_config['ReuseFactor'] = reuse_factor
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
@@ -988,7 +993,7 @@ def test_binary_accumulator(test_case_id, case):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-@pytest.mark.parametrize('strategy, reuse_factor', [('Latency', 1), ('Resource', 4)])
+@pytest.mark.parametrize('strategy, reuse_factor', [('Latency', 1), ('Resource', 4), ('resource_unrolled', 4)])
 def test_binary_network(test_case_id, io_type, strategy, reuse_factor):
     """
     Test a binary network: binary Dense layers with a bias, each followed by batch normalization and a binary
@@ -1002,6 +1007,22 @@ def test_binary_network(test_case_id, io_type, strategy, reuse_factor):
     hls_model, y_hls4ml, y_keras = predict_exact(
         model, test_case_id, 'Vitis', io_type, strategy=strategy, reuse_factor=reuse_factor
     )
+    assert len(binary_layers(hls_model)) == 2
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+def test_binary_dot(test_case_id, backend):
+    """
+    Test the dot product of two binary tensors, whose sum starts at zero rather than at nnet::init.
+    """
+
+    q = {'kernel_quantizer': binary(alpha=1), 'use_bias': False}
+    model = binary_input_model(
+        (16,), lambda x: Dot(axes=1)([x, QActivation(binary())(BatchNormalization()(QDense(16, **q)(x)))])
+    )
+    # Precision inference does not support Dot with 'auto' accumulator types, so every type is set
+    hls_model, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, 'io_parallel', granularity='model')
     assert len(binary_layers(hls_model)) == 2
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
