@@ -123,9 +123,10 @@ template <class x_T, class w_T> class data_binary_weight_exponential : public Pr
 
 } // namespace product
 
-template <class data_T, typename CONFIG_T> inline typename CONFIG_T::accum_t init(typename CONFIG_T::bias_t b) {
-    return CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::template init<typename CONFIG_T::accum_t>(
-        b, CONFIG_T::n_in);
+// The value a sum of n products starts from, n_in by default
+template <class data_T, typename CONFIG_T>
+inline typename CONFIG_T::accum_t init(typename CONFIG_T::bias_t b, int n = CONFIG_T::n_in) {
+    return CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::template init<typename CONFIG_T::accum_t>(b, n);
 }
 
 template <class data_T, class res_T, typename CONFIG_T> inline res_T cast(typename CONFIG_T::accum_t x) { return (res_T)x; }

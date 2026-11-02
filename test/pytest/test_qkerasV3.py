@@ -891,7 +891,15 @@ def binary_input_model(input_shape, layer, seed=0):
 
 
 def predict_exact(
-    model, test_case_id, backend, io_type, precision='fixed<24,12>', strategy='Latency', reuse_factor=1, granularity='name'
+    model,
+    test_case_id,
+    backend,
+    io_type,
+    precision='fixed<24,12>',
+    strategy='Latency',
+    reuse_factor=1,
+    granularity='name',
+    parallelization_factor=None,
 ):
     """The hls4ml model, its output and the Keras output, for inputs that are multiples of 1/16. The values that reach
     a binary or ternary activation are then exact in both, so the two outputs must be equal."""
@@ -903,6 +911,8 @@ def predict_exact(
     config['Model']['ReuseFactor'] = reuse_factor
     for layer_config in config.get('LayerName', {}).values():
         layer_config['ReuseFactor'] = reuse_factor
+        if parallelization_factor is not None:
+            layer_config['ParallelizationFactor'] = parallelization_factor
     hls_model = hls4ml.converters.convert_from_keras_model(
         model,
         hls_config=config,
@@ -1008,6 +1018,19 @@ def test_binary_network(test_case_id, io_type, strategy, reuse_factor):
         model, test_case_id, 'Vitis', io_type, strategy=strategy, reuse_factor=reuse_factor
     )
     assert len(binary_layers(hls_model)) == 2
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_binary_pointwise_conv1d(test_case_id, backend):
+    """
+    Test a pointwise Conv1D with binary input and weights that computes all its outputs at once.
+    """
+
+    q = {'kernel_quantizer': binary(alpha=1), 'bias_quantizer': quantized_bits(8, 3)}
+    model = binary_input_model((10, 4), QConv1D(5, 1, **q))
+    # A parallelization factor equal to the output width computes all pixels at once, in pointwise_conv_1d_latency_cl
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, 'io_parallel', parallelization_factor=10)
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 

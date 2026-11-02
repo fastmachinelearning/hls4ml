@@ -131,11 +131,12 @@ ConvOut:
         }     // end filter loop
     }         // end output loop
 
-    // Initialize accumulator with input biases
+    // Initialize accumulator with input biases. Each output sums n_chan products, one per channel of its pixel. This
+    // kernel computes all pixels at once, so mult_config::n_in counts the channels of all pixels, not of one
     for (int ii = 0; ii < CONFIG_T::out_width / CONFIG_T::n_partitions; ii++) {
         for (int ff = 0; ff < CONFIG_T::n_filt; ff++) {
             #pragma HLS UNROLL
-            acc[ii][ff] = init<data_T, typename CONFIG_T::mult_config>(biases[ff]);
+            acc[ii][ff] = init<data_T, typename CONFIG_T::mult_config>(biases[ff], CONFIG_T::n_chan);
         }
     }
 
