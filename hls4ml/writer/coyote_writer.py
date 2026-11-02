@@ -163,8 +163,8 @@ class CoyoteWriter(VitisWriter):
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
                             newline += '    // ' + layer.name + '\n'
-                            for line in func:
-                                newline += '    ' + line + '\n'
+                            for func_line in func:
+                                newline += '    ' + func_line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
                             vars = layer.get_variables()
                             newline += '#ifndef __SYNTHESIS__\n'
