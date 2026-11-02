@@ -3,7 +3,14 @@ import numpy as np
 from hls4ml.model.layers import ApplyAlpha, Conv1DTranspose, Conv2DTranspose
 from hls4ml.model.optimizer import ConfigurableOptimizerPass, OptimizerPass, register_pass
 from hls4ml.model.quantizers import QKerasPO2Quantizer
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.model.types import (
+    ExponentPrecisionType,
+    ExponentWeightVariable,
+    FixedPrecisionType,
+    IntegerPrecisionType,
+    NamedType,
+    XnorPrecisionType,
+)
 
 
 class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
@@ -81,6 +88,7 @@ def register_qkeras():
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
     register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
     register_pass('extract_ternary_threshold', ExtractTernaryThreshold)
+    register_pass('narrow_binary_po2_exponents', NarrowBinaryPo2Exponents)
 
 
 class QKerasFactorizeAlpha(OptimizerPass):
@@ -296,3 +304,34 @@ class ExtractTernaryThreshold(OptimizerPass):
         layer = model.make_node(ApplyAlpha, node.name + '_scale', attrs, node.inputs.copy())
         model.insert_node(layer, before=node)
         return True
+
+
+class NarrowBinaryPo2Exponents(OptimizerPass):
+    """Power-of-two weights are stored as exponents, in a field as wide as the quantizer allows. The product of such a
+    weight and binary data is +-2^e, in a type that holds 2^e for every exponent of the field, which costs logic when
+    the weights are read from memory. In layers with a binary input, this pass narrows the field to the exponents the
+    weights use.
+    """
+
+    def match(self, node):
+        return any(self.width(var) < var.type.precision.width for var in self.exponent_weights(node))
+
+    def transform(self, model, node):
+        for var in self.exponent_weights(node):
+            var.update_precision(ExponentPrecisionType(width=self.width(var), signed=True))
+        return False
+
+    def exponent_weights(self, node):
+        # The power-of-two weights that multiply the input of the layer
+        names = [name for name in ('weight', 'scale') if isinstance(node.weights.get(name), ExponentWeightVariable)]
+        if not names or not isinstance(node.get_input_variable().type.precision, XnorPrecisionType):
+            return []
+        return [node.weights[name] for name in names]
+
+    def width(self, var):
+        # The width of a signed field that holds the exponents of the nonzero weights
+        data = np.asarray(var.data, dtype=float)
+        exponents = np.round(np.log2(np.abs(data[data != 0]))).astype(int)
+        if exponents.size == 0:
+            return var.type.precision.width
+        return max(int(exponents.max()).bit_length(), int(-exponents.min() - 1).bit_length()) + 1

@@ -331,8 +331,7 @@ class Layer(Serializable):
             type_name = name + '{index}_t'
             data = quantizer(data)
             if isinstance(quantizer.hls_type, ExponentPrecisionType) and name == 'bias':
-                max_shift = 2 ** (quantizer.hls_type.width - 1)
-                precision = FixedPrecisionType(2 * max_shift + 1, max_shift + 1, signed=True)
+                precision = quantizer.hls_type.value_precision(data)
             elif isinstance(quantizer.hls_type, ExponentPrecisionType):
                 exponent_type = True
 
@@ -709,6 +708,8 @@ class Conv2DBatchnorm(Conv2D):
         bias_q = self.get_attr('bias_quantizer')
         if bias_q is not None:
             self.weights['bias'].data = bias_q(folded_bias)
+            if isinstance(bias_q.hls_type, ExponentPrecisionType):
+                self.weights['bias'].update_precision(bias_q.hls_type.value_precision(self.weights['bias'].data))
         else:
             self.weights['bias'].data = folded_bias
 

@@ -1048,13 +1048,13 @@ def binary_layers(hls_model):
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize(
     'kernel_quantizer',
-    [binary(alpha=1), binary(alpha='auto_po2'), quantized_bits(4, 0, alpha=1), quantized_po2(4)],
+    [binary(alpha=1), binary(alpha='auto_po2'), quantized_bits(4, 0, alpha=1), quantized_po2()],
     ids=['binary', 'binary_auto_po2', 'bits', 'po2'],
 )
 @pytest.mark.parametrize('layer', ['dense', 'conv1d', 'conv2d', 'depthwise'])
 def test_binary_input(test_case_id, layer, kernel_quantizer, backend, io_type):
     """
-    Test layers with a binary input and binary, scaled binary, 4-bit and power-of-two weights, with a bias.
+    Test layers with a binary input and binary, scaled binary, 4-bit and 8-bit power-of-two weights, with a bias.
     """
 
     if layer == 'depthwise' and backend not in ('Vivado', 'Vitis'):
@@ -1071,6 +1071,9 @@ def test_binary_input(test_case_id, layer, kernel_quantizer, backend, io_type):
     model = binary_input_model(input_shape, tested)
     hls_model, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
     assert len(binary_layers(hls_model)) == 1
+    if isinstance(kernel_quantizer, quantized_po2):
+        # The exponent field holds only the exponents of the weights, which keeps their products with binary data narrow
+        assert hls_model.graph[tested.name].get_weights('weight').type.precision.width < 8
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
@@ -1218,18 +1221,20 @@ def test_qbatchnorm(test_case_id, activation, backend, io_type):
 @pytest.mark.parametrize('layer', ['dense', 'conv2d'])
 def test_po2_bias(test_case_id, layer, backend, io_type):
     """
-    Test layers with a power-of-two bias.
+    Test layers with a power-of-two bias of the default 8 bits.
     """
 
     keras.utils.set_random_seed(0)
-    q = {'kernel_quantizer': quantized_bits(4, 0, alpha=1), 'bias_quantizer': quantized_po2(4)}
+    q = {'kernel_quantizer': quantized_bits(4, 0, alpha=1), 'bias_quantizer': quantized_po2()}
     if layer == 'dense':
         model = Sequential([Input((8,)), QDense(5, **q)])
     else:
         model = Sequential([Input((6, 6, 3)), QConv2D(5, 3, **q)])
     rng = np.random.default_rng(0)
     model.set_weights([rng.uniform(-1, 1, w.shape) for w in model.get_weights()])
-    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    hls_model, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    # The bias type holds the values of the bias, rather than 2^e for every exponent of 8 bits, which takes 257 bits
+    assert hls_model.graph[model.layers[0].name].get_weights('bias').type.precision.width < 32
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 

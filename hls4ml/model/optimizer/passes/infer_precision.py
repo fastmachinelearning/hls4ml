@@ -127,13 +127,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if isinstance(precision, XnorPrecisionType):
             return IntegerPrecisionType(width=2, signed=True)
         if isinstance(precision, ExponentPrecisionType):
-            magnitudes = np.abs(np.asarray(data, dtype=float)) if data is not None else np.zeros(1)
-            magnitudes = magnitudes[magnitudes > 0]
-            if magnitudes.size == 0:
-                return IntegerPrecisionType(width=2, signed=True)
-            exponents = np.round(np.log2(magnitudes)).astype(int)
-            integer = max(int(exponents.max()), 0) + 2
-            return FixedPrecisionType(integer + max(-int(exponents.min()), 0), integer, signed=True)
+            return precision.value_precision(np.zeros(1) if data is None else data)
         return precision
 
     def _infer_default_type(self, node, type_name):
