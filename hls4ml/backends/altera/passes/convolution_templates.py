@@ -99,7 +99,9 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
         mult_params['product_type'] = get_backend('Altera').product_type(
-            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
+            node.get_input_variable().type.precision,
+            node.get_weights('weight').type.precision,
+            sum_starts_with_init=not isinstance(node, DepthwiseConv1D),
         )
         mult_config = self.mult_template.format(**mult_params)
 
@@ -216,7 +218,9 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         mult_params['n_in'] = node.get_attr('n_chan') * node.get_attr('filt_height') * node.get_attr('filt_width')
         mult_params['n_out'] = node.get_attr('n_filt')
         mult_params['product_type'] = get_backend('Altera').product_type(
-            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
+            node.get_input_variable().type.precision,
+            node.get_weights('weight').type.precision,
+            sum_starts_with_init=not isinstance(node, DepthwiseConv2D),
         )
         mult_config = self.mult_template.format(**mult_params)
 

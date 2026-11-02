@@ -36,6 +36,16 @@ template <class x_T, class w_T> class both_binary : public Product {
     }
 };
 
+// The products of the -1 and +1 values, for sums that do not start at bias - n
+template <class x_T, class w_T> class both_binary_signed : public Product {
+  public:
+    static hls::ap_int<2> product(x_T a, w_T w) {
+        // specialisation for 1-bit weights and incoming data
+        #pragma HLS function inline
+        return a == w ? 1 : -1;
+    }
+};
+
 template <class x_T, class w_T> class weight_binary : public Product {
   public:
     static auto product(x_T a, w_T w) -> decltype(-a) {

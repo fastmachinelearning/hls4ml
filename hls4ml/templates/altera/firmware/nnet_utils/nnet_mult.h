@@ -29,6 +29,15 @@ template <class x_T, class w_T> class both_binary : public Product {
     }
 };
 
+// The products of the -1 and +1 values, for sums that do not start at bias - n
+template <class x_T, class w_T> class both_binary_signed : public Product {
+  public:
+    inline static ac_int<2, true> product(x_T a, w_T w) {
+        // specialisation for 1-bit weights and incoming data
+        return a == w ? 1 : -1;
+    }
+};
+
 template <class x_T, class w_T> class weight_binary : public Product {
   public:
     inline static auto product(x_T a, w_T w) -> decltype(-a) {
