@@ -31,8 +31,11 @@ class BatchNormalizationQuantizedTanh(Layer):
             )
 
     def set_thresholds(self, scale, bias, ternary_threshold=0.5):
+        # Kept to compute the thresholds again when the type of the input changes
+        self.set_attr('scale_data', scale)
+        self.set_attr('bias_data', bias)
+        self.set_attr('ternary_threshold', ternary_threshold)
         inp = self.get_input_variable()
-        shape = inp.shape
         precision = self.model.config.backend.convert_precision_string(inp.type.precision)
         F = precision.fractional
         low, high, threshold_precision = self.threshold_range(precision)
@@ -43,7 +46,6 @@ class BatchNormalizationQuantizedTanh(Layer):
         with np.errstate(divide='ignore', invalid='ignore'):
             threshold = -bias / scale
         if self.get_attr('quantize') == 2:
-            self.add_output_variable(shape, precision=self.binary_precision())
             # The output is 1 where the input is at least the threshold (at most, if flipped), so the threshold is rounded
             # up (down) to the resolution of the input
             threshold = np.where(flip, np.floor(threshold * 2**F), np.ceil(threshold * 2**F)) / 2**F
@@ -56,7 +58,6 @@ class BatchNormalizationQuantizedTanh(Layer):
                 precision=threshold_precision,
             )
         elif self.get_attr('quantize') == 3:
-            self.add_output_variable(shape, precision=IntegerPrecisionType(width=2))
             with np.errstate(divide='ignore', invalid='ignore'):
                 threshold_hi = ternary_threshold / scale + threshold
                 threshold_lo = -ternary_threshold / scale + threshold
