@@ -34,9 +34,10 @@ class FuseBatchNormalization(OptimizerPass):
             b0 = prev_node.weights['bias'].data_unquantized
             s1 = node.weights['scale'].data_unquantized
             b1 = node.weights['bias'].data_unquantized
+            weight_quantizer = prev_node.get_attr('weight_quantizer') or prev_node.get_attr('depthwise_quantizer')
             scale_compatible = (
-                (prev_node.get_attr('weight_quantizer') is None and node.get_attr('scale_quantizer') is None)
-                or ((s0 == np.ones_like(s0)).all() and prev_node.get_attr('weight_quantizer') is None)
+                (weight_quantizer is None and node.get_attr('scale_quantizer') is None)
+                or ((s0 == np.ones_like(s0)).all() and weight_quantizer is None)
                 or ((s1 == np.ones_like(s1)).all() and node.get_attr('scale_quantizer') is None)
             )
             bias_compatible = (

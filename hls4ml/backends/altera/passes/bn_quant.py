@@ -144,6 +144,7 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             'n_out': bn_layer.get_attr('n_in'),
             'n_filt': bn_layer.get_attr('n_filt'),
             'quantize': quantize,
+            'use_01': (node.get_attr('activation_quantizer') or {}).get('config', {}).get('use_01', False),
             'trace': bn_layer.get_attr('trace'),
         }
         bnbt_layer = model.make_node(BatchNormalizationQuantizedTanh, 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
