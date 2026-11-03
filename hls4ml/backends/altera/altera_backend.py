@@ -36,7 +36,7 @@ class AlteraBackend(FPGABackend):
         self._register_flows()
 
     def _register_layer_attributes(self):
-        # Add RNN-specific recurrent_reuse_factor attribute
+        # Add RNN-specific table_size and table attributes
         rnn_layers = [
             SimpleRNN,
             LSTM,
@@ -45,7 +45,6 @@ class AlteraBackend(FPGABackend):
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
             attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
             attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
             self.attribute_map[layer] = attrs
@@ -272,6 +271,7 @@ class AlteraBackend(FPGABackend):
 
     @layer_optimizer(GRU)
     def init_gru(self, layer):
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
@@ -359,6 +359,7 @@ class AlteraBackend(FPGABackend):
 
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
@@ -404,6 +405,7 @@ class AlteraBackend(FPGABackend):
 
     @layer_optimizer(SimpleRNN)
     def init_simple_rnn(self, layer):
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
@@ -426,15 +428,13 @@ class AlteraBackend(FPGABackend):
         inp_tpose_idxs, ker_tpose_idxs = recipe['in_transpose_idxs']
         out_tpose_idxs = recipe['out_transpose_idxs']
 
-        # Pre-transpose kernel (and bias) to save a transpose in cpp. Shouldn't matter for latency strategy though.
-        # hls4ml dense acts like i,ij->j
-        # parser assumes ij,j->i, so we need to transpose the kernel to match
+        # Pre-transpose kernel (and bias) to save a transpose in cpp.
+        # The kernel is stored as (I, L1, C), the row-major layout dense_resource expects for each slice
         kernel = kernel.transpose(ker_tpose_idxs)
-        kernel = kernel.reshape(recipe['I'], recipe['L1'], recipe['C']).transpose(0, 2, 1)
+        kernel = kernel.reshape(recipe['I'], recipe['L1'], recipe['C'])
 
         def to_original_kernel(tkernel: np.ndarray) -> np.ndarray:
-            _kernel = tkernel.transpose(0, 2, 1)
-            _kernel = _kernel.reshape(tuple(kernel_shape[i] for i in ker_tpose_idxs))
+            _kernel = tkernel.reshape(tuple(kernel_shape[i] for i in ker_tpose_idxs))
             return _kernel.transpose(np.argsort(ker_tpose_idxs))
 
         # TODO: for weight in bram mode (resource), broadcasting bias here shall be avoided.

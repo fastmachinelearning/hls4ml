@@ -4,7 +4,6 @@ import os
 import shutil
 import subprocess
 import sys
-from pathlib import Path
 
 from hls4ml.backends import VivadoBackend
 from hls4ml.model.flow import get_flow, register_flow
@@ -127,28 +126,25 @@ class VitisBackend(VivadoBackend):
         vsynth=False,
         fifo_opt=False,
         log_to_stdout=True,
+        pnr=False,
     ):
         if 'linux' in sys.platform:
             found_vrun = os.system('command -v vitis-run > /dev/null') == 0
             if not found_vrun:
                 raise Exception('Vitis installation not found. Make sure "vitis-run" is on PATH.')
 
-        build_opts = (
-            'array set opt {\n'
-            f'    reset      {int(reset)}\n'
-            f'    csim       {int(csim)}\n'
-            f'    synth      {int(synth)}\n'
-            f'    cosim      {int(cosim)}\n'
-            f'    validation {int(validation)}\n'
-            f'    export     {int(export)}\n'
-            f'    vsynth     {int(vsynth)}\n'
-            f'    fifo_opt   {int(fifo_opt)}\n'
-            '}\n'
+        self._write_build_opts(
+            model,
+            reset=reset,
+            csim=csim,
+            synth=synth,
+            cosim=cosim,
+            validation=validation,
+            export=export,
+            vsynth=vsynth,
+            fifo_opt=fifo_opt,
+            pnr=pnr,
         )
-
-        tcl_path = Path(model.config.get_output_dir()) / 'build_opt.tcl'
-        with open(tcl_path, 'w') as file:
-            file.write(build_opts)
 
         build_command = 'vitis-run --tcl build_prj.tcl --mode hls'
 

@@ -62,14 +62,11 @@ void einsum_dense(const data_T &data, res_T &res, const typename CONFIG_T::weigh
                 dense_in[c_idx] = inp_tpose[(i * L0 + l0) * C + c_idx];
             }
 
-            // Reorder weights from column-major (source) to row-major (destination) during copy
+            // Weights are pre-transposed to row-major (L1, C) slices in Python, so this is a contiguous copy
             const unsigned weights_offset = i * L1 * C;
             #pragma unroll
-            for (unsigned j = 0; j < L1; j++) {
-                #pragma unroll
-                for (unsigned k = 0; k < C; k++) {
-                    dense_weights[j * C + k] = weights[weights_offset + (k * L1 + j)];
-                }
+            for (unsigned w_idx = 0; w_idx < L1 * C; w_idx++) {
+                dense_weights[w_idx] = weights[weights_offset + w_idx];
             }
 
             #pragma unroll

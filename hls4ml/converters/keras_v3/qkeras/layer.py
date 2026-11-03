@@ -9,12 +9,16 @@ class QKerasV3LayerHandler(KerasV3LayerHandler):
         'qkeras.qlayers.QDense',
         'qkeras.qconvolutional.QConv1D',
         'qkeras.qconvolutional.QConv2D',
+        'qkeras.qconvolutional.QConv1DTranspose',
+        'qkeras.qconvolutional.QConv2DTranspose',
         'qkeras.qconvolutional.QDepthwiseConv2D',
         'qkeras.qconv2d_batchnorm.QConv2DBatchnorm',
     )
 
     def handle(self, layer, in_tensors, out_tensors):
         config = layer.get_config()
+        if getattr(layer, 'output_padding', None) is not None:
+            config['output_padding'] = layer.output_padding
         layer_dict = {'config': config, 'class_name': layer.__class__.__name__}
 
         reader = IsolatedLayerReader(layer)
@@ -27,7 +31,12 @@ class QKerasV3LayerHandler(KerasV3LayerHandler):
         if v2_handler is None:
             raise ValueError(f'No v2 handler found for {layer.__class__.__name__}')
 
-        ret, _ = v2_handler(layer_dict, input_names, input_shapes, reader)
+        ret, output_shape = v2_handler(layer_dict, input_names, input_shapes, reader)
+        if list(output_shape[1:]) != list(out_tensors[0].shape[1:]):
+            raise ValueError(
+                f'Output shape {list(output_shape[1:])} computed for {layer.name} differs from the Keras output shape '
+                f'{list(out_tensors[0].shape[1:])}'
+            )
         ret = set_default_config(ret, self.default_config)
 
         activation = config.get('activation')

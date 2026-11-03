@@ -1,5 +1,7 @@
+import itertools
 import os
-import sys
+import shutil
+import subprocess
 from warnings import warn
 
 import numpy as np
@@ -7,14 +9,16 @@ import numpy as np
 from hls4ml.backends import FPGABackend
 from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter
 from hls4ml.backends.vivado.vivado_types import VivadoArrayVariableConverter
-from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
+from hls4ml.model.attributes import Attribute, ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
     GRU,
     LSTM,
     Bidirectional,
     Conv1D,
+    Conv1DTranspose,
     Conv2D,
+    Conv2DTranspose,
     Dense,
     DepthwiseConv1D,
     DepthwiseConv2D,
@@ -37,7 +41,6 @@ from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedTy
 from hls4ml.report import parse_vivado_report
 from hls4ml.utils import attribute_descriptions as descriptions
 from hls4ml.utils.einsum_utils import parse_einsum
-from hls4ml.utils.string_utils import convert_to_pascal_case
 
 
 class VivadoBackend(FPGABackend):
@@ -73,11 +76,30 @@ class VivadoBackend(FPGABackend):
         pf_layers = [
             Conv1D,
             Conv2D,
+            Conv1DTranspose,
+            Conv2DTranspose,
         ]
 
         for layer in pf_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('parallelization_factor', default=1, description=descriptions.conv_pf))
+            self.attribute_map[layer] = attrs
+
+        # Add the values computed by the backend to Conv1D/2DTranspose
+        for layer in [Conv1DTranspose, Conv2DTranspose]:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(
+                Attribute('slot_groups', value_type=tuple, default=(), description=descriptions.conv_transpose_slot_groups)
+            )
+            attrs.append(
+                Attribute('slot_shifts', value_type=tuple, default=(), description=descriptions.conv_transpose_slot_shifts)
+            )
+            attrs.append(Attribute('n_buf', default=0, description=descriptions.conv_transpose_n_buf))
+            for axis in ['height', 'width'] if layer is Conv2DTranspose else ['width']:
+                attrs.append(
+                    Attribute(f'first_block_{axis}', default=0, description=descriptions.conv_transpose_first_block)
+                )
+                attrs.append(Attribute(f'n_blocks_{axis}', default=0, description=descriptions.conv_transpose_n_blocks))
             self.attribute_map[layer] = attrs
 
         # Add ConvImplementation to Convolution+Pooling layers
@@ -300,28 +322,70 @@ class VivadoBackend(FPGABackend):
         export=False,
         vsynth=False,
         fifo_opt=False,
+        pnr=False,
     ):
-        if 'linux' in sys.platform:
-            found = os.system('command -v vivado_hls > /dev/null')
-            if found != 0:
-                raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+        """Build the HLS project, running the steps that are enabled.
 
-        curr_dir = os.getcwd()
-        os.chdir(model.config.get_output_dir())
-        vivado_cmd = (
-            f'vivado_hls -f build_prj.tcl "reset={reset} '
-            f'csim={csim} '
-            f'synth={synth} '
-            f'cosim={cosim} '
-            f'validation={validation} '
-            f'export={export} '
-            f'vsynth={vsynth} '
-            f'fifo_opt={fifo_opt}"'
+        Args:
+            model (ModelGraph): The model to build.
+            reset (bool, optional): Start a new HLS project, removing the previous one. Defaults to False.
+            csim (bool, optional): Run C simulation. Defaults to True.
+            synth (bool, optional): Run C synthesis. Defaults to True.
+            cosim (bool, optional): Run C/RTL co-simulation. Defaults to False.
+            validation (bool, optional): Compare the outputs of C simulation and co-simulation. Defaults to False.
+            export (bool, optional): Export the design as an IP. Defaults to False.
+            vsynth (bool, optional): Synthesize the generated Verilog with Vivado, out of context. If synthesis leaves
+                the cascade input of a DSP unconnected (design rule DSPS-2), the design is synthesized again with
+                ``-cascade_dsp tree``, which can change the resources. Defaults to False.
+            fifo_opt (bool, optional): Record the FIFO occupancy during co-simulation, used by the FIFO depth
+                optimization flow. Defaults to False.
+            pnr (bool, optional): Also place and route the design after Vivado synthesis, for the resources, timing
+                and power after implementation. Vivado estimates the power from default switching activity, not
+                from a simulation of the design, so most of the total can be the static power of the device.
+                Implies ``vsynth``. Defaults to False.
+
+        Returns:
+            dict: The reports read from the project, see ``hls4ml.report.parse_vivado_report``.
+
+        Raises:
+            Exception: If vivado_hls is not on PATH, or if a step of the build fails.
+        """
+
+        if shutil.which('vivado_hls') is None:
+            raise Exception('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
+
+        self._write_build_opts(
+            model,
+            reset=reset,
+            csim=csim,
+            synth=synth,
+            cosim=cosim,
+            validation=validation,
+            export=export,
+            vsynth=vsynth,
+            fifo_opt=fifo_opt,
+            pnr=pnr,
         )
-        os.system(vivado_cmd)
-        os.chdir(curr_dir)
 
-        return parse_vivado_report(model.config.get_output_dir())
+        output_dir = model.config.get_output_dir()
+        if subprocess.run(['vivado_hls', '-f', 'build_prj.tcl'], cwd=output_dir).returncode != 0:
+            raise Exception(f'Build failed for {model.config.get_project_name()}. See {output_dir}/vivado_hls.log.')
+
+        return parse_vivado_report(output_dir)
+
+    def _write_build_opts(self, model, **build_opts):
+        """Write the build options to build_opt.tcl, which build_prj.tcl reads.
+
+        Running build_prj.tcl again without arguments then repeats the same build.
+
+        Args:
+            model (ModelGraph): The model being built.
+            build_opts: The options, each a bool.
+        """
+
+        lines = ''.join(f'    {name:<10} {int(value)}\n' for name, value in build_opts.items())
+        with open(os.path.join(model.config.get_output_dir(), 'build_opt.tcl'), 'w') as f:
+            f.write('array set opt {\n' + lines + '}\n')
 
     @layer_optimizer(Layer)
     def init_base_layer(self, layer):
@@ -432,6 +496,92 @@ class VivadoBackend(FPGABackend):
         layer.set_attr('parallelization_factor', closest_pf)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+    @layer_optimizer(Conv1DTranspose)
+    def init_conv1d_transpose(self, layer):
+        self._init_conv_transpose(layer)
+
+    @layer_optimizer(Conv2DTranspose)
+    def init_conv2d_transpose(self, layer):
+        self._init_conv_transpose(layer)
+
+    def _init_conv_transpose(self, layer):
+        if layer.get_attr('data_format') != 'channels_last':
+            raise NotImplementedError(f'Layer {layer.name} ({layer.class_name}) is only supported with channels_last data.')
+
+        self._split_conv_transpose_kernel(layer)
+
+        strategy = layer.model.config.get_strategy(layer).lower()
+        if strategy == 'resource':
+            layer.set_attr('strategy', 'resource')
+            n_in, n_out = self.get_layer_mult_size(layer)
+            # The kernel goes through all inputs at least once per reuse cycle
+            valid_rf = [rf for rf in self.get_valid_reuse_factors(n_in, n_out) if rf <= n_in]
+            chosen_rf = layer.get_attr('reuse_factor')
+            if chosen_rf not in valid_rf:
+                closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
+                print(
+                    f'WARNING: Invalid ReuseFactor={chosen_rf} in layer "{layer.name}". '
+                    f'Using ReuseFactor={closest_rf} instead. Valid ReuseFactor(s): {",".join(map(str, valid_rf))}.'
+                )
+                layer.set_attr('reuse_factor', closest_rf)
+        elif strategy == 'latency':
+            layer.set_attr('strategy', 'latency')
+        else:
+            raise NotImplementedError(
+                f'Layer {layer.name} ({layer.class_name}) supports only the Latency and Resource strategies, not {strategy}.'
+            )
+
+        n_blocks_h = layer.get_attr('n_blocks_height', 1)
+        n_blocks_w = layer.get_attr('n_blocks_width')
+        user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
+        chosen_pf = user_pf or layer.get_attr('parallelization_factor', None) or 1
+        valid_pf = self.get_valid_conv_partition_splits(n_blocks_h, n_blocks_w)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}". '
+                f'Using ParallelizationFactor={closest_pf} instead. '
+                f'Valid ParallelizationFactor(s): {",".join(map(str, valid_pf))}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', n_blocks_h * n_blocks_w // closest_pf)
+        layer.set_attr('parallelization_factor', closest_pf)
+
+    def _split_conv_transpose_kernel(self, layer):
+        # The output is computed in blocks of stride positions, one block per input position. Kernel element t adds to
+        # position t * dilation of a block, so it is in group (t * dilation) % stride and reads the input that is
+        # (t * dilation) // stride positions before the block.
+        axes = [('height', 'top'), ('width', 'left')] if isinstance(layer, Conv2DTranspose) else [('width', 'left')]
+        axis_groups = []
+        for axis, side in axes:
+            stride = layer.get_attr(f'stride_{axis}')
+            dilation = layer.get_attr(f'dilation_{axis}')
+            crop = layer.get_attr(f'crop_{side}')
+            groups = [[] for _ in range(stride)]
+            for t in range(layer.get_attr(f'filt_{axis}')):
+                groups[(t * dilation) % stride].append((t, (t * dilation) // stride))
+            axis_groups.append(groups)
+            first_block = crop // stride
+            last_block = (crop + layer.get_attr(f'out_{axis}') - 1) // stride
+            layer.set_attr(f'first_block_{axis}', first_block)
+            layer.set_attr(f'n_blocks_{axis}', last_block - first_block + 1)
+
+        # The weights become a matrix with a row for each input channel of each kernel element, ordered by group
+        slot_groups, slot_shifts, slot_elements = [], [], []
+        for group, group_axes in enumerate(itertools.product(*(range(len(groups)) for groups in axis_groups))):
+            for elements in itertools.product(*(groups[g] for groups, g in zip(axis_groups, group_axes))):
+                slot_groups.append(group)
+                slot_shifts.append((0,) * (2 - len(axes)) + tuple(shift for _, shift in elements))
+                slot_elements.append(tuple(t for t, _ in elements))
+        layer.set_attr('slot_groups', tuple(slot_groups))
+        layer.set_attr('slot_shifts', tuple(slot_shifts))
+        layer.set_attr('n_buf', len(slot_elements) * layer.get_attr('n_chan'))
+
+        weight = layer.weights['weight']
+        weight.data = np.stack([weight.data[element].T for element in slot_elements]).reshape(-1, layer.get_attr('n_filt'))
+        weight.shape = list(weight.data.shape)
 
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
@@ -645,15 +795,33 @@ class VivadoBackend(FPGABackend):
                     f'({layer.class_name}) is not supported. Use "linear", "relu", "sigmoid" or "tanh".'
                 )
 
-    def _warn_removed_reuse_factors(self, layer, attributes):
-        """Warn about reuse factor settings that are no longer used but are still in the config."""
+    def _set_recurrent_cell_schedule(self, layer, n_in, n_state, prefix=''):
+        """Set the schedule of the cell of the Resource strategy (see nnet_recurrent.h) from the reuse factor, after
+        replacing a reuse factor the cell cannot build with the closest one it can."""
 
-        for attribute in attributes:
-            if attribute in layer.attributes:
-                warn(
-                    f'{convert_to_pascal_case(attribute)} of layer "{layer.name}" ({layer.class_name}) is no longer used. '
-                    'The ReuseFactor of the layer applies to all of its multiplications.'
-                )
+        max_cycles = max(n_in, n_state)
+        unit_par = [p for p in range(1, n_state + 1) if n_state % p == 0]
+        valid_rf = sorted({n_state // p * cycles for p in unit_par for cycles in range(1, max_cycles + 1)})
+        attribute = f'{prefix}reuse_factor'
+        reuse_factor = layer.get_attr(attribute)
+        if reuse_factor not in valid_rf:
+            closest_rf = self.get_closest_reuse_factor(valid_rf, reuse_factor)
+            direction = f' ({prefix[:-1]} direction)' if prefix else ''
+            print(
+                f'WARNING: Invalid ReuseFactor={reuse_factor} in layer "{layer.name}"{direction}. Using '
+                f'ReuseFactor={closest_rf} instead. Valid ReuseFactor(s): {",".join(map(str, valid_rf))}.'
+            )
+            reuse_factor = closest_rf
+            layer.set_attr(attribute, reuse_factor)
+
+        n_unit_par = min(
+            p for p in unit_par if reuse_factor % (n_state // p) == 0 and reuse_factor // (n_state // p) <= max_cycles
+        )
+        n_cycles = reuse_factor // (n_state // n_unit_par)
+        layer.set_attr(f'{prefix}n_unit_par', n_unit_par)
+        layer.set_attr(f'{prefix}n_cycles', n_cycles)
+        layer.set_attr(f'{prefix}n_lanes_in', -(-n_in // n_cycles))
+        layer.set_attr(f'{prefix}n_lanes_state', -(-n_state // n_cycles))
 
     def _init_recurrent(self, layer):
         """Setup shared by SimpleRNN, LSTM and GRU layers."""
@@ -664,35 +832,37 @@ class VivadoBackend(FPGABackend):
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
-        if layer.model.config.is_resource_strategy(layer):
-            n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
-            self.set_closest_reuse_factor(layer, n_in, n_out)
-            self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
+        strategy = layer.model.config.get_strategy(layer).lower()
+        if strategy == 'resource_unrolled' and layer.get_attr('reuse_factor', 1) == 1:
+            print(
+                f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}". '
+                'Using "resource" strategy instead.'
+            )
+            strategy = 'resource'
+
+        if strategy == 'resource':
+            self._set_recurrent_cell_schedule(layer, layer.get_attr('n_in'), layer.get_attr('n_out'))
+            layer.set_attr('recurrent_reuse_factor', layer.get_attr('reuse_factor'))
             layer.set_attr('strategy', 'resource')
-        elif layer.model.config.get_strategy(layer).lower() == 'resource_unrolled':
-            use_resource_instead = False
-            if layer.get_attr('reuse_factor', 1) == 1:
-                print(
-                    f'Unrolled resource strategy cannot be combined with reuse factor 1 in layer "{layer.name}". '
-                    'Using "resource" strategy instead.'
-                )
-                use_resource_instead = True
+        elif strategy == 'resource_unrolled':
             n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)
-            if use_resource_instead:
-                self.set_closest_reuse_factor(layer, n_in, n_out)
-                self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor')
-                layer.set_attr('strategy', 'resource')
-            else:
-                self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
-                self.set_closest_reuse_factor(
-                    layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor', include_max_rf=False
-                )
-                layer.set_attr('strategy', 'resource_unrolled')
+            self.set_closest_reuse_factor(layer, n_in, n_out, include_max_rf=False)
+            self.set_closest_reuse_factor(
+                layer, n_in_recr, n_out_recr, attribute='recurrent_reuse_factor', include_max_rf=False
+            )
+            layer.set_attr('strategy', 'resource_unrolled')
         else:
             layer.set_attr('strategy', 'latency')
 
+        if layer.get_attr('strategy') == 'resource' and not layer.get_attr('static'):
+            warn(
+                f'Static set to False in layer "{layer.name}" has no effect with the "Resource" strategy, where one cell '
+                'is always shared across time steps. Use the "Latency" strategy with "io_parallel" for one cell per '
+                'time step.'
+            )
+            layer.set_attr('static', True)
         # In io_stream the time steps run one after another, so one cell is always shared
-        if layer.model.config.get_config_value('IOType') == 'io_stream' and not layer.get_attr('static'):
+        elif layer.model.config.get_config_value('IOType') == 'io_stream' and not layer.get_attr('static'):
             warn(
                 f'Static set to False in layer "{layer.name}" has no effect with "io_stream", where one cell is always '
                 'shared across time steps. Use "io_parallel" for one cell per time step.'
@@ -752,14 +922,20 @@ class VivadoBackend(FPGABackend):
         )
         reuse_factor = layer.model.config.get_reuse_factor(layer)
 
-        for i, d in enumerate(['forward', 'backward']):
+        for d in ['forward', 'backward']:
             layer.set_attr(f'{d}_reuse_factor', reuse_factor)
-            layer.set_attr(f'{d}_recurrent_reuse_factor', reuse_factor)
-
             if use_resource:
-                n_in, n_out, n_in_recr, n_out_recr = self.get_layer_mult_size(layer)[i]
-                self.set_closest_reuse_factor(layer, n_in, n_out, attribute=f'{d}_reuse_factor')
-                self.set_closest_reuse_factor(layer, n_in_recr, n_out_recr, attribute=f'{d}_recurrent_reuse_factor')
+                self._set_recurrent_cell_schedule(
+                    layer, layer.get_attr('n_in'), layer.get_attr(f'{d}_n_states'), prefix=f'{d}_'
+                )
+            layer.set_attr(f'{d}_recurrent_reuse_factor', layer.get_attr(f'{d}_reuse_factor'))
+
+        if use_resource and not layer.get_attr('static'):
+            warn(
+                f'Static set to False in layer "{layer.name}" has no effect with the "Resource" strategy, where one cell '
+                'is always shared across time steps. Use the "Latency" strategy for one cell per time step.'
+            )
+            layer.set_attr('static', True)
 
         layer.set_attr('strategy', 'resource' if use_resource else 'latency')
         layer.set_attr('index_t', NamedType(f'layer{layer.index}_index', IntegerPrecisionType(width=1, signed=False)))

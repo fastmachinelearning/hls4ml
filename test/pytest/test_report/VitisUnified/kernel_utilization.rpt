@@ -1,0 +1,32 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2023.2 (lin64) Build 4029153 Fri Oct 13 20:13:54 MDT 2023
+| Date         : Sun Oct 18 14:11:49 2026
+| Host         : ngt-highmem-002.cern.ch running 64-bit AlmaLinux release 9.3 (Shamrock Pampas Cat)
+| Command      : report_accelerator_utilization -kernels { myproject_axi_stream:vitis_design_i/myproject_axi_stream_1/inst:myproject_axi_stream_1} -file kernel_util_routed.rpt -name kernel_util_routed -json
+| Design       : vitis_design_wrapper
+| Device       : xczu9eg
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Accelerator Utilization Design Information
+
+Table of Contents
+-----------------
+1. System Utilization
+
+1. System Utilization
+---------------------
+
++---------------------------+------------------+------------------+------------------+---------------+----------------+
+| Name                      | LUT              | LUTAsMem         | REG              | BRAM          | DSP            |
++---------------------------+------------------+------------------+------------------+---------------+----------------+
+| Platform                  |   5115 [  1.87%] |    877 [  0.61%] |   7986 [  1.46%] |   2 [  0.22%] |    0 [  0.00%] |
+| User Budget               | 268965 [100.00%] | 143123 [100.00%] | 540174 [100.00%] | 910 [100.00%] | 2520 [100.00%] |
+|    Used Resources         |   6869 [  2.55%] |      0 [  0.00%] |   3769 [  0.70%] |   8 [  0.88%] |  133 [  5.28%] |
+|    Unused Resources       | 262096 [ 97.45%] | 143123 [100.00%] | 536405 [ 99.30%] | 902 [ 99.12%] | 2387 [ 94.72%] |
+| myproject_axi_stream      |   6869 [  2.55%] |      0 [  0.00%] |   3769 [  0.70%] |   8 [  0.88%] |  133 [  5.28%] |
+|    myproject_axi_stream_1 |   6869 [  2.55%] |      0 [  0.00%] |   3769 [  0.70%] |   8 [  0.88%] |  133 [  5.28%] |
++---------------------------+------------------+------------------+------------------+---------------+----------------+
+
+

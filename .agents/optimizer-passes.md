@@ -133,6 +133,9 @@ too — a quiet omission, not a loud one.
 The user writes the name in pascal case in the config (`ParallelizationFactor`); it arrives as snake case
 (`parallelization_factor`) in `layer.attributes`, and templates read it from there by the same name.
 
+Give the attribute a `description=` from `hls4ml/utils/attribute_descriptions.py`, and regenerate
+`docs/ir/attributes.rst` as [CONTRIBUTING.md](../CONTRIBUTING.md) describes.
+
 ## Worked example in the tree: the distributed arithmetic strategy
 
 A strategy implemented end to end as passes, useful as a template to copy. The machinery it uses is core to

@@ -8,13 +8,14 @@ import numpy as np
 import pytest
 import qonnx.core.onnx_exec as oxe
 from qonnx.core.modelwrapper import ModelWrapper
-from tensorflow.keras.layers import Dense, SeparableConv2D
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Concatenate, Dense, Input, SeparableConv2D
+from tensorflow.keras.models import Model, Sequential
 
 import hls4ml
 from hls4ml.backends.vitis.passes.fifo_depth_optimization import (
     FifoDepthOptimizationPost,
     get_vitis_optimized_fifo_depths,
+    initialize_large_fifos,
 )
 
 test_root_path = Path(__file__).parent
@@ -297,3 +298,43 @@ def test_fifo_depth_optimization_post_missing_fifo(tmp_path):
 
     with pytest.raises(RuntimeError, match='could not find the profiled depths of layer3_out'):
         FifoDepthOptimizationPost().transform(hls_model)
+
+
+@pytest.mark.parametrize(
+    'backend_kwargs',
+    [
+        {'backend': 'Vitis'},
+        {'backend': 'VitisUnified', 'board': 'zcu102', 'part': 'xczu9eg-ffvb1156-2-e', 'axi_mode': 'axi_master'},
+    ],
+    ids=['Vitis', 'VitisUnified_axi_master'],
+)
+def test_initialize_large_fifos_multi_io(test_case_id, backend_kwargs):
+    """Model inputs and outputs are ports of the top function, not FIFOs, so none of them may be profiled.
+    Before the fix only the first input and the first output were left out."""
+    in_a = Input((16,), name='in_a')
+    in_b = Input((16,), name='in_b')
+    h = Concatenate(name='cat')([Dense(8, name='da')(in_a), Dense(8, name='db')(in_b)])
+    h = Dense(8, name='dh')(h)
+    model = Model([in_a, in_b], [Dense(4, name='oa')(h), Dense(2, name='ob')(h)])
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend_kwargs['backend'])
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        io_type='io_stream',
+        output_dir=str(test_root_path / test_case_id),
+        **backend_kwargs,
+    )
+
+    io_vars = hls_model.get_input_variables() + hls_model.get_output_variables()
+    assert len(io_vars) == 4
+    io_pragmas = [v.pragma for v in io_vars]
+
+    profiling_fifo_depth = 100_000
+    initial_fifo_depths = initialize_large_fifos(hls_model, profiling_fifo_depth)
+
+    profiled = set(initial_fifo_depths)
+    assert profiled.isdisjoint(v.name for v in io_vars)
+    assert {hls_model.graph[layer].get_output_variable().name for layer in ('cat', 'dh')} <= profiled
+    assert [v.pragma for v in io_vars] == io_pragmas
+    assert all(v.pragma[1] == profiling_fifo_depth for v in hls_model.output_vars.values() if v.name in profiled)

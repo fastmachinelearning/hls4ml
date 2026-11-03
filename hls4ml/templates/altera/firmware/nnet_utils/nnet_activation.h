@@ -104,11 +104,7 @@ template <class data_T, unsigned table_size> inline unsigned softmax_stable_idx_
     static constexpr int N = ceillog2<table_size>::val;
 
     // Slice the top N bits of the input
-    [[intel::fpga_register]] ac_int<N, false> y = x.template slc<N>(x.width - N - 1);
-
-    // If x is the most negative value, the slice will be 0, so we need to set the 0-th bit to ensure correctness
-    if (x != 0 && y == 0)
-        y[0] = 1;
+    [[intel::fpga_register]] ac_int<N, false> y = x.template slc<N>(x.width - N);
     return y.to_uint();
 }
 
@@ -128,26 +124,26 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
     [[intel::fpga_register]] auto x_max =
         reduce<typename data_T::value_type, CONFIG_T::n_in, Op_max<typename data_T::value_type>>(data.data(), op_max);
 
-    // For the diffs, use the same type as the input but force rounding and saturation
+    // The diffs are non-negative and use the normalized input type of the exp table
     [[intel::fpga_register]] typename CONFIG_T::inp_norm_t d_xi_xmax[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        d_xi_xmax[i] = data[i] - x_max;
+        d_xi_xmax[i] = x_max - data[i];
     }
 
     // Calculate all the e^x's
-    [[intel::fpga_register]] typename CONFIG_T::exp_table_t exp_res[CONFIG_T::n_in];
+    [[intel::fpga_register]] typename CONFIG_T::accum_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
         exp_res[i] =
             CONFIG_T::exp_table[softmax_stable_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(
-                d_xi_xmax[i])]; // input_t, CONFIG_T
+                d_xi_xmax[i])];
     }
 
     // Explicitly sum previously calculated exponentials with an adder tree
-    Op_add<typename CONFIG_T::exp_table_t> op_add;
+    Op_add<typename CONFIG_T::accum_t> op_add;
     [[intel::fpga_register]] typename CONFIG_T::inv_inp_t exp_sum =
-        reduce<typename CONFIG_T::exp_table_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::exp_table_t>>(exp_res, op_add);
+        reduce<typename CONFIG_T::accum_t, CONFIG_T::n_in, Op_add<typename CONFIG_T::accum_t>>(exp_res, op_add);
 
     // Multiply previously calculated exponetials with the reciprocal of the sum
     [[intel::fpga_register]] typename CONFIG_T::inv_table_t inv_exp_sum =
@@ -247,22 +243,14 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_argmax(cons
 }
 
 template <class data_T, class res_T, typename CONFIG_T> inline void softmax(const data_T &data, res_T &res) {
-    switch (CONFIG_T::implementation) {
-    case softmax_implementation::stable:
-        softmax_stable<data_T, res_T, CONFIG_T>(data, res);
-        break;
-    case softmax_implementation::latency:
+    if constexpr (CONFIG_T::implementation == softmax_implementation::latency) {
         softmax_latency<data_T, res_T, CONFIG_T>(data, res);
-        break;
-    case softmax_implementation::legacy:
-        softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
-        break;
-    default:
-        softmax_stable<data_T, res_T, CONFIG_T>(data, res);
-        break;
-    case softmax_implementation::argmax:
+    } else if constexpr (CONFIG_T::implementation == softmax_implementation::argmax) {
         softmax_argmax<data_T, res_T, CONFIG_T>(data, res);
-        break;
+    } else if constexpr (CONFIG_T::implementation == softmax_implementation::legacy) {
+        softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
+    } else {
+        softmax_stable<data_T, res_T, CONFIG_T>(data, res);
     }
 }
 

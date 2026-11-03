@@ -205,8 +205,8 @@ def _is_running_in_notebook():
             return False  # Terminal running IPython
         else:
             return False  # Other type (?)
-    except NameError:
-        return False  # Probably standard Python interpreter
+    except ImportError:
+        return False  # IPython is not installed
 
 
 _table_css = """

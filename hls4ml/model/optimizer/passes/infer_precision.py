@@ -61,6 +61,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['DepthwiseConv1D', 'DepthwiseConv2D']:
             return self._infer_depthconv_precision(node, types_to_infer)
 
+        if node_class in ['Conv1DTranspose', 'Conv2DTranspose']:
+            return self._infer_conv_transpose_precision(node, types_to_infer)
+
         if node_class in ['SeparableConv1D', 'SeparableConv2D']:
             return self._infer_sepconv_precision(node, types_to_infer)
 
@@ -214,6 +217,16 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
     def _infer_conv_precision(self, node, types_to_infer):
         n_ops = node.get_attr('n_chan') * node.get_attr('filt_height', 1) * node.get_attr('filt_width')
+        return self._infer_common_precision(node, types_to_infer, n_ops)
+
+    def _infer_conv_transpose_precision(self, node, types_to_infer):
+        # Kernel element t of an axis adds to output position (t * dilation) % stride of each block of stride positions
+        n_ops = node.get_attr('n_chan')
+        for axis in ('height', 'width'):
+            stride = node.get_attr(f'stride_{axis}', 1)
+            dilation = node.get_attr(f'dilation_{axis}', 1)
+            positions = [(t * dilation) % stride for t in range(node.get_attr(f'filt_{axis}', 1))]
+            n_ops *= max(positions.count(p) for p in positions)
         return self._infer_common_precision(node, types_to_infer, n_ops)
 
     def _infer_depthconv_precision(self, node, types_to_infer):

@@ -1,7 +1,10 @@
+import copy
+
 from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Activation, BatchNormalization, Dense, HardActivation, ParametrizedActivation, PReLU, Softmax
+from hls4ml.model.types import RoundingMode, SaturationMode
 from hls4ml.utils.fixed_point_utils import ceil_log2
 
 # Dense templates
@@ -195,6 +198,10 @@ hard_activ_config_template = """struct {type}_config{index} : nnet::activ_config
 
 softmax_config_template = """struct {type}_config{index} : nnet::activ_config {{
     static constexpr unsigned n_in = {n_in};
+    static constexpr unsigned n_slice = {n_slice};
+    static constexpr unsigned n_outer = {n_outer};
+    static constexpr unsigned n_inner = {n_inner};
+    static constexpr unsigned table_size = {table_size};
     static constexpr unsigned exp_table_size = {exp_table_size};
     static constexpr unsigned inv_table_size = {inv_table_size};
     static constexpr unsigned io_type = nnet::{iotype};
@@ -210,6 +217,7 @@ softmax_config_table_template = """
 }};\n"""
 
 softmax_config_table_template_stable = """
+    typedef {accum_t_str} accum_t;
     typedef {inv_inp_t.name} inv_inp_t;
     typedef {inp_norm_t.name} inp_norm_t;
 
@@ -235,56 +243,6 @@ class ActivationConfigTemplate(LayerConfigTemplate):
     def format(self, node):
         params = self._default_config_params(node)
         params['type'] = node.get_attr('activation')
-
-        if params['type'] == 'softmax':
-            if 'exp_table_size' in params:
-                params['exp_table_size'] //= 2
-            else:
-                params['exp_table_size'] = 1024
-
-                params['exp_table_t'].precision.width = ceil_log2(params['exp_table_size'])
-                params['exp_table_t'].precision.integer = 3
-                params['exp_table_t'].precision.signed = False
-
-            if 'inp_norm_t' not in params:
-                input_t = node.get_input_variable().type.precision
-                width, iwidth, signed = input_t.width, input_t.integer, input_t.signed  # noqa: F841
-                width, iwidth = width - signed, iwidth - signed
-                import copy
-
-                params['inp_norm_t'] = copy.deepcopy(params['exp_table_t'])  # assign type,later override
-
-                # this checks if table sizes will be default, if it is just use the table size to derive precision
-                if 'inv_table_size' not in params:
-                    params['inp_norm_t'].precision.width = params['exp_table_t'].precision.width + 1
-                    params['inp_norm_t'].precision.integer = params['exp_table_t'].precision.integer + 1
-                    params['inp_norm_t'].precision.signed = True
-                    params['inp_norm_t'].name = f'{node.name}_inp_norm_t'
-                else:
-                    params['inp_norm_t'].name = f'ac_fixed<{width},{iwidth},{str(signed).lower()},AC_RND,AC_SAT_SYM>'
-
-                node.set_attr('inp_norm_t', params['inp_norm_t'])
-
-            if 'inv_table_size' in params:
-                params['inv_table_size'] //= 2
-            else:
-                params['inv_table_size'] = 1024
-
-                params['inv_table_t'].precision.width = ceil_log2(params['inv_table_size'])
-                params['inv_table_t'].precision.integer = 3
-                params['inv_table_t'].precision.signed = False
-
-                params['inv_inp_t'].precision.width = params['inv_table_t'].precision.width + 1
-                params['inv_inp_t'].precision.integer = params['inv_table_t'].precision.integer + 1
-                params['inv_inp_t'].precision.signed = True
-
-            if params['implementation'] == 'stable':
-                self.template += softmax_config_table_template_stable
-            else:
-                self.template += softmax_config_table_template
-
-            params['exp_table_name'] = node.name + '_exp_table'
-            params['inv_table_name'] = node.name + '_inv_table'
 
         return self.template.format(**params)
 
@@ -318,10 +276,93 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
         super(ActivationConfigTemplate, self).__init__(Softmax)  # Skip ActivationConfigTemplate's __init__
         self.template = softmax_config_template
 
+    def format(self, node):
+        params = self._default_config_params(node)
+        params['type'] = node.get_attr('activation')
+        params['n_slice'] = params['n_in'] // params['n_inner'] // params['n_outer']
+
+        stable = params['implementation'] == 'stable'
+
+        # The table sizes and types derived below are only used by the stable implementation
+        if params.get('exp_table_size') is None:
+            params['exp_table_size'] = 1024
+
+            if stable:
+                params['exp_table_t'].precision.width = ceil_log2(params['exp_table_size'])
+                params['exp_table_t'].precision.integer = 3
+                params['exp_table_t'].precision.signed = False
+
+        if params.get('inv_table_size') is None:
+            inv_table_size_given = False
+            params['inv_table_size'] = 1024
+
+            if stable:
+                params['inv_table_t'].precision.width = ceil_log2(params['inv_table_size'])
+                params['inv_table_t'].precision.integer = 3
+                params['inv_table_t'].precision.signed = False
+
+                params['inv_inp_t'].precision.width = params['inv_table_t'].precision.width
+                params['inv_inp_t'].precision.integer = params['inv_table_t'].precision.integer
+                params['inv_inp_t'].precision.signed = False
+        else:
+            inv_table_size_given = True
+
+        # x_max - x is non-negative, so a derived normalized input type is unsigned
+        if stable and 'inp_norm_t' not in params:
+            params['inp_norm_t'] = copy.deepcopy(params['exp_table_t'])
+            params['inp_norm_t'].name = f'{node.name}_inp_norm_t'
+            inp_norm_precision = params['inp_norm_t'].precision
+            inp_norm_precision.signed = False
+
+            # this checks if table sizes will be default, if it is just use the table size to derive precision
+            if not inv_table_size_given:
+                inp_norm_precision.width = params['exp_table_t'].precision.width
+                inp_norm_precision.integer = params['exp_table_t'].precision.integer
+            else:
+                input_t = node.get_input_variable().type.precision
+                inp_norm_precision.width = input_t.width - input_t.signed
+                inp_norm_precision.integer = input_t.integer - input_t.signed
+                inp_norm_precision.rounding_mode = RoundingMode.RND
+                inp_norm_precision.saturation_mode = SaturationMode.SAT
+
+            node.set_attr('inp_norm_t', params['inp_norm_t'])
+
+        if params['accum_t'].name == 'model_default_t':
+            scale = ceil_log2(params['n_slice'])
+            exp_table_precision = params['exp_table_t'].precision
+            width, integer = exp_table_precision.width + scale, exp_table_precision.integer + scale
+            params['accum_t_str'] = f'ac_fixed<{width}, {integer}, {str(exp_table_precision.signed).lower()}>'
+        else:
+            params['accum_t_str'] = params['accum_t'].name
+
+        params['exp_table_name'] = node.name + '_exp_table'
+        params['inv_table_name'] = node.name + '_inv_table'
+
+        if stable:
+            template = self.template + softmax_config_table_template_stable
+        else:
+            template = self.template + softmax_config_table_template
+
+        return template.format(**params)
+
+
+class SoftmaxFunctionTemplate(FunctionCallTemplate):
+    def __init__(self):
+        super().__init__(Softmax, include_header=activ_include_list)
+        self.template = activ_function_template
+
+    def format(self, node):
+        params = self._default_function_params(node)
+        use_multidim = node.get_attr('n_inner', 1) > 1 or node.get_attr('n_outer', 1) > 1
+        params['activation'] = 'softmax_multidim' if use_multidim else 'softmax'
+        params['config'] = f'{node.get_attr("activation")}_config{node.index}'
+
+        return self.template.format(**params)
+
 
 class ActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Activation, HardActivation, Softmax), include_header=activ_include_list)
+        super().__init__((Activation, HardActivation), include_header=activ_include_list)
         self.template = activ_function_template
 
     def format(self, node):

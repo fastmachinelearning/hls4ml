@@ -73,7 +73,7 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
             vars_to_profile = {
                 k: v
                 for k, v in model.output_vars.items()
-                if v != model.get_output_variables()[0] and v != model.get_input_variables()[0]
+                if v not in model.get_output_variables() and v not in model.get_input_variables()
             }
 
             set_big_fifos(vars_to_profile, profiling_fifo_depth)

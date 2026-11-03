@@ -25,8 +25,8 @@ def initialize_large_fifos(model, profiling_fifo_depth):
         output_variable_name: output_variable
         for output_variable_name, output_variable in model.output_vars.items()
         if ('StreamVariable' in str(type(output_variable)))
-        and output_variable != model.get_output_variables()[0]
-        and output_variable != model.get_input_variables()[0]
+        and output_variable not in model.get_output_variables()
+        and output_variable not in model.get_input_variables()
     }
 
     # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs and so

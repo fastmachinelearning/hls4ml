@@ -131,3 +131,63 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
     output_shape = [input_shapes[0][0], layer['n_filt'], layer['out_height'], layer['out_width']]
 
     return layer, output_shape
+
+
+@pytorch_handler('ConvTranspose1d', 'ConvTranspose2d')
+def parse_conv_transpose_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert 'ConvTranspose' in operation
+
+    if class_object.groups != 1:
+        raise NotImplementedError(f'Layer {layer_name}: {operation} with groups={class_object.groups} is not supported.')
+    output_size = node.kwargs.get('output_size', node.args[1] if len(node.args) > 1 else None)
+    if output_size is not None:
+        if not isinstance(output_size, (list, tuple)) or not all(isinstance(size, int) for size in output_size):
+            raise NotImplementedError(
+                f'Layer {layer_name}: {operation} with an output_size known only at run time is not supported.'
+            )
+        # PyTorch also accepts the batch and channel sizes in front of the spatial ones
+        output_size = output_size[-len(class_object.kernel_size) :]
+
+    layer = {}
+
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+    layer['class_name'] = 'Conv1DTranspose' if operation == 'ConvTranspose1d' else 'Conv2DTranspose'
+    layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
+
+    layer['weight_data'] = class_object.weight.data.numpy()
+    if class_object.bias is not None:
+        layer['bias_data'] = class_object.bias.data.numpy()
+    else:
+        layer['bias_data'] = None
+
+    (*px_in_shape, layer['n_chan']) = parse_data_format(input_shapes[0], 'channels_first')
+    layer['n_filt'] = class_object.out_channels
+
+    # PyTorch removes `padding` positions from both ends of the full output, then adds `output_padding` positions at
+    # the end, or as many as the `output_size` of the call needs
+    axes = [('width', 'left')] if len(px_in_shape) == 1 else [('height', 'top'), ('width', 'left')]
+    px_out_shape = []
+    for (axis, side), n_in, k, s, d, p, op, n_out in zip(
+        axes,
+        px_in_shape,
+        class_object.kernel_size,
+        class_object.stride,
+        class_object.dilation,
+        class_object.padding,
+        class_object.output_padding,
+        output_size or [None] * len(px_in_shape),
+    ):
+        if n_out is None:
+            n_out = (n_in - 1) * s - 2 * p + d * (k - 1) + op + 1
+        layer[f'in_{axis}'] = n_in
+        layer[f'out_{axis}'] = n_out
+        layer[f'filt_{axis}'] = k
+        layer[f'stride_{axis}'] = s
+        layer[f'dilation_{axis}'] = d
+        layer[f'crop_{side}'] = p
+        px_out_shape.append(n_out)
+
+    output_shape = [input_shapes[0][0], layer['n_filt'], *px_out_shape]  # Channel first as default
+
+    return layer, output_shape
