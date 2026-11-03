@@ -260,6 +260,8 @@ class KerasV3HandlerDispatcher:
         ret = (ret,)
 
         activation = getattr(layer, 'activation', None)
+        if key in ('SimpleRNN', 'LSTM', 'GRU', 'QSimpleRNN', 'QLSTM', 'QGRU', 'Bidirectional'):
+            activation = None  # a recurrent layer applies its activation itself, as in the Keras v2 converter
         if activation not in (keras.activations.linear, None):
             assert isinstance(activation, FunctionType), f'Activation function for layer {layer.name} is not a function'
             intermediate_tensor_name = f'{output_names[0]}_activation'
