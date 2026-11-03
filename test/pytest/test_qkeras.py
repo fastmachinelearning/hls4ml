@@ -3,7 +3,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from keras.layers import GRU, LSTM, BatchNormalization, Bidirectional, Input, SimpleRNN
+import tensorflow as tf
+from keras.layers import GRU, LSTM, BatchNormalization, Bidirectional, Dense, Input, SimpleRNN
 from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
@@ -258,6 +259,50 @@ def test_btnn(test_case_id, make_btnn, randX_100_10, backend, io_type):
     y_ker = model.predict(X)
     wrong = (y_hls != y_ker).ravel()
     assert sum(wrong) / len(wrong) < 0.005
+
+
+class BinaryDense(Dense):
+    """A Dense layer with binary weights and bias, which hls4ml recognizes by its class name and binarizes itself."""
+
+    def call(self, inputs):
+        return tf.matmul(inputs, tf.where(self.kernel >= 0, 1.0, -1.0)) + tf.where(self.bias >= 0, 1.0, -1.0)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'Altera'])
+@pytest.mark.parametrize('position', ['last', 'between'])
+def test_binary_dense_bias(test_case_id, position, backend):
+    """
+    Test a BinaryDense layer with a bias after a binary activation, as the last layer or followed by batch normalization
+    and a binary activation, into which hls4ml moves the bias.
+    """
+
+    model = Sequential([BatchNormalization(input_shape=(16,)), QActivation(binary()), BinaryDense(8)])
+    if position == 'between':
+        model.add(BatchNormalization())
+        model.add(QActivation(binary()))
+    rng = np.random.default_rng(0)
+    for layer in model.layers:
+        if isinstance(layer, BatchNormalization):
+            n = layer.get_weights()[0].shape[0]
+            layer.set_weights(
+                [rng.uniform(0.5, 1.5, n), rng.uniform(-1, 1, n), rng.uniform(-1, 1, n), rng.uniform(0.5, 1.5, n)]
+            )
+        elif layer.get_weights():
+            layer.set_weights([rng.uniform(-1, 1, w.shape) for w in layer.get_weights()])
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model.compile()
+
+    # Inputs on a grid of 1/16, which the default precision holds exactly
+    X = np.round(rng.uniform(-1, 1, (100, 16)) * 16) / 16
+    y_keras = model.predict(X)
+    y_hls = hls_model.predict(X).reshape(y_keras.shape)
+    if position == 'between':
+        # The binary output stores -1 as 0
+        y_hls = 2 * y_hls - 1
+    np.testing.assert_array_equal(y_hls, y_keras)
 
 
 @pytest.fixture(scope='module')
