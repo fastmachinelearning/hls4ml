@@ -60,7 +60,7 @@ PartitionLoop:
         ResetAccum:
             for (int i_acc = 0; i_acc < mult_n_out; i_acc++) {
                 #pragma HLS UNROLL
-                acc[i_acc] = (typename CONFIG_T::accum_t)biases[i_acc];
+                acc[i_acc] = init<data_T, typename CONFIG_T::mult_config>(biases[i_acc]);
             }
 
         // Accumulate multiplication result
@@ -132,11 +132,12 @@ ConvOut:
         }     // end filter loop
     }         // end output loop
 
-    // Initialize accumulator with input biases
+    // Initialize accumulator with input biases. Each output sums n_chan products, one per channel of its pixel. This
+    // kernel computes all pixels at once, so mult_config::n_in counts the channels of all pixels, not of one
     for (int ii = 0; ii < CONFIG_T::out_width / CONFIG_T::n_partitions; ii++) {
         for (int ff = 0; ff < CONFIG_T::n_filt; ff++) {
             #pragma HLS UNROLL
-            acc[ii][ff] = biases[ff];
+            acc[ii][ff] = init<data_T, typename CONFIG_T::mult_config>(biases[ff], CONFIG_T::n_chan);
         }
     }
 

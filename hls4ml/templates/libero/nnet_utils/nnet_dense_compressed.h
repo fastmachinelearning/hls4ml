@@ -39,7 +39,7 @@ void dense_compressed(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
 InitAccum:
     #pragma HLS loop unroll
     for (unsigned i = 0; i < CONFIG_T::n_out; i++) {
-        acc[i] = (typename CONFIG_T::accum_t)(biases[i]);
+        acc[i] = init<data_T, CONFIG_T>(biases[i]);
     }
 
     // Do the compressed matrix-multiply

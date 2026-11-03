@@ -1099,16 +1099,18 @@ void ternary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
 
     //#pragma HLS PIPELINE
 
+    // As in QKeras: 1 at or above 0.5, -1 at or below -0.5
+    const ac_fixed<2, 1, true> half = 0.5;
     data_T datareg;
     res_T cache;
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        datareg = 2 * data[ii];
-        if (datareg > 1)
+        datareg = data[ii];
+        if (datareg >= half)
             cache = 1;
-        else if (datareg > -1 && datareg <= 1)
-            cache = 0;
-        else
+        else if (datareg <= -half)
             cache = -1;
+        else
+            cache = 0;
 
         res[ii] = (res_T)cache;
     }

@@ -46,7 +46,7 @@ Product1:
 // Initialize accumulator with input biases
 ResetAccum:
     for (uint iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+        acc[iacc] = init<data_T, CONFIG_T>(biases[iacc]);
     }
 
 // Accumulate multiplication result

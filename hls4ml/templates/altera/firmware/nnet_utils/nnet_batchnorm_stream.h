@@ -47,7 +47,7 @@ BatchNormLoop:
 //       Merged Batch Normalization and Quantized Tanh
 // ****************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T>
-void normalize_binary_tanh_stream(typename CONFIG_T::threshold_t threshold) {
+void normalize_binary_tanh_stream(typename CONFIG_T::threshold_t threshold, typename CONFIG_T::flip_t flip) {
     constexpr auto datasize = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
 
 BinaryNormLoop:
@@ -64,7 +64,9 @@ BinaryNormLoop:
             else
                 norm_index = j % CONFIG_T::n_filt;
 
-            out_data[j] = (in_data[j] >= threshold[norm_index]) ? 1 : 0;
+            // A flipped channel (negative scale) is 1 at or below its threshold
+            out_data[j] =
+                (flip[norm_index] ? in_data[j] <= threshold[norm_index] : in_data[j] >= threshold[norm_index]) ? 1 : 0;
         }
 
         res_pipe::write(out_data);
@@ -73,7 +75,7 @@ BinaryNormLoop:
 
 template <class data_pipe, class res_pipe, typename CONFIG_T>
 void normalize_ternary_tanh_stream(typename CONFIG_T::threshold_hi_t threshold_hi,
-                                   typename CONFIG_T::threshold_lo_t threshold_lo) {
+                                   typename CONFIG_T::threshold_lo_t threshold_lo, typename CONFIG_T::flip_t flip) {
     constexpr auto datasize = std::tuple_size<typename ExtractPipeType<data_pipe>::value_type>{};
 
 TernaryNormLoop:
@@ -90,9 +92,10 @@ TernaryNormLoop:
             else
                 norm_index = j % CONFIG_T::n_filt;
 
-            if (in_data[j] > threshold_hi[norm_index])
+            // A flipped channel (negative scale) is 1 below the high threshold and -1 at or above the low one
+            if (flip[norm_index] ? in_data[j] < threshold_hi[norm_index] : in_data[j] > threshold_hi[norm_index])
                 out_data[j] = 1;
-            else if (in_data[j] <= threshold_lo[norm_index])
+            else if (flip[norm_index] ? in_data[j] >= threshold_lo[norm_index] : in_data[j] <= threshold_lo[norm_index])
                 out_data[j] = -1;
             else
                 out_data[j] = 0;

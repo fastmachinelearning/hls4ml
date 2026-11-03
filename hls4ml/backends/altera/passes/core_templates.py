@@ -1,7 +1,16 @@
 from hls4ml.backends.altera.altera_template import StreamFunctionCallTemplate, TaskSequenceTemplate
 from hls4ml.backends.backend import get_backend
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
-from hls4ml.model.layers import Activation, BatchNormalization, Dense, HardActivation, ParametrizedActivation, PReLU, Softmax
+from hls4ml.model.layers import (
+    Activation,
+    BatchNormalization,
+    Dense,
+    HardActivation,
+    ParametrizedActivation,
+    PReLU,
+    Softmax,
+    TernaryTanh,
+)
 
 # Dense templates
 
@@ -50,7 +59,9 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('weight').nzeros
         params['nonzeros'] = node.get_weights('weight').nonzeros
         params['product_type'] = get_backend('Altera').product_type(
-            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
+            node.get_input_variable().type.precision,
+            node.get_weights('weight').type.precision,
+            sum_starts_with_init=True,
         )
 
         return self.template.format(**params)
@@ -214,7 +225,7 @@ activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activatio
 
 class ActivationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__(Activation)
+        super().__init__((Activation, TernaryTanh))
         self.template = activ_config_template
 
     def format(self, node):
@@ -256,7 +267,7 @@ class SoftmaxConfigTemplate(ActivationConfigTemplate):
 
 class ActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Activation, HardActivation, Softmax), include_header=activ_include_list)
+        super().__init__((Activation, HardActivation, Softmax, TernaryTanh), include_header=activ_include_list)
         self.template = activ_function_template
 
     def format(self, node):
@@ -297,7 +308,7 @@ class PReLUFunctionTemplate(FunctionCallTemplate):
 
 class ActivationTaskSequenceTemplate(TaskSequenceTemplate):
     def __init__(self):
-        super().__init__((Activation, HardActivation, Softmax, PReLU))
+        super().__init__((Activation, HardActivation, Softmax, PReLU, TernaryTanh))
         self.template = activ_task_sequence_template
 
     def format(self, node):
@@ -321,7 +332,7 @@ class ParametrizedActivationTaskSequenceTemplate(TaskSequenceTemplate):
 
 class ActivationStreamFunctionTemplate(StreamFunctionCallTemplate):
     def __init__(self):
-        super().__init__((Activation, HardActivation, Softmax))
+        super().__init__((Activation, HardActivation, Softmax, TernaryTanh))
         self.template = activ_stream_function_template
 
     def format(self, node):

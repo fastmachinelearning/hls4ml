@@ -517,20 +517,29 @@ class FPGABackend(Backend):
         """
         return UnspecifiedPrecisionType()
 
-    def product_type(self, data_T, weight_T):
+    def product_type(self, data_T, weight_T, sum_starts_with_init=False):
         """
         Helper function to determine which product implementation to use during inference
+
+        Args:
+            data_T (PrecisionType): The precision of the data.
+            weight_T (PrecisionType): The precision of the weights.
+            sum_starts_with_init (bool, optional): Whether the kernel starts its sums with ``nnet::init``, which allows a
+                cheaper product of binary data and binary weights. Defaults to False.
         """
         assert not isinstance(data_T, ExponentPrecisionType), (
             "Only ExponentPrecisionType (aka 'power of 2') weights are currently supported, not data."
         )
         product = 'mult'
         if isinstance(weight_T, ExponentPrecisionType):
-            product = 'weight_exponential'
+            if isinstance(data_T, XnorPrecisionType):
+                product = 'data_binary_weight_exponential'
+            else:
+                product = 'weight_exponential'
         else:
             # if binary
             if isinstance(weight_T, XnorPrecisionType) and isinstance(data_T, XnorPrecisionType):
-                product = 'both_binary'
+                product = 'both_binary' if sum_starts_with_init else 'both_binary_signed'
             elif isinstance(weight_T, XnorPrecisionType):  # data is not xnor-binary
                 product = 'weight_binary'
             elif isinstance(data_T, XnorPrecisionType):  # data is xnor, weight is not

@@ -11,6 +11,7 @@ from hls4ml.model.layers import (
     ParametrizedActivation,
     PReLU,
     Softmax,
+    TernaryTanh,
 )
 from hls4ml.model.optimizer.passes.hgq_proxy_model import UnaryLUT
 
@@ -51,7 +52,9 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('weight').nzeros
         params['nonzeros'] = node.get_weights('weight').nonzeros
         params['product_type'] = get_backend('vivado').product_type(
-            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
+            node.get_input_variable().type.precision,
+            node.get_weights('weight').type.precision,
+            sum_starts_with_init=True,
         )
 
         namespace = params['namespace']
@@ -256,7 +259,7 @@ activ_include_list = ['nnet_utils/nnet_activation.h', 'nnet_utils/nnet_activatio
 
 class ActivationConfigTemplate(LayerConfigTemplate):
     def __init__(self):
-        super().__init__((Activation, UnaryLUT))
+        super().__init__((Activation, TernaryTanh, UnaryLUT))
         self.template = activ_config_template
 
     def format(self, node):
@@ -354,7 +357,7 @@ class SoftmaxFunctionTemplate(FunctionCallTemplate):
 
 class ActivationFunctionTemplate(FunctionCallTemplate):
     def __init__(self):
-        super().__init__((Activation, HardActivation), include_header=activ_include_list)
+        super().__init__((Activation, HardActivation, TernaryTanh), include_header=activ_include_list)
         self.template = activ_function_template
 
     def format(self, node):

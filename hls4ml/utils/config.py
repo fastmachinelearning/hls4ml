@@ -92,8 +92,13 @@ def _get_precision_from_quantizer(quantizer):
             signed = False
 
     elif quantizer['class_name'] in ['binary', 'stochastic_binary', 'binary_tanh']:
-        bits = 2
-        integer = 2
+        if quantizer['config'].get('use_01', False):
+            bits = 1
+            integer = 1
+            signed = False
+        else:
+            bits = 2
+            integer = 2
 
     elif quantizer['class_name'] in ['ternary', 'stochastic_ternary', 'ternary_tanh']:
         bits = 2

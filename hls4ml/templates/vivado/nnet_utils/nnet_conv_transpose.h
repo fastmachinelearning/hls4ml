@@ -48,11 +48,13 @@ struct conv_transpose_config {
     static const unsigned multiplier_limit = 1;
 };
 
+// Binary data stores -1 as 0, so a zero read outside the input is not a zero product
 template <class data_T, typename CONFIG_T> struct conv_transpose_binary {
     typedef typename CONFIG_T::mult_config::weight_t weight_T;
     typedef typename CONFIG_T::mult_config::template product<data_T, weight_T> product_T;
-    static const bool both = std::is_same<product_T, product::both_binary<data_T, weight_T>>::value;
-    static const bool data = both || std::is_same<product_T, product::data_binary<data_T, weight_T>>::value;
+    static const bool data = std::is_same<product_T, product::both_binary_signed<data_T, weight_T>>::value ||
+                             std::is_same<product_T, product::data_binary<data_T, weight_T>>::value ||
+                             std::is_same<product_T, product::data_binary_weight_exponential<data_T, weight_T>>::value;
 };
 
 template <class data_T, typename CONFIG_T>
@@ -63,41 +65,6 @@ typename CONFIG_T::accum_t conv_transpose_product(data_T x, typename CONFIG_T::m
     }
     return static_cast<typename CONFIG_T::accum_t>(
         CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(x, w));
-}
-
-template <class data_T, typename CONFIG_T> typename CONFIG_T::accum_t conv_transpose_start(typename CONFIG_T::bias_t bias) {
-    #pragma HLS INLINE
-    return conv_transpose_binary<data_T, CONFIG_T>::both ? (typename CONFIG_T::accum_t)0 : (typename CONFIG_T::accum_t)bias;
-}
-
-template <class data_T, typename CONFIG_T>
-void conv_transpose_count(
-    typename CONFIG_T::accum_t acc[CONFIG_T::stride_height * CONFIG_T::stride_width * CONFIG_T::n_filt],
-    const bool valid[CONFIG_T::n_buf / CONFIG_T::n_chan], typename CONFIG_T::bias_t biases[CONFIG_T::n_filt]) {
-    #pragma HLS INLINE
-    if (!conv_transpose_binary<data_T, CONFIG_T>::both) {
-        return;
-    }
-    constexpr unsigned n_groups = CONFIG_T::stride_height * CONFIG_T::stride_width;
-    ap_uint<nnet::ceillog2(CONFIG_T::n_buf + 1)> n_products[n_groups];
-    #pragma HLS ARRAY_PARTITION variable=n_products complete
-CountInitLoop:
-    for (unsigned i_g = 0; i_g < n_groups; i_g++) {
-        #pragma HLS UNROLL
-        n_products[i_g] = 0;
-    }
-CountLoop:
-    for (unsigned i_slot = 0; i_slot < CONFIG_T::n_buf / CONFIG_T::n_chan; i_slot++) {
-        #pragma HLS UNROLL
-        if (valid[i_slot]) {
-            n_products[CONFIG_T::group_of[i_slot * CONFIG_T::n_chan]] += CONFIG_T::n_chan;
-        }
-    }
-CountAccLoop:
-    for (unsigned i_acc = 0; i_acc < n_groups * CONFIG_T::n_filt; i_acc++) {
-        #pragma HLS UNROLL
-        acc[i_acc] = 2 * acc[i_acc] - n_products[i_acc / CONFIG_T::n_filt] + biases[i_acc % CONFIG_T::n_filt];
-    }
 }
 
 template <class data_T, class res_T, typename CONFIG_T>
@@ -151,7 +118,7 @@ PartitionLoop:
         ResetAccum:
             for (unsigned i_acc = 0; i_acc < n_acc; i_acc++) {
                 #pragma HLS UNROLL
-                acc[i_pxl][i_acc] = conv_transpose_start<data_T, CONFIG_T>(biases[i_acc % mult_n_out]);
+                acc[i_pxl][i_acc] = (typename CONFIG_T::accum_t)biases[i_acc % mult_n_out];
             }
 
         // Each product adds to the group of its input
@@ -164,7 +131,6 @@ PartitionLoop:
                     acc[i_pxl][CONFIG_T::group_of[i_in] * mult_n_out + i_out] += mult[i_in * mult_n_out + i_out];
                 }
             }
-            conv_transpose_count<data_T, CONFIG_T>(acc[i_pxl], valid[i_pxl], biases);
         }
 
         CONFIG_T::template place_block<data_T, res_T, CONFIG_T>::place(acc, res, i_part);
@@ -253,7 +219,7 @@ PartitionLoop:
                 ResetAccum:
                     for (unsigned i_acc = 0; i_acc < n_acc; i_acc++) {
                         #pragma HLS UNROLL
-                        acc[i_pxl][i_acc] = conv_transpose_start<data_T, CONFIG_T>(biases[i_acc % mult_n_out]);
+                        acc[i_pxl][i_acc] = (typename CONFIG_T::accum_t)biases[i_acc % mult_n_out];
                     }
                 SumBlockLoop:
                     for (unsigned i_blk = 0; i_blk < block_factor; i_blk++) {
@@ -267,7 +233,6 @@ PartitionLoop:
                             }
                         }
                     }
-                    conv_transpose_count<data_T, CONFIG_T>(acc[i_pxl], valid[i_pxl], biases);
                 }
 
                 CONFIG_T::template place_block<data_T, res_T, CONFIG_T>::place(acc, res, i_part);

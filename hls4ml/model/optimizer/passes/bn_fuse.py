@@ -1,6 +1,6 @@
 import numpy as np
 
-from hls4ml.model.layers import BatchNormalization, Conv1D, Conv2D, Dense
+from hls4ml.model.layers import BatchNormalization, Conv1D, Conv2D, Dense, DepthwiseConv1D, DepthwiseConv2D
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, UnspecifiedPrecisionType, XnorPrecisionType
 
@@ -34,9 +34,10 @@ class FuseBatchNormalization(OptimizerPass):
             b0 = prev_node.weights['bias'].data_unquantized
             s1 = node.weights['scale'].data_unquantized
             b1 = node.weights['bias'].data_unquantized
+            weight_quantizer = self.weight_quantizer(prev_node)
             scale_compatible = (
-                (prev_node.get_attr('weight_quantizer') is None and node.get_attr('scale_quantizer') is None)
-                or ((s0 == np.ones_like(s0)).all() and prev_node.get_attr('weight_quantizer') is None)
+                (weight_quantizer is None and node.get_attr('scale_quantizer') is None)
+                or ((s0 == np.ones_like(s0)).all() and weight_quantizer is None)
                 or ((s1 == np.ones_like(s1)).all() and node.get_attr('scale_quantizer') is None)
             )
             bias_compatible = (
@@ -48,6 +49,9 @@ class FuseBatchNormalization(OptimizerPass):
 
         else:
             return False
+
+    def weight_quantizer(self, node):
+        return node.get_attr('weight_quantizer') or node.get_attr('depthwise_quantizer')
 
     def transform(self, model, node):
         """Fuse weight and bias of Dense/Conv1D/Conv2D layer with BN values."""
@@ -73,13 +77,19 @@ class FuseBatchNormalization(OptimizerPass):
         ):
             return False
 
-        fused_weight = bn_scale.data * parent_weight.data
+        if isinstance(parent_node, (DepthwiseConv1D, DepthwiseConv2D)):
+            # The last two axes of a depthwise kernel, the input channels and the depth multiplier, together hold its
+            # output channels
+            shape = parent_weight.data.shape
+            fused_weight = (bn_scale.data * parent_weight.data.reshape(*shape[:-2], -1)).reshape(shape)
+        else:
+            fused_weight = bn_scale.data * parent_weight.data
         fused_bias = bn_scale.data * parent_bias.data + bn_bias.data
 
         w_quantizer = (
             node.get_attr('scale_quantizer')
             if node.get_attr('scale_quantizer') is not None
-            else parent_node.get_attr('weight_quantizer')
+            else self.weight_quantizer(parent_node)
         )
         b_quantizer = (
             node.get_attr('bias_quantizer')

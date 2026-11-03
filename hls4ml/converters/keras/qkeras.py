@@ -210,6 +210,7 @@ def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
     layer['variance_quantizer'] = get_quantizer_from_config(keras_layer, 'variance')
     layer['beta_quantizer'] = get_quantizer_from_config(keras_layer, 'beta')
     layer['gamma_quantizer'] = get_quantizer_from_config(keras_layer, 'gamma')
+    layer['inverse_quantizer'] = get_quantizer_from_config(keras_layer, 'inverse')
 
     return layer, output_shape
 
