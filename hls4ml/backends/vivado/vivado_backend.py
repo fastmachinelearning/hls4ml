@@ -1,3 +1,4 @@
+import itertools
 import os
 import shutil
 import subprocess
@@ -8,14 +9,16 @@ import numpy as np
 from hls4ml.backends import FPGABackend
 from hls4ml.backends.fpga.fpga_types import APTypeConverter, HLSTypeConverter
 from hls4ml.backends.vivado.vivado_types import VivadoArrayVariableConverter
-from hls4ml.model.attributes import ChoiceAttribute, ConfigurableAttribute, TypeAttribute
+from hls4ml.model.attributes import Attribute, ChoiceAttribute, ConfigurableAttribute, TypeAttribute
 from hls4ml.model.flow import register_flow
 from hls4ml.model.layers import (
     GRU,
     LSTM,
     Bidirectional,
     Conv1D,
+    Conv1DTranspose,
     Conv2D,
+    Conv2DTranspose,
     Dense,
     DepthwiseConv1D,
     DepthwiseConv2D,
@@ -73,11 +76,30 @@ class VivadoBackend(FPGABackend):
         pf_layers = [
             Conv1D,
             Conv2D,
+            Conv1DTranspose,
+            Conv2DTranspose,
         ]
 
         for layer in pf_layers:
             attrs = self.attribute_map.get(layer, [])
             attrs.append(ConfigurableAttribute('parallelization_factor', default=1, description=descriptions.conv_pf))
+            self.attribute_map[layer] = attrs
+
+        # Add the values computed by the backend to Conv1D/2DTranspose
+        for layer in [Conv1DTranspose, Conv2DTranspose]:
+            attrs = self.attribute_map.get(layer, [])
+            attrs.append(
+                Attribute('slot_groups', value_type=tuple, default=(), description=descriptions.conv_transpose_slot_groups)
+            )
+            attrs.append(
+                Attribute('slot_shifts', value_type=tuple, default=(), description=descriptions.conv_transpose_slot_shifts)
+            )
+            attrs.append(Attribute('n_buf', default=0, description=descriptions.conv_transpose_n_buf))
+            for axis in ['height', 'width'] if layer is Conv2DTranspose else ['width']:
+                attrs.append(
+                    Attribute(f'first_block_{axis}', default=0, description=descriptions.conv_transpose_first_block)
+                )
+                attrs.append(Attribute(f'n_blocks_{axis}', default=0, description=descriptions.conv_transpose_n_blocks))
             self.attribute_map[layer] = attrs
 
         # Add ConvImplementation to Convolution+Pooling layers
@@ -474,6 +496,92 @@ class VivadoBackend(FPGABackend):
         layer.set_attr('parallelization_factor', closest_pf)
 
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
+
+    @layer_optimizer(Conv1DTranspose)
+    def init_conv1d_transpose(self, layer):
+        self._init_conv_transpose(layer)
+
+    @layer_optimizer(Conv2DTranspose)
+    def init_conv2d_transpose(self, layer):
+        self._init_conv_transpose(layer)
+
+    def _init_conv_transpose(self, layer):
+        if layer.get_attr('data_format') != 'channels_last':
+            raise NotImplementedError(f'Layer {layer.name} ({layer.class_name}) is only supported with channels_last data.')
+
+        self._split_conv_transpose_kernel(layer)
+
+        strategy = layer.model.config.get_strategy(layer).lower()
+        if strategy == 'resource':
+            layer.set_attr('strategy', 'resource')
+            n_in, n_out = self.get_layer_mult_size(layer)
+            # The kernel goes through all inputs at least once per reuse cycle
+            valid_rf = [rf for rf in self.get_valid_reuse_factors(n_in, n_out) if rf <= n_in]
+            chosen_rf = layer.get_attr('reuse_factor')
+            if chosen_rf not in valid_rf:
+                closest_rf = self.get_closest_reuse_factor(valid_rf, chosen_rf)
+                print(
+                    f'WARNING: Invalid ReuseFactor={chosen_rf} in layer "{layer.name}". '
+                    f'Using ReuseFactor={closest_rf} instead. Valid ReuseFactor(s): {",".join(map(str, valid_rf))}.'
+                )
+                layer.set_attr('reuse_factor', closest_rf)
+        elif strategy == 'latency':
+            layer.set_attr('strategy', 'latency')
+        else:
+            raise NotImplementedError(
+                f'Layer {layer.name} ({layer.class_name}) supports only the Latency and Resource strategies, not {strategy}.'
+            )
+
+        n_blocks_h = layer.get_attr('n_blocks_height', 1)
+        n_blocks_w = layer.get_attr('n_blocks_width')
+        user_pf = layer.model.config.get_layer_config_value(layer, 'ParallelizationFactor', None)
+        chosen_pf = user_pf or layer.get_attr('parallelization_factor', None) or 1
+        valid_pf = self.get_valid_conv_partition_splits(n_blocks_h, n_blocks_w)
+        if chosen_pf not in valid_pf:
+            closest_pf = self.get_closest_reuse_factor(valid_pf, chosen_pf)
+            print(
+                f'WARNING: Invalid ParallelizationFactor={chosen_pf} in layer "{layer.name}". '
+                f'Using ParallelizationFactor={closest_pf} instead. '
+                f'Valid ParallelizationFactor(s): {",".join(map(str, valid_pf))}.'
+            )
+        else:
+            closest_pf = chosen_pf
+        layer.set_attr('n_partitions', n_blocks_h * n_blocks_w // closest_pf)
+        layer.set_attr('parallelization_factor', closest_pf)
+
+    def _split_conv_transpose_kernel(self, layer):
+        # The output is computed in blocks of stride positions, one block per input position. Kernel element t adds to
+        # position t * dilation of a block, so it is in group (t * dilation) % stride and reads the input that is
+        # (t * dilation) // stride positions before the block.
+        axes = [('height', 'top'), ('width', 'left')] if isinstance(layer, Conv2DTranspose) else [('width', 'left')]
+        axis_groups = []
+        for axis, side in axes:
+            stride = layer.get_attr(f'stride_{axis}')
+            dilation = layer.get_attr(f'dilation_{axis}')
+            crop = layer.get_attr(f'crop_{side}')
+            groups = [[] for _ in range(stride)]
+            for t in range(layer.get_attr(f'filt_{axis}')):
+                groups[(t * dilation) % stride].append((t, (t * dilation) // stride))
+            axis_groups.append(groups)
+            first_block = crop // stride
+            last_block = (crop + layer.get_attr(f'out_{axis}') - 1) // stride
+            layer.set_attr(f'first_block_{axis}', first_block)
+            layer.set_attr(f'n_blocks_{axis}', last_block - first_block + 1)
+
+        # The weights become a matrix with a row for each input channel of each kernel element, ordered by group
+        slot_groups, slot_shifts, slot_elements = [], [], []
+        for group, group_axes in enumerate(itertools.product(*(range(len(groups)) for groups in axis_groups))):
+            for elements in itertools.product(*(groups[g] for groups, g in zip(axis_groups, group_axes))):
+                slot_groups.append(group)
+                slot_shifts.append((0,) * (2 - len(axes)) + tuple(shift for _, shift in elements))
+                slot_elements.append(tuple(t for t, _ in elements))
+        layer.set_attr('slot_groups', tuple(slot_groups))
+        layer.set_attr('slot_shifts', tuple(slot_shifts))
+        layer.set_attr('n_buf', len(slot_elements) * layer.get_attr('n_chan'))
+
+        weight = layer.weights['weight']
+        weight.data = np.stack([weight.data[element].T for element in slot_elements]).reshape(-1, layer.get_attr('n_filt'))
+        weight.shape = list(weight.data.shape)
 
     @layer_optimizer(SeparableConv1D)
     def init_sepconv1d(self, layer):
