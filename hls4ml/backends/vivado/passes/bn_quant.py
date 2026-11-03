@@ -126,9 +126,16 @@ class QuantizeDenseOutput(OptimizerPass):
         )
         if not (is_dense and is_input_bnqt and is_binary_ternary):
             return False
-        # The bias of the layer moves to the batch normalizations that follow it, so a layer with a bias may only feed those
+        # The bias of the layer moves to the batch normalizations that follow it, so a layer with a bias may only feed those,
+        # and its output may not be an output of the model
         has_bias = np.any(node.get_weights('bias').data != 0)
-        return not has_bias or all(isinstance(n, BatchNormalizationQuantizedTanh) for n in node.get_output_nodes())
+        output_nodes = node.get_output_nodes()
+        bias_moves = (
+            len(output_nodes) > 0
+            and all(isinstance(n, BatchNormalizationQuantizedTanh) for n in output_nodes)
+            and node.outputs[0] not in node.model.outputs
+        )
+        return not has_bias or bias_moves
 
     def transform(self, model, node):
         # Compute the required precision and update the variables
