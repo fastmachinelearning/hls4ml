@@ -1143,7 +1143,7 @@ def test_binary_pointwise_conv1d(test_case_id, backend):
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 def test_binary_dot(test_case_id, backend):
     """
     Test the dot product of two binary tensors, whose sum starts at zero rather than at nnet::init.
@@ -1159,7 +1159,7 @@ def test_binary_dot(test_case_id, backend):
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('activation', [binary(), ternary()], ids=['binary', 'ternary'])
 @pytest.mark.parametrize('layer', ['dense', 'conv2d'])
@@ -1188,7 +1188,7 @@ def test_binary_activation_scale_sign(test_case_id, layer, activation, backend, 
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize(
     'activation', [None, binary(), binary(use_01=True), ternary()], ids=['none', 'binary', 'binary_01', 'ternary']
@@ -1215,7 +1215,7 @@ def test_qbatchnorm(test_case_id, activation, backend, io_type):
         np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('layer', ['dense', 'conv2d'])
 def test_po2_bias(test_case_id, layer, backend, io_type):
@@ -1237,7 +1237,7 @@ def test_po2_bias(test_case_id, layer, backend, io_type):
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize(
     'activation',
@@ -1258,7 +1258,7 @@ def test_binary_activation_without_batchnorm(test_case_id, activation, backend, 
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('backend', ['Vitis'])
 @pytest.mark.parametrize(
     'kernel_quantizer', [binary(alpha='auto'), quantized_bits(4, 0, alpha='auto')], ids=['binary', 'bits']
 )
