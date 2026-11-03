@@ -196,17 +196,15 @@ def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.
             OR-Tools requires all values & weights to be integers;
     """
     try:
-        from ortools.algorithms import pywrapknapsack_solver
+        from ortools.algorithms.python import knapsack_solver
     except ModuleNotFoundError:
-        raise Exception('OR-Tools not found. Please insteal Google OR-Tools from pip.')
+        raise Exception('OR-Tools 9.7 or newer not found. Please install Google OR-Tools from pip.')
 
-    solver = pywrapknapsack_solver.KnapsackSolver(
-        pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'BB'
-    )
+    solver = knapsack_solver.KnapsackSolver(knapsack_solver.SolverType.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'BB')
     solver.set_time_limit(time_limit)
-    solver.Init((values * scaling_factor).astype(int).tolist(), weights.astype(int).tolist(), capacity.astype(int).tolist())
-    optimal = solver.Solve()
-    selected = [i for i in range(values.shape[0]) if solver.BestSolutionContains(i)]
+    solver.init((values * scaling_factor).astype(int).tolist(), weights.astype(int).tolist(), capacity.astype(int).tolist())
+    optimal = solver.solve()
+    selected = [i for i in range(values.shape[0]) if solver.best_solution_contains(i)]
     return optimal / scaling_factor, selected
 
 
@@ -221,17 +219,15 @@ def __solve_knapsack_cbc_mip(values, weights, capacity, time_limit=sys.float_inf
             So all of the values are scaled by a large number
     """
     try:
-        from ortools.algorithms import pywrapknapsack_solver
+        from ortools.algorithms.python import knapsack_solver
     except ModuleNotFoundError:
-        raise Exception('OR-Tools not found. Please insteal Google OR-Tools from pip.')
+        raise Exception('OR-Tools 9.7 or newer not found. Please install Google OR-Tools from pip.')
 
-    solver = pywrapknapsack_solver.KnapsackSolver(
-        pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_CBC_MIP_SOLVER, 'CBC'
-    )
+    solver = knapsack_solver.KnapsackSolver(knapsack_solver.SolverType.KNAPSACK_MULTIDIMENSION_CBC_MIP_SOLVER, 'CBC')
     solver.set_time_limit(time_limit)
-    solver.Init((values * scaling_factor).astype(int).tolist(), weights.astype(int).tolist(), capacity.astype(int).tolist())
-    optimal = solver.Solve()
-    selected = [i for i in range(values.shape[0]) if solver.BestSolutionContains(i)]
+    solver.init((values * scaling_factor).astype(int).tolist(), weights.astype(int).tolist(), capacity.astype(int).tolist())
+    optimal = solver.solve()
+    selected = [i for i in range(values.shape[0]) if solver.best_solution_contains(i)]
     return optimal / scaling_factor, selected
 
 

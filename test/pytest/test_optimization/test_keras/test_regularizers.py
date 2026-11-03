@@ -1,22 +1,28 @@
 import numpy as np
 import pytest
 import tensorflow as tf
-from qkeras import QConv2D, QDense
 from tensorflow.keras.layers import Conv2D, Dense, Flatten
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 
 from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
 from hls4ml.optimization.dsp_aware_pruning.keras.builder import remove_custom_regularizers
+from hls4ml.optimization.dsp_aware_pruning.keras.config import QKERAS_AVAILABLE
 from hls4ml.optimization.dsp_aware_pruning.keras.regularizers import Conv2DRegularizer, DenseRegularizer
+
+if QKERAS_AVAILABLE:
+    from qkeras import QConv2D, QDense
+else:
+    QConv2D = QDense = None
 
 # Constants
 pattern_offset = 4
 consecutive_patterns = 2
 block_shape = (4, 4)
 
-dense_layers = [Dense, QDense]
-conv2d_layers = [Conv2D, QConv2D]
+requires_qkeras = pytest.mark.skipif(not QKERAS_AVAILABLE, reason='QKeras is not available')
+dense_layers = [Dense, pytest.param(QDense, marks=requires_qkeras, id='QDense')]
+conv2d_layers = [Conv2D, pytest.param(QConv2D, marks=requires_qkeras, id='QConv2D')]
 
 
 # Sets the loss due to data to zero; train model only on regularization loss
@@ -108,13 +114,14 @@ def test_dense_regularizer(structure_type, dense):
     norm, var = get_norm_and_variance(model.layers[0].get_weights()[0], structure_type)
 
     # Now, fit a model with strong regularization, starting with the same initial weights
-    dense_weights = model.layers[0].get_weights()
-    dense_weights[0] = w
-    model.layers[0].set_weights(dense_weights)
     regularizer = DenseRegularizer(
         alpha=0.5, beta=0.5, structure_type=structure_type, pattern_offset=pattern_offset, block_shape=block_shape
     )
-    model.layers[0].add_loss(lambda layer=model.layers[0]: regularizer(layer.kernel))
+    model = Sequential()
+    model.add(dense(output_shape[0], input_shape=input_shape, kernel_regularizer=regularizer))
+    dense_weights = model.layers[0].get_weights()
+    dense_weights[0] = w
+    model.layers[0].set_weights(dense_weights)
     model.compile(loss=zero_loss, optimizer=Adam(1.0))
     model.fit(X, y, epochs=epochs)
     reg_norm, reg_var = get_norm_and_variance(model.layers[0].get_weights()[0], structure_type)
@@ -147,9 +154,12 @@ def test_conv2d_regularizer(structure_type, conv2d):
     norm, var = get_norm_and_variance(model.layers[0].get_weights()[0], structure_type, 'conv2d')
 
     # Now, fit a model with strong regularization, starting with the same initial weights
-    model.layers[0].set_weights(conv_weights)
     regularizer = Conv2DRegularizer(alpha=0.5, beta=0.5, structure_type=structure_type, pattern_offset=pattern_offset)
-    model.layers[0].add_loss(lambda layer=model.layers[0]: regularizer(layer.kernel))
+    model = Sequential()
+    model.add(conv2d(num_filters, (3, 3), input_shape=input_shape, kernel_regularizer=regularizer))
+    model.add(Flatten())
+    model.add(Dense(1))
+    model.layers[0].set_weights(conv_weights)
     model.compile(loss=zero_loss, optimizer=Adam())
     model.fit(X, y, epochs=epochs, verbose=True)
     reg_norm, reg_var = get_norm_and_variance(model.layers[0].get_weights()[0], structure_type, 'conv2d')

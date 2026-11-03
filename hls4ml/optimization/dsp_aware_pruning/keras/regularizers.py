@@ -65,7 +65,6 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
         self.pattern_offset = pattern_offset
         self.consecutive_patterns = consecutive_patterns
 
-    @tf.function
     def __call__(self, weights):
         if self.structure_type == SUPPORTED_STRUCTURES.UNSTRUCTURED:
             sparse_penalty = self.alpha * tf.norm(weights, ord=self.norm)
@@ -139,7 +138,7 @@ class DenseRegularizer(tf.keras.regularizers.Regularizer):
             'alpha': self.alpha,
             'beta': self.beta,
             'norm': self.norm,
-            'structure_type': self.structure_type,
+            'structure_type': self.structure_type.value,
             'block_shape': self.block_shape,
             'pattern_offset': self.pattern_offset,
             'consecutive_patterns': self.consecutive_patterns,
@@ -200,7 +199,6 @@ class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
         self.pattern_offset = pattern_offset
         self.consecutive_patterns = consecutive_patterns
 
-    @tf.function
     def __call__(self, weights):
         if len(weights.shape) != 4:
             raise Exception(f'{self.__class__.__name__} regularizes Conv2D layers; weight matrix is not 4-dimensional')
@@ -249,7 +247,7 @@ class Conv2DRegularizer(tf.keras.regularizers.Regularizer):
             'alpha': self.alpha,
             'beta': self.beta,
             'norm': self.norm,
-            'structure_type': self.structure_type,
+            'structure_type': self.structure_type.value,
             'pattern_offset': self.pattern_offset,
             'consecutive_patterns': self.consecutive_patterns,
         }
