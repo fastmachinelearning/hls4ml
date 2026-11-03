@@ -4,7 +4,7 @@
 
 import numpy as np
 
-from hls4ml.model.layers import GRU, LSTM, Concatenate, Dense, Input, LayerNormalization, Reshape, Transpose
+from hls4ml.model.layers import GRU, LSTM, Concatenate, Dense, Input, LayerNormalization, Reshape, Softmax, Transpose
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer
 from hls4ml.model.types import WeightVariable
@@ -107,6 +107,15 @@ class ChannelsLastConverter(OptimizerPass):
                         node.set_attr('axis', 2)  # Not required, but left for clarity
                     else:
                         node.set_attr('axis', 3)
+            elif isinstance(node, Softmax) and len(outshape) in (2, 3):
+                # Move the axis from channels_first to channels_last; 'axis' counts the batch dimension
+                axis = node.get_attr('axis', -1)
+                ax = axis - 1 if axis > 0 else len(outshape) + axis
+                ax = len(outshape) - 1 if ax == 0 else ax - 1
+                shape = outshape[1:] + outshape[:1]
+                node.set_attr('axis', -1 if ax == len(outshape) - 1 else ax + 1)
+                node.set_attr('n_outer', int(np.prod(shape[:ax])))
+                node.set_attr('n_inner', int(np.prod(shape[ax + 1 :])))
 
             # Adjust output shape
             if len(outshape) == 2:

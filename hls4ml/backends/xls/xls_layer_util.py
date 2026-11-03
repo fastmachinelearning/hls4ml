@@ -1,19 +1,52 @@
 # Typing imports
 from __future__ import annotations  # makes all annotations into strings
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 from hls4ml.backends.xls.xls_types import (
     XLSConstDefinition,
     XLSFixedPointDefinition,
+    XLSFixedPointPrecisionDefinitionBase,
     XLSFunctionCallDefinition,
     XLSQualifiedName,
     XLSTensorVariableDefinition,
     XLSWeightVariableDefinition,
+    s32,
+    u32,
 )
+from hls4ml.model.types import NamedType
 
 if TYPE_CHECKING:
     from hls4ml.model.layers import Layer
+
+
+def xls_precision_definitions_dict(
+    precision: XLSFixedPointPrecisionDefinitionBase, name: str
+) -> dict[str, XLSConstDefinition]:
+    name = name.upper()
+    return {
+        'num_bits': XLSConstDefinition(name=f'{name}_NUM_BITS', value=precision.xls_num_bits, type=u32),
+        'binary_exponent': XLSConstDefinition(name=f'{name}_BINARY_EXPONENT', value=precision.xls_binary_exponent, type=s32),
+        'rounding_mode': XLSConstDefinition(
+            name=f'{name}_ROUNDING_MODE', value=f'RoundingMode::{precision.xls_rounding_mode}', type='RoundingMode'
+        ),
+        'overflow_mode': XLSConstDefinition(
+            name=f'{name}_OVERFLOW_MODE', value=f'OverflowMode::{precision.xls_saturation_mode}', type='OverflowMode'
+        ),
+    }
+
+
+def xls_named_type_definitions(node: Layer, key: str, keys: Iterable[str] | None = None) -> list[XLSConstDefinition]:
+    named_type = node.get_attr(key)
+    assert isinstance(named_type, NamedType), (
+        f'Layer {node.name}, attribute {key}: expected NamedType, got {type(named_type)}'
+    )
+    # Note that we could use name=named_type.name, but that could lead to collisions
+    # since different attributes can have e.g. name=model_default_t.
+    defs = xls_precision_definitions_dict(named_type.precision, name=key.upper())
+    keys = keys or defs.keys()
+    return [defs[key] for key in keys]
 
 
 def xls_weights_key(node: Layer) -> str:
@@ -88,8 +121,10 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
         if axis == -1:
             axis = rank - 1
         return [XLSConstDefinition(name='AXIS', value=axis, type='u32')]
+    elif class_name in ('Dense', 'Dot'):
+        return xls_named_type_definitions(layer, 'accum_t')
     elif class_name in ('Conv1D', 'DepthwiseConv1D'):
-        return [
+        return xls_named_type_definitions(layer, 'accum_t') + [
             XLSConstDefinition(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
             XLSConstDefinition(name='PAD_LEFT', value=layer.get_attr('pad_left'), type='u32'),
             XLSConstDefinition(name='PAD_RIGHT', value=layer.get_attr('pad_right'), type='u32'),
@@ -98,7 +133,7 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
             ),
         ]
     elif class_name in ('Conv2D', 'DepthwiseConv2D'):
-        return [
+        return xls_named_type_definitions(layer, 'accum_t') + [
             XLSConstDefinition(name='STRIDE_HEIGHT', value=layer.get_attr('stride_height'), type='u32'),
             XLSConstDefinition(name='STRIDE_WIDTH', value=layer.get_attr('stride_width'), type='u32'),
             XLSConstDefinition(name='PAD_TOP', value=layer.get_attr('pad_top'), type='u32'),
@@ -113,13 +148,13 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
         pool_op = f'pooling::PoolingOperation::{layer.get_attr("pool_op").upper()}'
         data_format = f'data_format::DataFormat::{layer.get_attr("data_format").upper()}'
         if class_name.startswith('GlobalPooling'):
-            return [
+            return xls_named_type_definitions(layer, 'accum_t') + [
                 XLSConstDefinition(name='POOL_OP', value=pool_op),
                 XLSConstDefinition(name='DATA_FORMAT', value=data_format),
             ]
         elif class_name.endswith('Pooling1D'):
             count_pad = str(layer.get_attr('count_pad')).lower()
-            return [
+            return xls_named_type_definitions(layer, 'accum_t') + [
                 XLSConstDefinition(name='POOL_OP', value=pool_op),
                 XLSConstDefinition(name='POOL_SIZE', value=layer.get_attr('pool_width'), type='u32'),
                 XLSConstDefinition(name='STRIDE', value=layer.get_attr('stride_width'), type='u32'),
@@ -130,7 +165,7 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
             ]
         elif class_name.endswith('Pooling2D'):
             count_pad = str(layer.get_attr('count_pad')).lower()
-            return [
+            return xls_named_type_definitions(layer, 'accum_t') + [
                 XLSConstDefinition(name='POOL_OP', value=pool_op),
                 XLSConstDefinition(name='POOL_HEIGHT', value=layer.get_attr('pool_height'), type='u32'),
                 XLSConstDefinition(name='POOL_WIDTH', value=layer.get_attr('pool_width'), type='u32'),
@@ -148,6 +183,15 @@ def xls_extra_func_params(node: Layer) -> list[XLSConstDefinition]:
     elif class_name == 'Reshape':
         assert len(layer.outputs) == 1, f'Reshape layer should have exactly one output variable, got {layer.outputs}'
         return list(layer.get_output_variable().xls_dims)
+    elif class_name == 'Softmax':
+        match layer.get_attr('implementation'):
+            case 'stable':
+                return xls_named_type_definitions(layer, 'inp_norm_t')
+            case 'latency':
+                # The exponent sum is resized into inv_inp_t before indexing the inverse table.
+                return xls_named_type_definitions(layer, 'inv_inp_t', keys=['rounding_mode', 'overflow_mode'])
+            case _:
+                return []
     elif class_name == 'Transpose':
         return [
             XLSConstDefinition(name=f'PERM_{i}', value=perm, type='u32') for i, perm in enumerate(layer.get_attr('perm'))
