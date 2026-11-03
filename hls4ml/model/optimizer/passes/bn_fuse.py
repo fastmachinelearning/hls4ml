@@ -1,6 +1,6 @@
 import numpy as np
 
-from hls4ml.model.layers import BatchNormalization, Conv1D, Conv2D, Dense
+from hls4ml.model.layers import BatchNormalization, Conv1D, Conv2D, Dense, DepthwiseConv1D, DepthwiseConv2D
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, UnspecifiedPrecisionType, XnorPrecisionType
 
@@ -77,7 +77,13 @@ class FuseBatchNormalization(OptimizerPass):
         ):
             return False
 
-        fused_weight = bn_scale.data * parent_weight.data
+        if isinstance(parent_node, (DepthwiseConv1D, DepthwiseConv2D)):
+            # The last two axes of a depthwise kernel, the input channels and the depth multiplier, together hold its
+            # output channels
+            shape = parent_weight.data.shape
+            fused_weight = (bn_scale.data * parent_weight.data.reshape(*shape[:-2], -1)).reshape(shape)
+        else:
+            fused_weight = bn_scale.data * parent_weight.data
         fused_bias = bn_scale.data * parent_bias.data + bn_bias.data
 
         w_quantizer = (
