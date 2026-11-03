@@ -34,7 +34,7 @@ class FuseBatchNormalization(OptimizerPass):
             b0 = prev_node.weights['bias'].data_unquantized
             s1 = node.weights['scale'].data_unquantized
             b1 = node.weights['bias'].data_unquantized
-            weight_quantizer = prev_node.get_attr('weight_quantizer') or prev_node.get_attr('depthwise_quantizer')
+            weight_quantizer = self.weight_quantizer(prev_node)
             scale_compatible = (
                 (weight_quantizer is None and node.get_attr('scale_quantizer') is None)
                 or ((s0 == np.ones_like(s0)).all() and weight_quantizer is None)
@@ -49,6 +49,9 @@ class FuseBatchNormalization(OptimizerPass):
 
         else:
             return False
+
+    def weight_quantizer(self, node):
+        return node.get_attr('weight_quantizer') or node.get_attr('depthwise_quantizer')
 
     def transform(self, model, node):
         """Fuse weight and bias of Dense/Conv1D/Conv2D layer with BN values."""
@@ -80,7 +83,7 @@ class FuseBatchNormalization(OptimizerPass):
         w_quantizer = (
             node.get_attr('scale_quantizer')
             if node.get_attr('scale_quantizer') is not None
-            else parent_node.get_attr('weight_quantizer')
+            else self.weight_quantizer(parent_node)
         )
         b_quantizer = (
             node.get_attr('bias_quantizer')
