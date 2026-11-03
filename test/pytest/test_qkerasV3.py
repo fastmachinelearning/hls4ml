@@ -1054,7 +1054,8 @@ def binary_layers(hls_model):
 @pytest.mark.parametrize('layer', ['dense', 'conv1d', 'conv2d', 'depthwise'])
 def test_binary_input(test_case_id, layer, kernel_quantizer, backend, io_type):
     """
-    Test layers with a binary input and binary, scaled binary, 4-bit and 8-bit power-of-two weights, with a bias.
+    Test layers with a binary input and binary, scaled binary, 4-bit fixed-point and 8-bit power-of-two weights, with a
+    bias.
     """
 
     if layer == 'depthwise' and backend not in ('Vivado', 'Vitis'):
