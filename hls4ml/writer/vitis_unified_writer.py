@@ -176,9 +176,10 @@ class VitisUnifiedWriter(VitisWriter):
                 if block is not None:
                     fout.write(block(indent))
                     continue
+                filled = line
                 for token, value in (replacements or {}).items():
-                    line = line.replace(token, value)
-                fout.write(line)
+                    filled = filled.replace(token, value)
+                fout.write(filled)
 
     # ===== Build/config generation =====
     def write_build_script(self, model):
@@ -233,9 +234,10 @@ class VitisUnifiedWriter(VitisWriter):
         def cosim_block(indent):
             lines = ''
             for option in cosim_options:
+                filled = option
                 for token, value in replacements.items():
-                    option = option.replace(token, value)
-                lines += option + '\n'
+                    filled = filled.replace(token, value)
+                lines += filled + '\n'
             return lines
 
         self._fill_template(

@@ -26,18 +26,18 @@ def extract_fixed_quantizer_config(q, tensor: 'KerasTensor', is_input: bool) -> 
     if any([s is None for s in shape]):
         raise ValueError(f'Tensor {tensor.name} has at least one dimension with no fixed size')
     k, i, f = internal_q.kif
-    k, B, I = k, k + i + f, k + i  # type: ignore # noqa: E741
-    k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)  # noqa: E741
-    I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
+    k, B, I = k, k + i + f, k + i  # type: ignore
+    k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)
+    I = np.where(B > 0, I, 0)  # type: ignore
 
     if np.size(k) != 1:
         k = np.broadcast_to(k.astype(np.int16), (1,) + shape)  # type: ignore
         B = np.broadcast_to(B.astype(np.int16), (1,) + shape)  # type: ignore
-        I = np.broadcast_to(I.astype(np.int16), (1,) + shape)  # noqa: E741
+        I = np.broadcast_to(I.astype(np.int16), (1,) + shape)
     else:
         k = np.ravel(k).astype(np.int16)
         B = np.ravel(B).astype(np.int16)
-        I = np.ravel(I).astype(np.int16)  # noqa: E741
+        I = np.ravel(I).astype(np.int16)
 
     overflow_mode: str = internal_q.overflow_mode
     round_mode: str = internal_q.round_mode

@@ -24,9 +24,9 @@ class FixedPointEmulator:
         - self.decimal_bits : Bits corresponding to the decimal part of the number
     """
 
-    def __init__(self, N, I, signed=True, integer_bits=None, decimal_bits=None):  # noqa E741
+    def __init__(self, N, I, signed=True, integer_bits=None, decimal_bits=None):
         self.N = N
-        self.I = I  # noqa E741
+        self.I = I
         self.F = N - I
         self.signed = signed
         self.integer_bits = [0] * self.I if integer_bits is None else integer_bits

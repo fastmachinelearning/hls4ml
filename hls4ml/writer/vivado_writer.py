@@ -1007,8 +1007,8 @@ class VivadoWriter(Writer):
         build_lib_src = (filedir / '../templates/vivado/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', model.config.get_project_name())
+            for template_line in src.readlines():
+                line = template_line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
                 dst.write(line)
@@ -1026,8 +1026,8 @@ class VivadoWriter(Writer):
         graph_project_names = ' '.join(f'"{g.config.get_output_dir().split("/")[-1]}"' for g in model.graphs)
 
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', model.config.config['OriginalProjectName'])
+            for template_line in src.readlines():
+                line = template_line.replace('myproject', model.config.config['OriginalProjectName'])
                 line = line.replace('myproject_stitched', model.config.config['ProjectName'])
                 line = line.replace('mystamp', model.config.config['Stamp'])
                 line = line.replace('mygraph_name_list', graph_project_names)

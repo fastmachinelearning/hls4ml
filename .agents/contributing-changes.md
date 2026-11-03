@@ -45,15 +45,16 @@ scope rules that decide how a feature is received:
 `.pre-commit-config.yaml` runs ruff (with `--fix`) and ruff-format, pyupgrade targeting Python 3.10,
 pyproject-fmt, the standard whitespace and YAML hooks, and `p-clang-format` for C and C++ — so edited
 `nnet_utils` headers are reformatted too. Ruff's rules live in `[tool.ruff]` in `pyproject.toml`: a
-125-character line limit plus the pycodestyle, pyflakes, isort and bugbear checks.
+125-character line limit plus pyflakes, isort, and most pycodestyle and bugbear checks. They include
+`PLW2901`, which rejects reassigning a loop variable inside its loop, as in `line = line.replace(...)`;
+give the loop variable or the result a name of its own.
 
 ```
 pre-commit run --files <the files you changed>
 ```
 
-The first run of a hook installs its own environment and needs network access. Hook revisions are pinned, so
-a local run resolves to the same tools CI uses. Commit the reformatting the hooks apply; pull requests that
-fail these checks are not reviewed.
+The first run of a hook installs its own environment and needs network access. Commit the reformatting the
+hooks apply; pull requests that fail these checks are not reviewed.
 
 **That command does not run everything CI runs.** CI splits the hooks between two services: pre-commit.ci
 runs the default-stage hooks on every pull request, and the `Check manifest` workflow runs the one hook
