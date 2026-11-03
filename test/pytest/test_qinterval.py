@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from quantizers.fixed_point import get_fixed_quantizer_np
+from quantizers import fixed_quantize
 
 from hls4ml.utils.qinterval import QIntervalArray, einsum, minimal_kif
 
@@ -22,10 +22,9 @@ def data():
 
 def test_minimal_kif(data):
     k, i, f = minimal_kif(data)
-    q = get_fixed_quantizer_np()
-    assert np.all(data == q(data, k, i, f))
-    assert np.all((data != q(data, k, i, f - 1)) | (data == 0))
-    assert np.all((data != q(data, k, i - 1, f)) | (data == 0) | (i + f == 0))
+    assert np.all(data == fixed_quantize(data, k, i, f))
+    assert np.all((data != fixed_quantize(data, k, i, f - 1)) | (data == 0))
+    assert np.all((data != fixed_quantize(data, k, i - 1, f)) | (data == 0) | (i + f == 0))
 
 
 def random_arr(seed=None):
@@ -97,5 +96,4 @@ def test_qinterval_einsum(qint_arr1, qint_arr2, eq):
 def test_qinterval_to_kif(qint_arr1):
     k, i, f = qint_arr1.to_kif()
     samples = qint_arr1.sample(10000)
-    q = get_fixed_quantizer_np()
-    assert np.all(samples == q(samples, k, i, f))
+    assert np.all(samples == fixed_quantize(samples, k, i, f))
