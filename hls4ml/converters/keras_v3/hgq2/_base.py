@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from hls4ml.converters.keras_v3._base import KerasV3LayerHandler
-from hls4ml.converters.keras_v3.conv import ConvHandler
+from hls4ml.converters.keras_v3.conv import ConvHandler, gen_conv_config
 from hls4ml.converters.keras_v3.core import ActivationHandler, DenseHandler
 from hls4ml.converters.keras_v3.einsum_dense import EinsumDenseHandler
 from hls4ml.converters.keras_v3.merge import MergeHandler
@@ -141,29 +141,124 @@ class QStandaloneQuantizerHandler(KerasV3LayerHandler):
         return conf
 
 
+def _parallelization_factor(layer, out_tensor: 'KerasTensor') -> int:
+    pf = layer.parallelization_factor
+    out_shape: tuple[int, ...] = out_tensor.shape[1:]  # type: ignore
+    if pf < 0:
+        if layer.data_format == 'channels_last':
+            pf = prod(out_shape[:-1])
+        else:
+            pf = prod(out_shape[1:])
+    return pf
+
+
 class QConvHandler(QLayerHandler, ConvHandler):
     handles = (
         'hgq.layers.conv.QConv1D',
         'hgq.layers.conv.QConv2D',
         # 'hgq.layers.conv.QConv3D',
+        'hgq.layers.conv.QPointwiseConv1D',
+        'hgq.layers.conv.QPointwiseConv2D',
+        'hgq.layers.separable_conv.QDepthwiseConv1D',
+        'hgq.layers.separable_conv.QDepthwiseConv2D',
     )
 
     def handle(
         self,
-        layer: 'hgq.layers.QConv1D|hgq.layers.QConv2D',
+        layer: 'hgq.layers.QConv1D|hgq.layers.QConv2D|hgq.layers.QDepthwiseConv1D|hgq.layers.QDepthwiseConv2D',
         in_tensors: Sequence['KerasTensor'],
         out_tensors: Sequence['KerasTensor'],
     ):
         conf = super().handle(layer, in_tensors, out_tensors)
-        pf = layer.parallelization_factor
-        out_shape: tuple[int, ...] = out_tensors[0].shape[1:]  # type: ignore
-        if pf < 0:
-            if layer.data_format == 'channels_last':
-                pf = prod(out_shape[:-1])
-            else:
-                pf = prod(out_shape[1:])
-        conf['parallelization_factor'] = pf
+        if layer.__class__.__name__.startswith('QPointwiseConv'):
+            conf.setdefault('class_name', f'Conv{layer.rank}D')  # a 1x1 QConv; hls4ml picks its pointwise kernel itself
+        conf['parallelization_factor'] = _parallelization_factor(layer, out_tensors[0])
         return conf
+
+
+class _TensorSpec:
+    """Name and shape of a tensor that exists only inside a layer (for extract_fixed_quantizer_config)."""
+
+    def __init__(self, name: str, shape: tuple[int | None, ...]):
+        self.name = name
+        self.shape = shape
+
+
+class QSeparableConvHandler(QLayerHandler, ConvHandler):
+    """QSeparableConv1D/2D -> DepthwiseConv1D/2D, the FixedPointQuantizer of the depthwise result (pq) and a 1x1
+    Conv1D/2D, so the intermediate tensor gets exactly the type the HGQ2 layer quantizes it to."""
+
+    handles = (
+        'hgq.layers.separable_conv.QSeparableConv1D',
+        'hgq.layers.separable_conv.QSeparableConv2D',
+    )
+
+    def handle(
+        self,
+        layer: 'hgq.layers.QSeparableConv1D|hgq.layers.QSeparableConv2D',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        assert layer.data_format == 'channels_last', f'Layer {layer.name}: only channels_last is supported'
+        conf = super().handle(layer, in_tensors, out_tensors)
+        name, rank = layer.name, layer.rank
+        pf = _parallelization_factor(layer, out_tensors[0])
+
+        in_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
+        out_shape: tuple[int, ...] = out_tensors[0].shape[1:]  # type: ignore
+        n_mid = in_shape[-1] * layer.depth_multiplier
+        mid_shape = (*out_shape[:-1], n_mid)
+        mid_name = f'{out_tensors[0].name}_depthwise'
+
+        dw_keys = ('filt_width', 'stride_width', 'pad_left', 'pad_right', 'in_width', 'out_width', 'filt_height')
+        dw_keys += ('stride_height', 'pad_top', 'pad_bottom', 'in_height', 'out_height', 'n_chan', 'depth_multiplier')
+        dw_conf = {k: conf[k] for k in dw_keys if k in conf}
+        dw_conf.update(
+            {
+                'name': f'{name}_depthwise',
+                'class_name': f'DepthwiseConv{rank}D',
+                'module': layer.__module__,
+                'input_keras_tensor_names': [in_tensors[0].name],
+                'input_shape': [list(in_shape)],
+                'output_keras_tensor_names': [mid_name],
+                'n_filt': n_mid,
+                'data_format': layer.data_format,
+                'dilation': conf['dilation'],
+                'depthwise_data': conf['depthwise_data'],
+                'weight_data': conf['depthwise_data'],
+                'bias_data': None,
+                'use_bias': False,
+                'parallelization_factor': pf,
+            }
+        )
+
+        pq_conf = extract_fixed_quantizer_config(layer.pq, _TensorSpec(mid_name, (None, *mid_shape)), True)  # type: ignore
+
+        ones = (1,) * rank
+        pw_conf = gen_conv_config(mid_shape, out_shape, ones, ones, 'valid', layer.data_format, f'{name}_pointwise')
+        pw_conf.update(
+            {
+                'name': f'{name}_pointwise',
+                'class_name': f'Conv{rank}D',
+                'module': layer.__module__,
+                'input_keras_tensor_names': [f'{mid_name}_q'],
+                'input_shape': [list(mid_shape)],
+                'output_keras_tensor_names': [out_tensors[0].name],
+                'data_format': layer.data_format,
+                'dilation': 1,
+                'weight_data': conf['pointwise_data'],
+                'bias_data': conf['bias_data'],
+                'use_bias': layer.use_bias,
+                'parallelization_factor': pf,
+            }
+        )
+
+        ret = (dw_conf, pq_conf, pw_conf)
+        act_conf, act_in = self.maybe_get_activation_config(layer, out_tensors)
+        if act_conf is not None:
+            pw_conf['output_keras_tensor_names'] = [act_in]
+            ret = *ret, act_conf
+        return ret
 
 
 class QDenseHandler(QLayerHandler, DenseHandler):

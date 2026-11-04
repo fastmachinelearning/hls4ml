@@ -42,7 +42,8 @@ endif()
 
 # Use cmake -DUSER_FPGA_FLAGS=<flags> to set extra flags for FPGA backend
 # compilation.
-set(USER_FPGA_FLAGS -Wno-unused-label;${USER_FPGA_FLAGS})
+# -int-dot-enable=false: the integer hardened-dot pass asserts (HardenedDot.cpp) on products with constexpr weights
+set(USER_FPGA_FLAGS -Wno-unused-label;-Xsopt-arg=-int-dot-enable=false;${USER_FPGA_FLAGS})
 
 # Use cmake -DUSER_FLAGS=<flags> to set extra flags for general compilation.
 set(USER_FLAGS -Wno-unused-label -fconstexpr-steps=134217728 ${USER_FLAGS})
