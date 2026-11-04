@@ -166,8 +166,7 @@ void compute_output_buffer_2d(
     }
 }
 
-template <class data_pipe, class res_pipe, typename CONFIG_T>
-void conv_2d_cl_stream(typename CONFIG_T::weight_t weights, typename CONFIG_T::bias_t biases) {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void conv_2d_cl_stream() {
 
     using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
     using data_element_T = typename data_arr_T::value_type;
@@ -196,8 +195,8 @@ PaddingTopHeight:
     [[intel::loop_coalesce(2)]] for (int row = 0; row < CONFIG_T::pad_top; row++) {
     PaddingTopWidth:
         for (int col = 0; col < CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right; col++) {
-            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
-                                                                                    weights, biases, pX, pY, sX, sY);
+            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(
+                padds, line_buffer, kernel_window, CONFIG_T::weights, CONFIG_T::biases, pX, pY, sX, sY);
         }
     }
 
@@ -206,22 +205,22 @@ ReadInputHeight:
     // Input image left-side padding
     PaddingLeftWidth:
         for (int col = 0; col < CONFIG_T::pad_left; col++) {
-            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
-                                                                                    weights, biases, pX, pY, sX, sY);
+            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(
+                padds, line_buffer, kernel_window, CONFIG_T::weights, CONFIG_T::biases, pX, pY, sX, sY);
         }
 
     // Read input image
     ReadInputWidth:
         for (int col = 0; col < CONFIG_T::in_width; col++) {
             compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(
-                data_pipe::read(), line_buffer, kernel_window, weights, biases, pX, pY, sX, sY);
+                data_pipe::read(), line_buffer, kernel_window, CONFIG_T::weights, CONFIG_T::biases, pX, pY, sX, sY);
         }
 
     // Input image right-side padding
     PaddingRightWidth:
         for (int col = 0; col < CONFIG_T::pad_right; col++) {
-            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
-                                                                                    weights, biases, pX, pY, sX, sY);
+            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(
+                padds, line_buffer, kernel_window, CONFIG_T::weights, CONFIG_T::biases, pX, pY, sX, sY);
         }
     }
 
@@ -230,8 +229,32 @@ PaddingBottomHeight:
     [[intel::loop_coalesce(2)]] for (int row = 0; row < CONFIG_T::pad_bottom; row++) {
     PaddingBottomWidth:
         for (int col = 0; col < CONFIG_T::pad_left + CONFIG_T::in_width + CONFIG_T::pad_right; col++) {
-            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(padds, line_buffer, kernel_window,
-                                                                                    weights, biases, pX, pY, sX, sY);
+            compute_output_buffer_2d<data_arr_T, data_window_T, res_pipe, CONFIG_T>(
+                padds, line_buffer, kernel_window, CONFIG_T::weights, CONFIG_T::biases, pX, pY, sX, sY);
+        }
+    }
+}
+
+template <class data_pipe, class res_pipe, typename CONFIG_T> void pointwise_conv_2d_cl_stream() {
+    static_assert(CONFIG_T::filt_height == 1 && CONFIG_T::filt_width == 1 && CONFIG_T::pad_top == 0 &&
+                      CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0,
+                  "Pointwise convolution requires a 1x1 filter without padding");
+
+    using data_arr_T = typename ExtractPipeType<data_pipe>::value_type;
+    using res_T = typename ExtractPipeType<res_pipe>::value_type;
+
+ReadInputHeight:
+    [[intel::loop_coalesce(2)]] for (int row = 0; row < CONFIG_T::in_height; row++) {
+    ReadInputWidth:
+        for (int col = 0; col < CONFIG_T::in_width; col++) {
+            [[intel::fpga_register]] data_arr_T in_elem = data_pipe::read();
+            if (row % CONFIG_T::stride_height != 0 || col % CONFIG_T::stride_width != 0)
+                continue;
+
+            [[intel::fpga_register]] res_T res_out;
+            dense_resource<data_arr_T, res_T, typename CONFIG_T::mult_config>(in_elem, res_out, CONFIG_T::weights,
+                                                                              CONFIG_T::biases);
+            res_pipe::write(res_out);
         }
     }
 }

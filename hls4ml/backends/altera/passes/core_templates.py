@@ -30,13 +30,16 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {weight_t.name} weight_t;
     typedef {index_t.name} index_t;
 
+    static constexpr weight_t weights = {weights};
+    static constexpr bias_t biases = {biases};
+
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 dense_function_template = 'nnet::dense_{strategy}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 dense_task_sequence_template = 'task_sequence<nnet::dense_{strategy}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
-dense_stream_function_template = '{name}.async({w}, {b});'
+dense_stream_function_template = '{name}.async();'
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_stream.h']
 
 
@@ -52,6 +55,8 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params['product_type'] = get_backend('Altera').product_type(
             node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
+        params['weights'] = node.get_weights('weight').name
+        params['biases'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
@@ -87,8 +92,6 @@ class DenseStreamFunctionTemplate(StreamFunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['w'] = node.get_weights('weight').name
-        params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
@@ -103,13 +106,17 @@ batchnorm_config_template = """struct config{index} : nnet::batchnorm_config {{
     static constexpr bool store_weights_in_bram = false;
     typedef {bias_t.name} bias_t;
     typedef {scale_t.name} scale_t;
+
+    static constexpr scale_t scale = {scale};
+    static constexpr bias_t bias = {bias};
+
     template<class x_T, class y_T>
     using product = nnet::product::{product_type}<x_T, y_T>;
 }};\n"""
 
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 batchnorm_task_sequence_template = 'task_sequence<nnet::normalize_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
-batchnorm_stream_function_template = '{name}.async({scale}, {bias});'
+batchnorm_stream_function_template = '{name}.async();'
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
 
 
@@ -124,6 +131,8 @@ class BatchNormalizationConfigTemplate(LayerConfigTemplate):
         params['product_type'] = get_backend('Altera').product_type(
             node.get_input_variable().type.precision, node.get_weights('scale').type.precision
         )
+        params['scale'] = node.get_weights('scale').name
+        params['bias'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
@@ -159,8 +168,6 @@ class BatchNormalizationStreamFunctionTemplate(StreamFunctionCallTemplate):
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['scale'] = node.get_weights('scale').name
-        params['bias'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 

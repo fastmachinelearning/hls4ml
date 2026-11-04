@@ -2,8 +2,6 @@
 #include "parameters.h"
 #include <sycl/ext/altera/experimental/task_sequence.hpp>
 
-// hls-fpga-machine-learning insert weights
-
 // The inter-task pipes need to be declared at namespace scope
 namespace mynamespace {
 // hls-fpga-machine-learning insert inter-task pipes

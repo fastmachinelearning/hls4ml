@@ -21,6 +21,8 @@ from hls4ml.model.layers import (
     Conv2D,
     DACombinational,
     Dense,
+    DepthwiseConv1D,
+    DepthwiseConv2D,
     Einsum,
     EinsumDense,
     Embedding,
@@ -586,6 +588,37 @@ def _(layer: Conv1D | Conv2D):
         qint_in = QIntervalArray.from_kif(kg, ig, fg)
         qint_out = qint_in @ kernel_g.reshape(-1, out_per_group)
         qint_out = qint_out + (bias[out_sl] if _bias is not None else 0)
+        k, i, f = qint_out.to_kif()
+        k_outs.append(k)
+        i_outs.append(i)
+        f_outs.append(f)
+    k = np.concatenate(k_outs, axis=-1).astype(np.int16)
+    i = np.concatenate(i_outs, axis=-1)
+    f = np.concatenate(f_outs, axis=-1)
+    return k, i, f
+
+
+@_produce_kif.register(DepthwiseConv1D)
+@_produce_kif.register(DepthwiseConv2D)
+def _(layer: DepthwiseConv1D | DepthwiseConv2D):
+    """Each input channel is its own single-channel conv with depth_multiplier outputs: unlike the generic conv
+    rule (which treats the (*kernel, n_chan, depth_multiplier) kernel as a dense channel mix), the output channel
+    c * depth_multiplier + m only sums over the window of channel c."""
+    assert layer.attributes['data_format'] == 'channels_last', 'Only channels_last format is supported'
+    kernel = layer.attributes['weight'].data  # (*kernel_size, n_chan, depth_multiplier)
+    _bias = layer.attributes['bias']
+    bias = _bias.data if _bias is not None else None
+    *ker_px, n_chan, dm = kernel.shape
+    k_in, i_in, f_in = get_input_kifs(layer)[0]
+    k_in, i_in, f_in = pad_arrs(layer, 0, k_in, i_in, f_in)
+    k_outs, i_outs, f_outs = [], [], []
+    for c in range(n_chan):
+        sl = slice(c, c + 1)
+        kc, ic, fc = im2col((*ker_px, 1, dm), k_in[..., sl], i_in[..., sl], f_in[..., sl])
+        kc, ic, fc = stride_arrs(layer, kc, ic, fc)
+        qint_out = QIntervalArray.from_kif(kc, ic, fc) @ kernel[..., c, :].reshape(-1, dm)
+        if bias is not None:
+            qint_out = qint_out + bias[c * dm : (c + 1) * dm]
         k, i, f = qint_out.to_kif()
         k_outs.append(k)
         i_outs.append(i)

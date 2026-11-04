@@ -79,7 +79,7 @@ def test_pointwiseconv1d(test_case_id, chans, padds, strides, backend, io_type, 
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
-    if backend != 'XLS' and not (backend in ['Quartus', 'Altera'] and io_type == 'io_stream'):
+    if backend != 'XLS' and not (backend == 'Quartus' and io_type == 'io_stream'):
         # Quartus io_stream does not currently have a special pointwise implementation
         assert 'Pointwise' in list(hls_model.graph.values())[1].class_name
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)
@@ -144,7 +144,7 @@ def test_pointwiseconv2d(test_case_id, chans, padds, strides, backend, io_type, 
     hls_model.compile()
     hls_prediction = hls_model.predict(X_input).reshape(keras_prediction.shape)
 
-    if backend != 'XLS' and not (backend in ['Quartus', 'Altera'] and io_type == 'io_stream'):
+    if backend != 'XLS' and not (backend == 'Quartus' and io_type == 'io_stream'):
         # Quartus io_stream does not currently have a special pointwise implementation
         assert 'Pointwise' in list(hls_model.graph.values())[1].class_name
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.001)

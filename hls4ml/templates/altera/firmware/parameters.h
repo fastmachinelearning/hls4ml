@@ -8,6 +8,9 @@
 
 // hls-fpga-machine-learning insert includes
 
+// Layer weights, referenced by the layer configs below
+// hls-fpga-machine-learning insert weights
+
 // hls-fpga-machine-learning insert layer-config
 
 #endif

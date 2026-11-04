@@ -164,14 +164,6 @@ class AlteraWriter(Writer):
                             newline += indent + f'auto {inp.name} = {inp.pipe_name}::read();\n'
                     # for streaming we don't need to read it in
 
-                # Insert weights
-                elif '// hls-fpga-machine-learning insert weights' in line:
-                    newline = line
-                    for layer in model.get_layers():
-                        for w in layer.get_weights():
-                            if w not in model_brams:
-                                newline += f'#include "weights/{w.name}.h"\n'
-
                 # Insert task sequences
                 elif '// hls-fpga-machine-learning declare task sequences' in line:
                     newline = line
@@ -323,6 +315,12 @@ class AlteraWriter(Writer):
                         set(sum((layer.get_attr('include_header', []) for layer in model.get_layers()), []))
                     ):
                         newline += '#include "%s"\n' % include
+
+                elif '// hls-fpga-machine-learning insert weights' in line:
+                    newline = line
+                    for layer in model.get_layers():
+                        for w in layer.get_weights():
+                            newline += f'#include "weights/{w.name}.h"\n'
 
                 elif '// hls-fpga-machine-learning insert layer-config' in line:
                     newline = line
