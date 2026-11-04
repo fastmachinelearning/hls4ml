@@ -3,6 +3,7 @@ import re
 import subprocess
 import sys
 import warnings
+from glob import glob
 from shutil import rmtree
 
 from hls4ml.backends import VitisBackend
@@ -30,10 +31,14 @@ class VitisUnifiedBackend(VitisBackend):
         bitfile=False,
         log_to_stdout=True,
         vitis_fifo_sizing=False,
+        pnr=False,
     ):
-        for name, value in [('validation', validation), ('export', export), ('vsynth', vsynth)]:
+        for name, value in [('validation', validation), ('export', export)]:
             if value:
                 warnings.warn(f'{name} is not supported by the VitisUnified backend and is ignored.', stacklevel=2)
+
+        # Place and route runs after Vivado synthesis
+        vsynth = vsynth or pnr
 
         if fifo_opt and not cosim:
             warnings.warn('fifo_opt requires cosim to be enabled; cosim will be run automatically.', stacklevel=2)
@@ -50,12 +55,26 @@ class VitisUnifiedBackend(VitisBackend):
         output_dir = model.config.get_output_dir()
         writer = model.config.backend.writer
 
+        # Vivado synthesis reads the Verilog of an earlier C synthesis, unless reset deletes it
+        verilog_dir = os.path.join(writer.get_vitis_hls_exec_dir(model), 'hls', 'syn', 'verilog')
+        if vsynth and not synth and (reset or not os.path.isdir(verilog_dir)):
+            warnings.warn('vsynth requires the Verilog written by synth; synth will be run automatically.', stacklevel=2)
+            synth = True
+
         if reset:
-            for path in [writer.get_vitis_hls_exec_dir(model), os.path.join(writer.get_vitis_linker_dir(model), '_x')]:
+            # Remove the HLS project and the linked design, and the reports read from them
+            for path in [
+                writer.get_vitis_hls_exec_dir(model),
+                os.path.join(writer.get_vitis_linker_dir(model), '_x'),
+                os.path.join(output_dir, 'final_reports'),
+            ]:
                 rmtree(path, ignore_errors=True)
             xclbin = os.path.join(writer.get_vitis_linker_dir(model), f'{model.config.get_project_name()}.xclbin')
             if os.path.isfile(xclbin):
                 os.remove(xclbin)
+            for pattern in ['vivado_synth*.rpt', 'vivado_impl*.rpt']:
+                for report_file in glob(os.path.join(output_dir, pattern)):
+                    os.remove(report_file)
 
         csim_cfg = 'hls_kernel_config_csim.cfg'
         cosim_cfg = 'hls_kernel_config_cosim_fifo_sizing.cfg' if vitis_fifo_sizing else 'hls_kernel_config_cosim.cfg'
@@ -84,11 +103,32 @@ class VitisUnifiedBackend(VitisBackend):
         if cosim or fifo_opt:
             commands.append(('cosim', cosim_cmd, vitis_hls_dir))
 
+        if vsynth:
+            axi_mode = model.config.get_config_value('VitisUnifiedConfig')['axi_mode']
+            vsynth_cmd = (
+                'vivado -mode batch -source vivado_synth.tcl -tclargs '
+                f'src={os.path.relpath(verilog_dir, output_dir)} '
+                f'top={model.config.get_project_name()}_{axi_mode} '
+                f'part={model.config.get_config_value("Part")} '
+                f'clock_period={writer._get_clock_period_ns(model)} '
+                f'pnr={int(pnr)}'
+            )
+            commands.append(('vsynth', vsynth_cmd, output_dir))
+
         if bitfile:
             commands.append(('kerlink', kerlink_cmd, kerlink_cwd))
 
-        if commands and 'linux' in sys.platform:
-            tools = ['v++', 'vitis-run'] + (['xclbinutil', 'vivado'] if bitfile else [])
+        if 'linux' in sys.platform:
+            # The tools each step runs; the link script runs v++, vivado and xclbinutil
+            step_tools = {
+                'csynth': ['v++'],
+                'package': ['vitis-run'],
+                'csim': ['vitis-run'],
+                'cosim': ['vitis-run'],
+                'vsynth': ['vivado'],
+                'kerlink': ['v++', 'vivado', 'xclbinutil'],
+            }
+            tools = dict.fromkeys(tool for task_name, _, _ in commands for tool in step_tools[task_name])
             for tool in tools:
                 if os.system(f'command -v {tool} > /dev/null') != 0:
                     raise Exception(f'Vitis installation not found. Make sure "{tool}" is on PATH.')

@@ -3,6 +3,7 @@ import re
 import subprocess
 from bisect import bisect_left
 from collections.abc import Iterable
+from warnings import warn
 
 import numpy as np
 
@@ -50,6 +51,7 @@ from hls4ml.model.types import (
     XnorPrecisionType,
 )
 from hls4ml.utils import attribute_descriptions as descriptions
+from hls4ml.utils.string_utils import convert_to_pascal_case
 from hls4ml.writer import get_writer
 
 
@@ -298,6 +300,16 @@ class FPGABackend(Backend):
             return after
         else:
             return before
+
+    def _warn_removed_reuse_factors(self, layer, attributes):
+        """Warn about reuse factor settings that are no longer used but are still in the config."""
+
+        for attribute in attributes:
+            if attribute in layer.attributes:
+                warn(
+                    f'{convert_to_pascal_case(attribute)} of layer "{layer.name}" ({layer.class_name}) is no longer used. '
+                    'The ReuseFactor of the layer applies to all of its multiplications.'
+                )
 
     def set_closest_reuse_factor(self, layer, n_in, n_out, attribute='reuse_factor', include_max_rf=True):
         assert attribute is not None, 'Reuse factor attribute cannot be None'

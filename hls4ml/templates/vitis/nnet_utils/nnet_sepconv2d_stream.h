@@ -16,7 +16,7 @@ void depthwise_conv_2d_buffer_cl(
     typename CONFIG_T::bias_t biases[CONFIG_T::n_chan]) {
     assert(CONFIG_T::pad_top == 0 && CONFIG_T::pad_bottom == 0 && CONFIG_T::pad_left == 0 && CONFIG_T::pad_right == 0);
 
-    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[CONFIG_T::filt_height - 1]
+    static ap_shift_reg<typename data_T::value_type, CONFIG_T::in_width> line_buffer[MAX(CONFIG_T::filt_height - 1, 2)]
                                                                                     [CONFIG_T::n_chan];
     #pragma HLS ARRAY_PARTITION variable = line_buffer complete dim = 2
 

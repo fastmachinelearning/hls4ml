@@ -75,6 +75,25 @@ For the Vivado/Vitis backends, there is a dedicated ``io_parallel``/``Latency`` 
 The reuse factor (RF) is used to split the layer execution and reuse the existing module RF times. The RF also limits the number of multipliers in each module.
 The initiation interval scales as the RF. One limitation is that it assumes ``in_width`` is divisible by the RF.
 
+Recurrent Layers
+----------------
+
+``SimpleRNN``, ``LSTM`` and ``GRU`` layers, and ``Bidirectional`` layers of ``LSTM`` and ``GRU`` layers, carry a state from one time step to the
+next. In each step they multiply the input and the state by their weights, apply the activations of their gates, and update the state.
+
+In the Vivado/Vitis backends, the ``Latency`` strategy computes a step with two matrix-vector multiplications, one for the input and one for the
+state, followed by the activations and the state update of all the units at once. With ``io_parallel``, setting ``Static`` to ``False`` builds a
+separate block for each time step, which lowers the initiation interval at the cost of resources; otherwise one block is used for all of them.
+
+The ``Resource`` strategy computes the units of a step in groups and updates the state of each unit as soon as its gates are done, so the
+activations and the state update are built only for the units of one group. The reuse factor is the number of cycles a step spends on its
+multiplications: a layer of ``n`` units computes ``u`` units at a time for ``c`` cycles each, with ``n / u * c`` equal to the reuse factor. It
+uses about as many multipliers as the other strategies at the same reuse factor, a few more when the inputs or the units do not divide evenly
+over the ``c`` cycles. Of the groupings that give the reuse factor, the one with the fewest
+units at a time is used. A reuse factor that no grouping gives, with at most as many cycles as the larger of the number of inputs and of units,
+is replaced by the closest one that does. A ``GRU`` with ``reset_after=False`` applies the reset gate before the recurrent multiplication, so
+each step takes two passes over the units. One block is always used for all time steps, so ``Static`` has no effect.
+
 Activations
 -----------
 

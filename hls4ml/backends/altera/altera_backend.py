@@ -37,7 +37,7 @@ class AlteraBackend(FPGABackend):
         self._register_flows()
 
     def _register_layer_attributes(self):
-        # Add RNN-specific recurrent_reuse_factor attribute
+        # Add RNN-specific table_size and table attributes
         rnn_layers = [
             SimpleRNN,
             LSTM,
@@ -46,7 +46,6 @@ class AlteraBackend(FPGABackend):
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
             attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
             attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
             self.attribute_map[layer] = attrs
@@ -280,6 +279,7 @@ class AlteraBackend(FPGABackend):
 
     @layer_optimizer(GRU)
     def init_gru(self, layer):
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
@@ -367,6 +367,7 @@ class AlteraBackend(FPGABackend):
 
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
@@ -412,6 +413,7 @@ class AlteraBackend(FPGABackend):
 
     @layer_optimizer(SimpleRNN)
     def init_simple_rnn(self, layer):
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 

@@ -756,7 +756,8 @@ def test_qgru(test_case_id, backend):
 @pytest.mark.parametrize('rnn_layer', ['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_binary_input_rnn(test_case_id, rnn_layer, backend, io_type):
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+def test_binary_input_rnn(test_case_id, rnn_layer, backend, io_type, strategy):
     """A binary input to a recurrent layer does not make its recurrent multiplication treat the state as binary.
 
     BatchNormalization followed by a binary activation is merged into one layer whose output has the 1-bit binary type.
@@ -783,6 +784,8 @@ def test_binary_input_rnn(test_case_id, rnn_layer, backend, io_type):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='ap_fixed<24,10>', backend=backend
     )
+    config['LayerName']['rnn']['Strategy'] = strategy
+    config['LayerName']['rnn']['ReuseFactor'] = 1 if strategy == 'Latency' else 4
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type

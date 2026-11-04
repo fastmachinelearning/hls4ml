@@ -2171,7 +2171,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2191,7 +2191,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult, Altera
+  * Available in: Quartus, Catapult
 
 LSTM
 ====
@@ -2275,7 +2275,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2295,7 +2295,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult, Altera
+  * Available in: Quartus, Catapult
 
 GRU
 ===
@@ -2381,7 +2381,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2401,7 +2401,7 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult, Altera
+  * Available in: Quartus, Catapult
 
 Bidirectional
 =============
@@ -2511,7 +2511,7 @@ Backend-specific attributes
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
 
