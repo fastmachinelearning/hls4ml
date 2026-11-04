@@ -51,8 +51,8 @@ def run_project(project_dir):
     y_hw = [np.array(y) for y in (y_hw if isinstance(y_hw, (list, tuple)) else [y_hw])]
 
     ok = True
-    for idx, (hw, sw) in enumerate(zip(y_hw, ys)):
-        hw = hw.reshape(sw.shape)
+    for idx, (hw_out, sw) in enumerate(zip(y_hw, ys)):
+        hw = hw_out.reshape(sw.shape)
         close = np.allclose(hw, sw, rtol=RTOL, atol=ATOL)
         ok = ok and close
         print(f'   output {idx}: max |hw - sw| = {np.abs(hw - sw).max():.3e}, match = {close}')
