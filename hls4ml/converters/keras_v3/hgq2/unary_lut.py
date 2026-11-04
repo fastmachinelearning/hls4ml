@@ -2,7 +2,7 @@ import typing
 from collections.abc import Sequence
 
 import numpy as np
-from quantizers import get_fixed_quantizer_np
+from quantizers import fixed_quantize
 
 from hls4ml.model.types import FixedPrecisionType
 
@@ -67,9 +67,8 @@ class QUnaryLUTHandler(QLayerHandler, KerasV3LayerHandler):
             if round_mode.startswith('S_'):
                 round_mode = round_mode[2:]
             overflow_mode = oq.overflow_mode
-            fixed_q = get_fixed_quantizer_np(round_mode, overflow_mode)
             k, i, f = (ops.convert_to_numpy(x).ravel().item() for x in oq.kif)
-            table = fixed_q(table, k, i, f)  # type: ignore
+            table = fixed_quantize(table, k, i, f, round_mode, overflow_mode)  # type: ignore
 
             k, b, I = bool(k), k + i + f, k + i  # noqa: E741
             table_t = FixedPrecisionType(b, I, k)

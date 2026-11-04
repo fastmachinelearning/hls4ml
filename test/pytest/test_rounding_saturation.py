@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from quantizers.fixed_point.fixed_point_ops_np import get_fixed_quantizer_np, saturation_mode_registry_np
+from quantizers import fixed_quantize
 from tensorflow.keras.layers import Activation, Input
 from tensorflow.keras.models import Model
 
@@ -17,11 +17,6 @@ test_root_path = Path(__file__).parent
 @pytest.mark.parametrize('round_mode', ['TRN', 'TRN_ZERO', 'RND', 'RND_ZERO', 'RND_INF', 'RND_MIN_INF', 'RND_CONV'])
 @pytest.mark.parametrize('sat_mode', ['WRAP', 'SAT', 'SAT_ZERO', 'SAT_SYM'])
 def test_rounding_saturation(test_case_id, round_mode, sat_mode, backend):
-    if sat_mode == 'SAT_ZERO' and 'SAT_ZERO' not in saturation_mode_registry_np:
-        # TODO remove this skip and update quantizers version once quantizers support SAT_ZERO,
-        # see https://github.com/calad0i/quantizers/pull/1
-        pytest.skip('SAT_ZERO is not supported by the installed quantizers package')
-
     in_precision = FixedPrecisionType(width=8, integer=4, signed=True)
     out_precision = FixedPrecisionType(width=4, integer=3, signed=True, rounding_mode=round_mode, saturation_mode=sat_mode)
     # out_precision covers the range [-4, -3.5, ... 3.5]
@@ -52,7 +47,8 @@ def test_rounding_saturation(test_case_id, round_mode, sat_mode, backend):
 
     hls_prediction = hls_model.predict(X)
 
-    quantizer = get_fixed_quantizer_np(round_mode, sat_mode)
-    expected_prediction = quantizer(X, k=1, i=out_precision.integer - 1, f=out_precision.fractional)
+    expected_prediction = fixed_quantize(
+        X, k=1, i=out_precision.integer - 1, f=out_precision.fractional, round_mode=round_mode, overflow_mode=sat_mode
+    )
 
     np.testing.assert_equal(hls_prediction, expected_prediction)

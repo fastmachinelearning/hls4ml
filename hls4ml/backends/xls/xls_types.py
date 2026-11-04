@@ -4,7 +4,7 @@ from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
-from quantizers import get_fixed_quantizer_np
+from quantizers import fixed_quantize
 
 from hls4ml.backends.fpga.fpga_types import FPGAPrecisionConverter
 from hls4ml.model.layers import Layer
@@ -150,11 +150,16 @@ def float_to_significand(
         # We convert it to XLS FixedPoint {-1, 1}
         assert np.all((x == 0) | (x == 1)), 'XNOR weights must be 0 or 1'
         x = np.where(x == 0, -1, 1)
-    quantizer = get_fixed_quantizer_np(
-        round_mode=str(precision.xls_rounding_mode), overflow_mode=str(precision.xls_saturation_mode)
-    )
+
     scale = 2 ** (-precision.xls_binary_exponent)
-    return quantizer(x * scale, k=1, i=precision.xls_num_bits - 1, f=0).astype(np.int64)
+    return fixed_quantize(
+        x * scale,
+        k=1,
+        i=precision.xls_num_bits - 1,
+        f=0,
+        round_mode=str(precision.xls_rounding_mode),
+        overflow_mode=str(precision.xls_saturation_mode),
+    ).astype(np.int64)
 
 
 def shape_tuple(shape):

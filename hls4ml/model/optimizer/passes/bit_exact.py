@@ -11,7 +11,7 @@ from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
-from quantizers import get_fixed_quantizer_np
+from quantizers import fixed_quantize
 
 from hls4ml.model.layers import (
     Activation,
@@ -768,9 +768,8 @@ def _(layer: Embedding):
     k, b, i = k[0], b[0], i[0]
     i, f = i - k, b - i
     k, i, f = np.max([k, i, f], axis=1) if isinstance(k, np.ndarray) else (k, i, f)
-    quant = get_fixed_quantizer_np(quant.RND, quant.SAT)
     data = layer.attributes['embeddings'].data
-    qdata = quant(data, k, i, f)
+    qdata = fixed_quantize(data, k, i, f, quant.RND, quant.SAT)
     layer.attributes['embeddings'].data = qdata
     k, i, f = minimal_kif(qdata)
     shape = get_output_shape(layer)
