@@ -17,6 +17,7 @@ size_t trace_type_size = sizeof(double);
 } // namespace nnet
 
 extern "C" {
+// hls-fpga-machine-learning insert reloadable weights
 
 struct trace_data {
     const char *name;
