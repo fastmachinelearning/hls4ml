@@ -10,7 +10,7 @@ It was developed specifically for the [AD@L1 CMS paper](https://www.nature.com/a
 
 # Usage
 
-`kl_layer.py` contains the example of how to use the KL layer.
+`kl_layer.py` contains an example of how to use the KL layer.
 To run, do:
 
 ```

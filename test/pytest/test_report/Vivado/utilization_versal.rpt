@@ -1,0 +1,103 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.1 (lin64) Build 5076996 Wed May 22 18:36:09 MDT 2024
+| Date         : Sun Oct 18 15:29:51 2026
+| Host         : ngt-highmem-002.cern.ch running 64-bit AlmaLinux release 9.4 (Seafoam Ocelot)
+| Command      : report_utilization -file vivado_impl.rpt
+| Design       : top
+| Device       : xcvc1902-vsva2197-2MP-e-S
+| Speed File   : -2MP
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+1. Netlist Logic
+----------------
+
++----------------------------+------+-------+------------+-----------+-------+
+|          Site Type         | Used | Fixed | Prohibited | Available | Util% |
++----------------------------+------+-------+------------+-----------+-------+
+| Registers                  |   56 |     0 |          0 |   1799680 | <0.01 |
+|   Register as Flip Flop    |   56 |     0 |          0 |   1799680 | <0.01 |
+|   Register as Latch        |    0 |     0 |          0 |   1799680 |  0.00 |
+| CLB LUTs                   |   56 |     0 |          0 |    899840 | <0.01 |
+|   LUT as Logic             |   32 |     0 |          0 |    899840 | <0.01 |
+|   LUT as Memory            |   24 |     0 |          0 |    449920 | <0.01 |
+|     LUT as Distributed RAM |    8 |     0 |            |           |       |
+|     LUT as Shift Register  |   16 |     0 |            |           |       |
+|       Variable Length SRL  |    0 |     0 |            |           |       |
+|       Fixed Length SRL     |   16 |     0 |            |           |       |
+| LOOKAHEAD8                 |    2 |     0 |          0 |    112480 | <0.01 |
++----------------------------+------+-------+------------+-----------+-------+
+* Warning! LUT value is adjusted to account for LUT combining.
+
+
+2. CLB Distribution
+-------------------
+
++-----------------------------------------------+------+-------+------------+-----------+-------+
+|                   Site Type                   | Used | Fixed | Prohibited | Available | Util% |
++-----------------------------------------------+------+-------+------------+-----------+-------+
+| SLICE                                         |    8 |     0 |          0 |    112480 | <0.01 |
+|   SLICEL                                      |    2 |     0 |            |           |       |
+|   SLICEM                                      |    6 |     0 |            |           |       |
+|      using Distributed RAM or Shift Registers |    4 |     0 |            |           |       |
+| CLB LUTs                                      |   56 |     0 |          0 |    899840 | <0.01 |
+|    using CASCADE                              |   15 |     0 |            |           |       |
+|   LUT as Logic                                |   32 |     0 |          0 |    899840 | <0.01 |
+|     single output                             |   16 |       |            |           |       |
+|     dual output                               |   16 |       |            |           |       |
+|   LUT as Memory                               |   24 |     0 |          0 |    449920 | <0.01 |
+|     LUT as Distributed RAM                    |    8 |     0 |            |           |       |
+|       single output                           |    8 |       |            |           |       |
+|       dual output                             |    0 |       |            |           |       |
+|     LUT as Shift Register                     |   16 |     0 |            |           |       |
+|       single output                           |   16 |       |            |           |       |
+|       dual output                             |    0 |       |            |           |       |
+| CLB Registers                                 |   56 |     0 |          0 |   1799680 | <0.01 |
+|   Register driven from within the CLB         |   40 |       |            |           |       |
+|   Register driven from outside the CLB        |   16 |       |            |           |       |
+|     LUT in front of the register is unused    |    0 |       |            |           |       |
+|     LUT in front of the register is used      |   16 |       |            |           |       |
+| CLB Imux registers                            |    0 |     0 |            |           |       |
+|   Pipelining                                  |    0 |       |            |           |       |
+| Unique Control Sets                           |    2 |       |          0 |    224960 | <0.01 |
++-----------------------------------------------+------+-------+------------+-----------+-------+
+* * Note: Available Control Sets calculated as Slices * 2, Review the Control Sets Report for more information regarding control sets.
+
+
+3. BLOCKRAM
+-----------
+
++--------------------------+------+-------+------------+-----------+-------+
+|         Site Type        | Used | Fixed | Prohibited | Available | Util% |
++--------------------------+------+-------+------------+-----------+-------+
+| Block RAM Tile           |    1 |     0 |          0 |       967 |  0.10 |
+|   RAMB36E5               |    1 |     0 |          0 |       967 |  0.10 |
+|   RAMB18E5*              |    0 |     0 |          0 |      1934 |  0.00 |
+| Block RAM Imux registers |    0 |     0 |            |           |       |
+|   Pipelining             |    0 |       |            |           |       |
+| URAM                     |    0 |     0 |          0 |       463 |  0.00 |
+| URAM Imux registers      |    0 |     0 |            |           |       |
+|   Pipelining             |    0 |       |            |           |       |
++--------------------------+------+-------+------------+-----------+-------+
+* Note: Each RAMB18 is counted as 0.5 Block RAM tiles
+
+
+4. ARITHMETIC
+-------------
+
++--------------------+------+-------+------------+-----------+-------+
+|      Site Type     | Used | Fixed | Prohibited | Available | Util% |
++--------------------+------+-------+------------+-----------+-------+
+| DSP Slices         |    1 |     0 |          0 |      1968 |  0.05 |
+|   DSP58            |    1 |     0 |            |           |       |
+|   DSPCPLX          |    0 |     0 |            |           |       |
+|   DSPFP32          |    0 |     0 |            |           |       |
+|   DSP48E5          |    0 |     0 |            |           |       |
+| DSP Imux registers |    0 |     0 |            |           |       |
+|   Pipelining       |    0 |       |            |           |       |
++--------------------+------+-------+------------+-----------+-------+
+
+

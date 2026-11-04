@@ -1,16 +1,22 @@
 import json
 import os
 import re
+import zipfile
 from pathlib import Path
 
 import numpy as np
 import pytest
 import qonnx.core.onnx_exec as oxe
 from qonnx.core.modelwrapper import ModelWrapper
-from tensorflow.keras.layers import SeparableConv2D
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Concatenate, Dense, Input, SeparableConv2D
+from tensorflow.keras.models import Model, Sequential
 
 import hls4ml
+from hls4ml.backends.vitis.passes.fifo_depth_optimization import (
+    FifoDepthOptimizationPost,
+    get_vitis_optimized_fifo_depths,
+    initialize_large_fifos,
+)
 
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../../example-models').resolve()
@@ -156,7 +162,7 @@ def get_branched_model():
 
 
 def run_fifo_depth_optimization_onnx(backend, profiling_fifo_depth, io_type, model, output_dir=None):
-    """Execute the FIFO depth optimization sequence on a ONNX/QONNX model."""
+    """Execute the FIFO depth optimization sequence on an ONNX/QONNX model."""
 
     ishape = tuple(model.get_tensor_shape(model.graph.input[0].name))
     X = np.random.uniform(low=0, high=1, size=np.prod(ishape)).reshape(ishape)
@@ -204,3 +210,131 @@ def test_successful_execution_of_tiny_unet(test_case_id, backend):
         model=get_branched_model(),
         output_dir=str(test_root_path / test_case_id),
     )
+
+
+# channel_info.csv rows as written by the co-simulation. The Vitis backend leaves the instance path (first column)
+# empty, the Vitis Unified backend wraps the model and adds its own streams with an empty instance path.
+channel_info_rows = {
+    'Vitis': [
+        ',layer2_out_U,,chan_status1.csv',
+        ',layer3_out_U,,chan_status2.csv',
+    ],
+    'VitisUnified': [
+        ',batch_size_c1_U,,chan_status1.csv',
+        ',model_input_stream_U,,chan_status2.csv',
+        ',batch_size_c_U,,chan_status3.csv',
+        ',model_output_stream_U,,chan_status4.csv',
+        'compute_U0.grp_myproject_fu_62,layer2_out_i_U,,chan_status5.csv',
+        'compute_U0.grp_myproject_fu_62,layer3_out_i_U,,chan_status6.csv',
+    ],
+}
+
+
+def get_dense_stream_model(output_dir):
+    """Convert a small Keras model with two internal FIFOs (layer2_out, layer3_out) without running any synthesis."""
+    model = Sequential()
+    model.add(Dense(8, activation='relu', input_shape=(16,)))
+    model.add(Dense(4))
+    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<16, 6>')
+    return hls4ml.converters.convert_from_keras_model(
+        model, io_type='io_stream', hls_config=config, output_dir=str(output_dir), backend='Vitis'
+    )
+
+
+def write_cosim_channel_files(hls_prj_path, rows, depths, trailing_newline=True):
+    """Write the channel_info.csv and channel.zip files that the co-simulation produces for FIFO profiling."""
+    db_path = Path(hls_prj_path) / '.autopilot/db'
+    (db_path / 'channel_depth_info').mkdir(parents=True)
+    content = '\n'.join(rows)
+    if trailing_newline:
+        content += '\n'
+    (db_path / 'channel_info.csv').write_text(content)
+    with zipfile.ZipFile(db_path / 'channel_depth_info/channel.zip', 'w') as zip_file:
+        for row in rows:
+            fifo_name, file_name = row.split(',')[1], row.split(',')[3]
+            depth = next((d for name, d in depths.items() if fifo_name.startswith(name + '_')), 0)
+            zip_file.writestr(file_name, f'2\n0\n4\n34\n{depth}\n')
+
+
+@pytest.mark.parametrize('csv_format', ['Vitis', 'VitisUnified'])
+@pytest.mark.parametrize('trailing_newline', [True, False])
+def test_get_vitis_optimized_fifo_depths(tmp_path, csv_format, trailing_newline):
+    """Check that the profiled depths are read for both channel_info.csv layouts (issue #1570)."""
+    hls_model = get_dense_stream_model(tmp_path / 'prj')
+    hls_prj_path = str(tmp_path / 'solution1')
+    depths = {'layer2_out': 5, 'layer3_out': 7}
+    write_cosim_channel_files(hls_prj_path, channel_info_rows[csv_format], depths, trailing_newline)
+
+    assert get_vitis_optimized_fifo_depths(hls_model, hls_prj_path) == depths
+
+
+def test_fifo_depth_optimization_post(tmp_path):
+    """Check that the post-processing step writes and sets the profiled depths."""
+    output_dir = tmp_path / 'prj'
+    hls_model = get_dense_stream_model(output_dir)
+    hls_prj_path = str(output_dir / 'myproject_prj/solution1')
+    depths = {'layer2_out': 5, 'layer3_out': 7}
+    write_cosim_channel_files(hls_prj_path, channel_info_rows['Vitis'], depths)
+    (output_dir / 'fifo_depths.json').write_text(json.dumps({name: {'initial': 100_000} for name in depths}))
+
+    FifoDepthOptimizationPost().transform(hls_model)
+
+    fifo_depths = json.loads((output_dir / 'fifo_depths.json').read_text())
+    assert {name: fifo['optimized'] for name, fifo in fifo_depths.items()} == depths
+    fifos = {var.name: var for var in hls_model.output_vars.values()}
+    for name, depth in depths.items():
+        assert fifos[name].pragma[1] == depth
+
+
+def test_fifo_depth_optimization_post_missing_fifo(tmp_path):
+    """Check that a FIFO missing from channel_info.csv gives a clear error instead of a KeyError."""
+    output_dir = tmp_path / 'prj'
+    hls_model = get_dense_stream_model(output_dir)
+    hls_prj_path = str(output_dir / 'myproject_prj/solution1')
+    write_cosim_channel_files(hls_prj_path, channel_info_rows['Vitis'][:1], {'layer2_out': 5})
+    (output_dir / 'fifo_depths.json').write_text(
+        json.dumps({'layer2_out': {'initial': 100_000}, 'layer3_out': {'initial': 100_000}})
+    )
+
+    with pytest.raises(RuntimeError, match='could not find the profiled depths of layer3_out'):
+        FifoDepthOptimizationPost().transform(hls_model)
+
+
+@pytest.mark.parametrize(
+    'backend_kwargs',
+    [
+        {'backend': 'Vitis'},
+        {'backend': 'VitisUnified', 'board': 'zcu102', 'part': 'xczu9eg-ffvb1156-2-e', 'axi_mode': 'axi_master'},
+    ],
+    ids=['Vitis', 'VitisUnified_axi_master'],
+)
+def test_initialize_large_fifos_multi_io(test_case_id, backend_kwargs):
+    """Model inputs and outputs are ports of the top function, not FIFOs, so none of them may be profiled.
+    Before the fix only the first input and the first output were left out."""
+    in_a = Input((16,), name='in_a')
+    in_b = Input((16,), name='in_b')
+    h = Concatenate(name='cat')([Dense(8, name='da')(in_a), Dense(8, name='db')(in_b)])
+    h = Dense(8, name='dh')(h)
+    model = Model([in_a, in_b], [Dense(4, name='oa')(h), Dense(2, name='ob')(h)])
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend_kwargs['backend'])
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        io_type='io_stream',
+        output_dir=str(test_root_path / test_case_id),
+        **backend_kwargs,
+    )
+
+    io_vars = hls_model.get_input_variables() + hls_model.get_output_variables()
+    assert len(io_vars) == 4
+    io_pragmas = [v.pragma for v in io_vars]
+
+    profiling_fifo_depth = 100_000
+    initial_fifo_depths = initialize_large_fifos(hls_model, profiling_fifo_depth)
+
+    profiled = set(initial_fifo_depths)
+    assert profiled.isdisjoint(v.name for v in io_vars)
+    assert {hls_model.graph[layer].get_output_variable().name for layer in ('cat', 'dh')} <= profiled
+    assert [v.pragma for v in io_vars] == io_pragmas
+    assert all(v.pragma[1] == profiling_fifo_depth for v in hls_model.output_vars.values() if v.name in profiled)

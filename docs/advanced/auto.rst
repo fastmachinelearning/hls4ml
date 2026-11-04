@@ -3,7 +3,7 @@ Automatic precision inference
 =============================
 
 The automatic precision inference (implemented in :py:class:`~hls4ml.model.optimizer.passes.infer_precision.InferPrecisionTypes`) attempts to infer the appropriate
-widths for a given precision. It is initiated by setting a precision in the configuration as ``'auto'``. (Note, only layer-level precisions can be set to ``'auto'``,
+widths for a given precision. It is initiated by setting a precision in the configuration as ``'auto'``. (Note that only layer-level precisions can be set to ``'auto'``,
 not model-level.)  Functions like :py:class:`~hls4ml.utils.config.config_from_keras_model`, :py:class:`~hls4ml.utils.config.config_from_onnx_model`,
 and :py:class:`~hls4ml.utils.config.config_from_pytorch_model` automatically set most precisions to ``'auto'`` if the ``'name'`` granularity is used.
 
@@ -22,4 +22,4 @@ enable rounding or saturation modes since it dramatically increases the executio
 can be enabled as needed.
 
 .. note::
-    For supported models (Most ``HGQ/HGQ2`` models and some ``QKeras`` models), Model-wise Precision Inference (documented in `model-wise precision inference <../precision.html>`_) can be used to achieve bit-exact conversion. Please refer to that section for more details.
+    For supported models (most ``HGQ/HGQ2`` models and some ``QKeras`` models), Model-wise Precision Inference (documented in `model-wise precision inference <./precision.html>`_) can be used to achieve bit-exact conversion. Please refer to that section for more details.

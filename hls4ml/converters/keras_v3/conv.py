@@ -3,6 +3,8 @@ from collections.abc import Sequence
 from math import ceil
 from typing import Any
 
+from hls4ml.converters.utils import compute_conv_transpose_output
+
 from ._base import KerasV3LayerHandler
 
 if typing.TYPE_CHECKING:
@@ -167,5 +169,76 @@ class ConvHandler(KerasV3LayerHandler):
             config['depth_multiplier'] = 1
         elif isinstance(layer, BaseConv):
             config['weight_data'] = kernel
+
+        return config
+
+
+class ConvTransposeHandler(KerasV3LayerHandler):
+    handles = (
+        'keras.src.layers.convolutional.conv1d_transpose.Conv1DTranspose',
+        'keras.src.layers.convolutional.conv2d_transpose.Conv2DTranspose',
+    )
+
+    def handle(
+        self,
+        layer: 'keras.layers.Conv1DTranspose|keras.layers.Conv2DTranspose',
+        in_tensors: Sequence['KerasTensor'],
+        out_tensors: Sequence['KerasTensor'],
+    ):
+        assert len(in_tensors) == 1, f'Layer {layer.name} has more than one input'
+        assert len(out_tensors) == 1, f'Layer {layer.name} has more than one output'
+
+        if layer.data_format != 'channels_last':
+            raise NotImplementedError(f'Layer {layer.name}: only data_format="channels_last" is supported.')
+
+        in_shape: tuple[int, ...] = in_tensors[0].shape[1:]  # type: ignore
+        out_shape: tuple[int, ...] = out_tensors[0].shape[1:]  # type: ignore
+        assert all(isinstance(x, int) for x in in_shape), f'Layer {layer.name} has non-fixed size input: {in_shape}'
+        assert all(isinstance(x, int) for x in out_shape), f'Layer {layer.name} has non-fixed size output: {out_shape}'
+
+        *px_in_shape, n_chan = in_shape
+        *px_out_shape, n_filt = out_shape
+
+        output_padding = layer.output_padding or [None] * len(px_in_shape)
+        crop = [
+            compute_conv_transpose_output(layer.padding, n_in, s, k, d, op)[1]
+            for n_in, s, k, d, op in zip(px_in_shape, layer.strides, layer.kernel_size, layer.dilation_rate, output_padding)
+        ]
+
+        config = {
+            'n_chan': n_chan,
+            'n_filt': n_filt,
+            'weight_data': self.load_weight(layer, 'kernel'),
+            'bias_data': self.load_weight(layer, 'bias') if layer.use_bias else None,
+            'data_format': 'channels_last',
+        }
+        if len(px_in_shape) == 1:
+            config.update(
+                {
+                    'in_width': px_in_shape[0],
+                    'out_width': px_out_shape[0],
+                    'filt_width': layer.kernel_size[0],
+                    'stride_width': layer.strides[0],
+                    'dilation_width': layer.dilation_rate[0],
+                    'crop_left': crop[0],
+                }
+            )
+        else:
+            config.update(
+                {
+                    'in_height': px_in_shape[0],
+                    'in_width': px_in_shape[1],
+                    'out_height': px_out_shape[0],
+                    'out_width': px_out_shape[1],
+                    'filt_height': layer.kernel_size[0],
+                    'filt_width': layer.kernel_size[1],
+                    'stride_height': layer.strides[0],
+                    'stride_width': layer.strides[1],
+                    'dilation_height': layer.dilation_rate[0],
+                    'dilation_width': layer.dilation_rate[1],
+                    'crop_top': crop[0],
+                    'crop_left': crop[1],
+                }
+            )
 
         return config

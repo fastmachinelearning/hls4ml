@@ -32,7 +32,7 @@ template <class data_T, class res_T, typename CONFIG_T>
 void normalize(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in],
                const typename CONFIG_T::scale_t scale[CONFIG_T::n_scale_bias],
                const typename CONFIG_T::bias_t bias[CONFIG_T::n_scale_bias]) {
-// Calcuate result
+// Calculate result
 Result:
     #pragma unroll
     for (int ires = 0; ires < CONFIG_T::n_in; ires++) {

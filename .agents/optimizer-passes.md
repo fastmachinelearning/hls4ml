@@ -65,7 +65,7 @@ self._default_flow = register_flow('ip', None, requires=ip_flow_requirements, ba
 ```
 
 Backend flow names that appear in every FPGA backend, each under its own prefix: `init_layers`,
-`specific_types`, `apply_templates`, `write` and `ip`. Others are optional and vary — Vivado, Quartus, oneAPI
+`specific_types`, `apply_templates`, `write` and `ip`. Others are optional and vary — Vivado, Quartus, Altera
 and Catapult add `optimize`, `streaming` and `quantization`, while Libero registers only the five above and
 Vitis adds `validation` on top of the ones it inherits from Vivado. Libero is the useful minimal example.
 
@@ -130,14 +130,17 @@ layer construction, which breaks every existing model.
 default rule, which converts but gives types nobody chose. Adding a layer type means adding its branch there
 too — a quiet omission, not a loud one.
 
-The user writes the name in pascal case in the config (`RecurrentReuseFactor`); it arrives as snake case
-(`recurrent_reuse_factor`) in `layer.attributes`, and templates read it from there by the same name.
+The user writes the name in pascal case in the config (`ParallelizationFactor`); it arrives as snake case
+(`parallelization_factor`) in `layer.attributes`, and templates read it from there by the same name.
+
+Give the attribute a `description=` from `hls4ml/utils/attribute_descriptions.py`, and regenerate
+`docs/ir/attributes.rst` as [CONTRIBUTING.md](../CONTRIBUTING.md) describes.
 
 ## Worked example in the tree: the distributed arithmetic strategy
 
 A strategy implemented end to end as passes, useful as a template to copy. The machinery it uses is core to
 every backend; the vocabulary it manipulates — `strategy`, `reuse_factor`, a `kernel` typedef chosen by a
-config template — is a Vivado-family convention. Quartus and oneAPI have no `strategy` attribute at all, and
+config template — is a Vivado-family convention. Quartus and Altera have no `strategy` attribute at all, and
 a backend under development may share none of these names. Passes remain the right tool there; only the
 attribute names change.
 

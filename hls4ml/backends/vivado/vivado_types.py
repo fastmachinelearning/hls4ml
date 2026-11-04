@@ -1,6 +1,7 @@
 from hls4ml.backends.fpga.fpga_types import (
     ArrayVariableConverter,
     InplaceStreamVariableConverter,
+    ScalarStreamVariableConverter,
     StreamVariableConverter,
     VariableDefinition,
 )
@@ -51,6 +52,11 @@ class VivadoInplaceStreamVariableDefinition(VariableDefinition):
 
 
 class VivadoStreamVariableConverter(StreamVariableConverter):
+    def __init__(self, type_converter):
+        super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoStreamVariableDefinition)
+
+
+class VivadoScalarStreamVariableConverter(ScalarStreamVariableConverter):
     def __init__(self, type_converter):
         super().__init__(type_converter=type_converter, prefix='Vivado', definition_cls=VivadoStreamVariableDefinition)
 

@@ -51,8 +51,7 @@ class DenseHandler(KerasV3LayerHandler):
         kernel = self.load_weight(layer, 'kernel')
         bias = self.load_weight(layer, 'bias') if layer.use_bias else None
         n_in, n_out = kernel.shape
-        return {'data_format': 'channels_last', 'weight_data': kernel,
-                'bias_data': bias, 'n_out': n_out, 'n_in': n_in}
+        return {'data_format': 'channels_last', 'weight_data': kernel, 'bias_data': bias, 'n_out': n_out, 'n_in': n_in}
 ```
 
 Things the base class does for you, worth knowing before writing a handler:

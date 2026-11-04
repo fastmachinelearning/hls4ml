@@ -128,10 +128,10 @@ def _config(args, extra_args):
                 default_reuse_factor=args.reuse_factor,
             )
     elif args.model.endswith('.onnx'):
-        print('Creating configuration for ONNX mdoels is not supported yet.')
+        print('Creating configuration for ONNX models is not supported yet.')
         sys.exit(1)
     elif args.model.endswith('.pb'):
-        print('Creating configuration for Tensorflow mdoels is not supported yet.')
+        print('Creating configuration for Tensorflow models is not supported yet.')
         sys.exit(1)
 
     if args.output is not None:
@@ -183,8 +183,15 @@ def _build_vivado(args, extra_args):
     vivado_parser.add_argument('-r', '--co-simulation', help='Run C/RTL co-simulation', action='store_true', default=False)
     vivado_parser.add_argument('-v', '--validation', help='Run C/RTL validation', action='store_true', default=False)
     vivado_parser.add_argument('-e', '--export', help='Export IP (implies -s)', action='store_true', default=False)
+    # -l is taken by --list-options of hls4ml build
     vivado_parser.add_argument(
-        '-l', '--vivado-synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False
+        '--vivado-synthesis', help='Run Vivado synthesis (implies -s)', action='store_true', default=False
+    )
+    vivado_parser.add_argument(
+        '--pnr',
+        help='Run Vivado place and route after Vivado synthesis (implies --vivado-synthesis)',
+        action='store_true',
+        default=False,
     )
     vivado_parser.add_argument(
         '-a',
@@ -207,6 +214,7 @@ def _build_vivado(args, extra_args):
     validation = int(vivado_args.validation)
     export = int(vivado_args.export)
     vsynth = int(vivado_args.vivado_synthesis)
+    pnr = int(vivado_args.pnr)
     if vivado_args.all:
         csim = synth = cosim = validation = export = vsynth = 1
 
@@ -217,10 +225,11 @@ def _build_vivado(args, extra_args):
             print('Vivado HLS installation not found. Make sure "vivado_hls" is on PATH.')
             sys.exit(1)
 
+    # Every option is given, so none is taken from the build_opt.tcl left by an earlier build() from Python
     os.system(
         (
             'cd {dir} && vivado_hls -f build_prj.tcl "reset={reset} csim={csim} synth={synth} cosim={cosim} '
-            'validation={validation} export={export} vsynth={vsynth}"'
+            'validation={validation} export={export} vsynth={vsynth} fifo_opt=0 pnr={pnr}"'
         ).format(
             dir=args.project,
             reset=reset,
@@ -230,6 +239,7 @@ def _build_vivado(args, extra_args):
             validation=validation,
             export=export,
             vsynth=vsynth,
+            pnr=pnr,
         )
     )
 

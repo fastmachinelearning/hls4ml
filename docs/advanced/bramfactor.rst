@@ -3,11 +3,11 @@ Loading weights from external BRAM
 ==================================
 
 .. note::
-    This feature is being evaluated for re-implementation. We welcome feedback from users how to make the implementation more flexible.
+    This feature is being evaluated for re-implementation. We welcome feedback from users on how to make the implementation more flexible.
 
-``hls4ml`` can optionally store weights in BRAMs external to the design. This is supported in Vivado/Vitis and Catapult backends. It is the responsibility of the user to ensure the weights are properly loaded during the operation of the design.
+``hls4ml`` can optionally store weights in BRAMs external to the design. This is supported in the Vivado/Vitis and Catapult backends. It is the responsibility of the user to ensure the weights are properly loaded during the operation of the design.
 
-The feature works as a threshold, exposed through a ``BramFactor`` config parameter. Layers with more weights above the threshold will be exposed as BRAM interface. Consider the following code:
+The feature works as a threshold, exposed through a ``BramFactor`` config parameter. Layers with more weights than the threshold will be exposed as a BRAM interface. Consider the following code:
 
 .. code-block:: Python
 
@@ -25,7 +25,7 @@ The feature works as a threshold, exposed through a ``BramFactor`` config parame
         model, hls_config=config, output_dir=output_dir, io_type=io_type, backend=backend
     )
 
-Having set ``BramFactor=100``, only layers with more than 100 weights will be exposed as external BRAM, in this case layers ``dense_1`` and ``dense_2``. ``BramFactor`` can currently be only set at the model level. The generated code will now have weights as part of the interface.
+Having set ``BramFactor=100``, only layers with more than 100 weights will be exposed as external BRAM, in this case layers ``dense_1`` and ``dense_2``. ``BramFactor`` can currently only be set at the model level. The generated code will now have weights as part of the interface.
 
 .. code-block:: C++
 

@@ -8,9 +8,9 @@ Because the neural networks can have complex architectures generally, it is hard
 By default ``hls4ml`` chooses the most conservative possible depth for each FIFO buffer, which can result in an unnecessary over-utilization of resources.
 
 In order to reduce the impact on the resources used for FIFO buffer implementation, an optimization flow has been developed that correctly sizes the depth
-of the FIFO buffers by analyzing the RTL co-simulation. This feature is currently available in ``Vitis`` and ``Vivado`` backends.
+of the FIFO buffers by analyzing the RTL co-simulation. This feature is currently available in the ``Vitis`` and ``Vivado`` backends.
 
-In ``Vivado`` backend, FIFO buffer resizing is implemented as a :py:class:`~hls4ml.backends.vivado.passes.fifo_depth_optimization` optimizer pass.
+In the ``Vivado`` backend, FIFO buffer resizing is implemented as a :py:class:`~hls4ml.backends.vivado.passes.fifo_depth_optimization` optimizer pass.
 Through RTL simulation with large FIFO buffers (by default set to a depth of 100,000), we estimate the maximum occupation of each FIFO.
 Once the maximum depth is determined, the optimizer pass sets the FIFO buffer depth to that value plus 1.
 

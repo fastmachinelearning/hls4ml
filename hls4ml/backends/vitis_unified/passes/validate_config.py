@@ -16,6 +16,7 @@ class ValidateConfig(ModelOptimizerPass):
             cfg['OutputDtype'],
             platform=cfg.get('Platform'),
             part=model.config.get_config_value('Part'),
+            n_ports=len(model.get_input_variables()) + len(model.get_output_variables()),
         )
 
         n_inputs = len(model.get_input_variables())

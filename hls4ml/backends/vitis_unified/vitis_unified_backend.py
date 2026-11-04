@@ -1,10 +1,13 @@
 import os
+import re
 import subprocess
 import sys
 import warnings
+from glob import glob
 from shutil import rmtree
 
 from hls4ml.backends import VitisBackend
+from hls4ml.backends.vitis_unified.vitis_unified_config import VitisUnifiedConfig
 from hls4ml.backends.vitis_unified.vitis_unified_validation import load_supported_boards, validate_config
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vitis_unified_report
@@ -28,10 +31,14 @@ class VitisUnifiedBackend(VitisBackend):
         bitfile=False,
         log_to_stdout=True,
         vitis_fifo_sizing=False,
+        pnr=False,
     ):
-        for name, value in [('validation', validation), ('export', export), ('vsynth', vsynth)]:
+        for name, value in [('validation', validation), ('export', export)]:
             if value:
                 warnings.warn(f'{name} is not supported by the VitisUnified backend and is ignored.', stacklevel=2)
+
+        # Place and route runs after Vivado synthesis
+        vsynth = vsynth or pnr
 
         if fifo_opt and not cosim:
             warnings.warn('fifo_opt requires cosim to be enabled; cosim will be run automatically.', stacklevel=2)
@@ -48,12 +55,26 @@ class VitisUnifiedBackend(VitisBackend):
         output_dir = model.config.get_output_dir()
         writer = model.config.backend.writer
 
+        # Vivado synthesis reads the Verilog of an earlier C synthesis, unless reset deletes it
+        verilog_dir = os.path.join(writer.get_vitis_hls_exec_dir(model), 'hls', 'syn', 'verilog')
+        if vsynth and not synth and (reset or not os.path.isdir(verilog_dir)):
+            warnings.warn('vsynth requires the Verilog written by synth; synth will be run automatically.', stacklevel=2)
+            synth = True
+
         if reset:
-            for path in [writer.get_vitis_hls_exec_dir(model), os.path.join(writer.get_vitis_linker_dir(model), '_x')]:
+            # Remove the HLS project and the linked design, and the reports read from them
+            for path in [
+                writer.get_vitis_hls_exec_dir(model),
+                os.path.join(writer.get_vitis_linker_dir(model), '_x'),
+                os.path.join(output_dir, 'final_reports'),
+            ]:
                 rmtree(path, ignore_errors=True)
             xclbin = os.path.join(writer.get_vitis_linker_dir(model), f'{model.config.get_project_name()}.xclbin')
             if os.path.isfile(xclbin):
                 os.remove(xclbin)
+            for pattern in ['vivado_synth*.rpt', 'vivado_impl*.rpt']:
+                for report_file in glob(os.path.join(output_dir, pattern)):
+                    os.remove(report_file)
 
         csim_cfg = 'hls_kernel_config_csim.cfg'
         cosim_cfg = 'hls_kernel_config_cosim_fifo_sizing.cfg' if vitis_fifo_sizing else 'hls_kernel_config_cosim.cfg'
@@ -82,16 +103,46 @@ class VitisUnifiedBackend(VitisBackend):
         if cosim or fifo_opt:
             commands.append(('cosim', cosim_cmd, vitis_hls_dir))
 
+        if vsynth:
+            axi_mode = model.config.get_config_value('VitisUnifiedConfig')['axi_mode']
+            vsynth_cmd = (
+                'vivado -mode batch -source vivado_synth.tcl -tclargs '
+                f'src={os.path.relpath(verilog_dir, output_dir)} '
+                f'top={model.config.get_project_name()}_{axi_mode} '
+                f'part={model.config.get_config_value("Part")} '
+                f'clock_period={writer._get_clock_period_ns(model)} '
+                f'pnr={int(pnr)}'
+            )
+            commands.append(('vsynth', vsynth_cmd, output_dir))
+
         if bitfile:
             commands.append(('kerlink', kerlink_cmd, kerlink_cwd))
 
-        if commands and 'linux' in sys.platform:
-            tools = ['v++', 'vitis-run'] + (['xclbinutil', 'vivado'] if bitfile else [])
+        if 'linux' in sys.platform:
+            # The tools each step runs; the link script runs v++, vivado and xclbinutil
+            step_tools = {
+                'csynth': ['v++'],
+                'package': ['vitis-run'],
+                'csim': ['vitis-run'],
+                'cosim': ['vitis-run'],
+                'vsynth': ['vivado'],
+                'kerlink': ['v++', 'vivado', 'xclbinutil'],
+            }
+            tools = dict.fromkeys(tool for task_name, _, _ in commands for tool in step_tools[task_name])
             for tool in tools:
                 if os.system(f'command -v {tool} > /dev/null') != 0:
                     raise Exception(f'Vitis installation not found. Make sure "{tool}" is on PATH.')
         if bitfile and not os.environ.get('XILINX_VITIS'):
             raise Exception('XILINX_VITIS is not set. Source the Vitis settings64.sh before building the bitfile.')
+        if bitfile:
+            unified_config = VitisUnifiedConfig(model.config, model.get_input_variables(), model.get_output_variables())
+            if unified_config.get_platform_generator_tcl() is None:
+                platform = os.path.expandvars(unified_config.get_platform_path())
+                unset = re.search(r'\$\{(\w+)\}', platform)
+                if unset:
+                    raise Exception(f'{unset.group(1)} is not set, but the platform path is rooted at it: {platform}')
+                if not os.path.exists(platform):
+                    raise Exception(f'Platform not found at {platform}.')
 
         for task_name, command, cwd in commands:
             stdout_log = os.path.join(output_dir, f'{task_name}_stdout.log')
@@ -112,7 +163,11 @@ class VitisUnifiedBackend(VitisBackend):
                     stdout_target.close()
                     stderr_target.close()
 
-        return parse_vitis_unified_report(output_dir)
+        report = parse_vitis_unified_report(output_dir)
+        if bitfile and report and 'KernelClockMHz' in report:
+            requested = 1000 / writer._get_clock_period_ns(model)
+            print(f'Kernel clock in the .xclbin: {report["KernelClockMHz"]} MHz (clock_period asks for {requested:.0f} MHz)')
+        return report
 
     def create_initial_config(
         self,
@@ -128,6 +183,7 @@ class VitisUnifiedBackend(VitisBackend):
         in_stream_buf_size=128,
         out_stream_buf_size=128,
         axi_mode='axi_master',
+        kernel_slr=None,
         **kwargs,
     ):
         supported_boards = load_supported_boards()
@@ -146,6 +202,9 @@ class VitisUnifiedBackend(VitisBackend):
         config['VitisUnifiedConfig']['axi_mode'] = axi_mode
         config['VitisUnifiedConfig']['in_stream_buf_size'] = in_stream_buf_size
         config['VitisUnifiedConfig']['out_stream_buf_size'] = out_stream_buf_size
+        if kernel_slr not in (None, False) and not re.fullmatch(r'SLR\d', str(kernel_slr)):
+            raise Exception(f'kernel_slr must be an SLR name such as "SLR1", or False, not {kernel_slr!r}')
+        config['VitisUnifiedConfig']['KernelSLR'] = kernel_slr
 
         config['VitisUnifiedConfig']['Driver'] = driver
         config['VitisUnifiedConfig']['InputDtype'] = input_type  # float, double or ap_fixed<a,b>

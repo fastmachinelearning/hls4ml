@@ -2,7 +2,7 @@
 VitisUnified
 ============
 
-The **VitisUnified** backend provides an end-to-end workflow for AMD SoC boards, from an ML model to a design that is ready to deploy on `PYNQ <http://pynq.io/>`_. It is inherited from the :doc:`Vitis <vitis>` backend. We use the new Vitis Unified software, which can automatically link the HLS kernel to the system hardware. The current version supports only SoC boards with a PYNQ Python driver.
+The **VitisUnified** backend provides an end-to-end workflow for AMD SoC boards and data-center cards, from an ML model to a design that is ready to deploy. It is inherited from the :doc:`Vitis <vitis>` backend. We use the new Vitis Unified software, which can automatically link the HLS kernel to the system hardware. SoC boards are deployed with a `PYNQ <http://pynq.io/>`_ Python driver, data-center cards with an XRT one.
 
 It is the recommended flow for AMD SoC boards with Vitis 2023.2 or newer. Models with ``io_parallel`` or with ``ap_fixed`` interface types stay with the :doc:`VivadoAccelerator <accelerator>` backend.
 
@@ -10,6 +10,8 @@ Currently ``hls4ml`` officially supports the following boards and tool versions:
 
 * `zcu102 <https://www.xilinx.com/products/boards-and-kits/ek-u1-zcu102-g.html>`_ (Vitis and Vivado 2023.2)
 * `kv260 <https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html>`_ (Vitis and Vivado 2023.2 and 2025.2)
+* `alveo-u55c <https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html>`_ (Vitis and Vivado 2024.2 with the ``xilinx_u55c_gen3x16_xdma_3_202210_1`` platform, ``axi_master`` with ``driver='xrt'``)
+* ``alveo-u50`` and ``alveo-u280`` (not tested on hardware, no ``kernel_slr``)
 
 If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. The steps are covered in the platform setup tutorial in the accelerator backend section of the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
 
@@ -59,7 +61,50 @@ In both modes the CPU controls the kernel through AXI-Lite and receives an inter
       The platforms built by the shipped Tcl scripts have a 32-bit DMA, so ``double`` is rejected with them and needs your own platform.
     * For each kernel start the kernel reads exactly ``batch_size × N_IN`` input beats and writes exactly ``batch_size × N_OUT`` output beats. ``N_IN`` and ``N_OUT`` are the flattened input and output sizes of the model.
     * ``TLAST`` is set only on the last output beat of the batch. ``TLAST`` on the input is ignored, so a transfer with fewer beats than expected makes the kernel wait.
-    * ``TKEEP`` is driven all-ones on every output beat. It is required by the AXI DMA, which never completes a transfer without it. ``TKEEP`` on the input is not checked, every beat is taken as a full element.
+    * ``TKEEP`` is driven all-ones on every output beat. It is required by the AXI DMA, which never completes a transfer without it. ``TKEEP`` on the input is not checked; every beat is taken as a full element.
+
+.. _vitis_unified_cards:
+
+Data-center cards
+=================
+
+A card is linked against an installed card platform instead of one built by Vivado, and it is driven by XRT over PCIe instead of by PYNQ. Three things follow from that, and all are handled by the ``board`` and ``driver`` options:
+
+* The platform is looked up under ``PLATFORM_REPO_PATHS``, which has to be set when ``bitfile=True`` runs the link.
+* The kernel pointers are assigned to memory banks explicitly. The banks of the board entry are split evenly over the pointer arguments, one contiguous slice each, and the generated driver allocates every buffer in the banks of its own kernel argument. For one input and one output on a card with 32 HBM banks that gives ``HBM[0:15]`` and ``HBM[16:31]``.
+* The kernel is placed in the SLR given by ``kernel_slr`` (from the board entry, ``SLR2`` on the U55C), so v++ pipelines the path to its memory banks. Pass ``kernel_slr=False`` for a model that does not fit in one SLR.
+
+Only ``axi_master`` is supported on a card. Instead of the raw bitstream and hardware handoff file that PYNQ needs, the ``.xclbin`` is copied to ``export/``.
+
+The kernel runs on the card's scalable clock. Vitis implements it against the platform's default kernel frequency, 300 MHz on the U55C, and when routing misses that it lowers the clock in the ``.xclbin`` to the highest frequency that meets timing. A ``[clock]`` entry would not change this, so a card's ``link_system.cfg`` has none. ``build(bitfile=True)`` prints the kernel clock read from the ``.xclbin`` and returns it as ``KernelClockMHz`` in its report. ``clock_period`` still sets the HLS schedule, and since the HLS estimate leaves out routing, a short period pays off. A 16-64-32-32-5 jet tagger at ``ReuseFactor`` 1 ships at 112 MHz with ``clock_period=6.66`` and at 237 MHz with ``clock_period=3.333``. Adding ``in_stream_buf_size=2`` and the options below to ``link_system.cfg`` after ``write()`` gives 256 MHz:
+
+.. code-block:: ini
+
+    [vivado]
+    prop=run.impl_1.STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE=AggressiveFanoutOpt
+    prop=run.impl_1.STEPS.POST_ROUTE_PHYS_OPT_DESIGN.IS_ENABLED=true
+    prop=run.impl_1.STEPS.POST_ROUTE_PHYS_OPT_DESIGN.ARGS.DIRECTIVE=AggressiveExplore
+
+With Vivado 2024.2, ``run.impl_1.strategy=Performance_Explore`` crashes the placer when ``kernel_slr`` is set.
+
+.. code-block:: Python
+
+    hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                           hls_config=config,
+                                                           output_dir='hls4ml_prj_u55c',
+                                                           backend='VitisUnified',
+                                                           board='alveo-u55c',
+                                                           driver='xrt',
+                                                           clock_period=3.333)
+
+The generated ``export/axi_master_driver.py`` loads the ``.xclbin`` from the path it is given, relative to the working directory. The shapes it is constructed with must share one batch size and match the number of values per sample of each model input and output, and the data type defaults to the interface type (``np.float32`` for ``float``, ``np.float64`` for ``double``). ``predict`` takes an input of exactly that shape:
+
+.. code-block:: Python
+
+    from axi_master_driver import NeuralNetworkAccelerator
+
+    accel = NeuralNetworkAccelerator('myproject.xclbin', X.shape, (len(X), n_out))
+    y = accel.predict(X)
 
 Configuration options
 =====================
@@ -78,7 +123,7 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
      - ``zcu102``
      - | Target board.
        | It selects the FPGA part, the platform, and the Python driver template.
-       | The current version only supports the boards in ``supported_boards.json`` (``zcu102`` and ``kv260``).
+       | The current version only supports the boards in ``supported_boards.json`` (``zcu102``, ``kv260``, ``alveo-u55c``, ``alveo-u50`` and ``alveo-u280``).
        | Any other board name is rejected with an error, unless ``platform`` and ``part`` are given.
        | You can use your own board: build its platform by following the platform setup tutorial in the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository and pass it with ``platform``.
    * - ``part``
@@ -109,7 +154,8 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
    * - ``driver``
      - ``python``
      - | Type of driver generated for the board.
-       | The current version only supports ``python`` (PYNQ).
+       | ``python`` is the PYNQ driver for SoC boards, ``xrt`` the PCIe driver for data-center cards.
+       | ``xrt`` requires ``axi_mode='axi_master'``. See :ref:`Data-center cards <vitis_unified_cards>`.
    * - ``input_type``
      - ``float``
      - | Data type of the model input on the AXI interface.
@@ -129,6 +175,10 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
      - ``128``
      - | Depth of the FIFO between the HLS model and the wrapper output (AXI master write or AXI-Stream). Used in both AXI modes.
        | The unit is one entry of the model output stream. One entry holds the last dimension of the output shape, and one sample takes ``N_OUT / channels`` entries, the same rule as for the input.
+   * - ``kernel_slr``
+     - from board
+     - | SLR the kernel is placed in on a data-center card, for example ``'SLR1'``.
+       | ``False`` leaves the placement to Vivado.
 
 Example:
 
@@ -160,6 +210,10 @@ All paths inside the generated files are relative, so the output directory can b
     ├── <project_name>_test.cpp            C testbench of the AXI wrapper
     ├── <project_name>_bridge.cpp          bridge used by hls_model.predict()
     ├── build_lib.sh                       builds the shared library for predict()
+    ├── vivado_synth.tcl                   Vivado synthesis, and place and route, of the kernel (vsynth=True)
+    ├── vivado_synth.xdc                   clock constraint written by vivado_synth.tcl
+    ├── vivado_synth*.rpt, vivado_impl*.rpt    reports of vsynth=True and pnr=True
+    ├── .srcs/, .gen/                      AMD IP cores of the kernel, such as floating-point operators, made by vivado_synth.tcl
     ├── hls4ml_config.yml
     ├── fifo_depths.json                   with FIFO depth optimization only
     ├── <step>_stdout.log, <step>_stderr.log   with log_to_stdout=False only
@@ -177,8 +231,9 @@ All paths inside the generated files are relative, so the output directory can b
     │   └── <board>/
     │       └── tcl_scripts/               create_xsa.tcl, platform tcl, output/<board>_*.xsa
     ├── export/
-    │   ├── system.bit                     bitstream (bitfile=True)
-    │   ├── system.hwh                     hardware handoff (bitfile=True)
+    │   ├── system.bit                     bitstream (bitfile=True, PYNQ driver only)
+    │   ├── system.hwh                     hardware handoff (bitfile=True, PYNQ driver only)
+    │   ├── <project_name>.xclbin          linked design (bitfile=True, XRT driver only)
     │   └── axi_master_driver.py or axi_stream_driver.py
     └── final_reports/                     timing, utilization, power, link summary, hls_compile.rpt
 
@@ -203,16 +258,21 @@ Build options
      - Runs the FIFO depth optimization. It turns on ``cosim`` by itself.
    * - ``vitis_fifo_sizing=True``
      - Uses the FIFO sizing feature of Vitis HLS during co-simulation. It turns on ``cosim`` by itself.
+   * - ``vsynth=True``
+     - Synthesizes the kernel alone with Vivado, out of context, and writes ``vivado_synth.rpt`` (utilization) and ``vivado_synth_timing.rpt``. Only the clock is constrained, so the slack covers the paths between registers of the kernel, not the paths from its inputs or to its outputs. It reads the Verilog of an earlier ``synth=True``, and turns on ``synth`` by itself only when there is none, or with ``reset=True``. If synthesis leaves the cascade input of a DSP unconnected (design rule DSPS-2), the kernel is synthesized again with ``-cascade_dsp tree``, which can change the resources. It needs ``vivado`` on the PATH.
+   * - ``pnr=True``
+     - Also places and routes the kernel after Vivado synthesis and writes ``vivado_impl.rpt``, ``vivado_impl_timing.rpt`` and ``vivado_impl_power.rpt``. The slack includes the delay and skew of the clock from the first clock buffer site of the device; another site changes it a little. Vivado estimates the power from default switching activity, not from a simulation of the kernel, so most of the total can be the static power of the device; ``DynamicPower`` is the part that depends on the kernel. It turns on ``vsynth`` by itself.
    * - ``bitfile=True``
-     - Links the packaged kernel to the board platform and writes the bitstream and the hardware handoff file to ``export/``. It needs the ``.xo`` file from ``synth=True``, ``xclbinutil`` and ``vivado`` on the PATH, and ``XILINX_VITIS`` set, which sourcing the Vitis ``settings64.sh`` does.
+     - Links the packaged kernel to the board platform and writes the ``.xclbin`` to ``vitis_workspace/system_link/``. With the PYNQ driver it also writes the bitstream and the hardware handoff file to ``export/``, with the XRT driver it copies the ``.xclbin`` there. It needs the ``.xo`` file from ``synth=True``, ``xclbinutil`` and ``vivado`` on the PATH, and ``XILINX_VITIS`` set, which sourcing the Vitis ``settings64.sh`` does. A card platform is found through ``PLATFORM_REPO_PATHS``. A prebuilt platform that cannot be found is reported before any step runs.
    * - ``log_to_stdout=False``
      - Writes the output of each step to ``<step>_stdout.log`` and ``<step>_stderr.log`` instead of the terminal.
    * - ``reset=True``
-     - Deletes the Vitis HLS project and the link work directory before the selected steps run.
-   * - ``validation``, ``export``, ``vsynth``
+     - Deletes the Vitis HLS project, the link work directory and the reports of Vivado synthesis and of the bitfile build before the selected steps run.
+   * - ``validation``, ``export``
      - Accepted for compatibility with the other backends. They are ignored with a warning. The kernel is always packaged by ``synth=True``.
 
-``build()`` returns a dictionary with the same keys as the Vitis backend: ``CSynthesisReport`` after ``synth=True`` and ``CosimReport`` after ``cosim=True``.
+``build()`` returns a dictionary with the same keys as the Vitis backend: ``CSynthesisReport`` after ``synth=True``, ``CosimReport`` after ``cosim=True``, ``VivadoSynthReport`` after ``vsynth=True`` and ``VivadoImplReport`` after ``pnr=True``.
+After ``bitfile=True`` it also has ``BitfileReport``: the resources of the kernel in the linked design, and the slack of the whole design and the power of the whole device, which include the platform.
 The raw reports are under ``vitis_workspace/<project_name>/vitis_unified_project/`` and, after ``bitfile=True``, under ``final_reports/``.
 
 
@@ -227,8 +287,9 @@ The following are not supported in this version:
 * Models with several inputs or outputs in ``axi_stream`` mode. Use ``axi_master`` for them.
 * ``double`` in ``axi_stream`` mode with the shipped platforms. Their DMA is 32 bits wide, so pass your own platform with a 64-bit DMA.
 * Multigraph models.
-* A C or C++ host driver. Only the Python (PYNQ) driver is generated.
-* Boards other than SoC boards with a PYNQ driver.
+* A C or C++ host driver. Only Python drivers are generated, PYNQ for SoC boards and XRT for cards.
+* ``axi_stream`` on a data-center card. Its platform has no AXI DMA for the kernel to connect to.
+* Cards other than the ones in ``supported_boards.json``. Another card works by passing its ``platform`` and ``part``, but then the bank assignment has to be added to ``link_system.cfg`` by hand.
 
 
 Tutorial

@@ -473,7 +473,7 @@ class Reshape(Layer):
         # take care of -1 shapes
         shape = self._infer_output_shape(input_shape, target_shape)
 
-        # update the target shape with chnges from above
+        # update the target shape with changes from above
         self.set_attr('target_shape', shape)
 
         self.add_output_variable(shape)
@@ -689,21 +689,25 @@ class Conv2DBatchnorm(Conv2D):
     def initialize(self):
         super().initialize()
         folded_weights, folded_bias = self._get_folded_weights()
+        weight_q = self.get_attr('weight_quantizer')
         if self.model.config.is_resource_strategy(self) and self.model.config.backend.name in [
             'Vivado',
             'VivadoAccelerator',
             'Catapult',
         ]:
             self.weights['weight'].data_unquantized = np.transpose(folded_weights, axes=[3, 0, 1, 2])
-            self.weights['weight'].data = self.get_attr('weight_quantizer')(self.weights['weight'].data_unquantized)
-
         else:
             self.weights['weight'].data_unquantized = folded_weights
-            self.weights['weight'].data = self.get_attr('weight_quantizer')(folded_weights)
+        if weight_q is not None:
+            self.weights['weight'].data = weight_q(self.weights['weight'].data_unquantized)
+        else:
+            self.weights['weight'].data = self.weights['weight'].data_unquantized
         self.weights['bias'].data_unquantized = folded_bias
         bias_q = self.get_attr('bias_quantizer')
         if bias_q is not None:
             self.weights['bias'].data = bias_q(folded_bias)
+        else:
+            self.weights['bias'].data = folded_bias
 
 
 class SeparableConv2D(Layer):
@@ -794,6 +798,64 @@ class DepthwiseConv2D(Conv2D):
             name='weight', var_name='w{index}', data='depthwise', quantizer=self.get_attr('depthwise_quantizer')
         )
 
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+
+class Conv1DTranspose(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+        Attribute('filt_width'),
+        Attribute('stride_width'),
+        Attribute('dilation_width', default=1),
+        Attribute('crop_left'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_width']]
+        self.add_output_variable(shape)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+
+class Conv2DTranspose(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+        Attribute('dilation_height', default=1),
+        Attribute('dilation_width', default=1),
+        Attribute('crop_top'),
+        Attribute('crop_left'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
+        self.add_output_variable(shape)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
@@ -1203,7 +1265,7 @@ class BatchNormalization(Layer):
             self.add_weights_variable(name='bias', var_name='b{index}')
 
 
-# TODO:  discuss whether this should be renamed to soemthing more descriptive, and whether the class hierarchy makes sense
+# TODO:  discuss whether this should be renamed to something more descriptive, and whether the class hierarchy makes sense
 class ApplyAlpha(BatchNormalization):
     """A custom layer to scale the output of a QDense layer which used 'alpha != 1'
     Inference computation uses BatchNormalization methods"""
@@ -2024,6 +2086,10 @@ layer_map = {
     'QSeparableConv2D': SeparableConv2D,
     'DepthwiseConv2D': DepthwiseConv2D,
     'QDepthwiseConv2D': DepthwiseConv2D,
+    'Conv1DTranspose': Conv1DTranspose,
+    'Conv2DTranspose': Conv2DTranspose,
+    'QConv1DTranspose': Conv1DTranspose,
+    'QConv2DTranspose': Conv2DTranspose,
     'BatchNormalization': BatchNormalization,
     'QBatchNormalization': BatchNormalization,
     'MaxPooling1D': Pooling1D,

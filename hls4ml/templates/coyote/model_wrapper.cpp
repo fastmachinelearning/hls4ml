@@ -14,7 +14,7 @@
  * the host and the accelerator, one must specify the size of the buffer moved. While it's perfectly
  * possible to "emulate" ap_fixed on the host and convert the float32 to ap_fixed, it is unclear
  * what the exact size/alignment etc. of the buffer will be on the host (e.g, ap_fixed<1> cannot
- * possibly be 1 bit in a "convential" OS, so some padding would almost certainly be added; this
+ * possibly be 1 bit in a "conventional" OS, so some padding would almost certainly be added; this
  * padding will then have to be removed by the model_wrapper, which could be error-prone).
  */
 void model_wrapper(hls::stream<axi_s> &data_in, hls::stream<axi_s> &data_out) {

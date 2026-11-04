@@ -37,7 +37,7 @@ scope rules that decide how a feature is received:
   set that raises naming the conflict — as `VivadoBackend.init_dense` does when a strategy is combined with a
   reuse factor it cannot support.
 - **Every backend that shares the code path has to keep working.** Vitis inherits from Vivado, so a change in
-  `backends/vivado/` affects both. Changes to `model/` affect all backends including Quartus, oneAPI,
+  `backends/vivado/` affects both. Changes to `model/` affect all backends including Quartus, Altera,
   Catapult and Libero.
 
 ## Formatting: pre-commit is required
@@ -151,7 +151,8 @@ fails on both is the environment's.
 - User-facing features get a page under `docs/advanced/` (see `da.rst`, `auto.rst`, `bramfactor.rst` for the
   expected length and tone) and a link from the relevant index.
 - New layer attributes should carry a `description=` taken from `hls4ml/utils/attribute_descriptions.py`;
-  `docs/attr_doc_gen.py` turns those into the attribute tables in the documentation.
+  `docs/attr_doc_gen.py` turns those into `docs/ir/attributes.rst`, which you regenerate as
+  [CONTRIBUTING.md](../CONTRIBUTING.md) describes.
 - The PR description itself must document the change and the expected behaviour — that is item one of the
   contribution guidelines.
 

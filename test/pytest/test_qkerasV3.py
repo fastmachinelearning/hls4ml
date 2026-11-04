@@ -9,7 +9,15 @@ from keras.models import Model, Sequential
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
 from qkeras.qconv2d_batchnorm import QConv2DBatchnorm
-from qkeras.qconvolutional import QConv1D, QConv2D, QDepthwiseConv2D, QSeparableConv1D, QSeparableConv2D
+from qkeras.qconvolutional import (
+    QConv1D,
+    QConv1DTranspose,
+    QConv2D,
+    QConv2DTranspose,
+    QDepthwiseConv2D,
+    QSeparableConv1D,
+    QSeparableConv2D,
+)
 from qkeras.qlayers import QActivation, QDense
 from qkeras.quantizers import (
     binary,
@@ -81,7 +89,7 @@ def load_jettagging_model():
     return model
 
 
-# TODO - Paramaterize for Quartus (different strategies?)
+# TODO - Parameterize for Quartus (different strategies?)
 @pytest.fixture
 def convert(load_jettagging_model, request, test_case_id):
     """
@@ -148,7 +156,7 @@ def randX_100_16():
 # https://github.com/fastmachinelearning/hls4ml/issues/381
 # @pytest.mark.parametrize('bits', [4, 6, 8])
 @pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_single_dense_activation_exact(test_case_id, randX_100_16, bits, alpha, backend, io_type):
     """
@@ -211,7 +219,7 @@ def randX_100_10():
 @pytest.mark.parametrize(
     'quantizer', [(quantized_tanh(8)), (quantized_sigmoid(5)), (quantized_sigmoid(7, use_real_sigmoid=True))]
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer_special(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -250,7 +258,7 @@ def test_quantizer_special(test_case_id, randX_1000_1, quantizer, backend, io_ty
         (7, 10, binary(), quantized_bits(5, 2), binary(), False, True),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_btnn(test_case_id, make_btnn, randX_100_10, backend, io_type):
     model, is_xnor, test_no = make_btnn
@@ -293,7 +301,7 @@ def randX_1000_1():
         (quantized_relu(10, 5)),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -328,11 +336,11 @@ def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
         (quantized_relu(10, 2, negative_slope=0.25)),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_relu_negative_slope(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
-    Test a a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
+    Test a transformation of quantized_relu with negative_slope to leaky_relu activation layer.
     """
     X = randX_1000_1
     X = -X  # Make it negative so leaky relu does something
@@ -400,7 +408,7 @@ def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, wei
         assert sum(wrong) / len(wrong) <= 0.005
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_qkeras_einsum_dense(test_case_id, randX_100_10, backend, io_type):
     """
@@ -440,7 +448,7 @@ def test_qkeras_einsum_dense(test_case_id, randX_100_10, backend, io_type):
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer_parsing(test_case_id, randX_100_10, backend, io_type):
     X = randX_100_10
@@ -479,7 +487,7 @@ def randX_100_8_8_1():
     return np.random.rand(100, 8, 8, 1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize(
     'qconv_layer,input_shape,input_data_shape,layer_kwargs',
@@ -531,7 +539,7 @@ def test_qconv_activation_kwarg(test_case_id, qconv_layer, input_shape, input_da
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     """
@@ -560,6 +568,105 @@ def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('padding', ['valid', 'same'])
+@pytest.mark.parametrize(
+    'qconv_layer,input_shape,layer_kwargs',
+    [
+        (QConv1DTranspose, (8, 2), {'kernel_size': 3, 'strides': 2, 'output_padding': 1}),
+        (QConv2DTranspose, (8, 8, 1), {'kernel_size': (3, 3), 'strides': (2, 2)}),
+    ],
+    ids=['qconv1d_transpose', 'qconv2d_transpose'],
+)
+@pytest.mark.parametrize('alpha', ['1', '"auto_po2"'], ids=['alpha_1', 'alpha_auto_po2'])
+def test_qconv_transpose(test_case_id, qconv_layer, input_shape, layer_kwargs, backend, padding, alpha):
+    """
+    Test proper handling of QConv1DTranspose and QConv2DTranspose.
+    """
+    X = np.random.default_rng(12345).random((100, *input_shape))
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+
+    inputs = Input(shape=input_shape)
+    outputs = qconv_layer(
+        3,
+        **layer_kwargs,
+        padding=padding,
+        kernel_quantizer=f'quantized_bits(4, 0, alpha={alpha})',
+        bias_quantizer='quantized_bits(4, 0, alpha=1)',
+        kernel_initializer=keras.initializers.RandomUniform(-0.3, 0.3, seed=1),
+        bias_initializer=keras.initializers.RandomUniform(-1, 1, seed=2),
+        activation='quantized_relu(6, 2)',
+    )(inputs)
+    model = Model(inputs, outputs)
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend=backend
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type='io_parallel'
+    )
+    hls_model.compile()
+
+    y_qkeras = model.predict(X)
+    y_hls4ml = hls_model.predict(X)
+
+    np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
+
+
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+@pytest.mark.parametrize(
+    'kernel_quantizer',
+    ['binary(alpha=1)', 'binary()', 'quantized_bits(4, 0, alpha=1)'],
+    ids=['binary', 'binary_po2', 'bits'],
+)
+def test_qconv_transpose_binary_input(test_case_id, kernel_quantizer, strategy, io_type):
+    """
+    Test QConv2DTranspose with a binary input, which hls4ml stores as 0 for -1 and 1 for +1.
+    """
+
+    # Inputs away from zero, so that the binary activation gives the same signs in QKeras and hls4ml
+    rng = np.random.default_rng(12345)
+    X = rng.choice([-1, 1], (100, 6, 6, 1)) * rng.uniform(0.25, 1, (100, 6, 6, 1))
+
+    inputs = Input(shape=(6, 6, 1))
+    # The scale of the binary kernel and the activation make one layer with a binary output
+    x = QConv2D(4, 1, kernel_quantizer=binary(), use_bias=False)(inputs)
+    x = QActivation(binary())(x)
+    outputs = QConv2DTranspose(
+        3,
+        kernel_size=3,
+        strides=2,
+        padding='same',
+        kernel_quantizer=kernel_quantizer,
+        bias_quantizer='quantized_bits(4, 0, alpha=1)',
+        kernel_initializer=keras.initializers.RandomUniform(-1, 1, seed=1),
+        bias_initializer=keras.initializers.RandomUniform(-1, 1, seed=2),
+        name='qconv2d_transpose',
+    )(x)
+    model = Model(inputs, outputs)
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='fixed<24,8>', backend='Vitis'
+    )
+    config['Model']['Strategy'] = strategy
+    if strategy == 'Resource':
+        config['LayerName']['qconv2d_transpose']['ReuseFactor'] = 4
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend='Vitis', io_type=io_type
     )
     hls_model.compile()
 
@@ -621,7 +728,7 @@ def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type, quan
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
 def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
@@ -659,7 +766,7 @@ def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
     np.testing.assert_allclose(y_hls.flatten(), y_keras.flatten(), rtol=2e-2)
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Quartus', 'Altera'])
 def test_qsimplernn(test_case_id, backend):
     """
     Test proper handling of QSimpleRNN.
@@ -694,7 +801,7 @@ def test_qsimplernn(test_case_id, backend):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
 def test_qlstm(test_case_id, backend):
     """
     Test proper handling of QLSTM.
@@ -730,7 +837,7 @@ def test_qlstm(test_case_id, backend):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
 def test_qgru(test_case_id, backend):
     """
     Test proper handling of QGRU.

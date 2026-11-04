@@ -43,7 +43,7 @@ Write the ``ModelGraph`` to the output directory specified in the config:
 ``compile`` method
 ======================
 
-Compiles the written C++/HLS code and links it into the Python runtime. Compiled model can be used to evaluate performance (accuracy) through ``predict()`` method.
+Compiles the written C++/HLS code and links it into the Python runtime. The compiled model can be used to evaluate performance (accuracy) through the ``predict()`` method.
 
 .. code-block:: python
 
@@ -80,10 +80,10 @@ This method "builds" the generated HLS project. The parameters of build are back
 
    report = hls_model.build()
 
-   #You can also read the report of the build
+   # You can also read the report of the build
    hls4ml.report.read_vivado_report('hls4ml_prj')
 
-The returned ``report`` object will contain the result of build step, which may include C-simulation results, HLS synthesis estimates, co-simulation latency etc, depending on the backend used.
+The returned ``report`` object will contain the result of the build step, which may include C-simulation results, HLS synthesis estimates, co-simulation latency, etc., depending on the backend used.
 
 ----
 
@@ -94,11 +94,11 @@ The returned ``report`` object will contain the result of build step, which may 
 
 The trace method is an advanced version of the ``predict`` method. It's used to trace individual outputs from each layer of the hls_model. This is useful for debugging and setting the appropriate configuration.
 
-**Return:** A dictionary where the keys are the names of the layers, and its values are the layers' outputs.
+**Return:** A dictionary where the keys are the names of the layers, and the values are the layers' outputs.
 
 .. code-block:: python
 
-   predict_outputs, trace_outputs =  hls_model.trace(X)
+   predict_outputs, trace_outputs = hls_model.trace(X)
 
-   #We also support a similar function for keras
+   # We also support a similar function for keras
    keras_trace = hls4ml.model.profiling.get_ymodel_keras(keras_model, X)

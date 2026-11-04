@@ -52,7 +52,7 @@ body:
         - Vivado
         - VivadoAccelerator
         - Quartus
-        - oneAPI
+        - Altera
         - Catapult
         - Libero
         - SymbolicExpression

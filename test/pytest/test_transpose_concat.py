@@ -49,22 +49,22 @@ def hls_model(keras_model, request, test_case_id):
         ('io_stream', 'Vivado'),
         ('io_stream', 'Vitis'),
         ('io_stream', 'Quartus'),
-        ('io_stream', 'oneAPI'),
+        ('io_stream', 'Altera'),
         ('io_parallel', 'Vivado'),
         ('io_parallel', 'Vitis'),
         ('io_parallel', 'Quartus'),
-        ('io_parallel', 'oneAPI'),
+        ('io_parallel', 'Altera'),
     ],
     indirect=True,
     ids=[
         'vivado_stream',
         'vitis_streamq',
         'quartus_stream',
-        'oneapi_stream',
+        'altera_stream',
         'vivado_parallel',
         'vitis_parallel',
         'quartus_parallel',
-        'oneapi_parallel',
+        'altera_parallel',
     ],
 )
 def test_accuracy(data, keras_model, hls_model):
@@ -93,7 +93,7 @@ def data_highdim():
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'oneAPI'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 def test_highdim_permute(test_case_id, data_highdim, keras_model_highdim, io_type, backend):
     X = data_highdim
     model = keras_model_highdim

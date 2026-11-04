@@ -66,6 +66,9 @@ def test_multiout_onnx(test_case_id, onnx_model, io_type):
     config = hls4ml.utils.config_from_onnx_model(
         onnx_model, granularity='name', default_precision='fixed<32, 16>', backend='Vitis'
     )
+    for i in range(5):
+        config['LayerName'][f'MatMul_{i}']['Precision']['weight'] = 'fixed<17,1,RND_CONV>'
+        config['LayerName'][f'MatMul_{i}']['Precision']['bias'] = 'fixed<17,1,RND_CONV>'
 
     output_dir = str(test_root_path / test_case_id)
 

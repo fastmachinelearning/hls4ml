@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from tensorflow.keras.layers import GRU, LSTM, Conv1D, Conv2D, Dense, Flatten
+from tensorflow.keras.layers import GRU, LSTM, Conv1D, Conv2D, Dense, Flatten, SimpleRNN
 from tensorflow.keras.models import Sequential
 
 from hls4ml.converters import convert_from_keras_model
@@ -98,7 +98,7 @@ def test_resource_unrolled_streaming_conv(test_case_id, dim, io_type, reuse_fact
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=1e-2)
 
 
-@pytest.mark.parametrize('rnn_layer', [LSTM, GRU])
+@pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU])
 @pytest.mark.parametrize('backend', ['Vitis', 'Vivado'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('static', [True, False])
@@ -131,6 +131,10 @@ def test_resource_unrolled_rnn(test_case_id, rnn_layer, backend, io_type, static
     hls_config['LayerName'][layer_name]['static'] = static
     hls_config['LayerName'][layer_name]['Strategy'] = 'ResourceUnrolled'
     hls_config['LayerName'][layer_name]['ReuseFactor'] = reuse_factor
+    if rnn_layer is SimpleRNN:
+        # The SimpleRNN state is the output of the tanh lookup table, so the table's error adds up over the time steps
+        # Increasing this is a workaround
+        hls_config['LayerName'][layer_name]['TableSize'] = 4096
     output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_keras_model(
