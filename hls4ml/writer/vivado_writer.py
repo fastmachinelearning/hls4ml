@@ -207,14 +207,18 @@ class VivadoWriter(Writer):
                 pipeline_pragma = indent + f'#pragma HLS {pipeline_style.upper()}'
                 if pipeline_style == 'pipeline' and pipeline_ii is not None:
                     pipeline_pragma += f' II={pipeline_ii}\n'
+                elif pipeline_style == 'none':
+                    pipeline_pragma = ''
                 else:
                     pipeline_pragma += '\n'
 
                 if io_type == 'io_parallel':
                     for i in model_inputs:
-                        newline += indent + self._make_array_pragma(i) + '\n'
+                        if i.pragma is not None:
+                            newline += indent + self._make_array_pragma(i) + '\n'
                     for o in model_outputs:
-                        newline += indent + self._make_array_pragma(o) + '\n'
+                        if o.pragma is not None:
+                            newline += indent + self._make_array_pragma(o) + '\n'
                     # TODO discussed adding a handle for setting the interface mode for individual input and output arrays
                     # Probably the handle doesn't need to be exposed to the user but should be just set in hls_model.py
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(

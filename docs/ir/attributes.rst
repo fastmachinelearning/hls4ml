@@ -443,6 +443,56 @@ Configurable attributes
 
 * membrane_t: NamedType
 
+StreamingSNN
+============
+Base attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* accum_t: NamedType (Default: fixed<24,12,TRN,WRAP,0>)
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
+
+* membrane_t: NamedType (Default: fixed<24,12,TRN,WRAP,0>)
+
+Type attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* n_steps: int
+
+* family: list [dense,conv]
+
+* stages: list
+
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* accum_t: NamedType (Default: fixed<24,12,TRN,WRAP,0>)
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
+
+* membrane_t: NamedType (Default: fixed<24,12,TRN,WRAP,0>)
+
 TernaryTanh
 ===========
 Base attributes
