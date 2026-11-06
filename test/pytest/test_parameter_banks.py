@@ -855,7 +855,7 @@ def test_package_rejects_a_bank_count_that_is_not_a_power_of_two(tmp_path):
     from hls4ml.contrib.parameter_banks import package
 
     _manifest(tmp_path)
-    for bad in (1, 3, 6, 2.0, '4', True):
+    for bad in (0, 3, 6, 2.0, '4', True):
         with pytest.raises(ValueError, match='n_banks'):
             package(str(tmp_path), n_banks=bad)
 
@@ -1013,6 +1013,10 @@ def test_bd_shim_mirrors_the_top():
     assert re.findall(r'\.(\w+)\(\1\)', inst.group(2)) == names
     # a comment line must not pick up the list separator
     assert not re.search(r'//[^\n]*,\s*$', body, re.M)
+
+    # one bank: nothing to select
+    names = _fabricated_wrapper(n_banks=1).port_names()
+    assert 'bank_id' not in names and 'ld_bank' not in names and 'ld_param_id' in names
 
 
 def test_generic_loader_is_range_checked_before_narrowing():

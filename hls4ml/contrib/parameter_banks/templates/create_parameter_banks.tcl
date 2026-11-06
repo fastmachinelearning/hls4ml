@@ -8,9 +8,9 @@
 #
 # Usage:  vivado -mode batch -source create_parameter_banks.tcl
 #
-# This is a synthesis sanity check, not a project generator: it runs in memory,
-# writes reports next to this script and exits without creating an .xpr or a
-# block design. For system integration, instantiate $top_name from your own HDL;
+# This is an implementation check, not a project generator: it synthesizes, places
+# and routes out of context in memory, writes reports next to this script and exits
+# without creating an .xpr or a block design. For system integration, instantiate $top_name from your own HDL;
 # for Vivado IP Integrator, use $bd_module as a Module Reference.
 
 set project_name  @PROJECT_NAME@
@@ -68,13 +68,23 @@ set xdc "$here/${top_name}_clock.xdc"
 set fh [open $xdc w]
 puts $fh "create_clock -period $clock_period -name ap_clk \[get_ports ap_clk\]"
 close $fh
-read_xdc $xdc
+read_xdc -mode out_of_context $xdc
 
-synth_design -top $bd_module -part $part
+# a preload image that cannot be found would leave its bank zero
+set_msg_config -id {Synth 8-4445} -new_severity ERROR
+
+synth_design -top $bd_module -part $part -mode out_of_context
 opt_design
+set clock_buffer [lindex [get_sites -quiet -filter {SITE_TYPE == BUFGCTRL}] 0]
+if {$clock_buffer ne ""} {
+    set_property HD.CLK_SRC $clock_buffer [get_ports ap_clk]
+}
+place_design
+phys_opt_design
+route_design
 
 report_utilization -hierarchical -file "$here/utilization.rpt"
 report_timing_summary            -file "$here/timing.rpt"
 report_drc                       -file "$here/drc.rpt"
 
-puts "parameter-banks wrapper synthesized: top=$top_name bd_module=$bd_module banks=$n_banks part=$part"
+puts "parameter-banks wrapper synthesized and routed: top=$top_name bd_module=$bd_module banks=$n_banks part=$part"

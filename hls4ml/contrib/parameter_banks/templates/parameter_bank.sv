@@ -28,7 +28,10 @@ module parameter_bank #(
     parameter int N_BANKS           = 2,
     parameter int BANK_ID_WIDTH     = 1,
     parameter int BANK_STRIDE_WORDS = 2,
-    parameter     INIT_HEX          = ""
+    parameter     INIT_HEX          = "",
+    parameter     RAM_STYLE         = "block",  // or "distributed"
+    // 0 when the IP never reads port B: it is then the loader's write port only
+    parameter int PORT_B_READ       = 1
 ) (
     input  wire                        ap_clk,
     input  wire                        ap_rst,
@@ -60,9 +63,7 @@ module parameter_bank #(
   localparam int PHYS_WORDS      = N_BANKS * BANK_STRIDE_WORDS;
   localparam int PHYS_ADDR_WIDTH = (PHYS_WORDS <= 1) ? 1 : $clog2(PHYS_WORDS);
 
-  // v1 deliberately forces block RAM so every bank has one predictable
-  // implementation; memory-style optimization is out of scope.
-  (* ram_style = "block" *)
+  (* ram_style = RAM_STYLE *)
   reg [DATA_WIDTH-1:0] mem [0:PHYS_WORDS-1];
 
   initial begin
@@ -148,13 +149,13 @@ module parameter_bank #(
 
   // One physical port B, owned by the loader while quiescent and by the IP
   // otherwise. ld_accept already requires quiescent, so the two never collide.
-  wire [PHYS_ADDR_WIDTH-1:0] phys_b = quiescent ? phys_ld : phys_hls_b;
+  wire [PHYS_ADDR_WIDTH-1:0] phys_b = (PORT_B_READ && !quiescent) ? phys_hls_b : phys_ld;
 
-  reg [DATA_WIDTH-1:0] dout_b_q;
+  reg [DATA_WIDTH-1:0] dout_b_q = '0;
 
   always @(posedge ap_clk) begin
     if (ld_accept) mem[phys_b] <= ld_wdata;
-    else if (hls_EN_B) dout_b_q <= mem[phys_b];
+    else if (PORT_B_READ && hls_EN_B) dout_b_q <= mem[phys_b];
   end
 
   generate

@@ -32,6 +32,10 @@ SUMMARY_FILENAME = 'parameter_banks.json'
 
 CONTROL_PORTS = {'ap_clk', 'ap_rst', 'ap_start', 'ap_done', 'ap_ready', 'ap_idle'}
 
+MEMORY_STYLES = ('auto', 'block', 'distributed')
+# Physical depth up to which 'auto' picks LUTRAM: a block RAM costs the same at any depth up to its own
+AUTO_DISTRIBUTED_DEPTH = 64
+
 
 class InterfaceUnsupported(Exception):
     """The model has an external parameter this version cannot bank."""
@@ -113,7 +117,7 @@ class Wrapper:
     """The generated top: the unmodified IP, its banked memories, and one port list
     shared by the SystemVerilog module and its Verilog shim."""
 
-    def __init__(self, project_name, interfaces, rtl_ports, n_banks, control, images=None):
+    def __init__(self, project_name, interfaces, rtl_ports, n_banks, control, images=None, memory='auto'):
         self.project_name = project_name
         self.top_name = f'{project_name}_parameter_banks'
         self.bd_module = f'{self.top_name}_bd'
@@ -125,6 +129,7 @@ class Wrapper:
         self.bank_id_width = max(1, (n_banks - 1).bit_length())
         self.control = control
         self.images = images or {}  # parameter name -> preload file, bound as its INIT_HEX default
+        self.memory = memory
         self.loader = LoaderGeometry(self.interfaces)
 
     @property
@@ -144,6 +149,11 @@ class Wrapper:
     def init_default(self, interface):
         return self.images.get(interface.name, '')
 
+    def ram_style(self, bram):
+        if self.memory != 'auto':
+            return self.memory
+        return 'distributed' if self.n_banks * bram.bank_stride_words <= AUTO_DISTRIBUTED_DEPTH else 'block'
+
     # -- port list, shared by top and shim --
 
     def port_lines(self):
@@ -158,7 +168,10 @@ class Wrapper:
             '    output wire ap_done',
             '    output wire ap_idle',
             '    output wire ap_ready',
-            f'    input  wire [{w - 1}:0] bank_id',
+        ]
+        if self.n_banks > 1:
+            lines.append(f'    input  wire [{w - 1}:0] bank_id')
+        lines += [
             '',
         ]
         if self.passthrough:
@@ -170,7 +183,10 @@ class Wrapper:
             '    // loader: rewrites banks at run time, only while the IP is idle; tie ld_req low if unused',
             '    input  wire ld_req',
             f'    input  wire [{g.param_id_width - 1}:0] ld_param_id',
-            f'    input  wire [{w - 1}:0] ld_bank',
+        ]
+        if self.n_banks > 1:
+            lines.append(f'    input  wire [{w - 1}:0] ld_bank')
+        lines += [
             f'    input  wire [{g.addr_width - 1}:0] ld_addr',
             f'    input  wire [{g.data_width - 1}:0] ld_data',
             '    output wire ld_accept',
@@ -208,6 +224,8 @@ class Wrapper:
 
         f.write(f'  localparam int N_BANKS       = {self.n_banks};\n')
         f.write(f'  localparam int BANK_ID_WIDTH = {self.bank_id_width};\n\n')
+        if self.n_banks == 1:
+            f.write("  wire [0:0] bank_id = 1'b0, ld_bank = 1'b0;\n\n")
         f.write('  wire hls_ap_start, hls_ap_done, hls_ap_idle, hls_ap_ready;\n')
         f.write('  wire [BANK_ID_WIDTH-1:0] cur_bank_id;\n')
         f.write('  wire quiescent;\n\n')
@@ -243,7 +261,8 @@ class Wrapper:
             f.write(f'      .HLS_ADDR_WIDTH({b.addr_width}),\n')
             f.write(f'      .WORD_BYTES({b.addr_stride}), .LOCAL_WORDS({b.depth}),\n')
             f.write('      .N_BANKS(N_BANKS), .BANK_ID_WIDTH(BANK_ID_WIDTH),\n')
-            f.write(f'      .BANK_STRIDE_WORDS({b.bank_stride_words}), .INIT_HEX({b.name.upper()}_INIT_HEX)) u_{b.name} (\n')
+            f.write(f'      .BANK_STRIDE_WORDS({b.bank_stride_words}), .INIT_HEX({b.name.upper()}_INIT_HEX),\n')
+            f.write(f'      .RAM_STYLE("{self.ram_style(b)}"), .PORT_B_READ({int(b.reads_port_b)})) u_{b.name} (\n')
             f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
             f.write(f'      .hls_Addr_A({sig["addr_a"]}), .hls_EN_A({sig["en_a"]}),\n')
             f.write(f'      .hls_Dout_A({sig["dout_a"]}),\n')
@@ -320,6 +339,7 @@ class Wrapper:
             'passthrough_ports': [p['name'] for p in self.passthrough],
             'loader': self.loader.describe(),
             'banked_ports': [{**s.interface.describe(), **s.describe()} for s in self.loader],
+            'memory': {b.name: self.ram_style(b) for b in self.bram},
             'rom_data_files': rom_data,
             'preload_files': self.images,
             'exported_ip_sha256': fingerprint,
@@ -339,17 +359,20 @@ def _is_port_decl(line):
 # --- entry point -------------------------------------------------------------
 
 
-def package(project, n_banks=None, banks=None, output_dir=None):
+def package(project, n_banks=None, banks=None, memory='auto', output_dir=None):
     """Generate the banked-parameter wrapper for a synthesized hls4ml project.
 
     Args:
         project: a ModelGraph, or the path to its output directory.
-        n_banks: how many banks to provision, a power of two. Fixed in the generated
+        n_banks: how many banks to provision, a power of two; one bank gives
+            reloadable parameters with no bank selection. Fixed in the generated
             RTL; changing it means re-running this packager, not re-running HLS.
             Defaults to the smallest that holds ``banks``, or 2.
         banks: parameter sets to preload, as for ``pack_banks()``; needs the
             ModelGraph. Their images are written next to the RTL and bound as the
             wrapper's defaults. Banks beyond them start as zero.
+        memory: ``'block'`` or ``'distributed'`` RAM for the banks; ``'auto'`` picks
+            LUTRAM for shallow banks, where a block RAM would be mostly empty.
         output_dir: where to write the wrapper (default ``<project>/parameter_banks``).
 
     Returns a dict describing what was written, including a fingerprint of the
@@ -372,9 +395,11 @@ def package(project, n_banks=None, banks=None, output_dir=None):
     if banks is not None and not hasattr(project, 'config'):
         raise ValueError('preloading banks needs the ModelGraph the IP was built from, not a path')
     if n_banks is None:
-        n_banks = max(2, 1 << (len(banks) - 1).bit_length()) if banks else 2
-    if isinstance(n_banks, bool) or not isinstance(n_banks, int) or n_banks < 2 or n_banks & (n_banks - 1):
-        raise ValueError(f'n_banks must be a power of two of at least 2, got {n_banks!r}')
+        n_banks = 1 << (len(banks) - 1).bit_length() if banks else 2
+    if isinstance(n_banks, bool) or not isinstance(n_banks, int) or n_banks < 1 or n_banks & (n_banks - 1):
+        raise ValueError(f'n_banks must be a power of two, got {n_banks!r}')
+    if memory not in MEMORY_STYLES:
+        raise ValueError(f'memory must be one of {MEMORY_STYLES}, got {memory!r}')
     if banks is not None and len(banks) > n_banks:
         raise ValueError(f'{len(banks)} parameter sets do not fit in {n_banks} banks')
 
@@ -395,7 +420,7 @@ def package(project, n_banks=None, banks=None, output_dir=None):
         for name, image in pack_banks(project, banks).items():
             images[name] = f'{name}.mem'
             image.write_mem(os.path.join(rtl_dir, images[name]))
-    wrapper = Wrapper(project_name, interfaces, rtl_ports, n_banks, summary.control, images)
+    wrapper = Wrapper(project_name, interfaces, rtl_ports, n_banks, summary.control, images, memory)
     for module in STATIC_MODULES:
         shutil.copyfile(os.path.join(TEMPLATE_DIR, module), os.path.join(rtl_dir, module))
 

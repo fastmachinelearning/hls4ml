@@ -3,8 +3,9 @@ Runtime parameter banks
 =======================
 
 ``hls4ml.contrib.parameter_banks`` lets several trained parameter sets of the
-same network reside on the FPGA at once. A bank is selected for each inference
-without re-running HLS or modifying the synthesized compute IP.
+same network reside on the FPGA at once, for designs built with the Vitis
+backend. A bank is selected for each inference without re-running HLS or
+modifying the synthesized compute IP.
 
 A typical use case is one architecture trained for several operating conditions,
 configurations, or deployment modes.
@@ -46,7 +47,10 @@ Give ``package()`` one complete parameter set per bank, keyed by ``(layer, role)
 what hls4ml asked for and writes ``parameter_banks/`` next to the project: the
 original compute IP wrapped with bank storage, bank selection and a loader, with
 the parameter sets preloaded. The number of banks is a power of two, by default
-the smallest that holds the sets (four here); banks beyond them start as zero.
+the smallest that holds the sets (four here); banks beyond them start as zero,
+and a single bank gives reloadable parameters with no ``bank_id``. Bank memories
+are LUTRAM when shallow and block RAM otherwise; ``memory='block'`` or
+``'distributed'`` forces one.
 
 Only exposed parameters may differ between sets; the rest must be identical in
 every set, and incomplete or inconsistent sets are rejected. Tensor shapes are
@@ -67,7 +71,7 @@ Sample each output on its own ``ap_vld``, as with the plain IP.
 Updating bank contents
 ----------------------
 
-Banks can be rewritten at run time, without a new bitstream. ``pack_banks()``
+Optional: banks can be rewritten at run time, without a new bitstream. ``pack_banks()``
 packs new sets as ``package()`` does::
 
     from hls4ml.contrib.parameter_banks import pack_banks
@@ -94,10 +98,11 @@ and the HLS RTL (``<project>_prj/solution1/syn/verilog/*.v``) to your sources an
 It already contains the original HLS compute IP, parameter storage, bank-selection
 logic and loader, so the HLS IP should not be instantiated separately.
 The surrounding design drives data and control exactly as for the plain IP
-(``ap_start``, ``ap_done``, ``ap_idle``, ``ap_ready``), plus ``bank_id`` and
-any runtime parameter writes (``ld_*``).
-``create_parameter_banks.tcl`` synthesizes the packaged design stand-alone as a
-check; it does not create a Vivado project.
+(``ap_start``, ``ap_done``, ``ap_idle``, ``ap_ready``), plus ``bank_id``; the
+``ld_*`` loader ports are optional (tie ``ld_req`` low).
+``create_parameter_banks.tcl`` synthesizes, places and routes the packaged design
+stand-alone as a check, and fails if a preload image is missing; it does not
+create a Vivado project.
 
 For Vivado IP Integrator compatibility, ``package()`` also generates a Verilog
 shim ``<project>_parameter_banks_bd.v`` with identical ports. Port-level details

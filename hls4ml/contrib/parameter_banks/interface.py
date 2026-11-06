@@ -110,6 +110,7 @@ class BramInterface(ParameterInterface):
                 f'{parameter.name}: {parameter.n_scalars} scalars do not fill {self.scalars_per_word}-lane words'
             )
         self.depth = parameter.n_scalars // self.scalars_per_word
+        self.reads_port_b = True
 
     @property
     def bank_stride_words(self):
@@ -259,6 +260,7 @@ def _verify_bram(parameter, summary, rtl_by_name, project_dir, project_name):
     same_clk, evidence = bram_ports_use_ap_clk(project_dir, project_name, interface.signals)
     if not same_clk:
         raise InterfaceMismatch(f'{name}: both port clocks must be ap_clk ({evidence})')
+    interface.reads_port_b = not bram_port_b_unused(project_dir, project_name, interface.signals)
     return interface
 
 
@@ -409,3 +411,10 @@ def bram_is_read_only(project_dir, project_name, signals):
         name = signals[role]
         evidence[name] = bool(re.search(rf"assign\s+{re.escape(name)}\s*=\s*\d+'[bdh]0\s*;", text))
     return all(evidence.values()), evidence
+
+
+def bram_port_b_unused(project_dir, project_name, signals):
+    """Whether the IP ties port B's enable low, leaving the port to the loader alone."""
+    path = os.path.join(solution_verilog_dir(project_dir, project_name), f'{project_name}.v')
+    text = open(path).read()
+    return bool(re.search(rf"assign\s+{re.escape(signals['en_b'])}\s*=\s*\d+'[bdh]0\s*;", text))

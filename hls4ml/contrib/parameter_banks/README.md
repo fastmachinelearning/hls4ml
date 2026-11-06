@@ -158,7 +158,7 @@ never changes under a transaction in flight.
 | `rtl/<project>_parameter_banks.sv` | the wrapper: compute IP + bank storage + control; this is the module to integrate |
 | `rtl/*.sv` | the modules it instantiates |
 | `rtl/<project>_parameter_banks_bd.v` | optional Verilog shim for IP Integrator (below) |
-| `create_parameter_banks.tcl` | in-memory synthesis check; writes `utilization.rpt`/`timing.rpt`/`drc.rpt`, creates no project |
+| `create_parameter_banks.tcl` | in-memory place-and-route check; writes `utilization.rpt`/`timing.rpt`/`drc.rpt`, creates no project |
 | `parameter_banks.json` | port summary: pass-through ports, each banked port's kind/width/depth, bank count |
 
 ## Integrating from HDL
