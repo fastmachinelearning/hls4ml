@@ -73,6 +73,11 @@ def test_external_parameters_selects_roles_explicitly(tmp_path):
     hls_model = _convert_with(_dense_model(), tmp_path / 'weight_only', {'dense_1': {'ExternalParameters': ['weight']}})
     assert [p.role for p in build_manifest(hls_model)] == ['weight']
 
+    # without STABLE the dataflow region synchronizes on the parameter and inferences cannot overlap
+    hls_model.write()
+    top = (tmp_path / 'weight_only' / 'firmware' / 'myproject.cpp').read_text()
+    assert '#pragma HLS STABLE variable=w2' in top and 'variable=b2' not in top
+
 
 def test_external_parameters_rejects_unknown_role(tmp_path):
     with pytest.raises(ValueError, match="'gamma'"):

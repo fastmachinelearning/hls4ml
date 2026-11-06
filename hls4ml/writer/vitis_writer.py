@@ -25,6 +25,9 @@ class VitisWriter(VivadoWriter):
         for h in headers:
             copy(srcpath + h, dstpath + h)
 
+    def _bram_pragmas(self, brams):
+        return super()._bram_pragmas(brams) + [f'#pragma HLS STABLE variable={b}' for b in brams]
+
     def write_board_script_override(self, model):
         """
         Write the tcl scripts and kernel sources to create a Vitis IPI
