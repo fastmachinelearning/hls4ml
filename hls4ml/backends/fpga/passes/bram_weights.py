@@ -32,11 +32,11 @@ class RegisterBramWeights(OptimizerPass):
         hls_config = model.config.get_config_value('HLSConfig', {})
         if 'ExternalParameters' in hls_config.get('Model', {}):
             raise ValueError("ExternalParameters must be set per layer (LayerName or LayerType), not under 'Model'")
-        roles = model.config.get_layer_config(node).get('ExternalParameters')
-        if roles is None:
+        roles = node.get_attr('external_parameters')
+        if not roles:
             return set()
-        if not isinstance(roles, (list, tuple)) or not all(isinstance(r, str) for r in roles):
-            raise ValueError(f'{node.name}: ExternalParameters must be a list or tuple of parameter names, got {roles!r}')
+        if not isinstance(roles, list) or not all(isinstance(r, str) for r in roles):
+            raise ValueError(f'{node.name}: ExternalParameters must be a list of parameter names, got {roles!r}')
         unknown = sorted(set(roles) - set(node.weights))
         if unknown:
             raise ValueError(

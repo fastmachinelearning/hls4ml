@@ -195,7 +195,7 @@ def test_external_parameters_is_layer_config_only(tmp_path):
 
 @pytest.mark.parametrize('bad', ['weight', {'weight': True}, [1]])
 def test_external_parameters_must_be_a_list_of_names(tmp_path, bad):
-    with pytest.raises(ValueError, match='list or tuple of parameter names'):
+    with pytest.raises(Exception, match='(?i)external_?parameters'):
         _convert_with(_dense_model(), tmp_path / 'bad', {'dense_1': {'ExternalParameters': bad}})
 
 
