@@ -142,8 +142,8 @@ quiescent**, when the IP is not reading. That is why the wrapper is layer-agnost
 
 `scalar_bank_mux.sv` handles fully partitioned parameters — a Dense bias lowers to
 one `ap_none` port per element regardless of size. Its select is combinational, so
-the selected bank is present on the cycle the IP starts. It has per-bank storage but
-no `INIT_HEX` path in v1: loader-only.
+the selected bank is present on the cycle the IP starts. Like `parameter_bank`, it
+is preloaded through `INIT_HEX`.
 
 `bank_select_latch.sv` owns the transaction. Acceptance requires `hls_ap_idle`, not
 merely `!busy` — under `ap_ctrl_hs` idle follows done by a cycle — and a transaction
@@ -220,27 +220,23 @@ From `pack_banks()` output, the write for `(param_id, bank, addr)` is
 
 ### Runtime replacement of BRAM contents
 
-`INIT_HEX` is the default for memory-interface parameters because the sets are normally known
+`INIT_HEX` is the default because the sets are normally known
 at build time. The loader can do the same job, or replace a bank later, without
 touching the HLS IP or the bitstream:
 
 ```python
-images = pack_banks(hls_model, new_sets)      # same model, new parameter values
+images = pack_banks(hls_model, new_sets)  # same model, new parameter values
 for name, img in images.items():
-    pid = param_id[name]                      # parameter_banks.json
+    pid = param_id[name]  # parameter_banks.json
     for bank, words in enumerate(img.per_bank):
         for addr, data in enumerate(words):
-            write(pid, bank, addr, data)      # one ld_req, while quiescent
+            write(pid, bank, addr, data)  # one ld_req, while quiescent
 ```
 
 Only the contents change: `pack_banks()` still checks the new sets against the
 built model, so geometry, precision and layout stay what the IP was synthesized
 for. Moving the words from a host to `ld_*` (AXI, PCIe, registers) belongs to the
 surrounding framework and is out of scope here.
-
-Scalar bundles power up as zero in every bank, including bank 0, so their values
-must be loaded before the first inference (`BankImage.per_bank` holds them). Memory-interface parameters may instead be preloaded
-through `INIT_HEX`.
 
 ## IP Integrator shim (optional)
 

@@ -308,8 +308,7 @@ def test_pack_banks_packs_every_external_parameter(written_project, manifest):
             assert len(entry.image) == 2 * entry.bank_stride_words
         else:
             assert [len(c) for c in entry.per_bank] == [port.n_scalars] * 2
-            with pytest.raises(PackingUnsupported, match='loader'):
-                entry.image
+            assert len(entry.image) == 2 * port.n_scalars
 
     # and it agrees with the primitive it is built on
     weight = _port(manifest, 'trunk', 'weight')
@@ -997,7 +996,7 @@ def test_bd_shim_mirrors_the_top():
 
     top_params, top_ports = _module_header(top.getvalue(), 'p_parameter_banks')
     shim_params, shim_ports = _module_header(shim.getvalue(), 'p_parameter_banks_bd')
-    assert top_params == shim_params == [('W2_INIT_HEX', '""')]
+    assert top_params == shim_params == [('W2_INIT_HEX', '""'), ('B2_INIT_HEX', '""')]
     assert top_ports == shim_ports
     names = [n for _, _, n in top_ports]
     for expected in ('x', 'y_0_ap_vld', 'ld_param_id', 'ld_addr', 'ld_data', 'quiescent'):
@@ -1010,37 +1009,10 @@ def test_bd_shim_mirrors_the_top():
     # and every port and parameter is forwarded by name
     inst = re.search(r'p_parameter_banks\s*#\((.*?)\)\s*u_parameter_banks\s*\((.*?)\);', body, re.S)
     assert inst
-    assert re.findall(r'\.(\w+)\(\1\)', inst.group(1)) == ['W2_INIT_HEX']
+    assert re.findall(r'\.(\w+)\(\1\)', inst.group(1)) == ['W2_INIT_HEX', 'B2_INIT_HEX']
     assert re.findall(r'\.(\w+)\(\1\)', inst.group(2)) == names
     # a comment line must not pick up the list separator
     assert not re.search(r'//[^\n]*,\s*$', body, re.M)
-
-
-def test_scalar_only_wrapper_has_no_parameter_block():
-    """With no memory interface there is no INIT_HEX: top and shim are plain
-    modules, and the shim instantiates the top without a parameter list."""
-    import io
-
-    wrapper = _fabricated_wrapper(with_bram=False)
-    assert wrapper.init_params == [] and [s.name for s in wrapper.loader] == ['b2']
-    top, shim = io.StringIO(), io.StringIO()
-    wrapper.write_top(top)
-    wrapper.write_bd_shim(shim)
-
-    for text, module in ((top.getvalue(), 'p_parameter_banks'), (shim.getvalue(), 'p_parameter_banks_bd')):
-        assert f'module {module} #(' not in text and 'UNUSED' not in text
-        assert re.search(rf'module {module} \(\n', text)
-    assert re.search(r'p_parameter_banks u_parameter_banks \(', shim.getvalue())
-    _, top_ports = _module_header_plain(top.getvalue(), 'p_parameter_banks')
-    _, shim_ports = _module_header_plain(shim.getvalue(), 'p_parameter_banks_bd')
-    assert top_ports == shim_ports and 'ld_data' in [n for _, _, n in top_ports]
-
-
-def _module_header_plain(text, name):
-    m = re.search(rf'module\s+{name}\s*\((.*?)\);', text, re.S)
-    assert m, f'no header for {name}'
-    ports = re.findall(r'(input|output)\s+wire\s+(\[\d+:\d+\]\s+)?(\w+)', m.group(1))
-    return [], [(d, (w or '').strip(), n) for d, w, n in ports]
 
 
 def test_generic_loader_is_range_checked_before_narrowing():

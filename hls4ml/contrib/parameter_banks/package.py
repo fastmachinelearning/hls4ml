@@ -138,7 +138,7 @@ class Wrapper:
 
     @property
     def init_params(self):
-        return [f'{b.name.upper()}_INIT_HEX' for b in self.bram]
+        return [f'{i.name.upper()}_INIT_HEX' for i in self.bram + self.scalar]
 
     # -- port list, shared by top and shim --
 
@@ -185,7 +185,7 @@ class Wrapper:
     def _write_header(self, f, module):
         f.write('`timescale 1 ns / 1 ps\n`default_nettype none\n\n')
         params = [f'    parameter {p} = ""' for p in self.init_params]
-        f.write(f'module {module} #(\n' + ',\n'.join(params) + '\n) (\n' if params else f'module {module} (\n')
+        f.write(f'module {module} #(\n' + ',\n'.join(params) + '\n) (\n')
         lines = self.port_lines()
         remaining = sum(1 for ln in lines if _is_port_decl(ln))
         for ln in lines:
@@ -257,7 +257,8 @@ class Wrapper:
             s, w, n = g.slot(sb.name), sb.width, sb.n_scalars
             f.write(f'  wire [{w * n - 1}:0] {sb.name}_flat;\n')
             f.write(f'  scalar_bank_mux #(.SCALAR_WIDTH({w}), .N_SCALARS({n}),\n')
-            f.write(f'      .N_BANKS(N_BANKS), .BANK_ID_WIDTH(BANK_ID_WIDTH)) u_{sb.name} (\n')
+            f.write('      .N_BANKS(N_BANKS), .BANK_ID_WIDTH(BANK_ID_WIDTH),\n')
+            f.write(f'      .INIT_HEX({sb.name.upper()}_INIT_HEX)) u_{sb.name} (\n')
             f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
             f.write(f'      .ld_we(ld_hit[{s.param_id}]), .ld_bank(ld_bank), .ld_idx(ld_addr[{s.addr_width - 1}:0]),\n')
             f.write(f'      .ld_data(ld_data[{w - 1}:0]), .ld_accept(ld_acc[{s.param_id}]),\n')
@@ -301,12 +302,9 @@ class Wrapper:
         f.write('// accept a SystemVerilog top as a Module Reference. Use this module in a block\n')
         f.write(f'// design; instantiate {self.top_name} directly from RTL.\n\n')
         self._write_header(f, self.bd_module)
-        if self.init_params:
-            f.write(f'  {self.top_name} #(\n')
-            f.write(',\n'.join(f'      .{p}({p})' for p in self.init_params))
-            f.write('\n  ) u_parameter_banks (\n')
-        else:
-            f.write(f'  {self.top_name} u_parameter_banks (\n')
+        f.write(f'  {self.top_name} #(\n')
+        f.write(',\n'.join(f'      .{p}({p})' for p in self.init_params))
+        f.write('\n  ) u_parameter_banks (\n')
         f.write(',\n'.join(f'      .{n}({n})' for n in self.port_names()))
         f.write('\n  );\n\nendmodule\n\n`default_nettype wire\n')
 

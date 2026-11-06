@@ -36,9 +36,7 @@ class BankImage:
 
     @property
     def image(self):
-        """BRAM only: the depth-stacked ``$readmemh`` image, banks padded to the stride."""
-        if self.kind != 'bram':
-            raise PackingUnsupported(f'{self.name}: a {self.kind} port has no memory image; load it through the loader')
+        """The ``$readmemh`` image: banks one after another, each padded to the stride."""
         image = []
         for words in self.per_bank:
             image.extend(words)
@@ -113,6 +111,6 @@ def pack_banks(model, banks):
             per_bank = [parameter.pack(bank[key]) for bank in banks]
         except ExternalParameterError as exc:
             raise PackingUnsupported(str(exc))
-        stride = _next_pow2(parameter.depth) if parameter.interface_kind == 'bram' else None
+        stride = _next_pow2(parameter.depth) if parameter.interface_kind == 'bram' else parameter.n_scalars
         images[parameter.name] = BankImage(parameter, per_bank, stride)
     return images

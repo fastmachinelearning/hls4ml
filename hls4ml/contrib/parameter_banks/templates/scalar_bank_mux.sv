@@ -19,7 +19,8 @@ module scalar_bank_mux #(
     parameter int SCALAR_WIDTH  = 16,
     parameter int N_SCALARS     = 4,
     parameter int N_BANKS       = 2,
-    parameter int BANK_ID_WIDTH = 1
+    parameter int BANK_ID_WIDTH = 1,
+    parameter     INIT_HEX      = ""
 ) (
     input  wire                     ap_clk,
     input  wire                     ap_rst,
@@ -36,12 +37,13 @@ module scalar_bank_mux #(
     output wire [SCALAR_WIDTH*N_SCALARS-1:0] q_flat
 );
 
-  reg [SCALAR_WIDTH-1:0] bank_mem [0:N_BANKS-1][0:N_SCALARS-1];
+  // One scalar per entry, bank after bank: the layout of the INIT_HEX image.
+  reg [SCALAR_WIDTH-1:0] bank_mem [0:N_BANKS*N_SCALARS-1];
 
   initial begin
-    integer bk, s;
-    for (bk = 0; bk < N_BANKS; bk = bk + 1)
-      for (s = 0; s < N_SCALARS; s = s + 1) bank_mem[bk][s] = '0;
+    integer i;
+    for (i = 0; i < N_BANKS * N_SCALARS; i = i + 1) bank_mem[i] = '0;
+    if (INIT_HEX != "") $readmemh(INIT_HEX, bank_mem);
   end
 
   // same policy as parameter_bank: writes only while the wrapper is idle.
@@ -53,13 +55,13 @@ module scalar_bank_mux #(
   assign ld_reject = ld_we & ~safe;
 
   always @(posedge ap_clk) begin
-    if (ld_accept) bank_mem[ld_bank][ld_idx] <= ld_data;
+    if (ld_accept) bank_mem[32'(ld_bank) * N_SCALARS + 32'(ld_idx)] <= ld_data;
   end
 
   genvar i;
   generate
     for (i = 0; i < N_SCALARS; i = i + 1) begin : g_out
-      assign q_flat[SCALAR_WIDTH*i +: SCALAR_WIDTH] = bank_mem[cur_bank_id][i];
+      assign q_flat[SCALAR_WIDTH*i +: SCALAR_WIDTH] = bank_mem[32'(cur_bank_id) * N_SCALARS + i];
     end
   endgenerate
 

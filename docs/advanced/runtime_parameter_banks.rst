@@ -63,21 +63,14 @@ shapes are checked exactly. ``hls_model`` must be the model the IP was built fro
 Writing the bank contents
 -------------------------
 
-``images`` maps each exposed parameter's port name to its packed banks. A
-parameter with a memory interface (for example, a Dense weight) has a
-``$readmemh`` image to bind to the wrapper's ``<PORT>_INIT_HEX`` parameter::
+``images`` maps each exposed parameter's port name to its packed banks. Each
+has a ``$readmemh`` image to bind to the wrapper's ``<PORT>_INIT_HEX`` parameter::
 
     for name, img in images.items():
-        if img.kind == 'bram':
-            img.write_mem(f'{name}.hex')
+        img.write_mem(f'{name}.hex')
 
-Scalar bundles (Dense biases) have no preload path: they power up as zero in every
-bank and must be written through the wrapper's loader while ``quiescent`` is
-high, before the first inference. ``img.per_bank`` holds the values to write.
-
-For parameters preloaded through ``INIT_HEX``, the ``ld_*`` interface is not
-needed during normal inference. It is only required to initialize parameters
-without a preload path, or to replace bank contents after configuration.
+With every parameter preloaded, the ``ld_*`` interface is only needed to replace
+bank contents after configuration.
 
 Selecting a bank at runtime
 ---------------------------
@@ -129,7 +122,7 @@ with ``TRN``/``WRAP`` quantization, idle-time bank updates and one inference in
 flight at a time.
 
 Dense weights need a reuse factor above 1, and packed words wider than 4096 bits
-are outside the verified scope. Scalar bundles are loader-only. The bank count is
+are outside the verified scope. The bank count is
 fixed by ``package()``; changing it regenerates the wrapper, not the HLS. AXI
 integration, a Vivado project or block design, and board drivers are not provided.
 Unsupported layouts are rejected rather than inferred.
