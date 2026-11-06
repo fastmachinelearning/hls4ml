@@ -109,6 +109,11 @@ def test_invalid_selection_fails_at_conversion(tmp_path, cfg, error):
         _convert(_model((8,), 4), tmp_path, external=None, **cfg)
 
 
+def test_bram_factor_is_deprecated(tmp_path):
+    with pytest.warns(FutureWarning, match='BramFactor is deprecated'):
+        _convert(_model((8,), 4), tmp_path, external=None, model_config={'BramFactor': 0})
+
+
 def test_pack_banks(tmp_path):
     model = _model((8,), 4)
     hls_model = _convert(model, tmp_path, external=['weight'])

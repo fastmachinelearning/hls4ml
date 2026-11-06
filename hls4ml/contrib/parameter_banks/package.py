@@ -18,12 +18,10 @@ from hls4ml.contrib.parameter_banks.interface import BramInterface, ScalarBundle
 from hls4ml.contrib.parameter_banks.pack import pack_banks
 from hls4ml.model.external_parameters import ExternalParameterManifest
 
-# Only the Vitis flow has been verified end to end. This is about which hls4ml
-# backend produced the IP; Vivado is still used to implement the result.
+# the hls4ml backends whose IP has been verified end to end
 SUPPORTED_BACKENDS = frozenset({'Vitis'})
 
-# The ownership latch drives ap_start/ap_ready directly, so anything else
-# (ap_ctrl_chain, ap_ctrl_none) would be mis-driven rather than merely unsupported.
+# the latch drives ap_start/ap_ready as ap_ctrl_hs defines them
 REQUIRED_CONTROL_PROTOCOL = 'ap_ctrl_hs'
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
@@ -48,16 +46,12 @@ def fingerprint_ip(project_dir, project_name):
     verilog = interface.solution_verilog_dir(project_dir, project_name)
     entries = []
     for name in sorted(os.listdir(verilog)):
-        # A .dat is part of the compute artifact: $readmemh loads it into a
-        # generated ROM at elaboration, so it changes what the IP computes.
+        # the ROM data is part of what the IP computes
         if name.endswith(('.v', '.dat')):
             digest = hashlib.sha256(open(os.path.join(verilog, name), 'rb').read()).hexdigest()
             entries.append(f'{digest}  {name}')
     combined = hashlib.sha256('\n'.join(entries).encode()).hexdigest()
     return {'combined': combined, 'files': entries}
-
-
-# --- loader geometry -----------------------------------------------------------
 
 
 class LoaderSlot:
@@ -110,9 +104,6 @@ class LoaderGeometry:
         }
 
 
-# --- wrapper generation ----------------------------------------------------------
-
-
 class Wrapper:
     """The generated top: the unmodified IP, its banked memories, and one port list
     shared by the SystemVerilog module and its Verilog shim."""
@@ -153,8 +144,6 @@ class Wrapper:
         if self.memory != 'auto':
             return self.memory
         return 'distributed' if self.n_banks * bram.bank_stride_words <= AUTO_DISTRIBUTED_DEPTH else 'block'
-
-    # -- port list, shared by top and shim --
 
     def port_lines(self):
         """Declarations in order, with section comments and blank separators."""
@@ -211,8 +200,6 @@ class Wrapper:
                 f.write(ln + ('\n' if remaining == 0 else ',\n'))
         f.write(');\n\n')
 
-    # -- SystemVerilog top --
-
     def write_top(self, f):
         """Every port of the wrapped IP is declared and connected explicitly: control
         to the ownership latch, banked parameters to their memories, everything else
@@ -237,9 +224,7 @@ class Wrapper:
         f.write('  assign ap_done = hls_ap_done;\n')
         f.write('  assign ap_idle = hls_ap_idle;\n\n')
 
-        # Route each request to one parameter. The id and the full-width address
-        # are checked here, before the address is narrowed to the port's own width,
-        # so an out-of-range value is rejected rather than aliased onto a valid one.
+        # the full-width address is checked before it is narrowed, so it cannot alias a valid one
         g = self.loader
         f.write(f'  wire [{len(g) - 1}:0] ld_hit, ld_acc;\n')
         for s in g:
@@ -254,8 +239,6 @@ class Wrapper:
             s, sig = g.slot(b.name), b.signals
             f.write(f'  wire [{b.addr_width - 1}:0] {sig["addr_a"]}, {sig["addr_b"]};\n')
             f.write(f'  wire {sig["en_a"]}, {sig["en_b"]};\n')
-            # declared at the PHYSICAL width the IP drives; parameter_bank pads
-            # between logical and physical explicitly
             f.write(f'  wire [{b.port_width - 1}:0] {sig["dout_a"]}, {sig["dout_b"]};\n')
             f.write(f'  parameter_bank #(.DATA_WIDTH({b.data_width}), .PORT_WIDTH({b.port_width}),\n')
             f.write(f'      .HLS_ADDR_WIDTH({b.addr_width}),\n')
@@ -294,8 +277,6 @@ class Wrapper:
         conns += [f'.{p["name"]}({p["name"]})' for p in self.passthrough]
         for b in self.bram:
             sig = b.signals
-            # Both ports go to the IP as read ports; the bank lends port B to the
-            # loader while quiescent. A layer that ignores port B leaves EN_B low.
             for role in ('addr_a', 'en_a', 'dout_a', 'addr_b', 'en_b', 'dout_b'):
                 conns.append(f'.{sig[role]}({sig[role]})')
             # The IP never writes (proven in verify), the banks need no reset, both clocks are ap_clk.
@@ -309,8 +290,6 @@ class Wrapper:
         f.write(f'  // unmodified hls4ml IP\n  {self.project_name} u_{self.project_name} (\n')
         f.write(',\n'.join(f'      {c}' for c in conns))
         f.write('\n  );\n\nendmodule\n\n`default_nettype wire\n')
-
-    # -- Verilog shim --
 
     def write_bd_shim(self, f):
         """A Verilog-2001 module forwarding every port and parameter 1:1. Vivado IP
@@ -354,9 +333,6 @@ def _decl(port):
 
 def _is_port_decl(line):
     return bool(line.strip()) and not line.strip().startswith('//')
-
-
-# --- entry point -------------------------------------------------------------
 
 
 def package(project, n_banks=None, banks=None, memory='auto', output_dir=None):
@@ -424,9 +400,7 @@ def package(project, n_banks=None, banks=None, memory='auto', output_dir=None):
     for module in STATIC_MODULES:
         shutil.copyfile(os.path.join(TEMPLATE_DIR, module), os.path.join(rtl_dir, module))
 
-    # Vitis initializes generated ROMs with $readmemh("./<name>.dat"), resolved
-    # against the tool's working directory. The generated Tcl runs from output_dir,
-    # so the data has to be there too.
+    # the HLS ROMs read ./<name>.dat, so the data goes next to the Tcl that runs from here
     hls_rtl_dir = interface.solution_verilog_dir(project_dir, project_name)
     rom_data = [n for n in sorted(os.listdir(hls_rtl_dir)) if n.endswith('.dat')]
     for name in rom_data:

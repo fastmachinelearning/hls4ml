@@ -84,8 +84,6 @@ def pack_banks(model, banks):
     if foreign:
         raise PackingUnsupported(f'manifest parameters {foreign} are not parameters of this model; wrong ModelGraph?')
 
-    # Each bank has to be complete on its own: a union would let one bank omit a
-    # fixed parameter that another supplies, indistinguishable from agreement.
     for i, bank in enumerate(banks):
         missing = inventory - set(bank)
         if missing:

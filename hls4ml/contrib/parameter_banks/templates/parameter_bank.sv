@@ -1,26 +1,14 @@
 `timescale 1 ns / 1 ps
 
-// Depth-stacked replacement for the single-bank memory a stock hls4ml IP expects
-// on an external BRAM parameter port.
-//
-// Both ports are 1-cycle enable-gated reads for the IP, matching the memory model
-// Vitis generates; bank_addr_mapper is combinational, so the latency is that of the
-// unbanked memory. A Dense leaves port B idle, a pointwise convolution reads through
-// it, and the loader takes port B only while quiescent -- so nothing here depends on
-// how many ports the IP uses. It does depend on the IP never WRITING the memory,
-// which interface.bram_is_read_only() proves from the exported RTL.
-//
-// Banks are stacked in depth: phys_word = bank_id*BANK_STRIDE_WORDS + local_word.
-// N_BANKS, BANK_STRIDE_WORDS and the physical depth are build-time constants.
+// The banks of one external parameter, stacked in depth: bank_id * BANK_STRIDE_WORDS + word.
+// Both ports are 1-cycle reads for the IP, like the memories Vitis generates; the loader
+// takes port B while the IP is idle. The IP never writes it (checked by package()).
 
 `default_nettype none
 
 module parameter_bank #(
     parameter int DATA_WIDTH        = 256,
-    // Width of the RTL port the IP actually drives. Vitis rounds a parameter port
-    // up to a power-of-two byte count, so a 96-bit packed word arrives on a 128-bit
-    // port. The extra bits carry nothing; they are zero-filled on the read path
-    // explicitly rather than by implicit extension.
+    // Vitis rounds the port up to a power-of-two number of bytes; the extra bits read as zero
     parameter int PORT_WIDTH        = 256,
     parameter int HLS_ADDR_WIDTH    = 32,
     parameter int WORD_BYTES        = 32,
@@ -39,17 +27,17 @@ module parameter_bank #(
     input  wire [BANK_ID_WIDTH-1:0]    cur_bank_id,
     input  wire                        quiescent,
 
-    // facing the stock HLS IP (HLS is the master)
+    // HLS IP, port A
     input  wire [HLS_ADDR_WIDTH-1:0]   hls_Addr_A,
     input  wire                        hls_EN_A,
     output wire [PORT_WIDTH-1:0]       hls_Dout_A,
 
-    // facing the stock HLS IP, port B (read only; idle for layers that do not use it)
+    // HLS IP, port B (unused by Dense)
     input  wire [HLS_ADDR_WIDTH-1:0]   hls_Addr_B,
     input  wire                        hls_EN_B,
     output wire [PORT_WIDTH-1:0]       hls_Dout_B,
 
-    // native loader, granted port B while quiescent
+    // loader, granted port B while quiescent
     input  wire                        ld_req,
     input  wire [BANK_ID_WIDTH-1:0]    ld_bank,
     input  wire [$clog2(LOCAL_WORDS > 1 ? LOCAL_WORDS : 2)-1:0] ld_word,
@@ -90,9 +78,8 @@ module parameter_bank #(
       .addr_in_padding(pad_a)
   );
 
-  // port A: registered read with no reset, like the memories Vitis generates.
-  // Plain always blocks (not always_ff) because `mem` is shared with the loader
-  // port below; always_ff asserts exclusive ownership of the variables it assigns.
+  // Registered read without reset, like the memories Vitis generates. Plain always blocks:
+  // `mem` is also written by the loader below, which always_ff would not allow.
   localparam int PAD_BITS = PORT_WIDTH - DATA_WIDTH;
 
   reg [DATA_WIDTH-1:0] dout_q;
@@ -101,35 +88,24 @@ module parameter_bank #(
     if (hls_EN_A) dout_q <= mem[phys_a];
   end
 
-  // logical -> physical: the padding bits the IP does not use are driven to zero
   generate
     if (PAD_BITS > 0) assign hls_Dout_A = {{PAD_BITS{1'b0}}, dout_q};
     else              assign hls_Dout_A = dout_q;
   endgenerate
 
-  // There is no IP-side write path: interface.bram_is_read_only() proves both write
-  // enables are tied off before packaging, so the loader is the only writer.
-
   assign addr_padding_violation = hls_EN_A & pad_a;
 
   // ---------------- port B : loader ----------------
-  // Loader writes are accepted only while the wrapper is quiescent: nothing reads
-  // the memory then, so any bank may be written.
-  // ld_word is $clog2(LOCAL_WORDS) bits, so when LOCAL_WORDS is not a power of two
-  // it can encode words that lie in the inter-bank padding. Reject those rather
-  // than acknowledging a write that lands nowhere useful.
+  // ld_word can encode words in the padding between banks; those writes are rejected
   wire word_ok  = (32'(ld_word) < LOCAL_WORDS);
   wire safe     = quiescent & word_ok;
   assign ld_accept = ld_req &  safe;
   assign ld_reject = ld_req & ~safe;
 
-  // Widen before combining: ld_word is only $clog2(LOCAL_WORDS) bits, so a
-  // part-select of PHYS_ADDR_WIDTH bits from it can read past its width and
-  // yield x, silently sending every loader write to an undefined address.
+  // widened first: a part-select of the narrow ld_word could read past it and give x
   wire [31:0] phys_ld_full = (32'(ld_bank) * BANK_STRIDE_WORDS) + 32'(ld_word);
   wire [PHYS_ADDR_WIDTH-1:0] phys_ld = phys_ld_full[PHYS_ADDR_WIDTH-1:0];
 
-  // The IP's own port-B address, translated exactly like port A.
   wire [PHYS_ADDR_WIDTH-1:0] phys_hls_b;
   wire                       pad_b;
 
@@ -147,8 +123,6 @@ module parameter_bank #(
       .addr_in_padding(pad_b)
   );
 
-  // One physical port B, owned by the loader while quiescent and by the IP
-  // otherwise. ld_accept already requires quiescent, so the two never collide.
   wire [PHYS_ADDR_WIDTH-1:0] phys_b = (PORT_B_READ && !quiescent) ? phys_hls_b : phys_ld;
 
   reg [DATA_WIDTH-1:0] dout_b_q = '0;

@@ -1,16 +1,7 @@
 `timescale 1 ns / 1 ps
 
-// Address translation for one external hls4ml BRAM parameter port.
-//
-// Combinational: adds zero latency, so the HLS-facing read latency of the wrapped
-// memory is identical to the single-bank memory the stock IP expects.
-//
-//   physical_word = bank_id * BANK_STRIDE_WORDS + local_word
-//   local_word    = hls_byte_addr >> $clog2(WORD_BYTES)
-//
-// hls4ml BRAM ports carry a BYTE address (the generated RTL shifts the word index
-// left by log2(WORD_BYTES)). When BANK_STRIDE_WORDS is a power of two this reduces
-// to concatenating the bank bits above the local address bits.
+// The IP's BRAM address counts bytes, not words. Mapped combinationally, so the read latency is
+// that of the unbanked memory: bank_id * BANK_STRIDE_WORDS + (hls_byte_addr >> $clog2(WORD_BYTES))
 
 `default_nettype none
 

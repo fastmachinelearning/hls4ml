@@ -53,8 +53,9 @@ are LUTRAM when shallow and block RAM otherwise; ``memory='block'`` or
 ``'distributed'`` forces one.
 
 Only exposed parameters may differ between sets; the rest must be identical in
-every set, and incomplete or inconsistent sets are rejected. Tensor shapes are
-checked exactly. ``hls_model`` must be the model the IP was built from.
+every set, and incomplete or inconsistent sets are rejected. The tensors are the
+framework's own weights, and their shapes are checked. ``hls_model`` must be the
+model the IP was built from.
 
 Selecting a bank at runtime
 ---------------------------
@@ -92,8 +93,9 @@ if banks are never rewritten.
 Integrating the wrapper
 -----------------------
 
-Add ``parameter_banks/rtl/`` (the ``.sv`` sources and the ``.mem`` preload images)
-and the HLS RTL (``<project>_prj/solution1/syn/verilog/*.v``) to your sources and instantiate
+Add ``parameter_banks/rtl/`` (the ``.sv`` sources and the ``.mem`` preload images),
+the ``.dat`` ROM files in ``parameter_banks/`` and the HLS RTL
+(``<project>_prj/solution1/syn/verilog/*.v``) to your sources and instantiate
 ``<project>_parameter_banks`` as the single accelerator block in your design.
 It already contains the original HLS compute IP, parameter storage, bank-selection
 logic and loader, so the HLS IP should not be instantiated separately.
@@ -116,7 +118,7 @@ This version supports the Vitis backend, ``io_parallel``, ``Strategy: Resource``
 with ``TRN``/``WRAP`` quantization, and loader writes while the IP is idle.
 
 Dense weights need a reuse factor above 1, and packed words wider than 4096 bits
-are outside the verified scope. The bank count is
-fixed by ``package()``; changing it regenerates the wrapper, not the HLS. AXI
-integration, a Vivado project or block design, and board drivers are not provided.
-Unsupported layouts are rejected rather than inferred.
+are outside the verified scope, as are recurrent layers. A parameter that cannot
+be banked warns at conversion. The bank count is fixed by ``package()``; changing
+it regenerates the wrapper, not the HLS. AXI integration, a Vivado project or
+block design, and board drivers are not provided.

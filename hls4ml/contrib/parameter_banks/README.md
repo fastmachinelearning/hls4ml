@@ -1,258 +1,120 @@
-# Runtime parameter banks — advanced use and implementation notes
+# Runtime parameter banks: implementation notes
 
-User-facing guide: `docs/advanced/runtime_parameter_banks.rst`. This file is for
-integrators and contributors: the objects that cross module boundaries, the
-generated files, the loader contract, how the feature works and how to extend it.
+User guide: `docs/advanced/runtime_parameter_banks.rst`. This file is for integrators and contributors.
 
-Post-export packaging only: the generated project is read, never modified, and the
-summary records a SHA-256 fingerprint of the exported compute artifacts; comparing
-one taken before packaging with one taken after is what establishes it.
+`package()` only reads the synthesized project; the compute IP is never modified, and `parameter_banks.json`
+records a SHA-256 fingerprint of its RTL and ROM data to show it.
 
 ## Objects
 
-Semantic state that crosses a module boundary is object-backed; dictionaries stay
-at the JSON boundaries and in local plumbing such as the RTL port list.
+- `ExternalParameter` (`hls4ml/model/external_parameters.py`) describes one exposed parameter and turns its
+  tensor into interface words: `pack()` is `flat_order.flatten()` then `layout.pack()` of the quantized codes.
+  `ExternalParameterManifest` holds them with the project facts, and is saved as
+  `firmware/weights/external_parameters.json`.
+- `BramInterface` / `ScalarBundleInterface` (`interface.py`) exist only after a parameter has been checked
+  against the synthesis report and the RTL; `Wrapper` (`package.py`) generates the RTL from them.
+- `BankImage` (`pack.py`) is what `pack_banks()` returns.
 
-- `ExternalParameter` (`hls4ml/model/external_parameters.py`) is what the writer
-  claims about one exposed parameter and owns the rule that turns its tensor into
-  interface words: `pack()` = `flat_order.flatten()` then `layout.pack()` of the
-  quantized codes. It validates its own geometry on construction and on load.
-  `ExternalParameterManifest` is the list of them plus the project facts a
-  consumer needs; the written project carries its serialized form.
-- `BramInterface` / `ScalarBundleInterface` (`interface.py`) are produced by
-  `verify()` only after cross-checking a parameter against the synthesis report
-  and the RTL; `Wrapper` and `LoaderGeometry` (`package.py`) consume them.
-- `BankImage` (`pack.py`) is what `pack_banks()` hands the user.
-
-Every geometry an `ExternalParameter` carries is what hls4ml *asked* HLS for;
-only synthesis establishes what was built.
-
-## Selection
-
-`ExternalParameters: [roles]` on a layer (`LayerName` or `LayerType` config; no
-model-wide form, since roles belong to a layer) makes `register_bram_weights`
-convert the weight to a `BramWeightVariable`; the writer then emits an interface
-port for it and records it in the manifest. Selection is the only thing the new
-config changes: the lowering to a port is hls4ml's existing `storage == 'bram'`
-contract. The legacy `BramFactor` size threshold reaches the same pass and is
-kept for compatibility; the parameter-banks flow does not depend on it.
-
-`BramInterface` names the HLS `bram` port protocol the IP was synthesized with,
-not the storage behind it: `parameter_bank.sv` implements block RAM today, and a
-LUTRAM or register implementation would sit behind the same interface.
-
-## Manifest
-
-The written project carries `firmware/weights/external_parameters.json` (schema
-`hls4ml.external_parameter_manifest/v1`), the serialized manifest: one entry per
-exposed parameter. A 1-D Dense weight entry is:
+A manifest entry for a Dense weight:
 
 ```json
-{"name": "w2", "layer": "dense_1", "role": "weight",
- "kernel_variant": "dense_resource_rf_leq_nin",
- "precision": {"class_name": "hls4ml.model.types.FixedPrecisionType", "state": {"width": 16, "integer": 6, ...}},
+{"name": "w2", "layer": "dense_1", "role": "weight", "kernel_variant": "dense_resource_rf_leq_nin",
  "flat_order": {"tensor_axes": ["n_in","n_out"], "axes": ["n_out","n_in"], "shape": [8,4]},
  "layout": {"mode": "block", "block_size": 2, "lanes": 16},
- "expected_interface_kind": "bram", "expected_data_width": 256, "expected_depth": 2}
+ "expected_interface_kind": "bram", "expected_data_width": 256, "expected_depth": 2, ...}
 ```
 
-`flat_order` is a transpose then a ravel. `layout` maps that flat sequence into
-words: for `mode: "block"`, scalar `f` lands in word `f % block_size` at lane
-`f // block_size`. Both are structured, so no consumer parses an expression.
+`flat_order` is a transpose then a ravel; with a `block` layout, scalar `f` lands in word `f % block_size`
+at lane `f // block_size`.
 
-## Layouts — the extension point
+## Layouts: the extension point
 
-The Vitis pass `vitis:describe_external_parameters`
-(`hls4ml/backends/vitis/passes/external_parameters.py`) attaches an
-`ExternalParameter` to every external weight variable, from `_LAYOUTS` keyed
-`(io_type, strategy, layer_class, role)`. An unregistered combination gets no
-interface kind, geometry or ordering, only a note, and a parameter selected with
-`ExternalParameters` warns at conversion. Nothing is ever guessed.
-
-Two geometries are registered today, and they are genuinely different:
+The Vitis pass `vitis:describe_external_parameters` (`hls4ml/backends/vitis/passes/external_parameters.py`)
+attaches an `ExternalParameter` to every external weight from `_LAYOUTS`, keyed
+`(io_type, strategy, layer_class, role)`. Anything else gets only a note, and warns at conversion when it
+was selected with `ExternalParameters`. Two geometries are verified:
 
 | | Dense | PointwiseConv1D/2D |
 |---|---|---|
-| reshape reaches the port | yes, `ARRAY_RESHAPE block factor=N` | **no** |
-| word width | `block_factor × precision` | one scalar |
-| depth | `block_size` (= reuse factor) | `n_chan × n_filt` |
-| depends on reuse factor | yes | no |
-| IP reads port B | no | **yes** |
+| word | `ARRAY_RESHAPE block` lanes of one scalar each | one scalar |
+| depth | the reuse factor | `n_chan × n_filt` |
+| IP reads port B | no | yes |
 
-A `Dense` over a 2-D/3-D input and a native `Conv*D` with a 1-wide kernel produce
-the same layer with the same declared shape, so the pointwise layout keys on the
-class, not the origin. It still checks `filt_width`/`filt_height` and the
-`linebuffer` implementation rather than trusting the class name.
+A Dense over 2-D/3-D input is lowered to a pointwise convolution, and its Keras kernel is accepted as is.
 
-### Adding a layer
+To add a layer: synthesize a few configurations and read the real BRAM width, depth and address shift from
+the reports and RTL; write a function returning the `ExternalParameter` it can prove, raising `Unbankable`
+otherwise; register it in `_LAYOUTS`; extend `test_banks_match_predict` with a case for it.
 
-1. Characterize it: synthesize a few configurations and read the real BRAM width,
-   depth and address shift from the csynth report and generated RTL. Do not reason
-   by analogy with an existing layer — the pointwise geometry is nothing like Dense.
-2. Write a function returning the `ExternalParameter` it can prove
-   (`interface_kind`, `data_width`, `depth`, a `FlatOrder`, a layout), raising
-   `Unbankable` with the reason for anything it cannot.
-3. Register it in `_LAYOUTS`.
-4. Add a two-bank XSim test that shows switching banks changes the result.
+## What `package()` checks
 
-A layer that satisfies an existing verified memory contract should need only a
-layout and tests. A genuinely different interface needs a new contract rather than
-being forced into an existing one.
+`parse_vivado_report()` gives the RTL ports (`RtlPorts`, from `<top>_csynth.xml`) and the logical BRAM
+widths (`BramInterfaces`, from `csynth.rpt`; the XML only has the port width, which Vitis rounds up to a
+power-of-two number of bytes). `interface.py` then checks, against the generated Verilog, every BRAM signal
+and its direction, the address shift that sets the byte stride between words, that the IP never writes the
+memory and clocks both ports with `ap_clk`, and whether it reads port B. `interface.py` is the only place
+that knows how Vitis names these signals.
 
-## Widths: logical, physical, stride
+## Memories and control
 
-Three quantities, and only the first comes from the report:
-
-```
-logical width   the packed word this schema builds     e.g. 96
-physical width  the RTL port that carries it           e.g. 128
-byte stride     spacing between consecutive words      e.g. 16
-```
-
-Vitis rounds a parameter port up to a power-of-two byte count, so a 96-bit word
-travels on a 128-bit port and strides by 16 rather than 12. `verify()` computes
-`ceil(width/8)` — fixed-point words need not be byte-aligned — rounds up to the
-stride, and requires the RTL's address shift to match. `parameter_bank` pads
-logical→physical explicitly; nothing relies on implicit Verilog width extension.
-
-## Synthesis reports and RTL inspection
-
-`hls4ml.report.parse_vivado_report()` reads the HW interface with the rest of the
-C synthesis report: every RTL port with its protocol, direction and physical width
-comes from `<top>_csynth.xml` (`RtlPorts`); the logical BRAM data width, which the
-XML does not carry (its `Bits` is the rounded-up port), comes from the `* BRAM`
-table of `csynth.rpt` (`BramInterfaces`). That is the only textual parse.
-
-`interface.py` is the only module that knows how Vitis spells the BRAM signals.
-`verify()` resolves each parameter's signals against the real RTL port list and
-hands the names to the `BramInterface`; `Wrapper` connects them and never rebuilds
-a name. It also checks every signal's direction, the scalar-bundle members, and
-that the IP is **read-only** on each memory (`WEN_A` and `WEN_B` proved inactive
-in the Verilog) — which is what makes sharing a port with the loader sound.
-`Din`/`WEN` are then left dangling, so the read interface (`Addr`, `EN`, `Dout`)
-is what the width checks use. Whether the IP *reads* port B is deliberately not
-checked: Dense leaves it idle, pointwise uses it.
-
-`solution_verilog_dir()` is the single place the Vitis project layout appears.
-
-## Memories and the loader
-
-`parameter_bank.sv` is a depth-stacked memory, `bank_id * BANK_STRIDE_WORDS +
-local_word`, with `bank_addr_mapper` translating the IP's byte address on each port.
-Both ports are read ports for the IP; the loader takes **port B only while the IP
-is idle**, when it is not reading. That is why the wrapper is layer-agnostic.
-
-`scalar_bank_mux.sv` handles fully partitioned parameters — a Dense bias lowers to
-one `ap_none` port per element regardless of size. Its select is combinational, so
-the selected bank is present on the cycle the IP starts. Like `parameter_bank`, it
-is preloaded through `INIT_HEX`.
-
-`bank_select_latch.sv` owns the bank. Requests for the selected bank pass straight
-to the IP; a request for another bank is held until `hls_ap_idle`, so the bank
-never changes under a transaction in flight.
+- `parameter_bank.sv`: the banks of one parameter stacked in depth, `bank * BANK_STRIDE_WORDS + word`.
+  `memory='auto'` makes it LUTRAM when shallow and block RAM otherwise. When the IP never reads port B,
+  that port is the loader's write port only, so block RAM needs only simple dual port.
+- `scalar_bank_mux.sv`: a fully partitioned parameter (a Dense bias is one `ap_none` port per element),
+  selected combinationally so the bank is present on the cycle the IP starts.
+- `bank_select_latch.sv`: requests for the selected bank go straight to the IP; a request for another bank
+  waits until the IP is idle. The loader writes only while the IP is idle and no request is presented.
 
 ## Generated files
 
-`package()` writes `parameter_banks/` next to the HLS project:
-
 | file | purpose |
 |---|---|
-| `rtl/<project>_parameter_banks.sv` | the wrapper: compute IP + bank storage + control; this is the module to integrate |
+| `rtl/<project>_parameter_banks.sv` | the wrapper to integrate |
 | `rtl/*.sv` | the modules it instantiates |
-| `rtl/<project>_parameter_banks_bd.v` | optional Verilog shim for IP Integrator (below) |
-| `create_parameter_banks.tcl` | in-memory place-and-route check; writes `utilization.rpt`/`timing.rpt`/`drc.rpt`, creates no project |
-| `parameter_banks.json` | port summary: pass-through ports, each banked port's kind/width/depth, bank count |
+| `rtl/*.mem` | preload images, the wrapper's `<PORT>_INIT_HEX` defaults |
+| `rtl/<project>_parameter_banks_bd.v` | Verilog shim with the same ports, for IP Integrator, which refuses a SystemVerilog top as a Module Reference |
+| `*.dat` | ROM data of the HLS IP, read by `$readmemh` |
+| `create_parameter_banks.tcl` | stand-alone place-and-route check |
+| `parameter_banks.json` | bank count, memory styles, loader geometry and `param_id` of each parameter |
 
 ## Integrating from HDL
 
-The wrapper replaces the plain IP and keeps its ports, adding `bank_id` and the
-loader:
+Add `rtl/` (sources and `.mem` files), the `.dat` files and the HLS RTL to the project, then:
 
 ```verilog
 myproject_parameter_banks u_nn (
     .ap_clk(clk), .ap_rst(rst),
-    // the IP's own control, plus the bank this inference uses
     .ap_start(start), .ap_done(done), .ap_idle(idle), .ap_ready(ready), .bank_id(bank),
-    // network data ports and their ap_vld, exactly as with the plain hls4ml IP
-    ...
-    // loader, shared by every parameter; tie ld_req low if banks are never rewritten
+    ...  // data ports and their ap_vld, as with the plain IP
     .ld_req(ld_req), .ld_param_id(ld_id), .ld_bank(ld_bank), .ld_addr(ld_addr), .ld_data(ld_data),
-    .ld_accept(ld_ack), .ld_reject(ld_nak)
+    .ld_accept(ld_ack), .ld_reject(ld_nak)  // tie ld_req low if banks are never rewritten
 );
 ```
 
-The `<PORT>_INIT_HEX` parameters default to the `.mem` images `package()` wrote
-next to the RTL; add those files to the project with the sources. A VHDL top
-instantiates the wrapper as a component; Vivado resolves the mixed-language
-boundary.
+With one bank there are no `bank_id` and `ld_bank` ports. In IP Integrator, add the `_bd.v` shim with
+**Add Module** or `create_bd_cell -type module -reference <project>_parameter_banks_bd`; its `*_INIT_HEX`
+parameters appear in the customization dialog.
 
 ## Loader
 
-One interface serves every parameter; its widths are set by the widest one:
-
 | port | width | meaning |
 |---|---|---|
-| `ld_req` | 1 | request; sampled on the clock edge, answered the same cycle |
-| `ld_param_id` | `loader.param_id_width` | `banked_ports[i].param_id` |
+| `ld_req` | 1 | write request, answered in the same cycle |
+| `ld_param_id` | `loader.param_id_width` | `param_id` from `parameter_banks.json` |
 | `ld_bank` | `bank_id_width` | bank to write |
-| `ld_addr` | `loader.addr_width` | word (BRAM) or element (scalar bundle), `0 .. ld_depth-1` |
-| `ld_data` | `loader.data_width` | value in the low `banked_ports[i].ld_data_width` bits; upper bits ignored |
+| `ld_addr` | `loader.addr_width` | word (memory) or element (scalars), below `ld_depth` |
+| `ld_data` | `loader.data_width` | value in the low `ld_data_width` bits |
 | `ld_accept` / `ld_reject` | 1 | exactly one is high while `ld_req` is |
 
-All of these numbers are in `parameter_banks.json`, which is authoritative for
-the wrapper it was generated with: `param_id` is assigned by `package()` and must
-be read from there, not assumed stable across regenerated designs. `ld_data` is as
-wide as the widest packed word (up to 4096 bits in the verified scope); assembling
-such words on the host side is the surrounding framework's concern. The wrapper compares
-`ld_param_id` and the full-width `ld_addr` against the selected parameter *before*
-narrowing the address to the port's own width, so an out-of-range value is
-rejected rather than aliased onto a valid location. Every `ld_bank` value is a
-bank, as the bank count is a power of two. A request while the IP is busy is
-rejected too. Rejected requests write nothing.
-
-From `pack_banks()` output, the write for `(param_id, bank, addr)` is
-`img.per_bank[bank][addr]` for every kind of parameter.
-
-### Runtime replacement of BRAM contents
-
-`INIT_HEX` is the default because the sets are normally known
-at build time. The loader can do the same job, or replace a bank later, without
-touching the HLS IP or the bitstream:
+An unknown id, an out-of-range address or a request while the IP is busy is rejected and writes nothing.
+Read `param_id` from `parameter_banks.json`: it can change when the wrapper is regenerated. `ld_data` is as
+wide as the widest packed word (up to 4096 bits); assembling it on the host side is up to the surrounding
+framework.
+New parameter sets are packed by `pack_banks()` as for preloading:
 
 ```python
-images = pack_banks(hls_model, new_sets)  # same model, new parameter values
-for name, img in images.items():
-    pid = param_id[name]  # parameter_banks.json
-    for bank, words in enumerate(img.per_bank):
-        for addr, data in enumerate(words):
-            write(pid, bank, addr, data)  # one ld_req, while the IP is idle
+images = pack_banks(hls_model, [new_set])
+for name, image in images.items():
+    for addr, word in enumerate(image.per_bank[0]):
+        write(param_id[name], bank, addr, word)  # one ld_req while the IP is idle
 ```
-
-Only the contents change: `pack_banks()` still checks the new sets against the
-built model, so geometry, precision and layout stay what the IP was synthesized
-for. Moving the words from a host to `ld_*` (AXI, PCIe, registers) belongs to the
-surrounding framework and is out of scope here.
-
-## IP Integrator shim (optional)
-
-Vivado 2025.2 synthesizes the SystemVerilog top without complaint but refuses it
-as the top of a Module Reference in IP Integrator (`filemgmt 56-195`); that
-behaviour was verified manually on 2025.2 only. `package.py` therefore also emits
-`<top>_bd.v`, a plain Verilog-2001 module forwarding every port and `*_INIT_HEX`
-parameter 1:1 with no logic of its own. It is generated unconditionally: it has no
-functional content and a flag would cost more than the file. Use it with
-**Add Module** or `create_bd_cell -type module -reference <top>_bd`; the
-`*_INIT_HEX` parameters appear in the customization dialog. Both files are printed
-from the same `Wrapper.port_lines()` so they cannot drift; the generated Tcl
-synthesizes through the shim, the XSim testbench instantiates it, and
-`test_vivado_ip_integrator_accepts_the_shim` adds it to a block design with
-whatever Vivado the test environment provides.
-
-## Synthesis artifacts
-
-Vitis initializes generated ROMs with `$readmemh("./<name>.dat")`, resolved against
-the working directory. `dense_resource_rf_gt_nin_rem0` emits one. The packager
-copies these next to the generated Tcl, the Tcl `cd`s there, and they are included
-in the fingerprint — their contents change what the IP computes exactly as the
-Verilog does. They are deliberately **not** `add_files`'d: Vivado deletes a data
-file added as a source.

@@ -1,3 +1,5 @@
+from warnings import warn
+
 import numpy as np
 
 from hls4ml.backends.fpga.fpga_types import BramWeightVariableConverter
@@ -22,6 +24,7 @@ class RegisterBramWeights(OptimizerPass):
                     raise ValueError(f'{node.name}: parameter {w_name!r} cannot be made external in this backend')
                 node.set_attr(w_name, BramWeightVariableConverter.convert(w_var))
             elif has_storage and np.prod(w_var.shape) > bramport_size:
+                warn(f'{node.name}: BramFactor is deprecated, select the parameters with ExternalParameters', FutureWarning)
                 node.set_attr(w_name, BramWeightVariableConverter.convert(w_var))
 
     @staticmethod

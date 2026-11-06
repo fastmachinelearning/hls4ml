@@ -16,10 +16,7 @@ from hls4ml.report import parse_vivado_report
 # A fully partitioned parameter lowers to plain input ports with no handshake.
 EXPECTED_SCALAR_MODE = 'ap_none'
 
-# How Vitis spells the signals of one external BRAM parameter port, and their
-# direction from the IP's point of view. This is the only place that spelling
-# appears: verify() resolves it against the real RTL and the wrapper generator
-# takes the resulting names, never rebuilding one.
+# How Vitis names the signals of an external BRAM port, with their direction from the IP
 BRAM_SIGNALS = {
     'addr_a': ('Addr_A', 'output'),
     'en_a': ('EN_A', 'output'),
@@ -42,8 +39,6 @@ class InterfaceMismatch(Exception):
     """The synthesized interface disagrees with the manifest."""
 
 
-# The one HLS solution everything is read from: the report, the exported RTL and
-# the ROM data files must all describe the same synthesis run.
 SOLUTION = 'solution1'
 
 
@@ -54,9 +49,6 @@ def _solution_dir(project_dir, project_name):
 def solution_verilog_dir(project_dir, project_name):
     """Where Vitis writes the exported RTL. Callers should not spell this out."""
     return os.path.join(_solution_dir(project_dir, project_name), 'syn', 'verilog')
-
-
-# --- verified interfaces -------------------------------------------------------
 
 
 class ParameterInterface:
@@ -73,7 +65,6 @@ class ParameterInterface:
     def kind(self):
         return self.parameter.interface_kind
 
-    # the loader addresses every parameter the same way: one word per request
     loader_depth = None  # valid ld_addr values are 0 .. loader_depth-1
     loader_data_width = None  # the low bits of ld_data this parameter uses
 
@@ -158,9 +149,6 @@ class ScalarBundleInterface(ParameterInterface):
         return d
 
 
-# --- cross-check ---------------------------------------------------------------
-
-
 def _csynth_report(project_dir):
     with contextlib.redirect_stdout(io.StringIO()):  # it prints every report it does not find
         report = parse_vivado_report(project_dir) or {}
@@ -213,7 +201,6 @@ def _verify_bram(parameter, bram, report_ports, rtl_by_name, project_dir, projec
     if data_width != parameter.data_width:
         raise InterfaceMismatch(f'{name}: data width {data_width} but manifest expected {parameter.data_width}')
 
-    # every signal must exist in the RTL with the expected direction
     signals, missing, wrong_dir = {}, [], []
     for role, (suffix, want_dir) in BRAM_SIGNALS.items():
         port = rtl_by_name.get(f'{name}_{suffix}')
@@ -245,8 +232,6 @@ def _verify_bram(parameter, bram, report_ports, rtl_by_name, project_dir, projec
             f'({data_width} bits) strides by {interface.addr_stride} -- {evidence}'
         )
 
-    # The wrapper drives Addr/EN and reads Dout on both ports; Din/WEN are left
-    # dangling once proven inactive, so the read interface is what must agree.
     bad = [
         f'{signals[b]["name"]} is {signals[b]["width"]} bits, {signals[a]["name"]} is {signals[a]["width"]}'
         for a, b in (('addr_a', 'addr_b'), ('dout_a', 'dout_b'), ('din_a', 'din_b'), ('wen_a', 'wen_b'))
@@ -266,8 +251,7 @@ def _verify_bram(parameter, bram, report_ports, rtl_by_name, project_dir, projec
     if bad:
         raise InterfaceMismatch(f'{name}: BRAM interface disagrees ({"; ".join(bad)})')
 
-    # The loader shares port B with the IP, which is sound only if the IP never
-    # writes the memory and both ports run on ap_clk; prove both from the RTL.
+    # the loader shares port B, which is sound only if the IP never writes and both ports run on ap_clk
     read_only, evidence = bram_is_read_only(project_dir, project_name, interface.signals)
     if not read_only:
         raise InterfaceMismatch(f'{name}: the IP is not provably read-only on this memory ({evidence})')
@@ -280,8 +264,6 @@ def _verify_bram(parameter, bram, report_ports, rtl_by_name, project_dir, projec
 
 def _verify_scalar_bundle(parameter, report_ports, rtl_by_name):
     name = parameter.name
-    # Require exactly <name>_0 .. <name>_N-1: a matching count is not enough,
-    # since a gap plus an extra index would also count correctly.
     expected = [f'{name}_{i}' for i in range(parameter.n_scalars)]
     members = sorted(
         (p for p in report_ports if re.fullmatch(rf'{re.escape(name)}_\d+', p)),
@@ -313,10 +295,7 @@ def _verify_scalar_bundle(parameter, report_ports, rtl_by_name):
     return ScalarBundleInterface(parameter, members, bits)
 
 
-# --- generated Verilog ---------------------------------------------------------
-
-# Ways HLS spells a constant left shift of an address. The scale of the shift is
-# the fact; the spelling is not, so all of them are read the same way.
+# the forms in which HLS writes a constant left shift of an address
 _ADDR_SHIFT_FORMS = (
     re.compile(r"<<\s*(?:\d+'[dh])?(\d+)$"),  # x << 32'd4, x << 4
     re.compile(r",\s*(\d+)'[bdh]0+\s*\}$"),  # {x, 4'd0}
@@ -333,8 +312,7 @@ def parse_addr_shift(project_dir, project_name, port):
     if not os.path.isdir(verilog_dir):
         return None, f'no synthesized RTL at {verilog_dir}'
 
-    # What sits between _Addr_A and the shift varies with pipeline style --
-    # _local, _orig, a gep temporary, or nothing -- so match any driver.
+    # the driver's name after _Addr_A depends on the pipeline style
     driver = re.compile(rf'assign\s+{re.escape(port)}_Addr_A(?:_\w+)?\s*=\s*([^;]+);')
 
     assigns, shifts = [], {}  # shift -> evidence
@@ -418,8 +396,6 @@ def bram_is_read_only(project_dir, project_name, signals):
     if not os.path.exists(path):
         return False, 'exported RTL not found'
     text = open(path).read()
-    # A zero write enable is what makes it read-only; Din may be driven without
-    # meaning anything, so it is not required to be tied off.
     evidence = {}
     for role in ('wen_a', 'wen_b'):
         name = signals[role]
