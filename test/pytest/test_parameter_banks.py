@@ -872,16 +872,15 @@ def test_manifest_rejects_duplicate_parameters(tmp_path):
 def test_bram_signal_names_come_from_the_rtl(tmp_path):
     """The wrapper connects these names, so a renamed RTL port must fail here."""
     from hls4ml.contrib.parameter_banks import interface
-    from hls4ml.report.vivado_report import BramGeometry, InterfaceSummary
 
     port = _port(_manifest(tmp_path), 'trunk', 'weight')
-    summary = InterfaceSummary([], 'ap_ctrl_hs', {'w2_PORTA': BramGeometry(port.data_width, 8)})
+    bram = {'w2_PORTA': {'DataWidth': port.data_width, 'AddressWidth': 8}}
     rtl = {f'w2_{s}': {'name': f'w2_{s}', 'width': 8, 'dir': d} for s, d in interface.BRAM_SIGNALS.values()}
     del rtl['w2_Addr_A']
     rtl['w2_address0'] = {'name': 'w2_address0', 'width': 8, 'dir': 'output'}
 
     with pytest.raises(interface.InterfaceMismatch, match='naming has changed'):
-        interface._verify_bram(port, summary, rtl, str(tmp_path), PROJECT)
+        interface._verify_bram(port, bram, {}, rtl, str(tmp_path), PROJECT)
 
 
 def test_read_only_proof_rejects_a_live_write_enable(tmp_path):

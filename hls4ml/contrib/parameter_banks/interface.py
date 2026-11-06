@@ -6,10 +6,12 @@ The manifest records the request. The C synthesis report (read through
 inferred from pragmas: a fact that is not in the generated output is not claimed.
 """
 
+import contextlib
+import io
 import os
 import re
 
-from hls4ml.report import parse_interface_summary
+from hls4ml.report import parse_vivado_report
 
 # A fully partitioned parameter lowers to plain input ports with no handshake.
 EXPECTED_SCALAR_MODE = 'ap_none'
@@ -159,16 +161,29 @@ class ScalarBundleInterface(ParameterInterface):
 # --- cross-check ---------------------------------------------------------------
 
 
+def _csynth_report(project_dir):
+    with contextlib.redirect_stdout(io.StringIO()):  # it prints every report it does not find
+        report = parse_vivado_report(project_dir) or {}
+    if 'CSynthesisReport' not in report:
+        raise FileNotFoundError(f'no C synthesis report in {project_dir}; run build(synth=True) first')
+    return report['CSynthesisReport']
+
+
 def verify(manifest, project_dir):
     """Cross-check every described parameter against synthesis.
 
-    Returns ``(interfaces, summary)``: one ``BramInterface``/``ScalarBundleInterface``
-    per described parameter, and the report's ``InterfaceSummary``. Raises
+    Returns ``(interfaces, control)``: one ``BramInterface``/``ScalarBundleInterface``
+    per described parameter, and the block-level control protocol. Raises
     ``InterfaceMismatch`` on any disagreement. Undescribed parameters are skipped,
     not guessed at.
     """
     project_name = manifest.project_name
-    summary = parse_interface_summary(project_dir, solution=SOLUTION)
+    csynth = _csynth_report(project_dir)
+    report_ports = {p['name']: p for p in csynth['RtlPorts']}
+    controls = {p['IOProtocol'] for p in csynth['RtlPorts'] if p.get('Type') == 'return value'}
+    if len(controls) > 1:
+        raise InterfaceMismatch(f'block-level control ports disagree on the protocol: {sorted(controls)}')
+    bram = csynth.get('BramInterfaces', {})
     rtl_ports = parse_rtl_ports(project_dir, project_name)
     by_name = {p['name']: p for p in rtl_ports}
     interfaces, problems = [], []
@@ -176,9 +191,9 @@ def verify(manifest, project_dir):
     for parameter in manifest.described:
         try:
             if parameter.interface_kind == 'bram':
-                interfaces.append(_verify_bram(parameter, summary, by_name, project_dir, project_name))
+                interfaces.append(_verify_bram(parameter, bram, report_ports, by_name, project_dir, project_name))
             elif parameter.interface_kind == 'scalar_bundle':
-                interfaces.append(_verify_scalar_bundle(parameter, summary, by_name))
+                interfaces.append(_verify_scalar_bundle(parameter, report_ports, by_name))
             else:
                 raise InterfaceMismatch(f'{parameter.name}: unknown interface kind {parameter.interface_kind!r}')
         except InterfaceMismatch as exc:
@@ -186,16 +201,15 @@ def verify(manifest, project_dir):
 
     if problems:
         raise InterfaceMismatch('; '.join(problems))
-    return interfaces, summary
+    return interfaces, controls.pop() if controls else None
 
 
-def _verify_bram(parameter, summary, rtl_by_name, project_dir, project_name):
+def _verify_bram(parameter, bram, report_ports, rtl_by_name, project_dir, project_name):
     name = parameter.name
     key = f'{name}_PORTA'
-    if key not in summary.bram:
+    if key not in bram:
         raise InterfaceMismatch(f'{name}: expected a BRAM interface {key}, not present in the synthesis report')
-    geometry = summary.bram[key]
-    data_width = geometry.data_width
+    data_width, report_addr_width = bram[key]['DataWidth'], bram[key]['AddressWidth']
     if data_width != parameter.data_width:
         raise InterfaceMismatch(f'{name}: data width {data_width} but manifest expected {parameter.data_width}')
 
@@ -215,8 +229,8 @@ def _verify_bram(parameter, summary, rtl_by_name, project_dir, project_name):
         raise InterfaceMismatch(f'{name}: {"; ".join(wrong_dir)}')
 
     addr_width = signals['addr_a']['width']
-    if addr_width != geometry.addr_width:
-        raise InterfaceMismatch(f'{name}: address is {addr_width} bits in RTL, {geometry.addr_width} in the report')
+    if addr_width != report_addr_width:
+        raise InterfaceMismatch(f'{name}: address is {addr_width} bits in RTL, {report_addr_width} in the report')
     interface = BramInterface(parameter, {r: s['name'] for r, s in signals.items()}, data_width, addr_width)
     if interface.depth != parameter.depth:
         raise InterfaceMismatch(f'{name}: implied depth {interface.depth} but manifest expected {parameter.depth}')
@@ -244,9 +258,9 @@ def _verify_bram(parameter, summary, rtl_by_name, project_dir, project_name):
         if signals[role]['width'] != 1
     ]
     dout_name, dout_width = signals['dout_a']['name'], signals['dout_a']['width']
-    report_port = summary.port(dout_name)
-    if report_port is not None and report_port.bits != dout_width:
-        bad.append(f'{dout_name} is {dout_width} bits in RTL, {report_port.bits} in the report')
+    report_port = report_ports.get(dout_name)
+    if report_port is not None and int(report_port['Bits']) != dout_width:
+        bad.append(f'{dout_name} is {dout_width} bits in RTL, {report_port["Bits"]} in the report')
     if dout_width != interface.port_width:
         bad.append(f'read port is {dout_width} bits; expected {interface.port_width} (rounded from {data_width})')
     if bad:
@@ -264,19 +278,19 @@ def _verify_bram(parameter, summary, rtl_by_name, project_dir, project_name):
     return interface
 
 
-def _verify_scalar_bundle(parameter, summary, rtl_by_name):
+def _verify_scalar_bundle(parameter, report_ports, rtl_by_name):
     name = parameter.name
     # Require exactly <name>_0 .. <name>_N-1: a matching count is not enough,
     # since a gap plus an extra index would also count correctly.
     expected = [f'{name}_{i}' for i in range(parameter.n_scalars)]
     members = sorted(
-        (p.name for p in summary.ports if re.fullmatch(rf'{re.escape(name)}_\d+', p.name)),
+        (p for p in report_ports if re.fullmatch(rf'{re.escape(name)}_\d+', p)),
         key=lambda p: int(p.rsplit('_', 1)[1]),
     )
     if members != expected:
         raise InterfaceMismatch(f'{name}: scalar ports are {members}, expected {expected}')
-    modes = {summary.port(m).protocol for m in members}
-    widths = {summary.port(m).bits for m in members}
+    modes = {report_ports[m]['IOProtocol'] for m in members}
+    widths = {int(report_ports[m]['Bits']) for m in members}
     if len(modes) != 1 or len(widths) != 1:
         raise InterfaceMismatch(f'{name}: scalar ports disagree (modes={sorted(modes)}, widths={sorted(widths)})')
     mode, bits = modes.pop(), widths.pop()

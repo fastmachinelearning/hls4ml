@@ -403,10 +403,10 @@ def package(project, n_banks=None, banks=None, memory='auto', output_dir=None):
     if banks is not None and len(banks) > n_banks:
         raise ValueError(f'{len(banks)} parameter sets do not fit in {n_banks} banks')
 
-    interfaces, summary = interface.verify(manifest, project_dir)
-    if summary.control != REQUIRED_CONTROL_PROTOCOL:
+    interfaces, control = interface.verify(manifest, project_dir)
+    if control != REQUIRED_CONTROL_PROTOCOL:
         raise interface.InterfaceMismatch(
-            f'control protocol is {summary.control!r}; the wrapper requires {REQUIRED_CONTROL_PROTOCOL!r}'
+            f'control protocol is {control!r}; the wrapper requires {REQUIRED_CONTROL_PROTOCOL!r}'
         )
     rtl_ports = interface.parse_rtl_ports(project_dir, project_name)
 
@@ -420,7 +420,7 @@ def package(project, n_banks=None, banks=None, memory='auto', output_dir=None):
         for name, image in pack_banks(project, banks).items():
             images[name] = f'{name}.mem'
             image.write_mem(os.path.join(rtl_dir, images[name]))
-    wrapper = Wrapper(project_name, interfaces, rtl_ports, n_banks, summary.control, images, memory)
+    wrapper = Wrapper(project_name, interfaces, rtl_ports, n_banks, control, images, memory)
     for module in STATIC_MODULES:
         shutil.copyfile(os.path.join(TEMPLATE_DIR, module), os.path.join(rtl_dir, module))
 

@@ -117,11 +117,11 @@ logical→physical explicitly; nothing relies on implicit Verilog width extensio
 
 ## Synthesis reports and RTL inspection
 
-`hls4ml.report.parse_interface_summary()` reads the HW interface from the C
-synthesis reports: every RTL port with its protocol, direction and physical width
-and the block-level control protocol come from `<top>_csynth.xml`; the logical
-BRAM data width, which the XML does not carry (its `Bits` is the rounded-up port),
-comes from the `* BRAM` table of `csynth.rpt`. That is the only textual parse.
+`hls4ml.report.parse_vivado_report()` reads the HW interface with the rest of the
+C synthesis report: every RTL port with its protocol, direction and physical width
+comes from `<top>_csynth.xml` (`RtlPorts`); the logical BRAM data width, which the
+XML does not carry (its `Bits` is the rounded-up port), comes from the `* BRAM`
+table of `csynth.rpt` (`BramInterfaces`). That is the only textual parse.
 
 `interface.py` is the only module that knows how Vitis spells the BRAM signals.
 `verify()` resolves each parameter's signals against the real RTL port list and

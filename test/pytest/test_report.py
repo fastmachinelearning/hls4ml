@@ -314,70 +314,16 @@ def test_build_options_have_defaults(backend):
     assert set(options) - {'model', 'log_to_stdout'} <= set(defaults)
 
 
-# --- HW interface summary ----------------------------------------------------
+def test_csynth_interface(tmp_path):
+    """The RTL ports come from the C synthesis XML, the BRAM widths from the solution report next to it."""
+    report = _parse_csynth_xml(vivado_report_dir / 'myproject_csynth.xml')
+    tdata = next(p for p in report['RtlPorts'] if p['name'] == 'fc1_input_V_data_0_V_TDATA')
+    assert (tdata['IOProtocol'], tdata['Dir'], tdata['Bits']) == ('axis', 'in', '16')
+    assert 'BramInterfaces' not in report
 
-
-def test_interface_summary_from_pregenerated_report(tmp_path):
-    """The pre-generated Vivado HLS 2020.1 reports above also carry the HW
-    interface; the Vitis flow is covered by the synthesis-backed tests."""
-    from hls4ml.report import parse_interface_summary
-
-    (tmp_path / 'project.tcl').write_text('set project_name "myproject"\nset backend "vivado"\n')
-    copy_vivado_report(str(tmp_path), test_root_path / 'test_report' / 'Vivado')
-
-    summary = parse_interface_summary(str(tmp_path))
-    assert summary.control == 'ap_ctrl_hs' and summary.solution == 'solution1'
-    tdata = summary.port('fc1_input_V_data_0_V_TDATA')
-    assert (tdata.protocol, tdata.dir, tdata.bits) == ('axis', 'in', 16)
-    assert summary.bram == {}  # this model exposes no parameter memory
-
-
-def test_interface_summary_bram_table_and_solution(tmp_path):
-    """What the pre-generated report lacks: BRAM geometry, explicit solution
-    selection, disagreeing control protocols, and the unsynthesized case."""
-    from hls4ml.report import parse_interface_summary
-    from hls4ml.report.vivado_report import BramGeometry
-
-    def rtl_port(name, obj, typ, protocol, direction, bits):
-        return (
-            f'<RtlPorts><name>{name}</name><Object>{obj}</Object><Type>{typ}</Type><IOProtocol>{protocol}</IOProtocol>'
-            f'<Dir>{direction}</Dir><Bits>{bits}</Bits></RtlPorts>'
-        )
-
-    (tmp_path / 'project.tcl').write_text('set project_name "p"\nset backend "vitis"\n')
-    (tmp_path / 'p_prj').mkdir()
-    (tmp_path / 'p_prj' / 'hls.app').write_text(
-        '<AutoPilot:project xmlns:AutoPilot="x"><solutions><solution name="solution1"/></solutions></AutoPilot:project>'
+    shutil.copy(vivado_report_dir / 'myproject_csynth.xml', tmp_path)
+    (tmp_path / 'csynth.rpt').write_text(
+        '* BRAM\n+---+\n| Interface | Data Width | Address Width |\n+---+\n| w2_PORTA | 96 | 32 |\n+---+\n\n'
     )
-    report = tmp_path / 'p_prj' / 'solution1' / 'syn' / 'report'
-    report.mkdir(parents=True)
-    (report / 'p_csynth.xml').write_text(
-        '<profile><InterfaceSummary>'
-        + rtl_port('ap_start', 'p', 'return value', 'ap_ctrl_hs', 'in', 1)
-        + rtl_port('w2_Dout_A', 'w2', 'array', 'bram', 'in', 128)  # physical: 96 rounded up
-        + '</InterfaceSummary></profile>'
-    )
-    (report / 'csynth.rpt').write_text(
-        '* BRAM\n+---+---+---+\n| Interface | Data Width | Address Width |\n+---+---+---+\n'
-        '| w2_PORTA  | 96         | 32            |\n| w2_PORTB  | 96         | 32            |\n+---+---+---+\n\n'
-    )
-
-    summary = parse_interface_summary(str(tmp_path), solution='solution1')
-    assert summary.port('w2_Dout_A').bits == 128
-    assert summary.bram == {'w2_PORTA': BramGeometry(96, 32), 'w2_PORTB': BramGeometry(96, 32)}
-
-    with pytest.raises(FileNotFoundError, match="'solution2'"):
-        parse_interface_summary(str(tmp_path), solution='solution2')
-
-    (report / 'p_csynth.xml').write_text(
-        '<profile><InterfaceSummary>'
-        + rtl_port('ap_start', 'p', 'return value', 'ap_ctrl_hs', 'in', 1)
-        + rtl_port('ap_continue', 'p', 'return value', 'ap_ctrl_chain', 'in', 1)
-        + '</InterfaceSummary></profile>'
-    )
-    with pytest.raises(ValueError, match='control'):
-        parse_interface_summary(str(tmp_path))
-
-    (report / 'p_csynth.xml').unlink()
-    with pytest.raises(FileNotFoundError, match='synth=True'):
-        parse_interface_summary(str(tmp_path))
+    report = _parse_csynth_xml(tmp_path / 'myproject_csynth.xml')
+    assert report['BramInterfaces'] == {'w2_PORTA': {'DataWidth': 96, 'AddressWidth': 32}}
