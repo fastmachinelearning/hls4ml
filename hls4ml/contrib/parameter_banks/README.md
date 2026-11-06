@@ -60,12 +60,14 @@ exposed parameter. A 1-D Dense weight entry is:
 words: for `mode: "block"`, scalar `f` lands in word `f % block_size` at lane
 `f // block_size`. Both are structured, so no consumer parses an expression.
 
-## Adapters — the extension point
+## Layouts — the extension point
 
-Descriptions come from `_ADAPTERS` in `hls4ml/writer/external_parameters.py`, keyed
-`(backend, io_type, strategy, layer_class, role)`. The writer sees *every* external
-parameter, so an unregistered combination gets no interface kind, geometry or
-ordering — only a note. Nothing is ever guessed.
+The Vitis pass `vitis:describe_external_parameters`
+(`hls4ml/backends/vitis/passes/external_parameters.py`) attaches an
+`ExternalParameter` to every external weight variable, from `_LAYOUTS` keyed
+`(io_type, strategy, layer_class, role)`. An unregistered combination gets no
+interface kind, geometry or ordering, only a note, and a parameter selected with
+`ExternalParameters` warns at conversion. Nothing is ever guessed.
 
 Two geometries are registered today, and they are genuinely different:
 
@@ -78,7 +80,7 @@ Two geometries are registered today, and they are genuinely different:
 | IP reads port B | no | **yes** |
 
 A `Dense` over a 2-D/3-D input and a native `Conv*D` with a 1-wide kernel produce
-the same layer with the same declared shape, so the pointwise adapter keys on the
+the same layer with the same declared shape, so the pointwise layout keys on the
 class, not the origin. It still checks `filt_width`/`filt_height` and the
 `linebuffer` implementation rather than trusting the class name.
 
@@ -87,14 +89,14 @@ class, not the origin. It still checks `filt_width`/`filt_height` and the
 1. Characterize it: synthesize a few configurations and read the real BRAM width,
    depth and address shift from the csynth report and generated RTL. Do not reason
    by analogy with an existing layer — the pointwise geometry is nothing like Dense.
-2. Write a `_describe_*` function returning the `ExternalParameter` fields it can
-   prove (`interface_kind`, `data_width`, `depth`, a `FlatOrder`, a layout), or a
-   `note` for anything it cannot.
-3. Register it in `_ADAPTERS`.
+2. Write a function returning the `ExternalParameter` it can prove
+   (`interface_kind`, `data_width`, `depth`, a `FlatOrder`, a layout), raising
+   `Unbankable` with the reason for anything it cannot.
+3. Register it in `_LAYOUTS`.
 4. Add a two-bank XSim test that shows switching banks changes the result.
 
-A layer that satisfies an existing verified memory contract should need only an
-adapter and tests. A genuinely different interface needs a new contract rather than
+A layer that satisfies an existing verified memory contract should need only a
+layout and tests. A genuinely different interface needs a new contract rather than
 being forced into an existing one.
 
 ## Widths: logical, physical, stride

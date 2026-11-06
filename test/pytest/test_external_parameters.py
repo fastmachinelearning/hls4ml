@@ -8,12 +8,11 @@ from tensorflow.keras.models import Model
 import hls4ml
 from hls4ml.model.external_parameters import MANIFEST_FILENAME, SCHEMA, SCHEMA_VERSION, ExternalParameterManifest
 from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType
-from hls4ml.writer.external_parameters import build_manifest
 
 
 def _ports(hls_model):
     """The manifest's port entries as written to JSON: these tests check the format."""
-    return build_manifest(hls_model).serialize_state()['ports']
+    return ExternalParameterManifest.from_model(hls_model).serialize_state()['ports']
 
 
 def _dense_model(n_in=8, n_out=4):
@@ -52,7 +51,7 @@ def test_no_manifest_without_external_parameters(tmp_path):
     hls_model = _convert(_dense_model(), tmp_path / 'nobram', external=False)
     hls_model.write()
 
-    assert build_manifest(hls_model).parameters == []
+    assert ExternalParameterManifest.from_model(hls_model).parameters == []
     assert not (tmp_path / 'nobram' / 'firmware' / 'weights' / MANIFEST_FILENAME).exists()
 
 
@@ -71,7 +70,7 @@ def _convert_with(model, out_dir, layer_config=None, model_config=None, type_con
 
 def test_external_parameters_selects_roles_explicitly(tmp_path):
     hls_model = _convert_with(_dense_model(), tmp_path / 'weight_only', {'dense_1': {'ExternalParameters': ['weight']}})
-    assert [p.role for p in build_manifest(hls_model)] == ['weight']
+    assert [p.role for p in ExternalParameterManifest.from_model(hls_model)] == ['weight']
 
     # without STABLE the dataflow region synchronizes on the parameter and inferences cannot overlap
     hls_model.write()
@@ -88,7 +87,7 @@ def test_legacy_bram_factor_threshold_still_exposes_parameters(tmp_path):
     """BramFactor is kept for compatibility: above-threshold weights are exposed
     and described exactly as explicitly selected ones."""
     hls_model = _convert_with(_dense_model(), tmp_path / 'legacy', model_config={'BramFactor': 0})
-    assert {p.name for p in build_manifest(hls_model)} == {'w2', 'b2'}
+    assert {p.name for p in ExternalParameterManifest.from_model(hls_model)} == {'w2', 'b2'}
 
 
 def test_manifest_describes_the_model(tmp_path):
@@ -165,7 +164,7 @@ def test_conv2d_is_out_of_scope_and_claims_nothing(tmp_path):
         assert port['flat_order'] is None
         assert port['layout'] is None
         assert port['kernel_variant'] is None
-        assert 'no adapter for' in port['note']
+        assert 'no verified layout for' in port['note']
 
 
 def test_manifest_round_trips_any_precision_type(tmp_path):
@@ -187,7 +186,7 @@ def test_manifest_round_trips_any_precision_type(tmp_path):
 def test_external_parameters_is_layer_config_only(tmp_path):
     """Roles belong to a layer: LayerType applies, a Model-level entry is an error."""
     by_type = _convert_with(_dense_model(), tmp_path / 'by_type', type_config={'Dense': {'ExternalParameters': ['bias']}})
-    assert [p.role for p in build_manifest(by_type)] == ['bias']
+    assert [p.role for p in ExternalParameterManifest.from_model(by_type)] == ['bias']
 
     with pytest.raises(ValueError, match="not under 'Model'"):
         _convert_with(_dense_model(), tmp_path / 'global', model_config={'ExternalParameters': ['weight']})
@@ -317,7 +316,7 @@ def test_a_wider_kernel_is_not_pointwise(tmp_path):
     assert {p['layer_class'] for p in ports} == {'Conv1D'}
     for port in ports:
         assert port['expected_interface_kind'] is None
-        assert 'no adapter for' in port['note']
+        assert 'no verified layout for' in port['note']
 
 
 # Everything the manifest claims about a port, minus its hls4ml-assigned name: the
@@ -377,7 +376,7 @@ def test_pytorch_frontend_produces_the_same_manifest(tmp_path):
 
 
 def test_registry_stays_inside_the_verified_envelope():
-    from hls4ml.writer.external_parameters import described_combinations
+    from hls4ml.backends.vitis.passes.external_parameters import described_combinations
 
-    for backend, io_type, strategy, _layer_class, _role in described_combinations():
-        assert (backend, io_type, strategy) == ('Vitis', 'io_parallel', 'resource')
+    for io_type, strategy, _layer_class, _role in described_combinations():
+        assert (io_type, strategy) == ('io_parallel', 'resource')

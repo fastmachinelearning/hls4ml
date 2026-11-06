@@ -678,9 +678,7 @@ def test_unregistered_layer_cannot_be_packed(tmp_path):
     model = Model(inp, Conv2D(3, (2, 2), padding='valid', activation='linear', name='conv2d_1')(inp))
     hls_model = _convert_conv(model, tmp_path / 'conv')
 
-    from hls4ml.writer.external_parameters import build_manifest
-
-    manifest = build_manifest(hls_model)
+    manifest = ExternalParameterManifest.from_model(hls_model)
     assert manifest.parameters and not manifest.described
     for port in manifest:
         assert port.layout is None
@@ -689,13 +687,9 @@ def test_unregistered_layer_cannot_be_packed(tmp_path):
 
 
 def test_unsupported_backend_claims_nothing(tmp_path):
-    """The Vivado backend emits the same HLS source, but its RTL ABI is unverified.
-
-    The adapter registry is keyed on backend, so this refuses at the manifest
-    rather than reusing the Vitis layout.
-    """
+    """The Vivado backend emits the same HLS source, but its RTL is unverified: only
+    the Vitis backend describes external parameters, so there is nothing to bank."""
     from hls4ml.contrib.parameter_banks import package
-    from hls4ml.writer.external_parameters import build_manifest
 
     inp = Input(shape=(N_IN,), name='input_1')
     model = Model(inp, Dense(4, activation='linear', name='dense_1')(inp))
@@ -714,15 +708,8 @@ def test_unsupported_backend_claims_nothing(tmp_path):
     )
     hls_model.write()
 
-    ports = build_manifest(hls_model).parameters
-    assert ports
-    for port in ports:
-        assert port.interface_kind is None
-        assert port.layout is None
-        assert 'no adapter for' in port.note
-        assert "backend='Vivado'" in port.note
-
-    with pytest.raises(ValueError, match='backend'):
+    assert ExternalParameterManifest.from_model(hls_model).parameters == []
+    with pytest.raises(FileNotFoundError, match='no manifest'):
         package(str(tmp_path / 'vivado'), n_banks=2)
 
 

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from shutil import copy, copyfile
 
+from hls4ml.model.external_parameters import ExternalParameterManifest
 from hls4ml.writer.vivado_writer import VivadoWriter
 
 
@@ -24,6 +25,11 @@ class VitisWriter(VivadoWriter):
 
         for h in headers:
             copy(srcpath + h, dstpath + h)
+
+    def write_external_parameter_manifest(self, model):
+        manifest = ExternalParameterManifest.from_model(model)
+        if manifest.parameters:
+            manifest.save(model.config.get_output_dir())
 
     def _bram_pragmas(self, brams):
         return super()._bram_pragmas(brams) + [f'#pragma HLS STABLE variable={b}' for b in brams]
@@ -72,6 +78,7 @@ class VitisWriter(VivadoWriter):
         Write the HLS project. Calls the steps from VivadoWriter, adapted for Vitis
         """
         super().write_hls(model)
+        self.write_external_parameter_manifest(model)
         self.write_nnet_utils_overrides(model)
         self.write_board_script_override(model)
         self.write_build_prj_override(model)

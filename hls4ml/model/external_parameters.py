@@ -141,7 +141,6 @@ class ExternalParameter(Serializable):
         reuse_factor=None,
         strategy=None,
         kernel_variant=None,
-        pragma=None,
         interface_kind=None,
         data_width=None,
         depth=None,
@@ -159,7 +158,6 @@ class ExternalParameter(Serializable):
         self.reuse_factor = reuse_factor
         self.strategy = strategy
         self.kernel_variant = kernel_variant
-        self.pragma = pragma
         self.interface_kind = interface_kind
         self.data_width = data_width
         self.depth = depth
@@ -262,7 +260,6 @@ class ExternalParameter(Serializable):
             'reuse_factor': self.reuse_factor,
             'strategy': self.strategy,
             'kernel_variant': self.kernel_variant,
-            'pragma': self.pragma,
             'expected_interface_kind': self.interface_kind,
             'expected_data_width': self.data_width,
             'expected_depth': self.depth,
@@ -338,6 +335,23 @@ class ExternalParameterManifest(Serializable):
         keys = [p.key for p in self.parameters]
         if len(set(names)) != len(names) or len(set(keys)) != len(keys):
             raise ExternalParameterError(f'manifest has duplicate parameters: names {names}, keys {keys}')
+
+    @classmethod
+    def from_model(cls, model):
+        """The parameters a backend described while converting ``model``."""
+        from hls4ml import __version__
+
+        parameters = [var.external_parameter for var in model.get_weight_variables() if hasattr(var, 'external_parameter')]
+        config = model.config
+        return cls(
+            config.get_project_name(),
+            str(config.get_config_value('Backend')),
+            config.get_config_value('IOType'),
+            config.get_config_value('Part'),
+            config.get_config_value('ClockPeriod'),
+            parameters,
+            __version__,
+        )
 
     def __iter__(self):
         return iter(self.parameters)

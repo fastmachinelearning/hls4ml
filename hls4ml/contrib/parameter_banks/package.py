@@ -387,7 +387,7 @@ def package(project, n_banks=None, banks=None, memory='auto', output_dir=None):
     if manifest.undescribed:
         reasons = '\n'.join(f'  {p.name}: {p.note or "no reason recorded"}' for p in manifest.undescribed)
         raise InterfaceUnsupported(
-            f'no verified adapter for external parameter(s) {[p.name for p in manifest.undescribed]}; banking only '
+            f'no verified layout for external parameter(s) {[p.name for p in manifest.undescribed]}; banking only '
             "some of a model's parameters would leave the rest as unconnected top-level ports.\n" + reasons
         )
     if not manifest.described:
