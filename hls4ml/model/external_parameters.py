@@ -49,8 +49,10 @@ class FlatOrder(Serializable):
 
     def flatten(self, tensor):
         array = np.asarray(tensor)
-        if array.shape != tuple(self.shape):
+        # a size-1 axis orders nothing, so a Dense kernel (8, 4) is accepted for its pointwise form (1, 8, 4)
+        if [d for d in array.shape if d != 1] != [d for d in self.shape if d != 1]:
             raise ExternalParameterError(f'tensor shape {array.shape} but {tuple(self.shape)} declared')
+        array = array.reshape(self.shape)
         permutation = [self.tensor_axes.index(axis) for axis in self.axes]
         return np.transpose(array, permutation).ravel().tolist()
 

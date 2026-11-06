@@ -1,382 +1,246 @@
-import json
+import os
+import re
+import shutil
+import subprocess
 
 import numpy as np
 import pytest
-from tensorflow.keras.layers import Conv1D, Conv2D, Dense, Input
+from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
 
 import hls4ml
-from hls4ml.model.external_parameters import MANIFEST_FILENAME, SCHEMA, SCHEMA_VERSION, ExternalParameterManifest
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType
+from hls4ml.contrib.parameter_banks import InterfaceUnsupported, PackingUnsupported, pack_banks, package
+from hls4ml.model.external_parameters import ExternalParameterManifest
+
+PRECISION = 'ap_fixed<16,6>'
+FRACTION = 10
 
 
-def _ports(hls_model):
-    """The manifest's port entries as written to JSON: these tests check the format."""
-    return ExternalParameterManifest.from_model(hls_model).serialize_state()['ports']
-
-
-def _dense_model(n_in=8, n_out=4):
-    inp = Input(shape=(n_in,), name='input_1')
-    model = Model(inp, Dense(n_out, activation='linear', name='dense_1')(inp))
-    w = (np.arange(n_in * n_out, dtype=np.float32).reshape(n_in, n_out) + 1) / 1024.0
-    b = (np.arange(n_out, dtype=np.float32) + 1) / 1024.0
-    model.get_layer('dense_1').set_weights([w, b])
+def _model(shape, n_out, seed=0, hidden=None):
+    """Dense layers with weights on the fixed-point grid, so that every conversion of them is exact."""
+    inp = Input(shape=shape, name='input_1')
+    x = Dense(hidden, activation='relu', name='d1')(inp) if hidden else inp
+    model = Model(inp, Dense(n_out, name='d')(x))
+    rng = np.random.default_rng(seed)
+    for layer in model.layers:
+        if layer.get_weights():
+            layer.set_weights([rng.integers(-128, 128, w.shape) / 256 for w in layer.get_weights()])
     return model
 
 
-def _convert(model, out_dir, reuse_factor=2, external=True, strategy='Resource', io_type='io_parallel'):
-    cfg = hls4ml.utils.config_from_keras_model(
-        model,
-        granularity='model',
-        backend='Vitis',
-        default_precision='ap_fixed<16,6>',
-        default_reuse_factor=reuse_factor,
+def _convert(model, out_dir, external=('weight', 'bias'), strategy='Resource', reuse_factor=2, io_type='io_parallel', **cfg):
+    config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', backend='Vitis', default_precision=PRECISION, default_reuse_factor=reuse_factor
     )
-    cfg['Model']['Strategy'] = strategy
-    if external:
-        cfg['LayerName'] = {
-            layer.name: {'ExternalParameters': ['weight', 'bias']} for layer in model.layers if layer.get_weights()
-        }
+    config['Model']['Strategy'] = strategy
+    config['Model'].update(cfg.get('model_config', {}))
+    weighted = {layer.name for layer in model.layers if layer.get_weights()}
+    for name, layer in config['LayerName'].items():
+        for key, value in layer.get('Precision', {}).items():
+            if value == 'auto':
+                layer['Precision'][key] = PRECISION
+        if name in weighted:
+            layer['Strategy'] = strategy
+            layer['ReuseFactor'] = cfg.get('reuse_factors', {}).get(name, reuse_factor)
+            if external:
+                layer['ExternalParameters'] = list(external)
+    for name, entry in cfg.get('layer_config', {}).items():
+        config['LayerName'][name].update(entry)
     return hls4ml.converters.convert_from_keras_model(
-        model,
-        hls_config=cfg,
-        output_dir=str(out_dir),
-        project_name='manifest_prj',
-        backend='Vitis',
-        io_type=io_type,
+        model, hls_config=config, output_dir=str(out_dir), backend='Vitis', io_type=io_type
     )
 
 
-def test_no_manifest_without_external_parameters(tmp_path):
-    hls_model = _convert(_dense_model(), tmp_path / 'nobram', external=False)
-    hls_model.write()
-
-    assert ExternalParameterManifest.from_model(hls_model).parameters == []
-    assert not (tmp_path / 'nobram' / 'firmware' / 'weights' / MANIFEST_FILENAME).exists()
-
-
-def _convert_with(model, out_dir, layer_config=None, model_config=None, type_config=None):
-    cfg = hls4ml.utils.config_from_keras_model(model, granularity='model', backend='Vitis', default_reuse_factor=2)
-    cfg['Model']['Strategy'] = 'Resource'
-    cfg['Model'].update(model_config or {})
-    if layer_config:
-        cfg['LayerName'] = layer_config
-    if type_config:
-        cfg['LayerType'] = type_config
-    return hls4ml.converters.convert_from_keras_model(
-        model, hls_config=cfg, output_dir=str(out_dir), backend='Vitis', io_type='io_parallel'
-    )
-
-
-def test_external_parameters_selects_roles_explicitly(tmp_path):
-    hls_model = _convert_with(_dense_model(), tmp_path / 'weight_only', {'dense_1': {'ExternalParameters': ['weight']}})
-    assert [p.role for p in ExternalParameterManifest.from_model(hls_model)] == ['weight']
-
-    # without STABLE the dataflow region synchronizes on the parameter and inferences cannot overlap
-    hls_model.write()
-    top = (tmp_path / 'weight_only' / 'firmware' / 'myproject.cpp').read_text()
-    assert '#pragma HLS STABLE variable=w2' in top and 'variable=b2' not in top
-
-
-def test_external_parameters_rejects_unknown_role(tmp_path):
-    with pytest.raises(ValueError, match="'gamma'"):
-        _convert_with(_dense_model(), tmp_path / 'bad', {'dense_1': {'ExternalParameters': ['weight', 'gamma']}})
-
-
-def test_legacy_bram_factor_threshold_still_exposes_parameters(tmp_path):
-    """BramFactor is kept for compatibility: above-threshold weights are exposed
-    and described exactly as explicitly selected ones."""
-    hls_model = _convert_with(_dense_model(), tmp_path / 'legacy', model_config={'BramFactor': 0})
-    assert {p.name for p in ExternalParameterManifest.from_model(hls_model)} == {'w2', 'b2'}
-
-
-def test_manifest_describes_the_model(tmp_path):
-    hls_model = _convert(_dense_model(), tmp_path / 'dense')
-    hls_model.write()
-
-    path = tmp_path / 'dense' / 'firmware' / 'weights' / MANIFEST_FILENAME
-    assert path.exists()
-    manifest = json.loads(path.read_text())
-
-    assert manifest['schema'] == SCHEMA
-    assert manifest['schema_version'] == SCHEMA_VERSION
-    assert manifest['io_type'] == 'io_parallel'
-    assert {p['name'] for p in manifest['ports']} == {'w2', 'b2'}
-
-    weight = next(p for p in manifest['ports'] if p['role'] == 'weight')
-    assert weight['kernel_variant'] == 'dense_resource_rf_leq_nin'
-    assert weight['expected_interface_kind'] == 'bram'
-    assert weight['flat_order']['tensor_axes'] == ['n_in', 'n_out']
-    assert weight['flat_order']['axes'] == ['n_out', 'n_in']
-    assert weight['layout'] == {'mode': 'block', 'block_size': 2, 'lanes': 16}
-    assert weight['precision']['state']['width'] == 16
-
-    # and it round-trips through the object model unchanged
-    loaded = ExternalParameterManifest.load(str(tmp_path / 'dense'))
-    assert loaded.serialize_state() == manifest
-    assert loaded.get('dense_1', 'weight').layout.block_size == 2
+def _params(model):
+    return {
+        (layer.name, role): value for layer in model.layers for role, value in zip(('weight', 'bias'), layer.get_weights())
+    }
 
 
 @pytest.mark.parametrize(
-    'reuse_factor,expected_width,expected_depth',
+    'shape, reuse_factor, layer_class, lanes, depth',
     [
-        (2, 256, 2),
-        (4, 128, 4),
-        (8, 64, 8),  # rf == n_in boundary
-        (16, 32, 16),  # rf_gt_nin_rem0 from here
-        (32, 16, 32),  # single lane
+        ((8,), 2, 'Dense', 16, 2),  # dense_resource_rf_leq_nin
+        ((8,), 16, 'Dense', 2, 16),  # dense_resource_rf_gt_nin_rem0
+        ((5, 8), 2, 'PointwiseConv1D', 1, 32),
+        ((2, 5, 8), 2, 'PointwiseConv2D', 1, 32),
     ],
 )
-def test_weight_geometry_matches_reshape(tmp_path, reuse_factor, expected_width, expected_depth):
-    hls_model = _convert(_dense_model(), tmp_path / f'rf{reuse_factor}', reuse_factor=reuse_factor)
-    weight = next(p for p in _ports(hls_model) if p['role'] == 'weight')
+def test_layouts(tmp_path, shape, reuse_factor, layer_class, lanes, depth):
+    hls_model = _convert(_model(shape, 4), tmp_path, reuse_factor=reuse_factor)
+    weight, bias = sorted(ExternalParameterManifest.from_model(hls_model), key=lambda p: p.role, reverse=True)
 
-    assert weight['expected_interface_kind'] == 'bram'
-    assert weight['expected_data_width'] == expected_width
-    assert weight['expected_depth'] == expected_depth
-    assert weight['expected_data_width'] % weight['precision']['state']['width'] == 0
-    lanes = weight['expected_data_width'] // weight['precision']['state']['width']
-    assert lanes * weight['expected_depth'] == weight['n_scalars']
+    geometry = (weight.layer_class, weight.interface_kind, weight.layout.lanes, weight.depth)
+    assert geometry == (layer_class, 'bram', lanes, depth)
+    assert (bias.interface_kind, bias.n_scalars) == ('scalar_bundle', 4)
 
-
-def test_bias_is_scalar_bundle_regardless_of_size(tmp_path):
-    hls_model = _convert(_dense_model(n_out=32), tmp_path / 'bigbias')
-    bias = next(p for p in _ports(hls_model) if p['role'] == 'bias')
-
-    assert bias['expected_interface_kind'] == 'scalar_bundle'
-    assert bias['expected_data_width'] == 16
-    assert bias['expected_depth'] is None
-    assert bias['n_scalars'] == 32
+    # without STABLE the dataflow region synchronizes on the parameters and inferences cannot overlap
+    hls_model.write()
+    top = (tmp_path / 'firmware' / 'myproject.cpp').read_text()
+    assert f'#pragma HLS STABLE variable={weight.name}' in top and f'#pragma HLS STABLE variable={bias.name}' in top
 
 
-def test_conv2d_is_out_of_scope_and_claims_nothing(tmp_path):
-    inp = Input(shape=(4, 4, 2), name='input_1')
-    model = Model(inp, Conv2D(3, (2, 2), padding='valid', activation='linear', name='conv2d_1')(inp))
-    hls_model = _convert(model, tmp_path / 'conv2d')
-
-    ports = _ports(hls_model)
-    assert ports
-    for port in ports:
-        assert port['layer_class'] == 'Conv2D'
-        assert port['expected_interface_kind'] is None
-        assert port['expected_data_width'] is None
-        assert port['expected_depth'] is None
-        assert port['flat_order'] is None
-        assert port['layout'] is None
-        assert port['kernel_variant'] is None
-        assert 'no verified layout for' in port['note']
+@pytest.mark.parametrize(
+    'strategy, reuse_factor, io_type, reason',
+    [
+        ('Latency', 1, 'io_parallel', 'no verified layout'),
+        ('Resource', 1, 'io_parallel', 'one word'),
+        ('Resource', 2, 'io_stream', 'no verified layout'),
+    ],
+)
+def test_unbankable_parameters_warn_at_conversion(tmp_path, strategy, reuse_factor, io_type, reason):
+    with pytest.warns(UserWarning, match=f'weight cannot be placed in parameter banks: .*{reason}'):
+        hls_model = _convert(_model((8,), 4), tmp_path, strategy=strategy, reuse_factor=reuse_factor, io_type=io_type)
+    hls_model.write()
+    with pytest.raises(InterfaceUnsupported):
+        package(hls_model)
 
 
-def test_manifest_round_trips_any_precision_type(tmp_path):
-    """The manifest describes a parameter it cannot pack (so the refusal is clean
-    later), and rebuilds the precision class it wrote rather than assuming one."""
-    from hls4ml.model.external_parameters import ExternalParameter, ExternalParameterError
-
-    rnd = ExternalParameter('w', 'l', 'Dense', 'weight', [2], 2, FixedPrecisionType(16, 6, rounding_mode='RND'))
-    wrap_n = ExternalParameter('w', 'l', 'Dense', 'weight', [2], 2, FixedPrecisionType(16, 6, saturation_bits=3))
-    integer = ExternalParameter('b', 'l', 'Dense', 'bias', [2], 2, IntegerPrecisionType(8))
-    for original in (rnd, wrap_n, integer):
-        rebuilt = ExternalParameter.deserialize(json.loads(json.dumps(original.serialize_state())))
-        assert type(rebuilt.precision) is type(original.precision)
-        assert rebuilt.precision == original.precision
-        with pytest.raises(ExternalParameterError):
-            rebuilt.quantize([0.0, 0.0])
+@pytest.mark.parametrize(
+    'cfg, error',
+    [
+        ({'layer_config': {'d': {'ExternalParameters': ['weight', 'gamma']}}}, "'gamma'"),
+        ({'model_config': {'ExternalParameters': ['weight']}}, "not under 'Model'"),
+        ({'layer_config': {'d': {'ExternalParameters': 'weight'}}}, 'external_parameters'),
+    ],
+)
+def test_invalid_selection_fails_at_conversion(tmp_path, cfg, error):
+    with pytest.raises(Exception, match=error):
+        _convert(_model((8,), 4), tmp_path, external=None, **cfg)
 
 
-def test_external_parameters_is_layer_config_only(tmp_path):
-    """Roles belong to a layer: LayerType applies, a Model-level entry is an error."""
-    by_type = _convert_with(_dense_model(), tmp_path / 'by_type', type_config={'Dense': {'ExternalParameters': ['bias']}})
-    assert [p.role for p in ExternalParameterManifest.from_model(by_type)] == ['bias']
+def test_pack_banks(tmp_path):
+    model = _model((8,), 4)
+    hls_model = _convert(model, tmp_path, external=['weight'])
+    hls_model.write()
+    bank = _params(model)
+    weight = bank[('d', 'weight')]
 
-    with pytest.raises(ValueError, match="not under 'Model'"):
-        _convert_with(_dense_model(), tmp_path / 'global', model_config={'ExternalParameters': ['weight']})
+    (image,) = pack_banks(hls_model, [bank, {**bank, ('d', 'weight'): -weight}]).values()
+    parameter = image.parameter
+    assert len(image.image) == 2 * image.bank_stride_words
+    assert image.image[: parameter.depth] == parameter.pack(weight)
+    assert image.image[image.bank_stride_words : image.bank_stride_words + parameter.depth] == parameter.pack(-weight)
+
+    with pytest.raises(PackingUnsupported, match='compiled into the compute IP'):
+        pack_banks(hls_model, [bank, {**bank, ('d', 'bias'): bank[('d', 'bias')] + 1}])
+    with pytest.raises(PackingUnsupported, match='not a complete parameter set'):
+        pack_banks(hls_model, [{('d', 'weight'): weight}])
 
 
-@pytest.mark.parametrize('bad', ['weight', {'weight': True}, [1]])
-def test_external_parameters_must_be_a_list_of_names(tmp_path, bad):
-    with pytest.raises(Exception, match='(?i)external_?parameters'):
-        _convert_with(_dense_model(), tmp_path / 'bad', {'dense_1': {'ExternalParameters': bad}})
+# --- RTL ----------------------------------------------------------------------
+
+CASES = {
+    # two Dense kernels, four banks in LUTRAM: two preloaded, one loaded at run time, one left empty
+    'dense': dict(shape=(8,), n_out=4, hidden=6, reuse_factors={'d1': 4, 'd': 12}, n_banks=4, preload=2, memory='auto'),
+    # a Dense over 2-D input is a pointwise convolution, which also reads port B; one bank in block RAM
+    'pointwise': dict(shape=(3, 8), n_out=4, hidden=None, reuse_factors={}, n_banks=1, preload=1, memory='block'),
+}
+_built = {}
 
 
-def test_described_parameter_must_be_consistent():
-    from hls4ml.model.external_parameters import BlockLayout, ExternalParameter, ExternalParameterError, FlatOrder
+@pytest.fixture
+def banked(request, tmp_path_factory, synthesis_config):
+    """A synthesized and packaged design per case, shared by the tests that need RTL."""
+    if not synthesis_config['run_synthesis']:
+        pytest.skip('set RUN_SYNTHESIS=true to run synthesis tests')
+    kind = request.param
+    if kind not in _built:
+        case = CASES[kind]
+        models = [_model(case['shape'], case['n_out'], seed, case['hidden']) for seed in range(3)]
+        out_dir = tmp_path_factory.mktemp(f'banked_{kind}')
+        hls_model = _convert(models[0], out_dir, reuse_factors=case['reuse_factors'])
+        hls_model.write()
+        hls_model.build(**synthesis_config['build_args']['Vitis'], log_to_stdout=False)
+        banks = [_params(m) for m in models[: case['preload']]]
+        summary = package(hls_model, n_banks=case['n_banks'], banks=banks, memory=case['memory'])
+        _built[kind] = (case, models, hls_model, summary, out_dir)
+    return _built[kind]
 
-    def make(**overrides):
-        fields = dict(
-            name='w',
-            layer='l',
-            layer_class='Dense',
-            role='weight',
-            tensor_shape=[8, 4],
-            n_scalars=32,
-            precision=FixedPrecisionType(16, 6),
-            interface_kind='bram',
-            data_width=256,
-            depth=2,
-            flat_order=FlatOrder(['n_in', 'n_out'], ['n_out', 'n_in'], [8, 4]),
-            layout=BlockLayout(2, 16),
-        )
-        fields.update(overrides)
-        return ExternalParameter(**fields)
 
-    make()  # consistent
-    for bad in (
-        dict(n_scalars=30),  # shape holds 32
-        dict(data_width=128),  # 16 lanes x 16 bits
-        dict(depth=4),  # block_size 2
-        dict(layout=BlockLayout(4, 16)),  # 64 capacity for 32 scalars
-        dict(flat_order=None),
-        dict(interface_kind='scalar_bundle'),  # block layout
-        dict(interface_kind='rom'),
-        dict(interface_kind=None),  # layout claimed without a kind
-        dict(interface_kind=None, flat_order=None, layout=None),  # width/depth claimed without a kind
-        dict(tensor_shape=[8, 5]),  # 40, not 32
+def _simulate(out_dir, summary, requests, loads, work):
+    """Run requests (bank, input codes) back to back through the wrapper after the loader writes
+    (param id, bank, address, word); return every output port's values in order."""
+    rtl = out_dir / 'parameter_banks' / 'rtl'
+    header = (rtl / f'{summary["top"]}.sv').read_text()
+    pattern = r'^\s*(input|output)\s+wire\s+(?:\[(\d+):0\]\s+)?(\w+)'
+    ports = [(d, int(w) + 1 if w else 1, n) for d, w, n in re.findall(pattern, header, re.M)]
+    names = {n for _, _, n in ports}
+    outputs = [n for d, _, n in ports if d == 'output' and f'{n}_ap_vld' in names]
+    width = {n: w for _, w, n in ports}
+
+    tb = ['`timescale 1 ns / 1 ps', 'module tb;', '  reg ap_clk = 0, ap_rst = 1;', '  always #5 ap_clk = ~ap_clk;']
+    tb += [f'  {"reg" if d == "input" else "wire"} [{w - 1}:0] {n};' for d, w, n in ports if n not in ('ap_clk', 'ap_rst')]
+    tb += ['  integer f, errors = 0;', f'  {summary["top"]} dut ({", ".join(f".{n}({n})" for _, _, n in ports)});']
+    tb += [f'  always @(posedge ap_clk) if ({n}_ap_vld) $fdisplay(f, "{n} %0d", {n});' for n in outputs]
+    tb += ['  initial begin', '    f = $fopen("out.log", "w");', '    {ap_start, input_1_ap_vld, ld_req} = 0;']
+    tb += ['    repeat (5) @(negedge ap_clk);', '    ap_rst = 0;']
+    for pid, bank, addr, word in loads:
+        tb += [
+            '    @(negedge ap_clk);',
+            f'    ld_req = 1; ld_param_id = {pid}; ld_bank = {bank}; ld_addr = {addr};',
+            f"    ld_data = {width['ld_data']}'h{word:x};",
+            '    @(negedge ap_clk);',
+            '    if (ld_accept !== 1) errors = errors + 1;',
+            '    ld_req = 0;',
+        ]
+    for i, (bank, codes) in enumerate(requests):
+        packed = ''.join(f'{c:04x}' for c in reversed(codes))
+        tb += ['    @(negedge ap_clk);', f"    input_1 = {width['input_1']}'h{packed}; input_1_ap_vld = 1; ap_start = 1;"]
+        tb += [f'    bank_id = {bank};'] if 'bank_id' in names else []
+        if i == 0 and loads:  # a write while a request is presented could change the bank in use
+            tb += ['    ld_req = 1; ld_addr = 0;', "    #1 if (ld_accept !== 1'b0) errors = errors + 1;", '    ld_req = 0;']
+        tb += ['    @(posedge ap_clk);', "    while (ap_ready !== 1'b1) @(posedge ap_clk);"]
+    tb += ['    @(negedge ap_clk) ap_start = 0;', '    repeat (1000) @(posedge ap_clk);', '    $fclose(f);']
+    tb += ['    $display("TB_DONE errors=%0d", errors);', '    $finish;', '  end', 'endmodule']
+
+    os.makedirs(work)
+    (work / 'tb.sv').write_text('\n'.join(tb) + '\n')
+    hls_rtl = out_dir / 'myproject_prj' / 'solution1' / 'syn' / 'verilog'
+    for data in [*rtl.glob('*.mem'), *hls_rtl.glob('*.dat')]:
+        shutil.copy(data, work)
+    for cmd in (
+        ['xvlog', *map(str, hls_rtl.glob('*.v'))],
+        ['xvlog', '-sv', *map(str, rtl.glob('*.sv')), 'tb.sv'],
+        ['xelab', 'tb', '-s', 'tb_sim'],
+        ['xsim', 'tb_sim', '-R'],
     ):
-        with pytest.raises(ExternalParameterError):
-            make(**bad)
-    with pytest.raises(ExternalParameterError):
-        FlatOrder(['n_in', 'n_out'], ['n_out', 'n_out'], [8, 4])
+        result = subprocess.run(cmd, cwd=work, capture_output=True, text=True)
+        assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-3000:]
+    assert 'TB_DONE errors=0' in result.stdout, result.stdout[-3000:]
+
+    values = {n: [] for n in outputs}
+    for line in (work / 'out.log').read_text().splitlines():
+        name, value = line.split()
+        values[name].append(int(value))
+    return values
 
 
-def test_unencodable_precisions_are_named():
-    """The one rule the writer and the packer both apply."""
-    from hls4ml.model.external_parameters import unencodable_reason
+@pytest.mark.parametrize('banked', list(CASES), indirect=True)
+def test_banks_match_predict(banked, tmp_path):
+    """Every output of the banked RTL equals predict() of the model whose parameters its bank holds."""
+    if not shutil.which('xvlog'):
+        pytest.skip('requires xsim')
+    case, models, hls_model, summary, out_dir = banked
 
-    assert unencodable_reason(FixedPrecisionType(16, 6)) is None
-    assert unencodable_reason(FixedPrecisionType(16, 6, rounding_mode='RND'))
-    assert unencodable_reason(FixedPrecisionType(16, 6, saturation_mode='SAT'))
-    # AP_WRAP with saturation bits is not a plain modulo wrap
-    assert 'saturation bits' in unencodable_reason(FixedPrecisionType(16, 6, saturation_bits=3))
-    assert unencodable_reason(IntegerPrecisionType(8))
+    rng = np.random.default_rng(1)
+    banks = [0, 0, 1, 1, 2, 0] if case['n_banks'] > 1 else [0, 0, 0]
+    xs = rng.integers(-64, 64, (len(banks), *case['shape'])) / 64
+    requests = [(bank, [int(c) & 0xFFFF for c in (x.ravel() * 2**FRACTION).astype(int)]) for bank, x in zip(banks, xs)]
 
+    loads = []
+    if case['n_banks'] > 2:  # bank 2 is not preloaded: write it through the loader
+        param_ids = {p['name']: p['param_id'] for p in summary['banked_ports']}
+        for name, image in pack_banks(hls_model, [_params(models[2])]).items():
+            loads += [(param_ids[name], 2, addr, word) for addr, word in enumerate(image.per_bank[0])]
+    values = _simulate(out_dir, summary, requests, loads, tmp_path / 'xsim')
 
-@pytest.mark.parametrize(
-    'shape,expected_class,axes',
-    [
-        ((8,), 'Dense', ['n_out', 'n_in']),
-        ((4, 8), 'PointwiseConv1D', ['n_filt', 'filt_width', 'n_chan']),
-        ((2, 4, 8), 'PointwiseConv2D', ['n_filt', 'filt_height', 'filt_width', 'n_chan']),
-    ],
-)
-def test_dense_over_any_input_rank_is_described(tmp_path, shape, expected_class, axes):
-    """hls4ml rewrites a Dense over 2-D/3-D input into a pointwise convolution.
-
-    Those have their own adapter: unlike a Dense the kernel is not reshaped, so the
-    port is one scalar wide and as deep as there are scalars.
-    """
-    n_out = 6
-    inp = Input(shape=shape, name='input_1')
-    model = Model(inp, Dense(n_out, activation='linear', name='d')(inp))
-    hls_model = _convert(model, tmp_path / f'nd{len(shape)}')
-
-    ports = _ports(hls_model)
-    assert {p['layer_class'] for p in ports} == {expected_class}
-
-    weight = next(p for p in ports if p['role'] == 'weight')
-    bias = next(p for p in ports if p['role'] == 'bias')
-    assert weight['expected_interface_kind'] == 'bram'
-    assert bias['expected_interface_kind'] == 'scalar_bundle'
-    assert weight['flat_order']['axes'] == axes
-
-    if expected_class == 'Dense':
-        assert weight['kernel_variant'] == 'dense_resource_rf_leq_nin'
-        assert weight['layout']['lanes'] > 1  # reshaped into wide words
-    else:
-        assert weight['kernel_variant'] == 'pointwise_unreshaped'
-        assert weight['layout']['lanes'] == 1  # one scalar per word
-        assert weight['expected_data_width'] == weight['precision']['state']['width']
-        assert weight['expected_depth'] == weight['n_scalars'] == 8 * n_out
-
-
-@pytest.mark.parametrize('reuse_factor', [1, 2, 8])
-def test_pointwise_geometry_is_independent_of_reuse_factor(tmp_path, reuse_factor):
-    """No reshape reaches the port, so the geometry does not move with the reuse factor.
-
-    Reuse factor 1 is included deliberately: for a Dense it collapses the memory into
-    a single word and is refused, and the pointwise layout must not inherit that.
-    """
-    inp = Input(shape=(4, 8), name='input_1')
-    model = Model(inp, Dense(6, activation='linear', name='d')(inp))
-    hls_model = _convert(model, tmp_path / f'pw_rf{reuse_factor}', reuse_factor=reuse_factor)
-
-    weight = next(p for p in _ports(hls_model) if p['role'] == 'weight')
-    assert weight['kernel_variant'] == 'pointwise_unreshaped'
-    assert weight['expected_data_width'] == weight['precision']['state']['width']
-    assert weight['expected_depth'] == weight['n_scalars'] == 8 * 6
-    assert weight['layout']['lanes'] == 1
-
-
-def test_a_wider_kernel_is_not_pointwise(tmp_path):
-    """The pointwise adapter must not capture a genuine convolution."""
-    inp = Input(shape=(6, 8), name='input_1')
-    model = Model(inp, Conv1D(6, 3, activation='linear', name='c')(inp))
-    hls_model = _convert(model, tmp_path / 'conv1d_k3')
-
-    ports = _ports(hls_model)
-    assert {p['layer_class'] for p in ports} == {'Conv1D'}
-    for port in ports:
-        assert port['expected_interface_kind'] is None
-        assert 'no verified layout for' in port['note']
-
-
-# Everything the manifest claims about a port, minus its hls4ml-assigned name: the
-# frontends name layers differently ('dense_1' vs '_0') but must agree on all of this.
-_PORT_CLAIMS = (
-    'layer_class',
-    'role',
-    'expected_interface_kind',
-    'expected_data_width',
-    'expected_depth',
-    'n_scalars',
-    'kernel_variant',
-    'flat_order',
-    'layout',
-    'precision',
-)
-
-
-def _claims_by_role(hls_model):
-    return {p['role']: {k: p.get(k) for k in _PORT_CLAIMS} for p in _ports(hls_model)}
-
-
-def test_pytorch_frontend_produces_the_same_manifest(tmp_path):
-    """The feature lives after conversion, so the frontend must not matter."""
-    torch = pytest.importorskip('torch')
-
-    n_in, n_out = 8, 4
-    w = (np.arange(n_in * n_out, dtype=np.float32).reshape(n_in, n_out) + 1) / 1024.0
-    b = (np.arange(n_out, dtype=np.float32) + 1) / 1024.0
-
-    keras_claims = _claims_by_role(_convert(_dense_model(n_in, n_out), tmp_path / 'keras'))
-
-    model = torch.nn.Sequential(torch.nn.Linear(n_in, n_out))
-    with torch.no_grad():
-        model[0].weight.copy_(torch.tensor(w.T))  # torch keeps (n_out, n_in)
-        model[0].bias.copy_(torch.tensor(b))
-    cfg = hls4ml.utils.config_from_pytorch_model(
-        model,
-        input_shape=(None, n_in),
-        granularity='model',
-        backend='Vitis',
-        default_precision='ap_fixed<16,6>',
-        default_reuse_factor=2,
-    )
-    cfg['Model']['Strategy'] = 'Resource'
-    cfg['LayerName'] = {'0': {'ExternalParameters': ['weight', 'bias']}}
-    hls_model = hls4ml.converters.convert_from_pytorch_model(
-        model,
-        hls_config=cfg,
-        output_dir=str(tmp_path / 'torch'),
-        project_name='torch_prj',
-        backend='Vitis',
-        io_type='io_parallel',
-    )
-
-    assert _claims_by_role(hls_model) == keras_claims
-
-
-def test_registry_stays_inside_the_verified_envelope():
-    from hls4ml.backends.vitis.passes.external_parameters import described_combinations
-
-    for io_type, strategy, _layer_class, _role in described_combinations():
-        assert (io_type, strategy) == ('io_parallel', 'resource')
+    for bank in sorted(set(banks)):
+        reference = _convert(models[bank], tmp_path / f'reference_{bank}', reuse_factors=case['reuse_factors'])
+        reference.compile()
+        expected = reference.predict(np.ascontiguousarray(xs)).reshape(len(xs), -1)
+        for name, got in values.items():
+            index = int(name.rsplit('_', 1)[1])
+            for i, b in enumerate(banks):
+                if b == bank:
+                    assert got[i] == int(round(expected[i, index] * 2**FRACTION)) & 0xFFFF, (name, i, bank)
