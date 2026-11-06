@@ -10,9 +10,8 @@ A typical use case is one architecture trained for several operating conditions,
 configurations, or deployment modes.
 
 The flow is: mark the parameters that vary with ``ExternalParameters`` and
-``build(synth=True)`` once; ``package()`` the wrapper; ``pack_banks()`` the
-parameter sets; write BRAM images and load scalar parameters through the wrapper;
-instantiate the wrapper in your design; select a bank with ``ext_bank_id`` per
+``build(synth=True)`` once; ``package()`` the wrapper with the parameter sets;
+use the wrapper in place of the IP and select a bank with ``bank_id`` per
 inference.
 
 Exposing parameters
@@ -36,48 +35,29 @@ once.
 Packaging
 ---------
 
-Generate the wrapper with the required number of resident banks::
+Give ``package()`` one complete parameter set per bank, keyed by ``(layer, role)``::
 
     from hls4ml.contrib.parameter_banks import package
 
-    summary = package(hls_model, n_banks=3)
+    params_a = {('dense_1', 'weight'): w1_a, ('dense_1', 'bias'): b1_a, ('dense_2', 'weight'): w2_a, ...}
+    package(hls_model, banks=[params_a, params_b, params_c])
 
 ``package()`` checks the synthesized interface of every exposed parameter against
 what hls4ml asked for and writes ``parameter_banks/`` next to the project: the
-original compute IP wrapped with bank storage, bank selection and a loader.
+original compute IP wrapped with bank storage, bank selection and a loader, with
+the parameter sets preloaded. The number of banks is a power of two, by default
+the smallest that holds the sets (four here); banks beyond them start as zero.
 
-Preparing the banks
--------------------
-
-Provide one complete parameter set per variant, keyed by ``(layer, role)``::
-
-    from hls4ml.contrib.parameter_banks import pack_banks
-
-    params_a = {('dense_1', 'weight'): w1_a, ('dense_1', 'bias'): b1_a, ('dense_2', 'weight'): w2_a, ...}
-    images = pack_banks(hls_model, [params_a, params_b, params_c])
-
-Only exposed parameters may differ between banks; the rest must be identical in
-every set, and ``pack_banks()`` rejects incomplete or inconsistent sets. Tensor
-shapes are checked exactly. ``hls_model`` must be the model the IP was built from.
-
-Writing the bank contents
--------------------------
-
-``images`` maps each exposed parameter's port name to its packed banks. Each
-has a ``$readmemh`` image to bind to the wrapper's ``<PORT>_INIT_HEX`` parameter::
-
-    for name, img in images.items():
-        img.write_mem(f'{name}.hex')
-
-With every parameter preloaded, the ``ld_*`` interface is only needed to replace
-bank contents after configuration.
+Only exposed parameters may differ between sets; the rest must be identical in
+every set, and incomplete or inconsistent sets are rejected. Tensor shapes are
+checked exactly. ``hls_model`` must be the model the IP was built from.
 
 Selecting a bank at runtime
 ---------------------------
 
-Banks are numbered in the order given to ``pack_banks()``. For each inference,
-present ``ext_bank_id`` with ``ext_ap_start`` and hold both until
-``ext_ap_ready``, as for ``ap_start`` on the plain IP. Requests for the bank
+Banks are numbered in the order of ``banks``. For each inference, present
+``bank_id`` with ``ap_start`` and hold both until ``ap_ready``, as for
+``ap_start`` on the plain IP. Requests for the bank
 already selected go straight to the IP, so inferences overlap at the IP's own
 initiation interval. A request for another bank waits until the IP is idle, so a
 bank change costs about one latency of the IP.
@@ -87,6 +67,13 @@ Sample each output on its own ``ap_vld``, as with the plain IP.
 Updating bank contents
 ----------------------
 
+Banks can be rewritten at run time, without a new bitstream. ``pack_banks()``
+packs new sets as ``package()`` does::
+
+    from hls4ml.contrib.parameter_banks import pack_banks
+
+    images = pack_banks(hls_model, [params_d])  # images[name].per_bank[0] holds the words to write
+
 One loader interface serves every parameter::
 
     ld_req, ld_param_id, ld_bank, ld_addr, ld_data  ->  ld_accept | ld_reject
@@ -94,20 +81,21 @@ One loader interface serves every parameter::
 Each request writes one word (memory interface) or one element (scalar bundle)
 of one bank. ``parameter_banks.json`` gives every parameter its ``param_id``, valid
 address range (``ld_depth``) and how many low bits of ``ld_data`` it uses
-(``ld_data_width``). A request with an unknown id, an out-of-range bank or
-address, or issued during an inference is rejected and writes nothing.
+(``ld_data_width``). A request with an unknown id or an out-of-range address, or
+issued while the IP is busy, is rejected and writes nothing. Tie ``ld_req`` low
+if banks are never rewritten.
 
 Integrating the wrapper
 -----------------------
 
-Add ``parameter_banks/rtl/*.sv`` and the HLS RTL
-(``<project>_prj/solution1/syn/verilog/*.v``) to your sources and instantiate
+Add ``parameter_banks/rtl/`` (the ``.sv`` sources and the ``.mem`` preload images)
+and the HLS RTL (``<project>_prj/solution1/syn/verilog/*.v``) to your sources and instantiate
 ``<project>_parameter_banks`` as the single accelerator block in your design.
 It already contains the original HLS compute IP, parameter storage, bank-selection
 logic and loader, so the HLS IP should not be instantiated separately.
-The surrounding design supplies data, transaction control
-(``ext_ap_start``/``ext_ap_ready``/``ext_ap_done``), bank selection
-(``ext_bank_id``) and any runtime parameter writes (``ld_*``).
+The surrounding design drives data and control exactly as for the plain IP
+(``ap_start``, ``ap_done``, ``ap_idle``, ``ap_ready``), plus ``bank_id`` and
+any runtime parameter writes (``ld_*``).
 ``create_parameter_banks.tcl`` synthesizes the packaged design stand-alone as a
 check; it does not create a Vivado project.
 

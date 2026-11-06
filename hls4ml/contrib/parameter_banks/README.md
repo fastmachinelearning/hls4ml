@@ -137,8 +137,8 @@ checked: Dense leaves it idle, pointwise uses it.
 
 `parameter_bank.sv` is a depth-stacked memory, `bank_id * BANK_STRIDE_WORDS +
 local_word`, with `bank_addr_mapper` translating the IP's byte address on each port.
-Both ports are read ports for the IP; the loader takes **port B only while
-quiescent**, when the IP is not reading. That is why the wrapper is layer-agnostic.
+Both ports are read ports for the IP; the loader takes **port B only while the IP
+is idle**, when it is not reading. That is why the wrapper is layer-agnostic.
 
 `scalar_bank_mux.sv` handles fully partitioned parameters — a Dense bias lowers to
 one `ap_none` port per element regardless of size. Its select is combinational, so
@@ -163,32 +163,26 @@ never changes under a transaction in flight.
 
 ## Integrating from HDL
 
-Instantiate the wrapper from the user's top, binding each BRAM image to its
-`INIT_HEX` parameter:
+The wrapper replaces the plain IP and keeps its ports, adding `bank_id` and the
+loader:
 
 ```verilog
-myproject_parameter_banks #(
-    .W2_INIT_HEX("/abs/path/to/w2.hex")
-) u_nn (
+myproject_parameter_banks u_nn (
     .ap_clk(clk), .ap_rst(rst),
-    // transaction: replaces the IP's ap_start / ap_ready / ap_done
-    .ext_ap_start(start), .ext_bank_id(bank), .ext_ap_ready(ready), .ext_ap_done(done),
-    .ext_bank_id_bad(),
+    // the IP's own control, plus the bank this inference uses
+    .ap_start(start), .ap_done(done), .ap_idle(idle), .ap_ready(ready), .bank_id(bank),
     // network data ports and their ap_vld, exactly as with the plain hls4ml IP
     ...
-    // loader, shared by every parameter
+    // loader, shared by every parameter; tie ld_req low if banks are never rewritten
     .ld_req(ld_req), .ld_param_id(ld_id), .ld_bank(ld_bank), .ld_addr(ld_addr), .ld_data(ld_data),
-    .ld_accept(ld_ack), .ld_reject(ld_nak),
-    // status
-    .cur_bank_id(), .busy(), .quiescent(idle)
+    .ld_accept(ld_ack), .ld_reject(ld_nak)
 );
 ```
 
-A VHDL top instantiates it as a component; Vivado resolves the mixed-language
-boundary. `INIT_HEX` is read by `$readmemh` at elaboration, so an absolute path
-avoids depending on the tool's working directory; an unbound parameter leaves the
-memory initialized to zero (`parameter_bank.sv` clears every word before the
-optional `$readmemh`).
+The `<PORT>_INIT_HEX` parameters default to the `.mem` images `package()` wrote
+next to the RTL; add those files to the project with the sources. A VHDL top
+instantiates the wrapper as a component; Vivado resolves the mixed-language
+boundary.
 
 ## Loader
 
@@ -210,9 +204,9 @@ wide as the widest packed word (up to 4096 bits in the verified scope); assembli
 such words on the host side is the surrounding framework's concern. The wrapper compares
 `ld_param_id` and the full-width `ld_addr` against the selected parameter *before*
 narrowing the address to the port's own width, so an out-of-range value is
-rejected rather than aliased onto a valid location; the bank modules check
-`ld_bank` the same way. A request during an inference is rejected too. Rejected
-requests write nothing.
+rejected rather than aliased onto a valid location. Every `ld_bank` value is a
+bank, as the bank count is a power of two. A request while the IP is busy is
+rejected too. Rejected requests write nothing.
 
 From `pack_banks()` output, the write for `(param_id, bank, addr)` is
 `img.per_bank[bank][addr]` for every kind of parameter.
@@ -229,7 +223,7 @@ for name, img in images.items():
     pid = param_id[name]  # parameter_banks.json
     for bank, words in enumerate(img.per_bank):
         for addr, data in enumerate(words):
-            write(pid, bank, addr, data)  # one ld_req, while quiescent
+            write(pid, bank, addr, data)  # one ld_req, while the IP is idle
 ```
 
 Only the contents change: `pack_banks()` still checks the new sets against the

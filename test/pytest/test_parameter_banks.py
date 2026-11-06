@@ -559,8 +559,7 @@ def test_pointwise_two_banks_rtl_simulation(tmp_path, synthesis_config, rank):
 
 
 def test_bank_select_latch(tmp_path, synthesis_config):
-    """Same-bank requests overlap, a bank change waits for idle, and an id past
-    the bank count (three banks make one encodable) is dropped."""
+    """Same-bank requests overlap, and a bank change waits for idle."""
     import parameter_banks_sim as sim
 
     if not synthesis_config['run_synthesis']:
@@ -852,11 +851,11 @@ def test_package_enforces_manifest_contract(tmp_path, field, value, exc, match):
         package(str(tmp_path), n_banks=2)
 
 
-def test_package_rejects_non_integer_bank_count(tmp_path):
+def test_package_rejects_a_bank_count_that_is_not_a_power_of_two(tmp_path):
     from hls4ml.contrib.parameter_banks import package
 
     _manifest(tmp_path)
-    for bad in (1, 2.0, '3', True):
+    for bad in (1, 3, 6, 2.0, '4', True):
         with pytest.raises(ValueError, match='n_banks'):
             package(str(tmp_path), n_banks=bad)
 
@@ -933,7 +932,7 @@ def _module_header(text, name):
     return params, [(d, (w or '').strip(), n) for d, w, n in ports]
 
 
-def _fabricated_wrapper(n_banks=3, with_bram=True):
+def _fabricated_wrapper(n_banks=4, with_bram=True):
     """A Wrapper over made-up interfaces: checks the generator, not the HLS flow."""
     from hls4ml.contrib.parameter_banks.interface import BRAM_SIGNALS, BramInterface, ScalarBundleInterface
     from hls4ml.contrib.parameter_banks.package import CONTROL_PORTS, Wrapper
@@ -1000,7 +999,7 @@ def test_bd_shim_mirrors_the_top():
     assert top_params == shim_params == [('W2_INIT_HEX', '""'), ('B2_INIT_HEX', '""')]
     assert top_ports == shim_ports
     names = [n for _, _, n in top_ports]
-    for expected in ('x', 'y_0_ap_vld', 'ld_param_id', 'ld_addr', 'ld_data', 'quiescent'):
+    for expected in ('x', 'y_0_ap_vld', 'ap_start', 'ap_idle', 'bank_id', 'ld_param_id', 'ld_addr', 'ld_data'):
         assert expected in names
     assert len(names) == len(set(names)) and names == wrapper.port_names()
 

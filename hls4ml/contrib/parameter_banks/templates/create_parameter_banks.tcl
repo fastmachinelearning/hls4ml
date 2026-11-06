@@ -54,6 +54,8 @@ cd $here
 # matches the wrapper's ports.
 add_files -norecurse [glob "$wrap_rtl/*.sv"]
 set_property file_type SystemVerilog [get_files "$wrap_rtl/*.sv"]
+# bank preload images, found by name when $readmemh opens them
+foreach mem [glob -nocomplain "$wrap_rtl/*.mem"] { add_files -norecurse $mem }
 add_files -norecurse "$wrap_rtl/${bd_module}.v"
 
 set_property top $bd_module [current_fileset]

@@ -48,7 +48,7 @@ module scalar_bank_mux #(
   // same policy as parameter_bank: writes only while the wrapper is idle.
   // ld_idx is $clog2(N_SCALARS) bits, so for a non-power-of-two bundle it can
   // encode indices past the end of the array; reject those.
-  wire safe = quiescent & (32'(ld_bank) < N_BANKS) & (32'(ld_idx) < N_SCALARS);
+  wire safe = quiescent & (32'(ld_idx) < N_SCALARS);
 
   assign ld_accept = ld_we &  safe;
   assign ld_reject = ld_we & ~safe;

@@ -112,15 +112,13 @@ module parameter_bank #(
   assign addr_padding_violation = hls_EN_A & pad_a;
 
   // ---------------- port B : loader ----------------
-  // Loader writes are accepted only while the wrapper is quiescent; any in-range
-  // bank may be written. Nothing can read the memory while idle, so there is no
-  // active bank to protect.
+  // Loader writes are accepted only while the wrapper is quiescent: nothing reads
+  // the memory then, so any bank may be written.
   // ld_word is $clog2(LOCAL_WORDS) bits, so when LOCAL_WORDS is not a power of two
   // it can encode words that lie in the inter-bank padding. Reject those rather
   // than acknowledging a write that lands nowhere useful.
-  wire bank_ok  = (32'(ld_bank) < N_BANKS);
   wire word_ok  = (32'(ld_word) < LOCAL_WORDS);
-  wire safe     = quiescent & bank_ok & word_ok;   // idle => no active bank => any bank loadable
+  wire safe     = quiescent & word_ok;
   assign ld_accept = ld_req &  safe;
   assign ld_reject = ld_req & ~safe;
 

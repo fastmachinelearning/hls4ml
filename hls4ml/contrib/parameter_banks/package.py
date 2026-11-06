@@ -15,6 +15,7 @@ import shutil
 
 from hls4ml.contrib.parameter_banks import interface
 from hls4ml.contrib.parameter_banks.interface import BramInterface, ScalarBundleInterface
+from hls4ml.contrib.parameter_banks.pack import pack_banks
 from hls4ml.model.external_parameters import ExternalParameterManifest
 
 # Only the Vitis flow has been verified end to end. This is about which hls4ml
@@ -112,7 +113,7 @@ class Wrapper:
     """The generated top: the unmodified IP, its banked memories, and one port list
     shared by the SystemVerilog module and its Verilog shim."""
 
-    def __init__(self, project_name, interfaces, rtl_ports, n_banks, control):
+    def __init__(self, project_name, interfaces, rtl_ports, n_banks, control, images=None):
         self.project_name = project_name
         self.top_name = f'{project_name}_parameter_banks'
         self.bd_module = f'{self.top_name}_bd'
@@ -123,6 +124,7 @@ class Wrapper:
         self.n_banks = n_banks
         self.bank_id_width = max(1, (n_banks - 1).bit_length())
         self.control = control
+        self.images = images or {}  # parameter name -> preload file, bound as its INIT_HEX default
         self.loader = LoaderGeometry(self.interfaces)
 
     @property
@@ -139,6 +141,9 @@ class Wrapper:
     def init_params(self):
         return [f'{i.name.upper()}_INIT_HEX' for i in self.bram + self.scalar]
 
+    def init_default(self, interface):
+        return self.images.get(interface.name, '')
+
     # -- port list, shared by top and shim --
 
     def port_lines(self):
@@ -148,12 +153,12 @@ class Wrapper:
             '    input  wire ap_clk',
             '    input  wire ap_rst',
             '',
-            '    // transaction boundary',
-            '    input  wire ext_ap_start',
-            f'    input  wire [{w - 1}:0] ext_bank_id',
-            '    output wire ext_ap_ready',
-            '    output wire ext_ap_done',
-            '    output wire ext_bank_id_bad',
+            "    // the IP's ap_ctrl_hs control, plus the bank each inference uses",
+            '    input  wire ap_start',
+            '    output wire ap_done',
+            '    output wire ap_idle',
+            '    output wire ap_ready',
+            f'    input  wire [{w - 1}:0] bank_id',
             '',
         ]
         if self.passthrough:
@@ -162,7 +167,7 @@ class Wrapper:
             lines.append('')
         g = self.loader
         lines += [
-            '    // loader: one write per request, routed by ld_param_id (accepted only while idle)',
+            '    // loader: rewrites banks at run time, only while the IP is idle; tie ld_req low if unused',
             '    input  wire ld_req',
             f'    input  wire [{g.param_id_width - 1}:0] ld_param_id',
             f'    input  wire [{w - 1}:0] ld_bank',
@@ -170,11 +175,6 @@ class Wrapper:
             f'    input  wire [{g.data_width - 1}:0] ld_data',
             '    output wire ld_accept',
             '    output wire ld_reject',
-            '',
-            '    // observability',
-            f'    output wire [{w - 1}:0] cur_bank_id',
-            '    output wire busy',
-            '    output wire quiescent',
         ]
         return lines
 
@@ -183,7 +183,7 @@ class Wrapper:
 
     def _write_header(self, f, module):
         f.write('`timescale 1 ns / 1 ps\n`default_nettype none\n\n')
-        params = [f'    parameter {p} = ""' for p in self.init_params]
+        params = [f'    parameter {p} = "{self.init_default(i)}"' for p, i in zip(self.init_params, self.bram + self.scalar)]
         f.write(f'module {module} #(\n' + ',\n'.join(params) + '\n) (\n')
         lines = self.port_lines()
         remaining = sum(1 for ln in lines if _is_port_decl(ln))
@@ -208,15 +208,16 @@ class Wrapper:
 
         f.write(f'  localparam int N_BANKS       = {self.n_banks};\n')
         f.write(f'  localparam int BANK_ID_WIDTH = {self.bank_id_width};\n\n')
-        f.write('  wire hls_ap_start, hls_ap_done, hls_ap_idle, hls_ap_ready;\n\n')
-        f.write('  bank_select_latch #(.BANK_ID_WIDTH(BANK_ID_WIDTH), .N_BANKS(N_BANKS)) u_latch (\n')
+        f.write('  wire hls_ap_start, hls_ap_done, hls_ap_idle, hls_ap_ready;\n')
+        f.write('  wire [BANK_ID_WIDTH-1:0] cur_bank_id;\n')
+        f.write('  wire quiescent;\n\n')
+        f.write('  bank_select_latch #(.BANK_ID_WIDTH(BANK_ID_WIDTH)) u_latch (\n')
         f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst),\n')
-        f.write('      .ext_ap_start(ext_ap_start), .ext_bank_id(ext_bank_id),\n')
-        f.write('      .ext_ap_ready(ext_ap_ready), .ext_bank_id_bad(ext_bank_id_bad),\n')
-        f.write('      .hls_ap_start(hls_ap_start), .hls_ap_ready(hls_ap_ready),\n')
-        f.write('      .hls_ap_idle(hls_ap_idle),\n')
-        f.write('      .cur_bank_id(cur_bank_id), .busy(busy), .quiescent(quiescent));\n\n')
-        f.write('  assign ext_ap_done = hls_ap_done;\n\n')
+        f.write('      .ext_ap_start(ap_start), .ext_bank_id(bank_id), .ext_ap_ready(ap_ready),\n')
+        f.write('      .hls_ap_start(hls_ap_start), .hls_ap_ready(hls_ap_ready), .hls_ap_idle(hls_ap_idle),\n')
+        f.write('      .cur_bank_id(cur_bank_id), .quiescent(quiescent));\n\n')
+        f.write('  assign ap_done = hls_ap_done;\n')
+        f.write('  assign ap_idle = hls_ap_idle;\n\n')
 
         # Route each request to one parameter. The id and the full-width address
         # are checked here, before the address is narrowed to the port's own width,
@@ -320,6 +321,7 @@ class Wrapper:
             'loader': self.loader.describe(),
             'banked_ports': [{**s.interface.describe(), **s.describe()} for s in self.loader],
             'rom_data_files': rom_data,
+            'preload_files': self.images,
             'exported_ip_sha256': fingerprint,
         }
 
@@ -337,13 +339,17 @@ def _is_port_decl(line):
 # --- entry point -------------------------------------------------------------
 
 
-def package(project, n_banks=2, output_dir=None):
+def package(project, n_banks=None, banks=None, output_dir=None):
     """Generate the banked-parameter wrapper for a synthesized hls4ml project.
 
     Args:
         project: a ModelGraph, or the path to its output directory.
-        n_banks: how many banks to provision. Fixed in the generated RTL; changing
-            it means re-running this packager, not re-running HLS.
+        n_banks: how many banks to provision, a power of two. Fixed in the generated
+            RTL; changing it means re-running this packager, not re-running HLS.
+            Defaults to the smallest that holds ``banks``, or 2.
+        banks: parameter sets to preload, as for ``pack_banks()``; needs the
+            ModelGraph. Their images are written next to the RTL and bound as the
+            wrapper's defaults. Banks beyond them start as zero.
         output_dir: where to write the wrapper (default ``<project>/parameter_banks``).
 
     Returns a dict describing what was written, including a fingerprint of the
@@ -363,8 +369,14 @@ def package(project, n_banks=2, output_dir=None):
         )
     if not manifest.described:
         raise ValueError('manifest describes no external parameters; nothing to bank')
-    if isinstance(n_banks, bool) or not isinstance(n_banks, int) or n_banks < 2:
-        raise ValueError(f'n_banks must be an integer of at least 2, got {n_banks!r}')
+    if banks is not None and not hasattr(project, 'config'):
+        raise ValueError('preloading banks needs the ModelGraph the IP was built from, not a path')
+    if n_banks is None:
+        n_banks = max(2, 1 << (len(banks) - 1).bit_length()) if banks else 2
+    if isinstance(n_banks, bool) or not isinstance(n_banks, int) or n_banks < 2 or n_banks & (n_banks - 1):
+        raise ValueError(f'n_banks must be a power of two of at least 2, got {n_banks!r}')
+    if banks is not None and len(banks) > n_banks:
+        raise ValueError(f'{len(banks)} parameter sets do not fit in {n_banks} banks')
 
     interfaces, summary = interface.verify(manifest, project_dir)
     if summary.control != REQUIRED_CONTROL_PROTOCOL:
@@ -372,12 +384,18 @@ def package(project, n_banks=2, output_dir=None):
             f'control protocol is {summary.control!r}; the wrapper requires {REQUIRED_CONTROL_PROTOCOL!r}'
         )
     rtl_ports = interface.parse_rtl_ports(project_dir, project_name)
-    wrapper = Wrapper(project_name, interfaces, rtl_ports, n_banks, summary.control)
 
     if output_dir is None:
         output_dir = os.path.join(project_dir, 'parameter_banks')
     rtl_dir = os.path.join(output_dir, 'rtl')
     os.makedirs(rtl_dir, exist_ok=True)
+
+    images = {}
+    if banks is not None:
+        for name, image in pack_banks(project, banks).items():
+            images[name] = f'{name}.mem'
+            image.write_mem(os.path.join(rtl_dir, images[name]))
+    wrapper = Wrapper(project_name, interfaces, rtl_ports, n_banks, summary.control, images)
     for module in STATIC_MODULES:
         shutil.copyfile(os.path.join(TEMPLATE_DIR, module), os.path.join(rtl_dir, module))
 

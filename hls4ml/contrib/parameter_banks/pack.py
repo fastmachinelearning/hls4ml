@@ -71,8 +71,8 @@ def pack_banks(model, banks):
     """
     if not hasattr(model, 'get_layers'):
         raise PackingUnsupported(f'pack_banks needs a ModelGraph, got {type(model).__name__}')
-    if len(banks) < 2:
-        raise PackingUnsupported(f'need at least 2 banks, got {len(banks)}')
+    if len(banks) < 1:
+        raise PackingUnsupported('need at least one parameter set')
 
     try:
         manifest = ExternalParameterManifest.load(model.config.get_output_dir())

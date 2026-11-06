@@ -101,9 +101,9 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
         '  reg ap_clk = 0, ap_rst = 1;',
         '  always #5 ap_clk = ~ap_clk;',
         '',
-        '  reg ext_ap_start = 0;',
-        f'  reg [{bank_bits - 1}:0] ext_bank_id = 0;',
-        '  wire ext_ap_ready, ext_ap_done, ext_bank_id_bad;',
+        '  reg ap_start = 0;',
+        f'  reg [{bank_bits - 1}:0] bank_id = 0;',
+        '  wire ap_ready, ap_done, ap_idle;',
         f'  reg [{n_in * WIDTH - 1}:0] input_1 = 0;',
         '  reg input_1_ap_vld = 0;',
     ]
@@ -124,16 +124,12 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
         '  wire ld_accept, ld_reject;',
     ]
     lines += [
-        f'  wire [{bank_bits - 1}:0] cur_bank_id;',
-        '  wire busy, quiescent;',
         '  integer errors = 0, n_done = 0, want_done;',
-        '  always @(posedge ap_clk) if (ext_ap_done) n_done <= n_done + 1;',
+        '  always @(posedge ap_clk) if (ap_done) n_done <= n_done + 1;',
         '',
         f'  {top} dut (',  # bank count is fixed by the packager
         '    .ap_clk(ap_clk), .ap_rst(ap_rst),',
-        '    .ext_ap_start(ext_ap_start), .ext_bank_id(ext_bank_id),',
-        '    .ext_ap_ready(ext_ap_ready), .ext_ap_done(ext_ap_done),',
-        '    .ext_bank_id_bad(ext_bank_id_bad),',
+        '    .ap_start(ap_start), .ap_done(ap_done), .ap_idle(ap_idle), .ap_ready(ap_ready), .bank_id(bank_id),',
         '    .input_1(input_1), .input_1_ap_vld(input_1_ap_vld),',
     ]
     for name, count in outputs:
@@ -141,10 +137,9 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
             lines.append(f'    .{name}_{o}({name}_{o}), .{name}_{o}_ap_vld({name}_{o}_ap_vld),')
     lines += [
         '    .ld_req(ld_req), .ld_param_id(ld_param_id), .ld_bank(ld_bank),',
-        '    .ld_addr(ld_addr), .ld_data(ld_data), .ld_accept(ld_accept), .ld_reject(ld_reject),',
+        '    .ld_addr(ld_addr), .ld_data(ld_data), .ld_accept(ld_accept), .ld_reject(ld_reject));',
     ]
     lines += [
-        '    .cur_bank_id(cur_bank_id), .busy(busy), .quiescent(quiescent));',
         '',
     ]
     for name, count in outputs:
@@ -171,11 +166,11 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
         '    end',
         '  endtask',
         '',
-        '  // ap_ctrl_hs: the request is taken at a rising edge where ext_ap_ready is high',
+        '  // ap_ctrl_hs: the request is taken at a rising edge where ap_ready is high',
         '  task wait_accept;',
         '    begin',
         '      @(posedge ap_clk);',
-        "      while (ext_ap_ready !== 1'b1) @(posedge ap_clk);",
+        "      while (ap_ready !== 1'b1) @(posedge ap_clk);",
         '      @(negedge ap_clk);',
         '    end',
         '  endtask',
@@ -184,9 +179,9 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
         '    begin',
         '      @(negedge ap_clk);',
         '      want_done = n_done + 1;',
-        '      ext_bank_id = bank[%d:0]; ext_ap_start = 1; input_1_ap_vld = 1;' % (bank_bits - 1),
+        '      bank_id = bank[%d:0]; ap_start = 1; input_1_ap_vld = 1;' % (bank_bits - 1),
         '      wait_accept;',
-        '      ext_ap_start = 0;',
+        '      ap_start = 0;',
         '      // a dataflow IP can raise ap_done no later than ap_ready',
         '      wait (n_done >= want_done);',
         '      @(negedge ap_clk);',
@@ -238,7 +233,7 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
     lines += [
         '',
         '    repeat (20) @(negedge ap_clk);',
-        '    if (busy !== 1\'b0) begin $display("FAIL: busy stuck high"); errors = errors + 1; end',
+        '    if (ap_idle !== 1\'b1) begin $display("FAIL: IP never went idle"); errors = errors + 1; end',
         '',
         '    // an in-range write while idle must still be accepted',
         f"    ld_write({first['param_id']}, {n_banks - 1}, 0, 0, 1'b1);",
@@ -251,17 +246,15 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
         lines.append(f"    ld_write({short['param_id']}, {n_banks - 1}, {short['ld_depth']}, 0, 1'b0);")
     if g['n_params'] < (1 << pid_w):
         lines.append(f"    ld_write({g['n_params']}, 0, 0, 0, 1'b0);")
-    if n_banks < (1 << bank_bits):
-        lines.append(f"    ld_write({first['param_id']}, {n_banks}, 0, 0, 1'b0);")
     lines += [
         '',
         '    // a write while a request is presented must be refused',
         '    @(negedge ap_clk);',
         '    want_done = n_done + 1;',
-        '    ext_bank_id = 0; ext_ap_start = 1; input_1_ap_vld = 1;',
+        '    bank_id = 0; ap_start = 1; input_1_ap_vld = 1;',
         f"    ld_write({first['param_id']}, 0, 0, 0, 1'b0);",
         '    wait_accept;',
-        '    ext_ap_start = 0;',
+        '    ap_start = 0;',
         '    wait (n_done >= want_done);',
         '    @(negedge ap_clk); input_1_ap_vld = 0;',
         '',
@@ -322,14 +315,14 @@ LATCH_TB = r"""
 // bank_select_latch against a pipelined IP model: one start per cycle, done L
 // cycles later, ap_idle low while anything is in flight or ap_start is high.
 module tb;
-  localparam int NB = 3, W = 2, L = 4;
+  localparam int W = 2, L = 4;
 
   reg clk = 0, rst = 1;
   always #5 clk = ~clk;
 
   reg ext_ap_start = 0;
   reg [W-1:0] ext_bank_id = 0;
-  wire ext_ap_ready, ext_bank_id_bad, hls_ap_start, busy, quiescent;
+  wire ext_ap_ready, hls_ap_start, quiescent;
   wire [W-1:0] cur_bank_id;
 
   reg [L-1:0] pipe = 0;
@@ -337,12 +330,11 @@ module tb;
   wire hls_ap_idle = (pipe == 0) & ~hls_ap_start;
   always @(posedge clk) pipe <= rst ? '0 : {pipe[L-2:0], hls_ap_start};
 
-  bank_select_latch #(.BANK_ID_WIDTH(W), .N_BANKS(NB)) dut (
+  bank_select_latch #(.BANK_ID_WIDTH(W)) dut (
     .ap_clk(clk), .ap_rst(rst),
-    .ext_ap_start(ext_ap_start), .ext_bank_id(ext_bank_id),
-    .ext_ap_ready(ext_ap_ready), .ext_bank_id_bad(ext_bank_id_bad),
+    .ext_ap_start(ext_ap_start), .ext_bank_id(ext_bank_id), .ext_ap_ready(ext_ap_ready),
     .hls_ap_start(hls_ap_start), .hls_ap_ready(hls_ap_ready), .hls_ap_idle(hls_ap_idle),
-    .cur_bank_id(cur_bank_id), .busy(busy), .quiescent(quiescent));
+    .cur_bank_id(cur_bank_id), .quiescent(quiescent));
 
   integer errors = 0, accepts = 0, cyc = 0, t_req = 0;
   reg [W-1:0] prev_bank = 0;
@@ -379,17 +371,9 @@ module tb;
     if (cyc - t_req < L) begin $display("FAIL: bank change before the IP drained"); errors = errors + 1; end
 
     @(negedge clk);
-    ext_bank_id = 3;
-    #1;
-    if (ext_bank_id_bad !== 1'b1 || ext_ap_ready !== 1'b1 || hls_ap_start !== 1'b0) begin
-      $display("FAIL: out-of-range bank not dropped"); errors = errors + 1;
-    end
-    @(negedge clk);
-    if (cur_bank_id !== 2'd2) begin $display("FAIL: out-of-range bank selected"); errors = errors + 1; end
-
     ext_ap_start = 0;
     repeat (L + 2) @(negedge clk);
-    if (busy !== 1'b0 || quiescent !== 1'b1) begin
+    if (quiescent !== 1'b1) begin
       $display("FAIL: not quiescent after the last transaction"); errors = errors + 1;
     end
 
