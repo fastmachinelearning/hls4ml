@@ -145,10 +145,9 @@ one `ap_none` port per element regardless of size. Its select is combinational, 
 the selected bank is present on the cycle the IP starts. Like `parameter_bank`, it
 is preloaded through `INIT_HEX`.
 
-`bank_select_latch.sv` owns the transaction. Acceptance requires `hls_ap_idle`, not
-merely `!busy` — under `ap_ctrl_hs` idle follows done by a cycle — and a transaction
-whose `ap_ready` and `ap_done` coincide (a pointwise convolution does) must not
-latch `busy`, or nothing would ever clear it.
+`bank_select_latch.sv` owns the bank. Requests for the selected bank pass straight
+to the IP; a request for another bank is held until `hls_ap_idle`, so the bank
+never changes under a transaction in flight.
 
 ## Generated files
 

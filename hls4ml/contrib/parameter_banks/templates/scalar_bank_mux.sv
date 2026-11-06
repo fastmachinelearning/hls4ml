@@ -9,9 +9,8 @@
 // the first cycles of a transaction -- reachable here, since a pipelined design
 // can report a latency of one cycle.
 //
-// cur_bank_id is committed by bank_select_latch before ap_start rises and held to
-// ap_done, so these outputs are stable for the whole transaction even though they
-// are unregistered.
+// bank_select_latch changes cur_bank_id only while the IP is idle, so these
+// outputs are stable for every transaction even though they are unregistered.
 
 `default_nettype none
 

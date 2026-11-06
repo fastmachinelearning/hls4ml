@@ -126,7 +126,8 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
     lines += [
         f'  wire [{bank_bits - 1}:0] cur_bank_id;',
         '  wire busy, quiescent;',
-        '  integer errors = 0;',
+        '  integer errors = 0, n_done = 0, want_done;',
+        '  always @(posedge ap_clk) if (ext_ap_done) n_done <= n_done + 1;',
         '',
         f'  {top} dut (',  # bank count is fixed by the packager
         '    .ap_clk(ap_clk), .ap_rst(ap_rst),',
@@ -170,14 +171,24 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
         '    end',
         '  endtask',
         '',
+        '  // ap_ctrl_hs: the request is taken at a rising edge where ext_ap_ready is high',
+        '  task wait_accept;',
+        '    begin',
+        '      @(posedge ap_clk);',
+        "      while (ext_ap_ready !== 1'b1) @(posedge ap_clk);",
+        '      @(negedge ap_clk);',
+        '    end',
+        '  endtask',
+        '',
         '  task run_bank(input integer bank);',
         '    begin',
         '      @(negedge ap_clk);',
+        '      want_done = n_done + 1;',
         '      ext_bank_id = bank[%d:0]; ext_ap_start = 1; input_1_ap_vld = 1;' % (bank_bits - 1),
-        "      wait (ext_ap_ready === 1'b1);",
-        '      @(negedge ap_clk);',
+        '      wait_accept;',
         '      ext_ap_start = 0;',
-        "      wait (ext_ap_done === 1'b1);",
+        '      // a dataflow IP can raise ap_done no later than ap_ready',
+        '      wait (n_done >= want_done);',
         '      @(negedge ap_clk);',
         '      input_1_ap_vld = 0;',
         '    end',
@@ -226,7 +237,7 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
                 ]
     lines += [
         '',
-        '    @(negedge ap_clk);',
+        '    repeat (20) @(negedge ap_clk);',
         '    if (busy !== 1\'b0) begin $display("FAIL: busy stuck high"); errors = errors + 1; end',
         '',
         '    // an in-range write while idle must still be accepted',
@@ -244,13 +255,14 @@ def write_testbench(path, project_name, input_codes, outputs, summary, banks, ex
         lines.append(f"    ld_write({first['param_id']}, {n_banks}, 0, 0, 1'b0);")
     lines += [
         '',
-        '    // a write while an inference is active must be refused',
+        '    // a write while a request is presented must be refused',
         '    @(negedge ap_clk);',
+        '    want_done = n_done + 1;',
         '    ext_bank_id = 0; ext_ap_start = 1; input_1_ap_vld = 1;',
-        "    wait (ext_ap_ready === 1'b1);",
-        '    @(negedge ap_clk); ext_ap_start = 0;',
         f"    ld_write({first['param_id']}, 0, 0, 0, 1'b0);",
-        "    wait (ext_ap_done === 1'b1);",
+        '    wait_accept;',
+        '    ext_ap_start = 0;',
+        '    wait (n_done >= want_done);',
         '    @(negedge ap_clk); input_1_ap_vld = 0;',
         '',
         '    if (errors == 0) $display("PARAMETER_BANKS_PASS");',
@@ -307,143 +319,78 @@ def run_xsim(work_dir, rtl_dirs, tb_file, top='tb'):
 LATCH_TB = r"""
 `timescale 1 ns / 1 ps
 
-// Out-of-range bank rejection, checked on bank_select_latch directly.
-//
-// This cannot be exercised through a two-bank wrapper: with N_BANKS=2 the bank id
-// is one bit wide, so every encodable value is valid. N_BANKS=3 makes id 3
-// representable and invalid.
+// bank_select_latch against a pipelined IP model: one start per cycle, done L
+// cycles later, ap_idle low while anything is in flight or ap_start is high.
 module tb;
-  localparam int NB = 3;
-  localparam int W  = $clog2(NB);
+  localparam int NB = 3, W = 2, L = 4;
 
   reg clk = 0, rst = 1;
   always #5 clk = ~clk;
 
   reg ext_ap_start = 0;
   reg [W-1:0] ext_bank_id = 0;
-  wire ext_ap_ready, ext_bank_id_bad, hls_ap_start;
-  reg hls_ap_ready = 1, hls_ap_done = 0;
-
-  // ap_ctrl_hs: the IP drops ap_idle when it accepts a start and raises it one
-  // cycle AFTER ap_done, so there is a window where the transaction is over but
-  // the IP is not yet idle. The wrapper must not accept a new bank in it.
-  reg hls_ap_idle = 1, done_d = 0;
-  always @(posedge clk) begin
-    if (rst) begin
-      hls_ap_idle <= 1'b1;
-      done_d      <= 1'b0;
-    end else begin
-      done_d <= hls_ap_done;
-      if (hls_ap_start & hls_ap_ready) hls_ap_idle <= 1'b0;
-      else if (done_d)                 hls_ap_idle <= 1'b1;
-    end
-  end
+  wire ext_ap_ready, ext_bank_id_bad, hls_ap_start, busy, quiescent;
   wire [W-1:0] cur_bank_id;
-  wire busy, quiescent;
-  integer errors = 0;
+
+  reg [L-1:0] pipe = 0;
+  wire hls_ap_ready = hls_ap_start;
+  wire hls_ap_idle = (pipe == 0) & ~hls_ap_start;
+  always @(posedge clk) pipe <= rst ? '0 : {pipe[L-2:0], hls_ap_start};
 
   bank_select_latch #(.BANK_ID_WIDTH(W), .N_BANKS(NB)) dut (
     .ap_clk(clk), .ap_rst(rst),
     .ext_ap_start(ext_ap_start), .ext_bank_id(ext_bank_id),
     .ext_ap_ready(ext_ap_ready), .ext_bank_id_bad(ext_bank_id_bad),
-    .hls_ap_start(hls_ap_start), .hls_ap_ready(hls_ap_ready),
-    .hls_ap_idle(hls_ap_idle), .hls_ap_done(hls_ap_done),
+    .hls_ap_start(hls_ap_start), .hls_ap_ready(hls_ap_ready), .hls_ap_idle(hls_ap_idle),
     .cur_bank_id(cur_bank_id), .busy(busy), .quiescent(quiescent));
+
+  integer errors = 0, accepts = 0, cyc = 0, t_req = 0;
+  reg [W-1:0] prev_bank = 0;
+  always @(posedge clk) begin
+    cyc <= cyc + 1;
+    if (!rst) begin
+      if (hls_ap_start & hls_ap_ready) accepts = accepts + 1;
+      if (pipe != 0 && cur_bank_id !== prev_bank) begin
+        $display("FAIL: bank changed with a transaction in flight"); errors = errors + 1;
+      end
+    end
+    prev_bank <= cur_bank_id;
+  end
 
   initial begin
     repeat (4) @(negedge clk);
     rst = 0;
     @(negedge clk);
 
-    // id 3 is out of range for NB=3: flagged, and nothing starts
-    ext_bank_id = 2'd3; ext_ap_start = 1;
+    ext_bank_id = 0; ext_ap_start = 1;
+    repeat (6) @(negedge clk);
+    if (accepts != 6) begin
+      $display("FAIL: %0d of 6 requests for the selected bank accepted", accepts); errors = errors + 1;
+    end
+    if (quiescent !== 1'b0) begin $display("FAIL: quiescent while busy"); errors = errors + 1; end
+
+    ext_bank_id = 2; accepts = 0; t_req = cyc;
+    #1;
+    if (ext_ap_ready !== 1'b0 || hls_ap_start !== 1'b0) begin
+      $display("FAIL: bank change not held while busy"); errors = errors + 1;
+    end
+    wait (accepts == 1);
+    if (cur_bank_id !== 2'd2) begin $display("FAIL: bank %0d after change", cur_bank_id); errors = errors + 1; end
+    if (cyc - t_req < L) begin $display("FAIL: bank change before the IP drained"); errors = errors + 1; end
+
     @(negedge clk);
-    if (ext_bank_id_bad !== 1'b1) begin
-      $display("FAIL: out-of-range bank not flagged"); errors = errors + 1;
-    end
-    if (hls_ap_start !== 1'b0) begin
-      $display("FAIL: invalid bank started the IP"); errors = errors + 1;
+    ext_bank_id = 3;
+    #1;
+    if (ext_bank_id_bad !== 1'b1 || ext_ap_ready !== 1'b1 || hls_ap_start !== 1'b0) begin
+      $display("FAIL: out-of-range bank not dropped"); errors = errors + 1;
     end
     @(negedge clk);
-    if (busy !== 1'b0) begin
-      $display("FAIL: invalid bank made the wrapper busy"); errors = errors + 1;
-    end
+    if (cur_bank_id !== 2'd2) begin $display("FAIL: out-of-range bank selected"); errors = errors + 1; end
+
     ext_ap_start = 0;
-    @(negedge clk);
-
-    // a valid id is accepted, and is stable before ap_start rises
-    ext_bank_id = 2'd2; ext_ap_start = 1;
-    @(negedge clk);
-    if (ext_bank_id_bad !== 1'b0) begin
-      $display("FAIL: valid bank flagged as bad"); errors = errors + 1;
-    end
-    if (cur_bank_id !== 2'd2) begin
-      $display("FAIL: bank not committed before ap_start (got %0d)", cur_bank_id);
-      errors = errors + 1;
-    end
-    if (hls_ap_start !== 1'b1) begin
-      $display("FAIL: valid bank did not start the IP"); errors = errors + 1;
-    end
-    ext_ap_start = 0;
-    @(negedge clk);
-    if (busy !== 1'b1) begin $display("FAIL: not busy after accept"); errors = errors + 1; end
-
-    // loads are refused while a transaction is in flight
-    if (quiescent !== 1'b0) begin
-      $display("FAIL: quiescent asserted while busy"); errors = errors + 1;
-    end
-    hls_ap_done = 1; @(negedge clk); hls_ap_done = 0;
-    if (busy !== 1'b0) begin $display("FAIL: still busy after done"); errors = errors + 1; end
-
-    // done has cleared busy but the IP has not raised ap_idle yet: the wrapper
-    // must refuse both a new transaction and a load until it does
-    if (hls_ap_idle !== 1'b0) begin
-      $display("FAIL: bench did not model the done-to-idle window"); errors = errors + 1;
-    end
-    if (ext_ap_ready !== 1'b0) begin
-      $display("FAIL: accepted a request before the IP went idle"); errors = errors + 1;
-    end
-    if (quiescent !== 1'b0) begin
-      $display("FAIL: quiescent before the IP went idle"); errors = errors + 1;
-    end
-
-    @(negedge clk);
-    if (hls_ap_idle !== 1'b1) begin
-      $display("FAIL: IP model never returned to idle"); errors = errors + 1;
-    end
-    if (ext_ap_ready !== 1'b1) begin
-      $display("FAIL: not ready once idle"); errors = errors + 1;
-    end
-    if (quiescent !== 1'b1) begin
-      $display("FAIL: not quiescent once idle"); errors = errors + 1;
-    end
-
-    // a transaction whose ap_ready and ap_done coincide is already over: busy must
-    // not latch high with no later done to clear it
-    @(negedge clk);
-    ext_bank_id = 2'd1; ext_ap_start = 1;
-    @(negedge clk);
-    ext_ap_start = 0;
-    hls_ap_done = 1;          // same cycle the latch sees ap_ready
-    @(negedge clk);
-    hls_ap_done = 0;
-    if (busy !== 1'b0) begin
-      $display("FAIL: busy latched by a same-cycle ready/done transaction"); errors = errors + 1;
-    end
-    @(negedge clk); @(negedge clk);
-    if (ext_ap_ready !== 1'b1) begin
-      $display("FAIL: wrapper never became ready again"); errors = errors + 1;
-    end
-
-    // a transaction whose ap_ready and ap_done coincide is already over: busy must
-    // not latch high with no later done left to clear it
-    ext_bank_id = 2'd1; ext_ap_start = 1;
-    @(negedge clk);
-    ext_ap_start = 0; hls_ap_done = 1;      // same cycle the latch sees ap_ready
-    @(negedge clk);
-    hls_ap_done = 0;
-    if (busy !== 1'b0) begin
-      $display("FAIL: busy latched by a same-cycle ready/done transaction"); errors = errors + 1;
+    repeat (L + 2) @(negedge clk);
+    if (busy !== 1'b0 || quiescent !== 1'b1) begin
+      $display("FAIL: not quiescent after the last transaction"); errors = errors + 1;
     end
 
     if (errors == 0) $display("PARAMETER_BANKS_PASS");

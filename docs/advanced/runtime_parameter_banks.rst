@@ -76,9 +76,11 @@ Selecting a bank at runtime
 ---------------------------
 
 Banks are numbered in the order given to ``pack_banks()``. For each inference,
-present ``ext_bank_id`` with ``ext_ap_start`` when ``ext_ap_ready`` is high; the
-wrapper latches the id for the whole inference, so it may change afterwards. No
-fixed cycle count is needed.
+present ``ext_bank_id`` with ``ext_ap_start`` and hold both until
+``ext_ap_ready``, as for ``ap_start`` on the plain IP. Requests for the bank
+already selected go straight to the IP, so inferences overlap at the IP's own
+initiation interval. A request for another bank waits until the IP is idle, so a
+bank change costs about one latency of the IP.
 
 Sample each output on its own ``ap_vld``, as with the plain IP.
 
@@ -118,8 +120,7 @@ Scope and limitations
 
 This version supports the Vitis backend, ``io_parallel``, ``Strategy: Resource``,
 ``Dense`` layers over rank-1, rank-2 and rank-3 inputs, ``ap_fixed`` parameters
-with ``TRN``/``WRAP`` quantization, idle-time bank updates and one inference in
-flight at a time.
+with ``TRN``/``WRAP`` quantization, and loader writes while the IP is idle.
 
 Dense weights need a reuse factor above 1, and packed words wider than 4096 bits
 are outside the verified scope. The bank count is

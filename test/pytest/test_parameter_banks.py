@@ -558,8 +558,9 @@ def test_pointwise_two_banks_rtl_simulation(tmp_path, synthesis_config, rank):
     assert passed, f'pointwise ({rank}-D) two-bank RTL simulation failed:\n{log[-6000:]}'
 
 
-def test_latch_rejects_out_of_range_bank(tmp_path, synthesis_config):
-    """Needs three banks: two cannot express an invalid id."""
+def test_bank_select_latch(tmp_path, synthesis_config):
+    """Same-bank requests overlap, a bank change waits for idle, and an id past
+    the bank count (three banks make one encodable) is dropped."""
     import parameter_banks_sim as sim
 
     if not synthesis_config['run_synthesis']:
