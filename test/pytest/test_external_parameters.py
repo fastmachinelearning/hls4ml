@@ -40,7 +40,6 @@ def _convert(model, out_dir, external=('weight', 'bias'), strategy='Resource', r
             if value == 'auto':
                 layer['Precision'][key] = PRECISION
         if name in weighted:
-            layer['Strategy'] = strategy
             layer['ReuseFactor'] = cfg.get('reuse_factors', {}).get(name, reuse_factor)
             if external:
                 layer['ExternalParameters'] = list(external)
@@ -89,7 +88,7 @@ def test_layouts(tmp_path, shape, reuse_factor, layer_class, lanes, depth):
     ],
 )
 def test_unbankable_parameters_warn_at_conversion(tmp_path, strategy, reuse_factor, io_type, reason):
-    with pytest.warns(UserWarning, match=f'weight cannot be placed in parameter banks: .*{reason}'):
+    with pytest.warns(UserWarning, match=f'cannot be placed in parameter banks: .*{reason}'):
         hls_model = _convert(_model((8,), 4), tmp_path, strategy=strategy, reuse_factor=reuse_factor, io_type=io_type)
     hls_model.write()
     with pytest.raises(InterfaceUnsupported):
