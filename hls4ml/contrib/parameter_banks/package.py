@@ -235,7 +235,7 @@ class Wrapper:
         for b in self.bram:
             s, sig = g.slot(b.name), b.signals
             f.write(f'  wire [{b.addr_width - 1}:0] {sig["addr_a"]}, {sig["addr_b"]};\n')
-            f.write(f'  wire {sig["en_a"]}, {sig["en_b"]}, {sig["rst_a"]};\n')
+            f.write(f'  wire {sig["en_a"]}, {sig["en_b"]};\n')
             # declared at the PHYSICAL width the IP drives; parameter_bank pads
             # between logical and physical explicitly
             f.write(f'  wire [{b.port_width - 1}:0] {sig["dout_a"]}, {sig["dout_b"]};\n')
@@ -246,7 +246,7 @@ class Wrapper:
             f.write(f'      .BANK_STRIDE_WORDS({b.bank_stride_words}), .INIT_HEX({b.name.upper()}_INIT_HEX)) u_{b.name} (\n')
             f.write('      .ap_clk(ap_clk), .ap_rst(ap_rst), .cur_bank_id(cur_bank_id), .quiescent(quiescent),\n')
             f.write(f'      .hls_Addr_A({sig["addr_a"]}), .hls_EN_A({sig["en_a"]}),\n')
-            f.write(f'      .hls_Dout_A({sig["dout_a"]}), .hls_Rst_A({sig["rst_a"]}),\n')
+            f.write(f'      .hls_Dout_A({sig["dout_a"]}),\n')
             f.write(f'      .hls_Addr_B({sig["addr_b"]}), .hls_EN_B({sig["en_b"]}), .hls_Dout_B({sig["dout_b"]}),\n')
             f.write(f'      .ld_req(ld_hit[{s.param_id}]), .ld_bank(ld_bank), .ld_word(ld_addr[{s.addr_width - 1}:0]),\n')
             f.write(f'      .ld_wdata(ld_data[{b.data_width - 1}:0]),\n')
@@ -276,10 +276,10 @@ class Wrapper:
             sig = b.signals
             # Both ports go to the IP as read ports; the bank lends port B to the
             # loader while quiescent. A layer that ignores port B leaves EN_B low.
-            for role in ('addr_a', 'en_a', 'dout_a', 'rst_a', 'addr_b', 'en_b', 'dout_b'):
+            for role in ('addr_a', 'en_a', 'dout_a', 'addr_b', 'en_b', 'dout_b'):
                 conns.append(f'.{sig[role]}({sig[role]})')
-            # Din/WEN dangling: the IP never writes (proven in verify); both clocks are ap_clk.
-            for role in ('din_a', 'wen_a', 'clk_a', 'din_b', 'wen_b', 'clk_b', 'rst_b'):
+            # The IP never writes (proven in verify), the banks need no reset, both clocks are ap_clk.
+            for role in ('din_a', 'wen_a', 'clk_a', 'rst_a', 'din_b', 'wen_b', 'clk_b', 'rst_b'):
                 conns.append(f'.{sig[role]}()')
         for sb in self.scalar:
             w = sb.width

@@ -40,7 +40,6 @@ module parameter_bank #(
     input  wire [HLS_ADDR_WIDTH-1:0]   hls_Addr_A,
     input  wire                        hls_EN_A,
     output wire [PORT_WIDTH-1:0]       hls_Dout_A,
-    input  wire                        hls_Rst_A,
 
     // facing the stock HLS IP, port B (read only; idle for layers that do not use it)
     input  wire [HLS_ADDR_WIDTH-1:0]   hls_Addr_B,
@@ -90,16 +89,15 @@ module parameter_bank #(
       .addr_in_padding(pad_a)
   );
 
-  // port A: registered read. Plain always blocks (not
-  // always_ff) because `mem` is shared with the loader port below; always_ff
-  // asserts exclusive ownership of the variables it assigns.
+  // port A: registered read with no reset, like the memories Vitis generates.
+  // Plain always blocks (not always_ff) because `mem` is shared with the loader
+  // port below; always_ff asserts exclusive ownership of the variables it assigns.
   localparam int PAD_BITS = PORT_WIDTH - DATA_WIDTH;
 
   reg [DATA_WIDTH-1:0] dout_q;
 
-  always @(posedge ap_clk or posedge hls_Rst_A) begin
-    if (hls_Rst_A) dout_q <= {DATA_WIDTH{1'b0}};
-    else if (hls_EN_A) dout_q <= mem[phys_a];
+  always @(posedge ap_clk) begin
+    if (hls_EN_A) dout_q <= mem[phys_a];
   end
 
   // logical -> physical: the padding bits the IP does not use are driven to zero
