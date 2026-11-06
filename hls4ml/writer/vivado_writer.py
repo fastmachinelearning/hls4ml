@@ -113,6 +113,9 @@ class VivadoWriter(Writer):
         elif mode == 'stream':
             return f'#pragma HLS STREAM variable={variable.name} depth={depth}'
 
+    def _bram_pragmas(self, brams):
+        return [f'#pragma HLS INTERFACE bram port={",".join(brams)} ']
+
     def write_project_cpp(self, model):
         """Write the main architecture source file (myproject.cpp)
 
@@ -221,7 +224,7 @@ class VivadoWriter(Writer):
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
                     if all_brams:
-                        newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
+                        newline += ''.join(indent + pragma + '\n' for pragma in self._bram_pragmas(all_brams))
                     newline += pipeline_pragma
 
                 if io_type == 'io_stream':
@@ -229,7 +232,7 @@ class VivadoWriter(Writer):
                         ','.join(all_inputs), ','.join(all_outputs)
                     )
                     if all_brams:
-                        newline += indent + '#pragma HLS INTERFACE bram port={} \n'.format(','.join(all_brams))
+                        newline += ''.join(indent + pragma + '\n' for pragma in self._bram_pragmas(all_brams))
                     newline += pipeline_pragma
 
             elif '// hls-fpga-machine-learning insert layers' in line:
