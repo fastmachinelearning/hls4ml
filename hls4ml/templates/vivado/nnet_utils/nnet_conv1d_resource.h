@@ -65,8 +65,7 @@ PartitionLoop:
                     #pragma HLS UNROLL
 
                     acc[i_pxl][i_out] += static_cast<typename CONFIG_T::accum_t>(
-                        CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
-                            data_buf[i_pxl][i_in], weights[i_w]));
+                        product_after_init<data_T, typename CONFIG_T::mult_config>(data_buf[i_pxl][i_in], weights[i_w]));
                 }
 
                 // Increment i_w

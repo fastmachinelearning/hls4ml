@@ -1164,20 +1164,24 @@ def test_binary_dot(test_case_id, backend):
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('activation', [binary(), ternary()], ids=['binary', 'ternary'])
-@pytest.mark.parametrize('layer', ['dense', 'conv2d'])
+@pytest.mark.parametrize('layer', ['dense', 'conv2d', 'binary'])
 def test_binary_activation_scale_sign(test_case_id, layer, activation, backend, io_type):
     """
-    Test batch normalization with scales of both signs, followed by a binary or ternary activation, which hls4ml merges
-    into thresholds.
+    Test batch normalization with scales of both signs, after a layer or of binary data, followed by a binary or ternary
+    activation, which hls4ml merges into thresholds.
     """
 
     keras.utils.set_random_seed(0)
     if layer == 'dense':
         x_in = Input((8,))
         x = QDense(16, kernel_quantizer=quantized_bits(4, 0, alpha=1), bias_quantizer=quantized_bits(8, 3))(x_in)
-    else:
+    elif layer == 'conv2d':
         x_in = Input((6, 6, 3))
         x = QConv2D(4, 3, kernel_quantizer=quantized_bits(4, 0, alpha=1), bias_quantizer=quantized_bits(8, 3))(x_in)
+    else:
+        x_in = Input((8,))
+        x = QDense(16, kernel_quantizer=quantized_bits(4, 0, alpha=1), bias_quantizer=quantized_bits(8, 3))(x_in)
+        x = QActivation(binary())(BatchNormalization()(x))
     bn = BatchNormalization()
     model = Model(x_in, QActivation(activation)(bn(x)))
     rng = np.random.default_rng(0)

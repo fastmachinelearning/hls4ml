@@ -50,9 +50,8 @@ PartitionLoop:
             Product2:
                 #pragma HLS loop unroll
                 for (int i_out = 0; i_out < mult_n_out; i_out++) {
-                    mult[i_in * mult_n_out + i_out] =
-                        CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
-                            cache, weights[i_in * mult_n_out + i_out]);
+                    mult[i_in * mult_n_out + i_out] = product_after_init<data_T, typename CONFIG_T::mult_config>(
+                        cache, weights[i_in * mult_n_out + i_out]);
                 }
             }
 
@@ -125,8 +124,8 @@ ConvOut:
                     (ii * CONFIG_T::stride_width) >= (CONFIG_T::pad_left + CONFIG_T::in_width)) {
                     mult[index_mult] = 0;
                 } else {
-                    mult[index_mult] = CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::weight_t>::product(
-                        data[index_data], weights[index_weight]);
+                    mult[index_mult] =
+                        product_after_init<data_T, typename CONFIG_T::mult_config>(data[index_data], weights[index_weight]);
                 }
             } // end channel loop
         }     // end filter loop
@@ -136,7 +135,7 @@ ConvOut:
     for (int ii = 0; ii < CONFIG_T::out_width / CONFIG_T::reuse_factor; ii++) {
         #pragma HLS loop unroll
         for (int ff = 0; ff < CONFIG_T::n_filt; ff++) {
-            acc[ii][ff] = init<data_T, typename CONFIG_T::mult_config>(biases[ff]);
+            acc[ii][ff] = init<data_T, typename CONFIG_T::mult_config>(biases[ff], CONFIG_T::n_chan);
         }
     }
 

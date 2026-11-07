@@ -182,8 +182,7 @@ FusedAccum:
                 #pragma HLS UNROLL
                 unsigned j = jb + p;
                 if (j < CONFIG_T::n_out) {
-                    acc[j] += CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
-                        data[i], weights[i * CONFIG_T::n_out + j]);
+                    acc[j] += product_after_init<data_T, CONFIG_T>(data[i], weights[i * CONFIG_T::n_out + j]);
                 }
             }
         }
@@ -225,8 +224,7 @@ FusedDotOut:
                 #pragma HLS UNROLL
                 if (i + p < CONFIG_T::n_in) {
                     typename CONFIG_T::accum_t term =
-                        CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
-                            data[i + p], weights[j * CONFIG_T::n_in + i + p]);
+                        product_after_init<data_T, CONFIG_T>(data[i + p], weights[j * CONFIG_T::n_in + i + p]);
                     part[p] = (i == 0) ? term : (typename CONFIG_T::accum_t)(part[p] + term);
                 } else if (i == 0) {
                     part[p] = (typename CONFIG_T::accum_t)0;
@@ -272,8 +270,7 @@ FusedAxpyAccum:
                 #pragma HLS UNROLL
                 unsigned j = jb + p;
                 if (j < CONFIG_T::n_out) {
-                    acc[j] += CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(
-                        cache, weights[i * CONFIG_T::n_out + j]);
+                    acc[j] += product_after_init<data_T, CONFIG_T>(cache, weights[i * CONFIG_T::n_out + j]);
                 }
             }
         }

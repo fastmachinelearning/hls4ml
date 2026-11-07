@@ -35,8 +35,14 @@ class BatchNormalizationQuantizedTanh(Layer):
         self.set_attr('scale_data', scale)
         self.set_attr('bias_data', bias)
         self.set_attr('ternary_threshold', ternary_threshold)
+        scale = np.asarray(scale, dtype=np.float64)
+        bias = np.asarray(bias, dtype=np.float64)
         inp = self.get_input_variable()
         precision = self.model.config.backend.convert_precision_string(inp.type.precision)
+        if isinstance(precision, XnorPrecisionType):
+            # Binary data stores -1 as 0 and +1 as 1, so scale * x + bias is 2 * scale * b + bias - scale in the stored b
+            scale, bias = 2 * scale, bias - scale
+            precision = IntegerPrecisionType(width=1, signed=False)
         F = precision.fractional
         low, high, threshold_precision = self.threshold_range(precision)
         # A negative scale reverses the comparisons with the thresholds, which the flip of the channel tells the kernel
@@ -59,8 +65,8 @@ class BatchNormalizationQuantizedTanh(Layer):
             )
         elif self.get_attr('quantize') == 3:
             with np.errstate(divide='ignore', invalid='ignore'):
-                threshold_hi = ternary_threshold / scale + threshold
-                threshold_lo = -ternary_threshold / scale + threshold
+                threshold_hi = (ternary_threshold - bias) / scale
+                threshold_lo = (-ternary_threshold - bias) / scale
             # The output is 1 at or above the high threshold and -1 at or below the low one (at or below, and at or
             # above, if flipped). The kernel tests the high threshold with > (< if flipped), so it is moved to the last
             # step of the input below it (the first above it); the low one is rounded down (up)

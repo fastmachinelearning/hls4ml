@@ -16,28 +16,9 @@ namespace product {
  * types of each.
  * --- */
 
-class Product {
-  public:
-    // The value a sum of n products starts from
-    template <class acc_T, class b_T> static acc_T init(b_T b, int n) { return static_cast<acc_T>(b); }
-};
+class Product {};
 
 template <class x_T, class w_T> class both_binary : public Product {
-  public:
-    // With products of 2 for equal data and weight (both +1 or both -1) and 0 otherwise, a sum of n products started at
-    // bias - n is the bias plus the sum of the products of the -1 and +1 values
-    template <class acc_T, class b_T> static acc_T init(b_T b, int n) {
-        return static_cast<acc_T>(b) - static_cast<acc_T>(n);
-    }
-    static hls::ap_uint<2> product(x_T a, w_T w) {
-        // specialisation for 1-bit weights and incoming data
-        #pragma HLS function inline
-        return a == w ? 2 : 0;
-    }
-};
-
-// The products of the -1 and +1 values, for sums that do not start at bias - n
-template <class x_T, class w_T> class both_binary_signed : public Product {
   public:
     static hls::ap_int<2> product(x_T a, w_T w) {
         // specialisation for 1-bit weights and incoming data
@@ -120,11 +101,45 @@ template <class x_T, class w_T> class data_binary_weight_exponential : public Pr
         return (a == 1) == (w.sign == 1) ? y : static_cast<r_T>(-y);
     }
 };
+
+// The products of a sum that starts at nnet::init: those of the product class P, unless P has cheaper ones below
+template <class P> class after_init : public P {
+  public:
+    // The value a sum of n products starts from
+    template <class acc_T, class b_T> static acc_T init(b_T b, int n) { return static_cast<acc_T>(b); }
+};
+
+// With products of 2 for equal data and weight (both +1 or both -1) and 0 otherwise, a sum of n products started at
+// bias - n is the bias plus the sum of the products of the -1 and +1 values
+template <class x_T, class w_T> class after_init<both_binary<x_T, w_T>> : public Product {
+  public:
+    template <class acc_T, class b_T> static acc_T init(b_T b, int n) {
+        return static_cast<acc_T>(b) - static_cast<acc_T>(n);
+    }
+    static hls::ap_uint<2> product(x_T a, w_T w) {
+        #pragma HLS function inline
+        return a == w ? 2 : 0;
+    }
+};
+
 } // namespace product
 
-template <class data_T, typename CONFIG_T> inline typename CONFIG_T::accum_t init(typename CONFIG_T::bias_t b) {
-    return CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::template init<typename CONFIG_T::accum_t>(
-        b, CONFIG_T::n_in);
+// The product class of a sum that starts at init
+template <class data_T, typename CONFIG_T>
+using init_sum = product::after_init<typename CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>>;
+
+// The value a sum of n products starts from, n_in by default. The sum adds products from product_after_init
+template <class data_T, typename CONFIG_T>
+inline typename CONFIG_T::accum_t init(typename CONFIG_T::bias_t b, int n = CONFIG_T::n_in) {
+    return init_sum<data_T, CONFIG_T>::template init<typename CONFIG_T::accum_t>(b, n);
+}
+
+// The product of data and weight in a sum that starts at init
+template <class data_T, typename CONFIG_T>
+inline auto product_after_init(data_T x, typename CONFIG_T::weight_t w)
+    -> decltype(init_sum<data_T, CONFIG_T>::product(x, w)) {
+    #pragma HLS function inline
+    return init_sum<data_T, CONFIG_T>::product(x, w);
 }
 
 template <class data_T, class res_T, typename CONFIG_T> inline res_T cast(typename CONFIG_T::accum_t x) { return (res_T)x; }
