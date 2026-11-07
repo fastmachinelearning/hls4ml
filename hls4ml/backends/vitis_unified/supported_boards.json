@@ -41,5 +41,21 @@
     "axi_master": {
       "platform_file": "${PLATFORM_REPO_PATHS}/xilinx_u280_gen3x16_xdma_1_202211_1/xilinx_u280_gen3x16_xdma_1_202211_1.xpfm"
     }
+  },
+  "alveo-u200": {
+    "part": "xcu200-fsgd2104-2-e",
+    "memory": {"type": "DDR", "banks": 4, "slr_banks": {"SLR0": 0, "SLR1": 2, "SLR2": 3}},
+    "kernel_slr": "SLR0",
+    "axi_master": {
+      "platform_file": "${PLATFORM_REPO_PATHS}/xilinx_u200_gen3x16_xdma_2_202110_1/xilinx_u200_gen3x16_xdma_2_202110_1.xpfm"
+    }
+  },
+  "alveo-u250": {
+    "part": "xcu250-figd2104-2L-e",
+    "memory": {"type": "DDR", "banks": 4, "slr_banks": {"SLR0": 0, "SLR1": 1, "SLR2": 2, "SLR3": 3}},
+    "kernel_slr": "SLR0",
+    "axi_master": {
+      "platform_file": "${PLATFORM_REPO_PATHS}/xilinx_u250_gen3x16_xdma_4_1_202210_1/xilinx_u250_gen3x16_xdma_4_1_202210_1.xpfm"
+    }
   }
 }
