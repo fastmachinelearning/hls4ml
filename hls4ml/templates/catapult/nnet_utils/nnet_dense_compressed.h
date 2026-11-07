@@ -55,7 +55,7 @@ void dense_compressed(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
 
 InitAccum:
     for (unsigned i = 0; i < CONFIG_T::n_out; i++) {
-        acc[i] = (typename CONFIG_T::accum_t)(biases[i]);
+        acc[i] = init<data_T, CONFIG_T>(biases[i]);
     }
 
     // Do the compressed matrix-multiply
@@ -82,8 +82,7 @@ ReuseLoop:
             auto weight_cache = weights[w].weight;
             data_T data_cache = data[row];
             // mult[col] += weight_cache * data_cache;
-            typename CONFIG_T::accum_t prod =
-                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data_cache, weight_cache);
+            typename CONFIG_T::accum_t prod = product_after_init<data_T, CONFIG_T>(data_cache, weight_cache);
             fill_mult<CONFIG_T>(col, mult, prod);
         }
 

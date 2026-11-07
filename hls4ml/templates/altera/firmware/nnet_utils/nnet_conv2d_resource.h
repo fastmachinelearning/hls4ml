@@ -285,7 +285,7 @@ void conv_2d_resource_cl(const data_T &data, res_T &res, const typename CONFIG_T
         (CONFIG_T::implementation == nnet::conv2d_implementation::combination ||
          CONFIG_T::implementation == nnet::conv2d_implementation::winograd);
 
-    if (CONFIG_T::filt_height == 3 && CONFIG_T::filt_width == 3 && winograd_conditions) {
+    if constexpr (CONFIG_T::filt_height == 3 && CONFIG_T::filt_width == 3 && winograd_conditions) {
         winograd_conv2d_3x3_kernel_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);
     } else {
         conv_2d_im2col_cl<data_T, res_T, CONFIG_T>(data, res, weights, biases);

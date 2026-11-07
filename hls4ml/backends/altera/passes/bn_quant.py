@@ -14,6 +14,7 @@ batchnorm_quantized_tanh_binary_config_template = """struct config{index} : nnet
     static const unsigned io_type = nnet::{iotype};
     static const unsigned reuse_factor = {reuse};
     typedef {threshold_t.name} threshold_t;
+    typedef {flip_t.name} flip_t;
 }};\n"""
 
 batchnorm_quantized_tanh_ternary_config_template = """struct config{index} : nnet::batchnorm_quantized_tanh_config {{
@@ -24,6 +25,7 @@ batchnorm_quantized_tanh_ternary_config_template = """struct config{index} : nne
     static const unsigned reuse_factor = {reuse};
     typedef {threshold_hi_t.name} threshold_hi_t;
     typedef {threshold_lo_t.name} threshold_lo_t;
+    typedef {flip_t.name} flip_t;
 }};\n"""
 
 batchnorm_quantized_tanh_function_template = (
@@ -63,10 +65,10 @@ class BatchNormalizationQuantizedTanhFunctionTemplate(FunctionCallTemplate):
         params = self._default_function_params(node)
         if node.get_attr('quantize') == 2:
             params['quantize'] = 'binary'
-            params['threshold'] = node.get_weights('threshold').name
+            params['threshold'] = node.get_weights('threshold').name + ', ' + node.get_weights('flip').name
         elif node.get_attr('quantize') == 3:
             params['quantize'] = 'ternary'
-            params['threshold'] = node.get_weights('threshold_hi').name + ', ' + node.get_weights('threshold_lo').name
+            params['threshold'] = ', '.join(node.get_weights(name).name for name in ('threshold_hi', 'threshold_lo', 'flip'))
 
         return self.template.format(**params)
 
@@ -94,9 +96,9 @@ class BatchNormalizationQuantizedTanhStreamFunctionTemplate(StreamFunctionCallTe
     def format(self, node):
         params = self._default_function_params(node)
         if node.get_attr('quantize') == 2:
-            params['threshold'] = node.get_weights('threshold').name
+            params['threshold'] = node.get_weights('threshold').name + ', ' + node.get_weights('flip').name
         elif node.get_attr('quantize') == 3:
-            params['threshold'] = node.get_weights('threshold_hi').name + ', ' + node.get_weights('threshold_lo').name
+            params['threshold'] = ', '.join(node.get_weights(name).name for name in ('threshold_hi', 'threshold_lo', 'flip'))
 
         return self.template.format(**params)
 
@@ -142,6 +144,7 @@ class MergeBatchNormAndQuantizedTanh(OptimizerPass):
             'n_out': bn_layer.get_attr('n_in'),
             'n_filt': bn_layer.get_attr('n_filt'),
             'quantize': quantize,
+            'use_01': (node.get_attr('activation_quantizer') or {}).get('config', {}).get('use_01', False),
             'trace': bn_layer.get_attr('trace'),
         }
         bnbt_layer = model.make_node(BatchNormalizationQuantizedTanh, 'bnbt_' + bn_layer.name, attrs, bn_layer.inputs)
@@ -165,7 +168,18 @@ class QuantizeDenseOutput(OptimizerPass):
         is_binary_ternary = quantizer is not None and (
             quantizer.__class__.__name__ == 'BinaryQuantizer' or quantizer.__class__.__name__ == 'TernaryQuantizer'
         )
-        return is_dense and is_input_bnqt and is_binary_ternary
+        if not (is_dense and is_input_bnqt and is_binary_ternary):
+            return False
+        # The bias of the layer moves to the batch normalizations that follow it, so a layer with a bias may only feed those,
+        # and its output may not be an output of the model
+        has_bias = np.any(node.get_weights('bias').data != 0)
+        output_nodes = node.get_output_nodes()
+        bias_moves = (
+            len(output_nodes) > 0
+            and all(isinstance(n, BatchNormalizationQuantizedTanh) for n in output_nodes)
+            and node.outputs[0] not in node.model.outputs
+        )
+        return not has_bias or bias_moves
 
     def transform(self, model, node):
         # Compute the required precision and update the variables
@@ -190,7 +204,7 @@ class QuantizeDenseOutput(OptimizerPass):
             return False
         quantizer.bits = quantized_precision.width
         quantizer.hls_type = quantized_precision
-        quantized_data = quantizer(node.weights['weight'].data)
+        quantized_data = quantizer(node.weights['weight'].data_unquantized)
 
         weights = node.weights['weight']
         weights.data = quantized_data
@@ -198,25 +212,18 @@ class QuantizeDenseOutput(OptimizerPass):
         weights.update_precision(quantized_precision)
 
         bias = node.weights['bias']
+        layer_bias = bias.data
         bias.data = np.zeros(shape=(node.get_attr('n_out')))
         bias.type.name = f'bias{node.index}_t'
         bias.nzeros = 0
         bias.update_precision(quantized_precision)
 
-        # If followed by the BatchNormalizationBinaryTanh, update its input
-        # Also requantise the weights
-        bd_out_nodes = node.get_output_nodes()
-        for out_node in bd_out_nodes:
+        # Add the bias to the batch normalizations that follow, and compute their thresholds again for the new input type
+        for out_node in node.get_output_nodes():
             if isinstance(out_node, BatchNormalizationQuantizedTanh):
-                var_names = []
-                if quantizer.__class__.__name__ == 'BinaryQuantizer':
-                    var_names.append('threshold')
-                elif quantizer.__class__.__name__ == 'TernaryQuantizer':
-                    var_names.append('threshold_hi')
-                    var_names.append('threshold_lo')
-                for var_name in var_names:
-                    threshold_var = out_node.weights[var_name]
-                    threshold_var.update_precision(out_type)
-                    threshold_var.data = np.floor(threshold_var.data)
+                scale = out_node.get_attr('scale_data')
+                out_node.set_thresholds(
+                    scale, out_node.get_attr('bias_data') + scale * layer_bias, out_node.get_attr('ternary_threshold')
+                )
 
         return False

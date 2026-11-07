@@ -51,9 +51,8 @@ PartitionLoop:
             Product2:
                 for (int i_out = 0; i_out < mult_n_out; i_out++) {
                     #pragma HLS UNROLL
-                    mult[i_in * mult_n_out + i_out] =
-                        CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
-                            cache, weights[i_in * mult_n_out + i_out]);
+                    mult[i_in * mult_n_out + i_out] = product_after_init<data_T, typename CONFIG_T::mult_config>(
+                        cache, weights[i_in * mult_n_out + i_out]);
                 }
             }
 
@@ -61,7 +60,7 @@ PartitionLoop:
         ResetAccum:
             for (int i_acc = 0; i_acc < mult_n_out; i_acc++) {
                 #pragma HLS UNROLL
-                acc[i_acc] = (typename CONFIG_T::accum_t)biases[i_acc];
+                acc[i_acc] = init<data_T, typename CONFIG_T::mult_config>(biases[i_acc]);
             }
 
         // Accumulate multiplication result

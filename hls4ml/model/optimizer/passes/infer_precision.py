@@ -6,12 +6,14 @@ import numpy as np
 from hls4ml.model.optimizer import ConfigurableOptimizerPass
 from hls4ml.model.optimizer.passes.bit_exact import minimal_kif
 from hls4ml.model.types import (
+    ExponentPrecisionType,
     FixedPrecisionType,
     IntegerPrecisionType,
     PrecisionType,
     RoundingMode,
     SaturationMode,
     UnspecifiedPrecisionType,
+    XnorPrecisionType,
 )
 
 # TODO:  The code assumes everything is Fixed or Integer precision. Need to add checks
@@ -116,6 +118,18 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
                 return False
         return True
 
+    def _value_precision(self, precision, data=None):
+        """The fixed-point type of the values a binary or power-of-two type stands for, for the width rules below.
+
+        A binary value is -1 or +1. A power-of-two value is +-2^e, with e taken from the data where it is known.
+        """
+
+        if isinstance(precision, XnorPrecisionType):
+            return IntegerPrecisionType(width=2, signed=True)
+        if isinstance(precision, ExponentPrecisionType):
+            return precision.value_precision(np.zeros(1) if data is None else data)
+        return precision
+
     def _infer_default_type(self, node, type_name):
         model_config = node.model.config
         default_precision = model_config.backend.convert_precision_string(model_config.model_precision['default'])
@@ -160,14 +174,16 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             node.weights['bias'].update_precision(node.types['bias_t'].precision)
             inferred_types.append('bias_t')
 
-        if self._all_supported_types((input_precision, node.types['weight_t'].precision, node.types['bias_t'].precision)):
+        input_precision = self._value_precision(input_precision)
+        weight_precision = self._value_precision(node.types['weight_t'].precision, node.weights['weight'].data)
+        if self._all_supported_types((input_precision, weight_precision, node.types['bias_t'].precision)):
             input_width = input_precision.width
             input_integers = input_precision.integer
             input_signed = input_precision.signed
 
-            weight_width = node.types['weight_t'].precision.width
-            weight_integers = node.types['weight_t'].precision.integer
-            weight_signed = node.types['weight_t'].precision.signed
+            weight_width = weight_precision.width
+            weight_integers = weight_precision.integer
+            weight_signed = weight_precision.signed
 
             bias_width = node.types['bias_t'].precision.width
             bias_integers = node.types['bias_t'].precision.integer
@@ -330,8 +346,8 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('bias_t')
 
         if 'result_t' in types_to_infer:
-            input_precision = node.get_input_variable().type.precision
-            scale_precision = node.types['scale_t'].precision
+            input_precision = self._value_precision(node.get_input_variable().type.precision)
+            scale_precision = self._value_precision(node.types['scale_t'].precision, node.weights['scale'].data)
             bias_precision = node.types['bias_t'].precision
 
             if self._all_supported_types((input_precision, scale_precision, bias_precision)):
