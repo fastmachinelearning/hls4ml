@@ -54,7 +54,7 @@ ReuseLoop:
             //#pragma HLS UNROLL
 
             acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
-                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]));
+                product_after_init<data_T, CONFIG_T>(data[in_index], weights[w_index]));
 
             // Increment w_index
             w_index += rufactor;
@@ -136,7 +136,7 @@ ReuseLoop:
         for (unsigned int im = 0; im < block_factor; im++) {
             //#pragma HLS UNROLL
             acc[out_index] += static_cast<typename CONFIG_T::accum_t>(
-                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]));
+                product_after_init<data_T, CONFIG_T>(data[in_index], weights[w_index]));
 
             w_index += rufactor;
             if (w_index >= CONFIG_T::n_in * CONFIG_T::n_out)
@@ -201,8 +201,7 @@ ReuseLoop:
             int in_index = w_index % nin;
             if (w_index >= CONFIG_T::n_in * CONFIG_T::n_out)
                 continue; // check out of bounds
-            tmpmult[im] =
-                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data[in_index], weights[w_index]);
+            tmpmult[im] = product_after_init<data_T, CONFIG_T>(data[in_index], weights[w_index]);
         }
 
         typename CONFIG_T::accum_t mult[multiplier_limit];

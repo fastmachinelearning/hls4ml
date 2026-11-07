@@ -52,9 +52,7 @@ class DenseConfigTemplate(LayerConfigTemplate):
         params['nzeros'] = node.get_weights('weight').nzeros
         params['nonzeros'] = node.get_weights('weight').nonzeros
         params['product_type'] = get_backend('vivado').product_type(
-            node.get_input_variable().type.precision,
-            node.get_weights('weight').type.precision,
-            sum_starts_with_init=True,
+            node.get_input_variable().type.precision, node.get_weights('weight').type.precision
         )
 
         namespace = params['namespace']

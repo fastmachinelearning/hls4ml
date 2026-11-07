@@ -153,8 +153,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
                     mult_code += (
                         f'{indent * 4}acc[{out_index}] += '
                         'static_cast<typename CONFIG_T::accum_t>'
-                        '(CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::'
-                        f'product(data[{in_index}], weights[{w_index}]));\n'
+                        f'(product_after_init<data_T, CONFIG_T>(data[{in_index}], weights[{w_index}]));\n'
                     )
 
                 w_index += reuse_factor
@@ -214,8 +213,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
                     mult_code += (
                         f'{indent * 4}acc[{int(out_index)}] += '
                         'static_cast<typename CONFIG_T::accum_t>'
-                        '(CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::'
-                        f'product(data[{in_index}], weights[{w_index}]));\n'
+                        f'(product_after_init<data_T, CONFIG_T>(data[{in_index}], weights[{w_index}]));\n'
                     )
 
                 w_index += reuse_factor

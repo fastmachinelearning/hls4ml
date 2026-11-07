@@ -52,7 +52,7 @@ struct conv_transpose_config {
 template <class data_T, typename CONFIG_T> struct conv_transpose_binary {
     typedef typename CONFIG_T::mult_config::weight_t weight_T;
     typedef typename CONFIG_T::mult_config::template product<data_T, weight_T> product_T;
-    static const bool data = std::is_same<product_T, product::both_binary_signed<data_T, weight_T>>::value ||
+    static const bool data = std::is_same<product_T, product::both_binary<data_T, weight_T>>::value ||
                              std::is_same<product_T, product::data_binary<data_T, weight_T>>::value ||
                              std::is_same<product_T, product::data_binary_weight_exponential<data_T, weight_T>>::value;
 };

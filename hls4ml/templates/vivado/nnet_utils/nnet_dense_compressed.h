@@ -66,8 +66,7 @@ ReuseLoop:
             auto weight_cache = weights[w].weight;
             data_T data_cache = data[row];
             // mult[col] += weight_cache * data_cache;
-            typename CONFIG_T::accum_t prod =
-                CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(data_cache, weight_cache);
+            typename CONFIG_T::accum_t prod = product_after_init<data_T, CONFIG_T>(data_cache, weight_cache);
             fill_mult<CONFIG_T>(col, mult, prod);
         }
 

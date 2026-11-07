@@ -39,7 +39,7 @@ Product1:
     Product2:
         for (int jj = 0; jj < CONFIG_T::n_out; jj++) {
             int index = ii * CONFIG_T::n_out + jj;
-            mult[index] = CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(cache, weights[index]);
+            mult[index] = product_after_init<data_T, CONFIG_T>(cache, weights[index]);
         }
     }
 
