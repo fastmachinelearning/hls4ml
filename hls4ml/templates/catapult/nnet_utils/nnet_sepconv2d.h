@@ -42,7 +42,8 @@ void depthwise_conv_2d_cl(
                         //#pragma HLS UNROLL
                         int data_idx = (h + i) * in_width * n_chan + (w + j) * n_chan + c;
                         int weight_idx = i * filt_width * n_chan + j * n_chan + c;
-                        sum += data[data_idx] * depthwise_weights[weight_idx];
+                        sum += CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::weight_t>::product(
+                            data[data_idx], depthwise_weights[weight_idx]);
                     }
                 }
 
