@@ -1,0 +1,20 @@
+{
+    "CSynthesisReport": {
+        "TargetClockPeriod": "5.00",
+        "EstimatedClockPeriod": "5.517",
+        "BestLatency": "163",
+        "WorstLatency": "163",
+        "IntervalMin": "87",
+        "IntervalMax": "87",
+        "BRAM_18K": "8",
+        "DSP": "127",
+        "FF": "8798",
+        "LUT": "30440",
+        "URAM": "0",
+        "AvailableBRAM_18K": "5376",
+        "AvailableDSP": "12288",
+        "AvailableFF": "3456000",
+        "AvailableLUT": "1728000",
+        "AvailableURAM": "1280"
+    }
+}
