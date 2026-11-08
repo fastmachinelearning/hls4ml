@@ -5,6 +5,8 @@ import keras
 import numpy as np
 import pytest
 from keras.layers import (
+    Add,
+    AveragePooling2D,
     BatchNormalization,
     Concatenate,
     Cropping2D,
@@ -1162,6 +1164,27 @@ def test_binary_data_movement(test_case_id, layer, backend, io_type):
     model = binary_input_model(input_shape, lambda x: tested(move(x)))
     _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
     np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult'])
+@pytest.mark.parametrize('layer', ['add', 'average_pooling'])
+def test_binary_input_not_supported(test_case_id, layer, backend):
+    """
+    Test that conversion stops for a layer that would take the 0 that stores -1 in binary data as 0.
+    """
+
+    compute = {'add': lambda x: Add()([x, x]), 'average_pooling': AveragePooling2D(2)}[layer]
+    model = binary_input_model((6, 6, 4), compute)
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    with pytest.raises(RuntimeError, match='has a binary input'):
+        hls4ml.converters.convert_from_keras_model(
+            model,
+            hls_config=config,
+            output_dir=str(test_root_path / test_case_id),
+            backend=backend,
+            # The DA fallback replaces the batch normalization, which then does not merge with the binary activation
+            allow_da_fallback=False,
+        )
 
 
 @pytest.mark.parametrize(
