@@ -4,7 +4,20 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-from keras.layers import BatchNormalization, Dot, EinsumDense, Input
+from keras.layers import (
+    BatchNormalization,
+    Concatenate,
+    Cropping2D,
+    Dot,
+    EinsumDense,
+    GlobalMaxPooling2D,
+    Input,
+    MaxPooling2D,
+    Permute,
+    Reshape,
+    UpSampling2D,
+    ZeroPadding2D,
+)
 from keras.models import Model, Sequential
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
@@ -1075,6 +1088,76 @@ def test_binary_input(test_case_id, layer, kernel_quantizer, backend, io_type):
     if isinstance(kernel_quantizer, quantized_po2):
         # The exponent field holds only the exponents of the weights, which keeps their products with binary data narrow
         assert hls_model.graph[tested.name].get_weights('weight').type.precision.width < 8
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('kernel_quantizer', [binary(alpha=1), quantized_bits(4, 0, alpha=1)], ids=['binary', 'bits'])
+@pytest.mark.parametrize('layer', ['conv1d', 'conv2d', 'depthwise', 'separable'])
+def test_binary_same_padding(test_case_id, layer, kernel_quantizer, backend, io_type):
+    """
+    Test convolutions with 'same' padding and a binary input. The binary type stores -1 as 0 and cannot hold the padded
+    zeros.
+    """
+
+    if layer in ('depthwise', 'separable') and backend != 'Vitis':
+        pytest.skip(f'{layer} is tested on Vitis only')
+    q = {'bias_quantizer': quantized_bits(8, 3), 'padding': 'same'}
+    if layer == 'conv1d':
+        input_shape, tested = (10, 4), QConv1D(5, 3, kernel_quantizer=kernel_quantizer, **q)
+    elif layer == 'conv2d':
+        input_shape, tested = (6, 6, 4), QConv2D(5, 3, kernel_quantizer=kernel_quantizer, **q)
+    elif layer == 'depthwise':
+        input_shape, tested = (6, 6, 4), QDepthwiseConv2D(3, depthwise_quantizer=kernel_quantizer, **q)
+    else:
+        input_shape, tested = (
+            (6, 6, 4),
+            QSeparableConv2D(5, 3, depthwise_quantizer=kernel_quantizer, pointwise_quantizer=kernel_quantizer, **q),
+        )
+    model = binary_input_model(input_shape, tested)
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize(
+    'layer',
+    [
+        'zero_padding',
+        'reshape',
+        'upsampling',
+        'transpose',
+        'cropping',
+        'concatenate',
+        'max_pooling_same',
+        'global_max_pooling',
+    ],
+)
+def test_binary_data_movement(test_case_id, layer, backend, io_type):
+    """
+    Test layers that move or select binary data, followed by a layer that computes with it.
+    """
+
+    if layer == 'cropping' and backend != 'Vitis':
+        pytest.skip(f'{layer} is not supported on {backend}')
+    if layer == 'max_pooling_same' and io_type == 'io_stream':
+        pytest.skip('Pooling in io_stream does not support padding')
+    input_shape, move = {
+        'zero_padding': ((4, 4, 4), ZeroPadding2D(1)),
+        'reshape': ((64,), Reshape((4, 4, 4))),
+        'upsampling': ((3, 3, 4), UpSampling2D(2)),
+        'transpose': ((6, 4, 4), Permute((2, 1, 3))),
+        'cropping': ((6, 6, 4), Cropping2D(1)),
+        'concatenate': ((6, 6, 4), lambda x: Concatenate()([x, x])),
+        'max_pooling_same': ((5, 5, 4), MaxPooling2D(2, padding='same')),
+        'global_max_pooling': ((6, 6, 4), GlobalMaxPooling2D()),
+    }[layer]
+    q = {'kernel_quantizer': quantized_bits(4, 0, alpha=1), 'bias_quantizer': quantized_bits(8, 3)}
+    tested = QDense(5, **q) if layer == 'global_max_pooling' else QConv2D(5, 3, **q)
+    model = binary_input_model(input_shape, lambda x: tested(move(x)))
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
