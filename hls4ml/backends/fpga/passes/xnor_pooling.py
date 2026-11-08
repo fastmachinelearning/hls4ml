@@ -6,6 +6,7 @@ from hls4ml.model.layers import (
     Cropping2D,
     GlobalPooling1D,
     GlobalPooling2D,
+    Merge,
     Pooling1D,
     Pooling2D,
     Reshape,
@@ -19,8 +20,9 @@ from hls4ml.model.types import XnorPrecisionType
 class XnorPooling(OptimizerPass):
     """
     For correct behavior, for MaxPooling and similar, for XnorPrecisionType, have to propagate
-    the type to the output. The same holds for the layers that only move data: they copy binary data as it is stored,
-    with 0 for -1. When padding has turned binary data into a 2-bit type, the layers after it get that type back.
+    the type to the output. The same holds for the layers that only move data, or pick one of their inputs: they copy
+    binary data as it is stored, with 0 for -1. When padding has turned binary data into a 2-bit type, the layers after
+    it get that type back.
     """
 
     def match(self, node):
@@ -48,11 +50,13 @@ class XnorPooling(OptimizerPass):
             return node.get_attr('pool_op') == 'Max'
         if isinstance(node, Resize):
             return node.get_attr('algorithm') == 'nearest'
+        if isinstance(node, Merge) and not isinstance(node, Concatenate):
+            return node.get_attr('op') in ('maximum', 'minimum')
         return isinstance(node, (Reshape, Repack, Transpose, Cropping1D, Cropping2D, Concatenate, Clone))
 
     def precisions(self, node):
         # A Reshape can keep an empty second input name after its shape input is removed
-        names = node.inputs if isinstance(node, Concatenate) else node.inputs[:1]
+        names = node.inputs if isinstance(node, Merge) else node.inputs[:1]
         inputs = [node.get_input_variable(x).type.precision for x in names]
         outputs = [node.get_output_variable(x).type.precision for x in node.outputs]
         return inputs, outputs
