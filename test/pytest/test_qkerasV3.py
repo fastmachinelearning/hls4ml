@@ -1060,7 +1060,7 @@ def binary_layers(hls_model):
     ]
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize(
     'kernel_quantizer',
@@ -1074,7 +1074,7 @@ def test_binary_input(test_case_id, layer, kernel_quantizer, backend, io_type):
     bias.
     """
 
-    if layer == 'depthwise' and backend not in ('Vivado', 'Vitis'):
+    if layer == 'depthwise' and backend == 'Altera':
         pytest.skip(f'{layer} is not supported on {backend}')
     bias = {'bias_quantizer': quantized_bits(8, 3)}
     if layer == 'dense':
@@ -1094,7 +1094,7 @@ def test_binary_input(test_case_id, layer, kernel_quantizer, backend, io_type):
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('kernel_quantizer', [binary(alpha=1), quantized_bits(4, 0, alpha=1)], ids=['binary', 'bits'])
 @pytest.mark.parametrize('layer', ['conv1d', 'conv2d', 'depthwise', 'separable'])
@@ -1330,7 +1330,7 @@ def test_qbatchnorm(test_case_id, activation, backend, io_type):
         np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('layer', ['dense', 'conv2d'])
 @pytest.mark.parametrize('activation', [ternary(), quantized_relu(4, 2)], ids=['ternary', 'relu'])
