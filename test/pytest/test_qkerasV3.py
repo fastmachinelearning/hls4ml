@@ -12,6 +12,7 @@ from keras.layers import (
     EinsumDense,
     GlobalMaxPooling2D,
     Input,
+    Maximum,
     MaxPooling2D,
     Permute,
     Reshape,
@@ -1131,6 +1132,7 @@ def test_binary_same_padding(test_case_id, layer, kernel_quantizer, backend, io_
         'transpose',
         'cropping',
         'concatenate',
+        'maximum',
         'max_pooling_same',
         'global_max_pooling',
     ],
@@ -1151,6 +1153,7 @@ def test_binary_data_movement(test_case_id, layer, backend, io_type):
         'transpose': ((6, 4, 4), Permute((2, 1, 3))),
         'cropping': ((6, 6, 4), Cropping2D(1)),
         'concatenate': ((6, 6, 4), lambda x: Concatenate()([x, x])),
+        'maximum': ((6, 6, 4), lambda x: Maximum()([x, Permute((2, 1, 3))(x)])),
         'max_pooling_same': ((5, 5, 4), MaxPooling2D(2, padding='same')),
         'global_max_pooling': ((6, 6, 4), GlobalMaxPooling2D()),
     }[layer]
