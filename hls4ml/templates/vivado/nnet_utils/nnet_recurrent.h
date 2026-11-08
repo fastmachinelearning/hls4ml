@@ -465,9 +465,9 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CO
         nnet::lstm_cell<data_T, res_T, CONFIG_T, CONFIG_T::use_static>::apply(reset_state, data_in, h_newstate, s_newstate,
                                                                               param, param_r, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
-            for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
+            for (int j = 0; j < CONFIG_T::n_state; j++) {
                 #pragma HLS UNROLL
-                res[i] = h_newstate[j];
+                res[CONFIG_T::n_state * iloop + j] = h_newstate[j];
             }
         reset_state = false;
     }
@@ -510,9 +510,9 @@ void lstm_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_init[C
         nnet::lstm_cell<data_T, res_T, CONFIG_T, false>::apply(reset_state, data_in, h_newstate, s_newstate, param, param_r,
                                                                param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
-            for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
+            for (int j = 0; j < CONFIG_T::n_state; j++) {
                 #pragma HLS UNROLL
-                res[i] = h_newstate[j];
+                res[CONFIG_T::n_state * iloop + j] = h_newstate[j];
             }
         reset_state = false;
     }
@@ -1030,9 +1030,9 @@ void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], res_T res[CON
         nnet::gru_cell<data_T, res_T, CONFIG_T, CONFIG_T::use_static>::apply(reset_state, data_in, h_state, param, param_zr,
                                                                              param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
-            for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
+            for (int j = 0; j < CONFIG_T::n_state; j++) {
                 #pragma HLS UNROLL
-                res[i] = h_state[j];
+                res[CONFIG_T::n_state * iloop + j] = h_state[j];
             }
         reset_state = false;
     }
@@ -1071,9 +1071,9 @@ void gru_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_init[CO
                                                               param_br);
 
         if (CONFIG_T::n_sequence_out > 1)
-            for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
+            for (int j = 0; j < CONFIG_T::n_state; j++) {
                 #pragma HLS UNROLL
-                res[i] = h_state[j];
+                res[CONFIG_T::n_state * iloop + j] = h_state[j];
             }
         reset_state = false;
     }
@@ -1373,9 +1373,9 @@ void simple_rnn_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in],
         nnet::simple_rnn_cell<data_T, res_T, CONFIG_T, CONFIG_T::use_static>::apply(reset_state, data_in, h_state, param,
                                                                                     param_r, param_b, param_br);
         if (CONFIG_T::n_sequence_out > 1)
-            for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
+            for (int j = 0; j < CONFIG_T::n_state; j++) {
                 #pragma HLS UNROLL
-                res[i] = h_state[j];
+                res[CONFIG_T::n_state * iloop + j] = h_state[j];
             }
         reset_state = false;
     }
@@ -1414,9 +1414,9 @@ void simple_rnn_stack(data_T data[CONFIG_T::n_sequence * CONFIG_T::n_in], h_T h_
         nnet::simple_rnn_cell<data_T, res_T, CONFIG_T, false>::apply(reset_state, data_in, h_state, param, param_r, param_b,
                                                                      param_br);
         if (CONFIG_T::n_sequence_out > 1)
-            for (int i = CONFIG_T::n_state * iloop, j = 0; i < (CONFIG_T::n_state * (iloop + 1)); i++, j++) {
+            for (int j = 0; j < CONFIG_T::n_state; j++) {
                 #pragma HLS UNROLL
-                res[i] = h_state[j];
+                res[CONFIG_T::n_state * iloop + j] = h_state[j];
             }
         reset_state = false;
     }
@@ -1576,22 +1576,15 @@ void bidirectional_stack(
             reset_state, data_in_back, h_newstate_back, param_back, param_r_back, param_b_back, param_br_back);
 
         if (CONFIG_T::n_sequence_out > 1) {
-            for (int i = (CONFIG_T::FORWARD_CONFIG::n_state + CONFIG_T::BACKWARD_CONFIG::n_state) * iloop, j = 0;
-                 i < (CONFIG_T::FORWARD_CONFIG::n_state + CONFIG_T::BACKWARD_CONFIG::n_state) * iloop +
-                         CONFIG_T::FORWARD_CONFIG::n_state;
-                 i++, j++) {
+            for (int j = 0; j < CONFIG_T::FORWARD_CONFIG::n_state; j++) {
                 #pragma HLS UNROLL
-                res[i] = h_newstate[j];
+                res[(CONFIG_T::FORWARD_CONFIG::n_state + CONFIG_T::BACKWARD_CONFIG::n_state) * iloop + j] = h_newstate[j];
             }
-            for (int i = (CONFIG_T::FORWARD_CONFIG::n_state + CONFIG_T::BACKWARD_CONFIG::n_state) *
-                             (CONFIG_T::n_sequence - iloop) -
-                         CONFIG_T::BACKWARD_CONFIG::n_state,
-                     j = 0;
-                 i <
-                 (CONFIG_T::FORWARD_CONFIG::n_state + CONFIG_T::BACKWARD_CONFIG::n_state) * (CONFIG_T::n_sequence - iloop);
-                 i++, j++) {
+            for (int j = 0; j < CONFIG_T::BACKWARD_CONFIG::n_state; j++) {
                 #pragma HLS UNROLL
-                res[i] = h_newstate_back[j];
+                res[(CONFIG_T::FORWARD_CONFIG::n_state + CONFIG_T::BACKWARD_CONFIG::n_state) *
+                        (CONFIG_T::n_sequence - iloop) -
+                    CONFIG_T::BACKWARD_CONFIG::n_state + j] = h_newstate_back[j];
             }
         }
         reset_state = false;
