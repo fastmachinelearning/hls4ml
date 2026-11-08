@@ -1333,6 +1333,32 @@ def test_qbatchnorm(test_case_id, activation, backend, io_type):
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('layer', ['dense', 'conv2d'])
+@pytest.mark.parametrize('activation', [ternary(), quantized_relu(4, 2)], ids=['ternary', 'relu'])
+def test_po2_weights(test_case_id, activation, layer, backend, io_type):
+    """
+    Test power-of-two weights of the default 8 bits, with small and large exponents, after narrow data. Each product
+    must keep every bit of the input shifted by the exponent.
+    """
+
+    keras.utils.set_random_seed(0)
+    q = {'kernel_quantizer': quantized_po2(), 'bias_quantizer': quantized_bits(8, 3)}
+    if layer == 'dense':
+        input_shape, tested = (16,), QDense(5, **q)
+    else:
+        input_shape, tested = (6, 6, 3), QConv2D(4, 3, **q)
+    model = Sequential([Input(input_shape), QActivation(activation), tested])
+    rng = np.random.default_rng(0)
+    kernel, bias = tested.get_weights()
+    # Small enough for the float32 sums of Keras to be exact
+    kernel = rng.uniform(-1, 1, kernel.shape) * rng.choice([1 / 64, 4], kernel.shape)
+    tested.set_weights([kernel, rng.uniform(-1, 1, bias.shape)])
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('layer', ['dense', 'conv2d'])
 def test_po2_bias(test_case_id, layer, backend, io_type):
     """
     Test layers with a power-of-two bias of the default 8 bits.

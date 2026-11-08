@@ -9,7 +9,6 @@ from hls4ml.model.types import (
     FixedPrecisionType,
     IntegerPrecisionType,
     NamedType,
-    XnorPrecisionType,
 )
 
 
@@ -88,7 +87,7 @@ def register_qkeras():
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
     register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
     register_pass('extract_ternary_threshold', ExtractTernaryThreshold)
-    register_pass('narrow_binary_po2_exponents', NarrowBinaryPo2Exponents)
+    register_pass('narrow_po2_exponents', NarrowPo2Exponents)
 
 
 class QKerasFactorizeAlpha(OptimizerPass):
@@ -296,11 +295,10 @@ class ExtractTernaryThreshold(OptimizerPass):
         return True
 
 
-class NarrowBinaryPo2Exponents(OptimizerPass):
+class NarrowPo2Exponents(OptimizerPass):
     """Power-of-two weights are stored as exponents, in a field as wide as the quantizer allows. The product of such a
-    weight and binary data is +-2^e, in a type that holds 2^e for every exponent of the field, which costs logic when
-    the weights are read from memory. In layers with a binary input, this pass narrows the field to the exponents the
-    weights use.
+    weight and the data is held in a type that holds 2^e for every exponent e of the field, so its width grows as 2 to
+    the power of the field width. This pass narrows the field to the exponents the weights use.
     """
 
     def match(self, node):
@@ -312,16 +310,13 @@ class NarrowBinaryPo2Exponents(OptimizerPass):
         return False
 
     def exponent_weights(self, node):
-        # The power-of-two weights that multiply the input of the layer
-        names = [name for name in ('weight', 'scale') if isinstance(node.weights.get(name), ExponentWeightVariable)]
-        if not names or not isinstance(node.get_input_variable().type.precision, XnorPrecisionType):
-            return []
-        return [node.weights[name] for name in names]
+        return [var for var in node.weights.values() if isinstance(var, ExponentWeightVariable)]
 
     def width(self, var):
-        # The width of a signed field that holds the exponents of the nonzero weights
+        # The width of a signed field that holds the exponents of the nonzero weights, at least 2 bits, as Altera's
+        # ac_int has no signed 1-bit type
         data = np.asarray(var.data, dtype=float)
         exponents = np.round(np.log2(np.abs(data[data != 0]))).astype(int)
         if exponents.size == 0:
             return var.type.precision.width
-        return max(int(exponents.max()).bit_length(), int(-exponents.min() - 1).bit_length()) + 1
+        return max(max(int(exponents.max()), 0).bit_length(), max(int(-exponents.min()) - 1, 0).bit_length(), 1) + 1

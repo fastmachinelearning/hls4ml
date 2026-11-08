@@ -83,11 +83,11 @@ template <class x_T, class w_T> class mult : public Product {
 
 template <class x_T, class w_T> class weight_exponential : public Product {
   public:
-    // Construct the return type from the multiplication equivalent to the largest shifts
-    // ap_int<pow2(decltype(w_T::weight)::width-1)-1> is the type if the multiplicand equivalent to the largest lshift <<
-    // ap_fixed<pow2(decltype(w_T::weight)::width-1)-1,0> is the type of the multiplicand equivalent to the largest rshift >>
-    using r_T = decltype(x_T(0) * (ac_int<pow2(decltype(w_T::weight)::width - 1) - 1, true>(1) +
-                                   ac_fixed<pow2(decltype(w_T::weight)::width - 1) - 1, 0, true>(1)));
+    // The weight type holds the exponents from -max_shift to max_shift - 1. The product holds every value of x_T times
+    // every +-2^e exactly: max_shift more fractional bits for the right shifts, and max_shift more integer bits for the
+    // left shifts and the negation
+    static const int max_shift = 1 << (decltype(w_T::weight)::width - 1);
+    using r_T = decltype(x_T(0) * ac_fixed<2 * max_shift, max_shift, true>(1));
     static r_T product(x_T a, w_T w) {
         // Shift product for exponential weights
         //#pragma HLS INLINE

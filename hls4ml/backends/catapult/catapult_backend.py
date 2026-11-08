@@ -114,7 +114,7 @@ class CatapultBackend(FPGABackend):
             'insert_zero_padding_before_binary_conv',
             'binary_zero_padding',
             'validate_binary_input',
-            'narrow_binary_po2_exponents',
+            'narrow_po2_exponents',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
