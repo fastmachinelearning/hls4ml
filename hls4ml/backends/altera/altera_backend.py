@@ -82,6 +82,8 @@ class AlteraBackend(FPGABackend):
             'fuse_consecutive_batch_normalization',
             'altera:xnor_pooling',
             'narrow_binary_po2_exponents',
+            'insert_zero_padding_before_binary_conv',
+            'binary_zero_padding',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
