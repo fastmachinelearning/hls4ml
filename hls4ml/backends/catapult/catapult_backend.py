@@ -113,6 +113,7 @@ class CatapultBackend(FPGABackend):
             'catapult:xnor_pooling',
             'insert_zero_padding_before_binary_conv',
             'binary_zero_padding',
+            'update_quantized_tanh_thresholds',
             'validate_binary_input',
             'narrow_po2_exponents',
         ]

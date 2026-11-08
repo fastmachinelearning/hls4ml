@@ -35,6 +35,7 @@ class BatchNormalizationQuantizedTanh(Layer):
         self.set_attr('scale_data', scale)
         self.set_attr('bias_data', bias)
         self.set_attr('ternary_threshold', ternary_threshold)
+        self.set_attr('thresholds_input', self.thresholds_input())
         scale = np.asarray(scale, dtype=np.float64)
         bias = np.asarray(bias, dtype=np.float64)
         inp = self.get_input_variable()
@@ -95,6 +96,13 @@ class BatchNormalizationQuantizedTanh(Layer):
             type_name='flip{index}_t',
             precision=IntegerPrecisionType(width=1, signed=False),
         )
+
+    def thresholds_input(self):
+        """The input type the thresholds are computed for. A binary type, which stores -1 as 0, is told apart from a 1-bit
+        unsigned one."""
+
+        precision = self.get_input_variable().type.precision
+        return f'{type(precision).__name__} {precision}'
 
     def binary_precision(self):
         """The output type of a binary activation: 1-bit binary, where 0 stands for -1, or 0 and 1 with use_01."""

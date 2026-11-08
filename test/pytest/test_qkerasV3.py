@@ -1166,6 +1166,27 @@ def test_binary_data_movement(test_case_id, layer, backend, io_type):
     np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('layer', ['max_pooling', 'upsampling'])
+def test_binary_activation_after_data_movement(test_case_id, layer, backend, io_type):
+    """
+    Test a batch normalization and binary activation after a layer that moves binary data. The merged layer compares its
+    input with thresholds for the type of that input, which the moving layer gets after the merge.
+    """
+
+    input_shape, move = {'max_pooling': ((6, 6, 4), MaxPooling2D(2)), 'upsampling': ((3, 3, 4), UpSampling2D(2))}[layer]
+    q = {'kernel_quantizer': quantized_bits(4, 0, alpha=1), 'bias_quantizer': quantized_bits(8, 3)}
+    bn, tested = BatchNormalization(), QConv2D(5, 3, **q)
+    model = binary_input_model(input_shape, lambda x: tested(QActivation(binary())(bn(move(x)))))
+    # Thresholds on both sides of 0, and negative scales
+    rng = np.random.default_rng(1)
+    gamma, beta, mean, var = bn.get_weights()
+    bn.set_weights([rng.uniform(-2, 2, gamma.shape), rng.uniform(-2, 2, beta.shape), rng.uniform(-1, 1, mean.shape), var])
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult'])
 @pytest.mark.parametrize('layer', ['add', 'average_pooling'])
 def test_binary_input_not_supported(test_case_id, layer, backend):
