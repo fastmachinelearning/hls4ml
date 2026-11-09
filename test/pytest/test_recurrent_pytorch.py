@@ -548,8 +548,6 @@ def test_rnn_sequence_method_consumer(test_case_id):
     """A method call consuming the RNN output tuple resolves to the sequence output."""
 
     class MethodConsumerModel(nn.Module):
-        # note: no Linear here on purpose — with channels_last_conversion='off' PyTorch Dense
-        # weights are never transposed (pre-existing upstream bug, reported separately)
         def __init__(self):
             super().__init__()
             self.rnn = nn.GRU(n_in, n_hidden, num_layers=1, batch_first=True)
