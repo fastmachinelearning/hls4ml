@@ -25,7 +25,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dynamic = [ "version" ]
-dependencies = [ "h5py", "numpy", "pydigitalwavetools==1.1", "pyyaml", "quantizers" ]
+dependencies = [ "h5py", "numpy", "pydigitalwavetools==1.1", "pyyaml", "quantizers<2" ]
 optional-dependencies.da = [ "da4ml>=0.5.2,<0.6" ]
 optional-dependencies.doc = [
   "sphinx",
