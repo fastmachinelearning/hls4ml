@@ -1235,6 +1235,12 @@ class StreamingSNN(Layer):
         self._set_type_t('bias')
         self._set_type_t('membrane')
 
+    def serialize_state(self):
+        # The serializer replaces the arrays in the stage dicts with file references, so it gets copies of the dicts
+        state = super().serialize_state()
+        state['attributes']['stages'] = [dict(stage) for stage in self.get_attr('stages')]
+        return state
+
 
 class BatchNormOnnx(Layer):
     """

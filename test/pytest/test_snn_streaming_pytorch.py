@@ -1,3 +1,4 @@
+import copy
 from collections import OrderedDict
 from pathlib import Path
 
@@ -64,3 +65,17 @@ def test_streaming_snn(test_case_id, family):
     top_cpp = Path(output_dir, 'firmware', 'myproject.cpp').read_text()
     assert [line.split()[2] for line in top_cpp.splitlines() if '#pragma HLS' in line] == ['INTERFACE']
     assert 'typedef ap_uint<16> result_t;' in Path(output_dir, 'firmware', 'defines.h').read_text()
+
+    # Saving leaves the model intact, so a second save also loads
+    for _ in range(2):
+        hls_model.save(Path(output_dir, 'saved.fml'))
+    hls4ml.converters.load_saved_model(Path(output_dir, 'saved.fml'))
+
+    # Rejected: a result type that cannot count the spikes, and an unsigned membrane
+    for key, value, error in [('result', 'ap_uint<3>', 'cannot count'), ('membrane', 'ap_ufixed<32,8>', 'must be signed')]:
+        bad_config = copy.deepcopy(config)
+        bad_config['LayerName']['snn']['Precision'][key] = value
+        with pytest.raises(Exception, match=error):
+            hls4ml.converters.convert_from_pytorch_model(
+                top, hls_config=bad_config, output_dir=output_dir, backend='Vitis', io_type='io_parallel'
+            )

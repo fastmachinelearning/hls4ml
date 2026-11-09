@@ -174,9 +174,11 @@ def _streaming_snn_code(node):
 
 
 def _check_types(node):
-    # Beta and threshold are constants of the membrane type: neither may wrap or truncate to 0
+    # The membrane can go negative, and beta and threshold are constants of its type: neither may wrap or truncate to 0
     membrane = node.get_attr('membrane_t').precision
     if isinstance(membrane, (FixedPrecisionType, IntegerPrecisionType)):
+        if not membrane.signed:
+            raise Exception(f'Layer {node.name}: the membrane type {membrane.definition_cpp()} must be signed.')
         lsb = 2.0**-membrane.fractional
         largest = 2.0 ** (membrane.integer - membrane.signed) - lsb
         for stage in node.get_attr('stages'):
@@ -190,8 +192,8 @@ def _check_types(node):
     result = node.get_output_variable().type.precision
     if isinstance(result, (FixedPrecisionType, IntegerPrecisionType)):
         if 2 ** (result.integer - result.signed) - 1 < node.get_attr('n_steps'):
-            print(
-                f'WARNING: Layer {node.name}: the result type {result.definition_cpp()} cannot count '
+            raise Exception(
+                f'Layer {node.name}: the result type {result.definition_cpp()} cannot count '
                 f'{node.get_attr("n_steps")} spikes. Set its "result" precision to "auto" or a wider type.'
             )
 
