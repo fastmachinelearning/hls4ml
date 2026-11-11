@@ -385,9 +385,9 @@ def weights_keras(model, fmt='longform', plot='boxplot'):
         name = layer.name
         weights, suffix = keras_process_layer_map[type(layer).__name__](layer)
 
-        for i, w in enumerate(weights):
+        for i, weight in enumerate(weights):
             label = f'{name}/{suffix[i]}'
-            w = w.flatten()
+            w = weight.flatten()
             w = abs(w[w != 0])
             n = len(w)
             if n == 0:
@@ -421,9 +421,9 @@ def activations_keras(model, X, fmt='longform', plot='boxplot'):
         [layer for layer in model.layers if not isinstance(layer, keras.layers.InputLayer)], X, model.input
     )
     outputs = dict(zip([layer.name for layer in model.layers if not isinstance(layer, keras.layers.InputLayer)], outputs))
-    for layer_name, y in outputs.items():
+    for layer_name, output in outputs.items():
         print(f'   {layer_name}')
-        y = y.flatten()
+        y = output.flatten()
         y = abs(y[y != 0])
         if len(y) == 0:
             print(f'Activations for {layer_name} are only zeros, ignoring.')

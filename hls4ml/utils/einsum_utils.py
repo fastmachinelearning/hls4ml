@@ -50,20 +50,20 @@ def _validate_einsum_expr(fn: str, shape0: tuple[int, ...], shape1: tuple[int, .
         for a in in0:
             if in0.count(a) == 1:
                 continue
-            a = a if a != '0' else '...'
-            raise ValueError(f"einsum string {fn} is invalid: input0 subscripts includes '{a}' multiple times")
+            subscript = a if a != '0' else '...'
+            raise ValueError(f"einsum string {fn} is invalid: input0 subscripts includes '{subscript}' multiple times")
     if len(sax_in1) != len(ax_in1):
         for a in in1:
             if in1.count(a) == 1:
                 continue
-            a = a if a != '0' else '...'
-            raise ValueError(f"einsum string {fn} is invalid: input1 subscripts includes '{a}' multiple times")
+            subscript = a if a != '0' else '...'
+            raise ValueError(f"einsum string {fn} is invalid: input1 subscripts includes '{subscript}' multiple times")
     if len(sax_out) != len(ax_out):
         for a in out:
             if out.count(a) == 1:
                 continue
-            a = a if a != '0' else '...'
-            raise ValueError(f"einsum string {fn} is invalid: output subscripts includes '{a}' multiple times")
+            subscript = a if a != '0' else '...'
+            raise ValueError(f"einsum string {fn} is invalid: output subscripts includes '{subscript}' multiple times")
 
     # Invalid broadcasting
     if '0' in sax_in0 or '0' in sax_in1 or '0' in sax_out:

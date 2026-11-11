@@ -31,8 +31,8 @@ def unary_lut_keras_handler(keras_layer, input_names, input_shapes, data_reader:
 
     table = data_reader.get_weights_data(config['name'], 'table')
     k, i, f = keras_layer['config']['kif_out']
-    k, b, I = k, k + i + f, k + i  # noqa: E741
-    config['table_t'] = FixedPrecisionType(b, I, k)  # noqa: E741
+    k, b, I = k, k + i + f, k + i
+    config['table_t'] = FixedPrecisionType(b, I, k)
     config['table_data'] = table
     config['activation'] = 'unary_lut'
 
