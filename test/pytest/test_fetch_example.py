@@ -10,7 +10,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_fetch_example_utils(test_case_id, backend):
     f = io.StringIO()
     with redirect_stdout(f):

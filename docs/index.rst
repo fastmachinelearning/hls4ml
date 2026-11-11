@@ -39,7 +39,6 @@
     backend/altera
     backend/vitis_unified
     backend/catapult
-    backend/quartus
     backend/sr
     backend/xls
 

@@ -10,7 +10,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_bram_factor(test_case_id, backend, io_type):
     """A copy of the test_dense from test_keras_api.py with BramFactor set to 0"""
