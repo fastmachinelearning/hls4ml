@@ -832,9 +832,14 @@ class ExponentWeightVariable(WeightVariable):
         # Use an XnorBinary-like representation for the sign
         sign = np.where(y < 0, np.zeros_like(y), np.ones_like(y))
         # Take the logarithm, since this is what we will write to the header
-        # for the optimized product using shifts
-        y = (np.log2(np.abs(y)) / np.log2(2.0)).astype('int')
-        return np.stack((sign, y), axis=-1)
+        # for the optimized product using shifts. A power of two is never zero, but the data can be padded with
+        # zeros (the Resource strategy of recurrent layers); those get the smallest exponent of the type, the value
+        # closest to zero it can represent.
+        precision = self.type.precision
+        exponent = np.full(y.shape, -(2 ** (precision.width - 1)) if precision.signed else 0, dtype='int')
+        nonzero = y != 0
+        exponent[nonzero] = np.log2(np.abs(y[nonzero])).astype('int')
+        return np.stack((sign, exponent), axis=-1)
 
     def __iter__(self):
         data = self._format()
