@@ -26,7 +26,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dynamic = [ "version" ]
-dependencies = [ "h5py", "numpy", "pydigitalwavetools==1.1", "pyyaml", "quantizers" ]
+dependencies = [ "h5py", "numpy", "pydigitalwavetools==1.1", "pyyaml", "quantizers<2" ]
 optional-dependencies.da = [ "alkaid>=0.8.1,<1" ]
 optional-dependencies.doc = [
   "myst-parser",
@@ -52,7 +52,7 @@ optional-dependencies.qkeras = [
   "tensorflow>=2.8,<=2.14.1",
   "tensorflow-model-optimization<=0.7.5",
 ]
-optional-dependencies.qkeras-v3 = [ "qkeras-v3" ]
+optional-dependencies.qkeras-v3 = [ "qkeras-v3>=1.2.3" ]
 optional-dependencies.snn = [ "snntorch", "torch" ]
 optional-dependencies.sparsepixels = [ "sparsepixels>=0.3" ]
 optional-dependencies.sr = [ "sympy>=1.13.1" ]
@@ -81,7 +81,7 @@ optional-dependencies.testing-keras3 = [
 ]
 optional-dependencies.testing-qkeras-v3 = [
   "keras==3.14.1",
-  "qkeras-v3",
+  "qkeras-v3>=1.2.3",
   "tensorflow>=2.21",
 ]
 optional-dependencies.xls = [ "xls-python>=0.1.9875" ]
