@@ -77,7 +77,7 @@ def model_to_dot(
     layers = model.get_layers()
 
     # Create graph nodes.
-    for i, layer in enumerate(layers):
+    for layer in layers:
         # layer_id = str(id(layer))
         layer_id = str(layer.index)
 
@@ -112,8 +112,8 @@ def model_to_dot(
             if class_name != 'Input':
                 if len(layer.inputs) > 1:
                     input_shapes = []
-                    for i in layer.inputs:
-                        input_layer = layer.get_input_variable(i)
+                    for input_name in layer.inputs:
+                        input_layer = layer.get_input_variable(input_name)
                         if input_layer is not None:
                             input_shapes.append(input_layer.shape)
                         else:

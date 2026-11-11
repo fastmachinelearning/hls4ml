@@ -21,13 +21,13 @@ def parse_quantizer_layer(operation, layer_name, input_names, input_shapes, node
     if any([s is None for s in shape]):
         raise ValueError(f'Tensor {input_names[0]} has at least one dimension with no fixed size')
     k, i, f = q_params['k'].data, q_params['i'].data, q_params['f'].data
-    k, B, I = k, k + i + f, k + i  # type: ignore # noqa: E741
-    k, B, I = k.detach().cpu().numpy(), B.detach().cpu().numpy(), I.detach().cpu().numpy()  # noqa: E741
-    I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
+    k, B, I = k, k + i + f, k + i  # type: ignore
+    k, B, I = k.detach().cpu().numpy(), B.detach().cpu().numpy(), I.detach().cpu().numpy()
+    I = np.where(B > 0, I, 0)  # type: ignore
 
     k = np.broadcast_to(k.astype(np.int16), (1,) + shape)  # type: ignore
     B = np.broadcast_to(B.astype(np.int16), (1,) + shape)  # type: ignore
-    I = np.broadcast_to(I.astype(np.int16), (1,) + shape)  # noqa: E741
+    I = np.broadcast_to(I.astype(np.int16), (1,) + shape)
 
     overflow_mode: str = class_object.overflow
     round_mode: str = class_object.round_mode

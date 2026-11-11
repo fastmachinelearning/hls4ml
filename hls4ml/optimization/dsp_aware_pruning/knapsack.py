@@ -197,8 +197,8 @@ def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.
     """
     try:
         from ortools.algorithms import pywrapknapsack_solver
-    except ModuleNotFoundError:
-        raise Exception('OR-Tools not found. Please insteal Google OR-Tools from pip.')
+    except ModuleNotFoundError as e:
+        raise Exception('OR-Tools not found. Please insteal Google OR-Tools from pip.') from e
 
     solver = pywrapknapsack_solver.KnapsackSolver(
         pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'BB'
@@ -222,8 +222,8 @@ def __solve_knapsack_cbc_mip(values, weights, capacity, time_limit=sys.float_inf
     """
     try:
         from ortools.algorithms import pywrapknapsack_solver
-    except ModuleNotFoundError:
-        raise Exception('OR-Tools not found. Please insteal Google OR-Tools from pip.')
+    except ModuleNotFoundError as e:
+        raise Exception('OR-Tools not found. Please insteal Google OR-Tools from pip.') from e
 
     solver = pywrapknapsack_solver.KnapsackSolver(
         pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_CBC_MIP_SOLVER, 'CBC'

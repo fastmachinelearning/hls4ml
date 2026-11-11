@@ -269,8 +269,8 @@ class VivadoAcceleratorWriter(VivadoWriter):
         f = open(os.path.join(filedir, '../templates/vivado_accelerator/build_lib.sh'))
         fout = open(f'{model.config.get_output_dir()}/build_lib.sh', 'w')
 
-        for line in f.readlines():
-            line = line.replace('myproject', model.config.get_project_name())
+        for template_line in f.readlines():
+            line = template_line.replace('myproject', model.config.get_project_name())
             line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
             fout.write(line)

@@ -84,9 +84,9 @@ class WeightsTorch:
             layer = self._get_layer(layer_name, self.model)
             name = layer.__class__.__name__
             weights, suffix = torch_process_layer_map[layer.__class__.__name__](layer)
-            for i, w in enumerate(weights):
+            for i, weight in enumerate(weights):
                 label = f'{name}/{suffix[i]}'
-                w = weights[i].detach().numpy()
+                w = weight.detach().numpy()
                 w = w.flatten()
                 w = abs(w[w != 0])
                 n = len(w)

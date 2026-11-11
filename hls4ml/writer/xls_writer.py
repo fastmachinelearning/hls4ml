@@ -137,7 +137,8 @@ class XLSWriter(Writer):
         output_path = firmware_dir(model) / f'{model.config.get_project_name()}.x'
 
         with open(output_path, 'w') as f:
-            for line in open(XLS_TEMPLATE_DIR / 'firmware/myproject.x'):
+            for template_line in open(XLS_TEMPLATE_DIR / 'firmware/myproject.x'):
+                line = template_line
                 if 'myproject' in line:
                     line = line.replace('myproject', model.config.get_project_name())
                 elif '// hls-fpga-machine-learning insert imports' in line:
@@ -283,7 +284,8 @@ class XLSWriter(Writer):
         )
         func_call = xls_func_call(layer)
         with open(firmware_dir(model) / f'{xls_module_name(layer)}.x', 'w') as f:
-            for line in open(XLS_TEMPLATE_DIR / 'firmware/layer.x'):
+            for template_line in open(XLS_TEMPLATE_DIR / 'firmware/layer.x'):
+                line = template_line
                 if '// hls-fpga-machine-learning insert imports' in line:
                     imports = []
                     if layer.class_name != 'Input':
