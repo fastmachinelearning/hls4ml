@@ -19,7 +19,6 @@ inference will never set a bitwidth larger than the bitwidth of the ``max_precis
 
 Weights, biases and other constant weight types that are set to ``'auto'`` and have no quantizer use the width and integer part of the model's default precision,
 but with convergent rounding (``RND_CONV``) and saturation (``SAT``) enabled. Since the weights are constants, this has no cost in the generated hardware.
-The output of a ReLU activation set to ``'auto'`` is unsigned, using the input precision without the sign bit.
 
 When manually setting bitwidths, the accumulator can overflow, and the precision may need to be reduced. For the accumulator, it is usually a bad idea to explicitly
 enable rounding or saturation modes since it dramatically increases the execution time. For other types (e.g. output types or weight types), however, rounding and saturation handling
