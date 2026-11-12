@@ -24,6 +24,49 @@ example_model_path = (test_root_path / '../../../example-models').resolve()
 backend_options = ['Vitis']
 
 
+@pytest.mark.parametrize('occupancies', [(5, 11), (11, 5), (5, None)])
+def test_vivado_fifo_depths_are_independent(tmp_path, monkeypatch, occupancies):
+    """Each model must use its own profiling data, even when FIFO names are reused."""
+    optimizer = hls4ml.model.optimizer.get_optimizer('vivado:fifo_depth_optimization')
+    monkeypatch.setattr(optimizer, 'values', [])
+
+    for index, occupancy in enumerate(occupancies):
+        output_dir = tmp_path / str(index)
+        model = Sequential([Input((4,)), Dense(4), Dense(2)])
+        config = hls4ml.utils.config_from_keras_model(model, backend='Vivado')
+        config['Flows'] = ['vivado:fifo_depth_optimization']
+
+        def profile(hls_model, occupancy=occupancy):
+            hls_model.write()
+            if occupancy is None:
+                return {'children': []}
+            fifo = next(
+                v
+                for v in hls_model.output_vars.values()
+                if v not in hls_model.get_input_variables() + hls_model.get_output_variables()
+            )
+            signal = {
+                'name': fifo.name + '_U',
+                'children': [{'data': [(0, f'b{occupancy:b}')]}, {'data': [(0, f'b{100_000:b}')]}],
+            }
+            return {'children': [{'children': [{'children': [signal]}]}]}
+
+        monkeypatch.setattr('hls4ml.backends.vivado.passes.fifo_depth_optimization.get_vcd_data', profile)
+        hls_model = hls4ml.converters.convert_from_keras_model(
+            model, hls_config=config, backend='Vivado', io_type='io_stream', output_dir=str(output_dir)
+        )
+        if occupancy is None:
+            assert optimizer.values == []
+            assert not (output_dir / 'max_depth.json').exists()
+        else:
+            depths = json.loads((output_dir / 'max_depth.json').read_text())
+            assert len(depths) == 1
+            assert depths[0]['max'] == occupancy
+            fifo = next(v for v in hls_model.output_vars.values() if v.name + '_U' == depths[0]['name'])
+            assert fifo.pragma[1] == occupancy + 1
+            assert f'variable={fifo.name} depth={occupancy + 1}' in (output_dir / 'firmware/myproject.cpp').read_text()
+
+
 def parse_cosim_report(project_path, project_name):
     """
     Parse the co-simulation report to check whether the co-simulation passed or failed and therefore a deadlock is detected.
