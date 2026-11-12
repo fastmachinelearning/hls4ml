@@ -93,6 +93,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         if node_class in ['PReLU']:
             return self._infer_prelu_act_precision(node, types_to_infer)
+
+        if node_class in ['Activation'] and node.get_attr('activation').lower() == 'relu':
+            return self._infer_relu_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -617,6 +620,27 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('param_t')
 
         return inferred_types
+
+    def _infer_relu_precision(self, node, types_to_infer):
+        if 'result_t' not in types_to_infer:
+            return []
+
+        # The output is the non-negative part of the input, so dropping the sign bit is lossless.
+        in_type = node.get_input_variable().type.precision
+        if isinstance(in_type, FixedPrecisionType):
+            if in_type.signed:
+                out_type = FixedPrecisionType(max(in_type.width - 1, 1), in_type.integer - 1, signed=False)
+            else:
+                out_type = FixedPrecisionType(in_type.width, in_type.integer, signed=False)
+        elif isinstance(in_type, IntegerPrecisionType):
+            out_type = IntegerPrecisionType(max(in_type.width - in_type.signed, 1), signed=False)
+        else:
+            return []
+
+        node.types['result_t'].name = node.name + '_result_t'
+        node.types['result_t'].precision = out_type
+
+        return ['result_t']
 
 
 def _get_precision_from_constant(value: int | float, max_width=8):

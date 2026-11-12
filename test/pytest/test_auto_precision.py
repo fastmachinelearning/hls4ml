@@ -316,3 +316,33 @@ def test_precision_from_constant_unit(val, expected_width):
     quantum = 2.0**-fp.fractional
     if expected_width < max_width:
         assert val % quantum == 0
+
+
+@pytest.mark.parametrize(
+    'input_precision, expected_width, expected_integer',
+    [
+        ('ap_fixed<16,6>', 15, 5),
+        ('ap_ufixed<12,4>', 12, 4),
+        ('ap_int<8>', 7, 7),
+    ],
+)
+def test_auto_precision_relu(test_case_id, input_precision, expected_width, expected_integer):
+    """ReLU output should be unsigned, keeping the integer bits of the input other than the sign bit."""
+    model = Sequential()
+    model.add(Dense(4, activation='relu', input_shape=(4,), name='first_layer'))
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<16,6>', granularity='model')
+    config['LayerName'] = {
+        'first_layer': {'Precision': {'result': input_precision}},
+        'first_layer_relu': {'Precision': {'result': 'auto'}},
+    }
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=odir, backend='Vivado')
+
+    relu_precision = hls_model.graph['first_layer_relu'].get_output_variable().type.precision
+    assert not relu_precision.signed
+    assert relu_precision.width == expected_width
+    assert relu_precision.integer == expected_integer
+
+    hls_model.compile()
