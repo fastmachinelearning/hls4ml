@@ -21,5 +21,7 @@ When manually setting bitwidths, the accumulator can overflow, and the precision
 enable rounding or saturation modes since it dramatically increases the execution time. For other types (e.g. output types or weight types), however, rounding and saturation handling
 can be enabled as needed.
 
+The output of a ReLU activation set to ``'auto'`` is unsigned, using the input precision without the sign bit.
+
 .. note::
     For supported models (most ``HGQ/HGQ2`` models and some ``QKeras`` models), Model-wise Precision Inference (documented in `model-wise precision inference <./precision.html>`_) can be used to achieve bit-exact conversion. Please refer to that section for more details.
