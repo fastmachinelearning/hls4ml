@@ -119,9 +119,19 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
     def _infer_default_type(self, node, type_name):
         model_config = node.model.config
         default_precision = model_config.backend.convert_precision_string(model_config.model_precision['default'])
-        # No need to change the name of the NamedType since we use the default precision
-        node.types[type_name].precision = default_precision
         weight_name = type_name.removesuffix('_t')
+        if weight_name in node.weights and isinstance(default_precision, FixedPrecisionType):
+            # Weights are constants, so rounding and saturating them costs nothing at run time
+            default_precision = FixedPrecisionType(
+                default_precision.width,
+                default_precision.integer,
+                default_precision.signed,
+                rounding_mode=RoundingMode.RND_CONV,
+                saturation_mode=SaturationMode.SAT,
+            )
+            node.types[type_name].name = node.name + '_' + type_name
+        # Otherwise there is no need to change the name of the NamedType since we use the default precision
+        node.types[type_name].precision = default_precision
         if weight_name in node.weights:
             node.weights[weight_name].update_precision(default_precision)
 
