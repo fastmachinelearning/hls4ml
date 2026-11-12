@@ -56,12 +56,14 @@ def input_shape_3d(backend):
 @pytest.fixture()
 def data_1d(backend):
     X = np.random.rand(100, *input_shape_1d(backend))
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     return X
 
 
 @pytest.fixture()
 def data_2d(backend):
     X = np.random.rand(100, *input_shape_2d(backend))
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     return X
 
 
