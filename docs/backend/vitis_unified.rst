@@ -11,7 +11,9 @@ Currently ``hls4ml`` officially supports the following boards and tool versions:
 * `zcu102 <https://www.xilinx.com/products/boards-and-kits/ek-u1-zcu102-g.html>`_ (Vitis and Vivado 2023.2)
 * `kv260 <https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html>`_ (Vitis and Vivado 2023.2 and 2025.2)
 * `alveo-u55c <https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html>`_ (Vitis and Vivado 2024.2 with the ``xilinx_u55c_gen3x16_xdma_3_202210_1`` platform, ``axi_master`` with ``driver='xrt'``)
-* ``alveo-u50`` and ``alveo-u280`` (not tested on hardware, no ``kernel_slr``)
+* `alveo-u250 <https://www.xilinx.com/products/boards-and-kits/alveo/u250.html>`_ (Vitis and Vivado 2024.2 with the ``xilinx_u250_gen3x16_xdma_4_1_202210_1`` platform, ``axi_master`` with ``driver='xrt'``)
+* `alveo-u200 <https://www.xilinx.com/products/boards-and-kits/alveo/u200.html>`_ (Vitis and Vivado 2024.2 with the ``xilinx_u200_gen3x16_xdma_2_202110_1`` platform, ``axi_master`` with ``driver='xrt'``)
+* ``alveo-u50`` and ``alveo-u280``
 
 If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. The steps are covered in the platform setup tutorial in the accelerator backend section of the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
 
@@ -71,12 +73,12 @@ Data-center cards
 A card is linked against an installed card platform instead of one built by Vivado, and it is driven by XRT over PCIe instead of by PYNQ. Three things follow from that, and all are handled by the ``board`` and ``driver`` options:
 
 * The platform is looked up under ``PLATFORM_REPO_PATHS``, which has to be set when ``bitfile=True`` runs the link.
-* The kernel pointers are assigned to memory banks explicitly. The banks of the board entry are split evenly over the pointer arguments, one contiguous slice each, and the generated driver allocates every buffer in the banks of its own kernel argument. For one input and one output on a card with 32 HBM banks that gives ``HBM[0:15]`` and ``HBM[16:31]``.
-* The kernel is placed in the SLR given by ``kernel_slr`` (from the board entry, ``SLR2`` on the U55C), so v++ pipelines the path to its memory banks. Pass ``kernel_slr=False`` for a model that does not fit in one SLR.
+* The kernel pointers are assigned to memory banks explicitly. The banks of the board entry are split evenly over the pointer arguments, one contiguous slice each, and the generated driver allocates every buffer in the banks of its own kernel argument. For one input and one output on a card with 32 HBM banks that gives ``HBM[0:15]`` and ``HBM[16:31]``. On a DDR card a pointer connects to a single bank, and every pointer goes to the bank the board entry lists for the kernel's SLR (``slr_banks``, ``DDR[0]`` without ``kernel_slr``), so the kernel does not cross SLRs to reach its memory.
+* The kernel is placed in the SLR given by ``kernel_slr`` (from the board entry, ``SLR2`` on the U55C, ``SLR0`` on the U200 and U250, whose static region is in ``SLR1``), so v++ pipelines the path to its memory banks. Pass ``kernel_slr=False`` for a model that does not fit in one SLR. On a DDR card the memory controllers are placed in the same SLRs as the kernel, so leave headroom in the kernel's SLR: a nearly full SLR can fail the link on a memory clock that Vitis cannot lower.
 
 Only ``axi_master`` is supported on a card. Instead of the raw bitstream and hardware handoff file that PYNQ needs, the ``.xclbin`` is copied to ``export/``.
 
-The kernel runs on the card's scalable clock. Vitis implements it against the platform's default kernel frequency, 300 MHz on the U55C, and when routing misses that it lowers the clock in the ``.xclbin`` to the highest frequency that meets timing. A ``[clock]`` entry would not change this, so a card's ``link_system.cfg`` has none. ``build(bitfile=True)`` prints the kernel clock read from the ``.xclbin`` and returns it as ``KernelClockMHz`` in its report. ``clock_period`` still sets the HLS schedule, and since the HLS estimate leaves out routing, a short period pays off. A 16-64-32-32-5 jet tagger at ``ReuseFactor`` 1 ships at 112 MHz with ``clock_period=6.66`` and at 237 MHz with ``clock_period=3.333``. Adding ``in_stream_buf_size=2`` and the options below to ``link_system.cfg`` after ``write()`` gives 256 MHz:
+The kernel runs on the card's scalable clock. Vitis implements it against the platform's default kernel frequency, 300 MHz on the U55C, and when routing misses that it lowers the clock in the ``.xclbin`` to the highest frequency that meets timing. A ``[clock]`` entry would not change this, so a card's ``link_system.cfg`` has none. ``build(bitfile=True)`` prints the kernel clock read from the ``.xclbin`` and returns it as ``KernelClockMHz`` in its report. ``clock_period`` still sets the HLS schedule, and since the HLS estimate leaves out routing, a short period pays off. A 16-64-32-32-5 jet tagger at ``ReuseFactor`` 1 ships at 112 MHz with ``clock_period=6.66`` and at 237 MHz with ``clock_period=3.333``. On the U250, with the kernel in ``SLR0`` next to ``DDR[0]``, the same model ships at 285 MHz with ``clock_period=3.333``. Adding ``in_stream_buf_size=2`` and the options below to ``link_system.cfg`` after ``write()`` gives 256 MHz:
 
 .. code-block:: ini
 
@@ -123,7 +125,7 @@ They are stored under ``VitisUnifiedConfig`` in the model configuration.
      - ``zcu102``
      - | Target board.
        | It selects the FPGA part, the platform, and the Python driver template.
-       | The current version only supports the boards in ``supported_boards.json`` (``zcu102``, ``kv260``, ``alveo-u55c``, ``alveo-u50`` and ``alveo-u280``).
+       | The current version only supports the boards in ``supported_boards.json`` (``zcu102``, ``kv260``, ``alveo-u55c``, ``alveo-u200``, ``alveo-u250``, ``alveo-u50`` and ``alveo-u280``).
        | Any other board name is rejected with an error, unless ``platform`` and ``part`` are given.
        | You can use your own board: build its platform by following the platform setup tutorial in the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository and pass it with ``platform``.
    * - ``part``

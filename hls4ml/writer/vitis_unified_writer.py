@@ -359,7 +359,8 @@ fi
         )
 
     def _get_memory_assignment(self, model, memory):
-        """One contiguous slice of the card's memory banks per kernel pointer argument.
+        """HBM: one contiguous slice of the banks per kernel pointer argument.
+        DDR: every pointer on the bank the board lists for the kernel's SLR, DDR[0] without one.
 
         The host must allocate each buffer in the same banks, which the generated XRT driver does
         through the kernel argument index.
@@ -368,13 +369,18 @@ fi
         ports = [self._get_io_port_name(var, True, idx) for idx, var in enumerate(model.get_input_variables())]
         ports += [self._get_io_port_name(var, False, idx) for idx, var in enumerate(model.get_output_variables())]
         kind, banks = memory['type'], memory['banks']
-        per_port = banks // len(ports)
-        lines = ''
-        for idx, port in enumerate(ports):
-            first = idx * per_port
-            span = f'{kind}[{first}]' if per_port == 1 else f'{kind}[{first}:{first + per_port - 1}]'
-            lines += f'sp={instance}.{port}:{span}\n'
         kernel_slr = self.vitis_unified_config.get_kernel_slr()
+        lines = ''
+        if kind == 'DDR':
+            bank = memory['slr_banks'][kernel_slr] if kernel_slr else 0
+            for port in ports:
+                lines += f'sp={instance}.{port}:DDR[{bank}]\n'
+        else:
+            per_port = banks // len(ports)
+            for idx, port in enumerate(ports):
+                first = idx * per_port
+                span = f'{kind}[{first}]' if per_port == 1 else f'{kind}[{first}:{first + per_port - 1}]'
+                lines += f'sp={instance}.{port}:{span}\n'
         if kernel_slr:
             lines += f'slr={instance}:{kernel_slr}\n'
         return lines

@@ -8,7 +8,11 @@ from shutil import rmtree
 
 from hls4ml.backends import VitisBackend
 from hls4ml.backends.vitis_unified.vitis_unified_config import VitisUnifiedConfig
-from hls4ml.backends.vitis_unified.vitis_unified_validation import load_supported_boards, validate_config
+from hls4ml.backends.vitis_unified.vitis_unified_validation import (
+    load_supported_boards,
+    memory_config,
+    validate_config,
+)
 from hls4ml.model.flow import register_flow
 from hls4ml.report import parse_vitis_unified_report
 
@@ -204,6 +208,9 @@ class VitisUnifiedBackend(VitisBackend):
         config['VitisUnifiedConfig']['out_stream_buf_size'] = out_stream_buf_size
         if kernel_slr not in (None, False) and not re.fullmatch(r'SLR\d', str(kernel_slr)):
             raise Exception(f'kernel_slr must be an SLR name such as "SLR1", or False, not {kernel_slr!r}')
+        memory = memory_config(supported_boards.get(board, {}))
+        if kernel_slr and memory.get('type') == 'DDR' and kernel_slr not in memory.get('slr_banks', {}):
+            raise Exception(f'board "{board}" has no DDR bank in {kernel_slr}, use one of {list(memory["slr_banks"])}')
         config['VitisUnifiedConfig']['KernelSLR'] = kernel_slr
 
         config['VitisUnifiedConfig']['Driver'] = driver
