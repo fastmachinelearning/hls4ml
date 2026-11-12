@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from keras.layers import GRU, LSTM, Bidirectional, Input, SimpleRNN
 from keras.models import Model, Sequential
+from synthesis_helpers import run_synthesis_test
 
 import hls4ml
 
@@ -872,6 +873,58 @@ def test_bidirectional_gru_reset_after_accuracy(test_case_id, reset_after, stati
     keras_prediction = model.predict(X)
     hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=5e-2)
+
+
+def create_return_sequences_model(rnn_layer, stacked):
+    """Small recurrent layer returning every time step, optionally feeding a second one; fixed non-zero weights."""
+    n_steps, n_features, n_units = 5, 3, 4
+    model = Sequential()
+    model.add(Input(shape=(n_steps, n_features)))
+    if rnn_layer is Bidirectional:
+        model.add(Bidirectional(GRU(n_units, return_sequences=True), name='rnn'))
+    else:
+        model.add(rnn_layer(n_units, return_sequences=True, name='rnn'))
+    if stacked:
+        model.add(GRU(n_units, name='rnn_out'))
+
+    rng = np.random.default_rng(0)
+    for layer in model.layers:
+        weights = [rng.uniform(-1, 1, w.shape) for w in layer.get_weights()]
+        layer.set_weights([(np.round(w * 2**16) * 2**-16).astype('float32') for w in weights])
+    X = rng.uniform(-1, 1, (50, n_steps, n_features))
+    X = (np.round(X * 2**16) * 2**-16).astype('float32')
+    return model, X
+
+
+@pytest.mark.parametrize('rnn_layer', rnn_layers, ids=['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])
+@pytest.mark.parametrize('stacked', [False, True], ids=['single', 'stacked'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_rnn_return_sequences_synthesis(test_case_id, synthesis_config, rnn_layer, stacked, backend):
+    """Layers returning every time step match Keras and synthesize with a fixed latency."""
+    model, X = create_return_sequences_model(rnn_layer, stacked)
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32, 16>', backend=backend
+    )
+    for name, layer_config in hls_config['LayerName'].items():
+        if name.startswith('rnn'):
+            layer_config['Strategy'] = 'Resource'
+            layer_config['ReuseFactor'] = 4
+    if rnn_layer is SimpleRNN:
+        hls_config['LayerName']['rnn']['TableSize'] = 4096
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type='io_parallel'
+    )
+    hls_model.compile()
+
+    keras_prediction = model.predict(X)
+    hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=5e-2)
+
+    run_synthesis_test(
+        config=synthesis_config, hls_model=hls_model, baseline_file_name=f'{test_case_id}.json', backend=backend
+    )
 
 
 @pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])
