@@ -18,6 +18,7 @@ from tensorflow.keras.models import Sequential
 
 import hls4ml
 from hls4ml.model.optimizer.passes.infer_precision import _get_precision_from_constant
+from hls4ml.model.types import RoundingMode, SaturationMode
 
 test_root_path = Path(__file__).parent
 
@@ -288,6 +289,62 @@ def test_auto_precision_dense(test_case_id, keras_model_dense, data_1d, io_type,
     y_keras = model.predict(data).flatten()
     y_hls = hls_model.predict(data).flatten()
     np.testing.assert_allclose(y_keras, y_hls, rtol=2e-2, atol=5e-2, verbose=True)
+
+
+@pytest.mark.parametrize(
+    'input_precision, expected_width, expected_integer',
+    [
+        ('ap_fixed<16,6>', 15, 5),
+        ('ap_ufixed<12,4>', 12, 4),
+        ('ap_int<8>', 7, 7),
+    ],
+)
+def test_auto_precision_relu(test_case_id, input_precision, expected_width, expected_integer):
+    """ReLU output should be unsigned, keeping the integer bits of the input other than the sign bit."""
+    model = Sequential()
+    model.add(Dense(4, activation='relu', input_shape=(4,), name='first_layer'))
+    model.compile()
+
+    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<16,6>', granularity='model')
+    config['LayerName'] = {
+        'first_layer': {'Precision': {'result': input_precision}},
+        'first_layer_relu': {'Precision': {'result': 'auto'}},
+    }
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=odir, backend='Vivado')
+
+    relu_precision = hls_model.graph['first_layer_relu'].get_output_variable().type.precision
+    assert not relu_precision.signed
+    assert relu_precision.width == expected_width
+    assert relu_precision.integer == expected_integer
+
+    hls_model.compile()
+
+
+def test_auto_precision_weight_rounding(test_case_id):
+    """Weights that fall back to the default precision should round and saturate."""
+    model = Sequential()
+    model.add(Dense(2, input_shape=(1,), name='first_layer'))
+    model.compile()
+    lsb = 2**-10
+    model.get_layer('first_layer').set_weights([np.array([[0.75 * lsb, 40.0]]), np.zeros(2)])
+
+    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<16,6>', granularity='model')
+    config['LayerName'] = {'first_layer': {'Precision': {'weight': 'auto', 'bias': 'auto'}}}
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=odir, backend='Vivado')
+
+    layer = hls_model.graph['first_layer']
+    for type_name in ('weight_t', 'bias_t'):
+        precision = layer.types[type_name].precision
+        assert (precision.width, precision.integer, precision.signed) == (16, 6, True)
+        assert precision.rounding_mode == RoundingMode.RND_CONV
+        assert precision.saturation_mode == SaturationMode.SAT
+    assert layer.get_output_variable().type.precision.rounding_mode == RoundingMode.TRN
+
+    hls_model.compile()
+    y_hls = hls_model.predict(np.ones((1, 1))).flatten()
+    np.testing.assert_array_equal(y_hls, [lsb, 32 - lsb])
 
 
 @pytest.mark.parametrize(

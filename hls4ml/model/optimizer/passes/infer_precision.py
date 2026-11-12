@@ -93,6 +93,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         if node_class in ['PReLU']:
             return self._infer_prelu_act_precision(node, types_to_infer)
+
+        if node_class in ['Activation'] and node.get_attr('activation').lower() == 'relu':
+            return self._infer_relu_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
         # this in config_from_* functions
 
@@ -119,9 +122,19 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
     def _infer_default_type(self, node, type_name):
         model_config = node.model.config
         default_precision = model_config.backend.convert_precision_string(model_config.model_precision['default'])
-        # No need to change the name of the NamedType since we use the default precision
-        node.types[type_name].precision = default_precision
         weight_name = type_name.removesuffix('_t')
+        if weight_name in node.weights and isinstance(default_precision, FixedPrecisionType):
+            # Weights are constants, so rounding and saturating them costs nothing at run time
+            default_precision = FixedPrecisionType(
+                default_precision.width,
+                default_precision.integer,
+                default_precision.signed,
+                rounding_mode=RoundingMode.RND_CONV,
+                saturation_mode=SaturationMode.SAT,
+            )
+            node.types[type_name].name = node.name + '_' + type_name
+        # Otherwise there is no need to change the name of the NamedType since we use the default precision
+        node.types[type_name].precision = default_precision
         if weight_name in node.weights:
             node.weights[weight_name].update_precision(default_precision)
 
@@ -617,6 +630,27 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('param_t')
 
         return inferred_types
+
+    def _infer_relu_precision(self, node, types_to_infer):
+        if 'result_t' not in types_to_infer:
+            return []
+
+        # The output is the non-negative part of the input, so dropping the sign bit is lossless.
+        in_type = node.get_input_variable().type.precision
+        if isinstance(in_type, FixedPrecisionType):
+            if in_type.signed:
+                out_type = FixedPrecisionType(max(in_type.width - 1, 1), in_type.integer - 1, signed=False)
+            else:
+                out_type = FixedPrecisionType(in_type.width, in_type.integer, signed=False)
+        elif isinstance(in_type, IntegerPrecisionType):
+            out_type = IntegerPrecisionType(max(in_type.width - in_type.signed, 1), signed=False)
+        else:
+            return []
+
+        node.types['result_t'].name = node.name + '_result_t'
+        node.types['result_t'].precision = out_type
+
+        return ['result_t']
 
 
 def _get_precision_from_constant(value: int | float, max_width=8):
