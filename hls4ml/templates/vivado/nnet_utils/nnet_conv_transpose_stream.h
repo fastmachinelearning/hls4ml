@@ -168,7 +168,7 @@ GridHeight:
             ResetAccum:
                 for (unsigned i_acc = 0; i_acc < n_acc; i_acc++) {
                     #pragma HLS UNROLL
-                    acc[i_acc] = conv_transpose_start<typename data_T::value_type, CONFIG_T>(biases[i_acc % mult_n_out]);
+                    acc[i_acc] = (typename CONFIG_T::accum_t)biases[i_acc % mult_n_out];
                 }
 
             // Each product adds to the group of its input
@@ -181,7 +181,6 @@ GridHeight:
                         acc[CONFIG_T::group_of[i_in] * mult_n_out + i_out] += mult[i_in * mult_n_out + i_out];
                     }
                 }
-                conv_transpose_count<typename data_T::value_type, CONFIG_T>(acc, valid, biases);
 
                 block_T block;
             CastLoop:
@@ -276,7 +275,7 @@ GridHeight:
                 ResetAccum:
                     for (unsigned i_acc = 0; i_acc < n_acc; i_acc++) {
                         #pragma HLS UNROLL
-                        acc[i_acc] = conv_transpose_start<typename data_T::value_type, CONFIG_T>(biases[i_acc % mult_n_out]);
+                        acc[i_acc] = (typename CONFIG_T::accum_t)biases[i_acc % mult_n_out];
                     }
                 SumBlockLoop:
                     for (unsigned i_blk = 0; i_blk < block_factor; i_blk++) {
@@ -290,7 +289,6 @@ GridHeight:
                             }
                         }
                     }
-                    conv_transpose_count<typename data_T::value_type, CONFIG_T>(acc, valid, biases);
 
                     block_T block;
                 CastLoop:

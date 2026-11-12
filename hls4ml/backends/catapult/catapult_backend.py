@@ -111,6 +111,11 @@ class CatapultBackend(FPGABackend):
             'catapult:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
             'catapult:xnor_pooling',
+            'insert_zero_padding_before_binary_conv',
+            'binary_zero_padding',
+            'update_quantized_tanh_thresholds',
+            'validate_binary_input',
+            'narrow_po2_exponents',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 

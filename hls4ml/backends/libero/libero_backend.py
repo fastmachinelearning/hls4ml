@@ -39,6 +39,7 @@ class LiberoBackend(FPGABackend):
         init_flow = register_flow('init_layers', initializers, requires=['optimize'], backend=self.name)
 
         libero_types = [
+            'narrow_po2_exponents',
             'libero:transform_types',
             'libero:set_pipeline_style',
         ]

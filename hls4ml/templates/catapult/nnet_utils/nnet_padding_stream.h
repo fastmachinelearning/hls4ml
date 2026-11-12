@@ -1,6 +1,7 @@
 #ifndef NNET_PADDING_STREAM_H_
 #define NNET_PADDING_STREAM_H_
 
+#include "nnet_padding.h"
 #include <math.h>
 
 namespace nnet {
@@ -21,7 +22,7 @@ template <class data_T, class res_T, typename CONFIG_T> void fill_data(ac_channe
     res_T res_part;
     for (unsigned int c = 0; c < CONFIG_T::n_chan; c++) {
         //#pragma HLS UNROLL
-        res_part[c] = data_part[c];
+        res_part[c] = pad_copy<typename res_T::value_type, CONFIG_T::binary_input>(data_part[c]);
     }
     res.write(res_part);
 }

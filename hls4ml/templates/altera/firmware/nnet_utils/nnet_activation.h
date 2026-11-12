@@ -492,16 +492,18 @@ template <class data_T, class res_T, typename CONFIG_T> void binary_tanh(const d
 //       Ternary TanH Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T> void ternary_tanh(const data_T &data, res_T &res) {
+    // As in QKeras: 1 at or above 0.5, -1 at or below -0.5
+    const ac_fixed<2, 1, true> half = 0.5;
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        auto datareg = 2 * data[ii];
+        auto datareg = data[ii];
         typename res_T::value_type cache;
-        if (datareg > 1)
+        if (datareg >= half)
             cache = 1;
-        else if (datareg > -1 && datareg <= 1)
-            cache = 0;
-        else
+        else if (datareg <= -half)
             cache = -1;
+        else
+            cache = 0;
 
         res[ii] = cache;
     }

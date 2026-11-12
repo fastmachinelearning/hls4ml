@@ -211,9 +211,10 @@ ReadInputHeight:
 template <typename T, Pool_Op op> inline T init_pool_value() {
     switch (op) {
     case Max: {
+        // The smallest value: the sign bit alone, or 0 for an unsigned type (in binary data, 0 stands for -1)
         T x = 0;
         x[x.width - 1] = 1;
-        return x;
+        return x > 0 ? T(0) : x;
     }
     case Average:
         return 0;

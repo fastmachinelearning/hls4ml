@@ -47,7 +47,7 @@ void dense_rf_gt(const data_T &data, res_T &res, const typename CONFIG_T::weight
 Load:
     #pragma unroll
     for (int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+        acc[iacc] = init<typename data_T::value_type, CONFIG_T>(biases[iacc]);
     }
     [[intel::fpga_register]] int out_index[CONFIG_T::reuse_factor][CONFIG_T::block_factor];
     [[intel::fpga_register]] int d_index[CONFIG_T::reuse_factor][CONFIG_T::block_factor];
@@ -72,9 +72,7 @@ Product1:
                 continue;
             int data_index = d_index[ir][im];
             // Modified this
-            tmp_acc[im] =
-                CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::weight_t::value_type>::product(
-                    data[data_index], weights[w_index]);
+            tmp_acc[im] = product_after_init<typename data_T::value_type, CONFIG_T>(data[data_index], weights[w_index]);
         }
         [[intel::fpga_register]] typename CONFIG_T::accum_t mult[CONFIG_T::multiplier_limit];
     ResetMult:
@@ -113,7 +111,7 @@ void dense_rf_lt(const data_T &data, res_T &res, const typename CONFIG_T::weight
 InitAccum:
     #pragma unroll
     for (int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-        acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+        acc[iacc] = init<typename data_T::value_type, CONFIG_T>(biases[iacc]);
     }
 ReuseLoop:
     [[intel::nofusion, intel::speculated_iterations(0)]] for (int ir = 0; ir < CONFIG_T::reuse_factor; ir++) {
@@ -125,9 +123,7 @@ ReuseLoop:
             if (ir + CONFIG_T::reuse_factor * im >= CONFIG_T::n_in * CONFIG_T::n_out)
                 continue;
             // Modified this
-            mult[im] =
-                CONFIG_T::template product<typename data_T::value_type, typename CONFIG_T::weight_t::value_type>::product(
-                    data[in_index], weights[w_index]);
+            mult[im] = product_after_init<typename data_T::value_type, CONFIG_T>(data[in_index], weights[w_index]);
             in_index += CONFIG_T::reuse_factor;
             if (in_index >= CONFIG_T::n_in)
                 in_index = ir;
