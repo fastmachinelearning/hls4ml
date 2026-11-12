@@ -34,6 +34,10 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['inputs'] = input_names
 
     layer['weight_data'] = class_object.weight.data.numpy()
+    if config.get('HLSConfig', {}).get('Model', {}).get('ChannelsLastConversion', 'off') == 'off':
+        # PyTorch stores (n_out, n_in) and Dense expects (n_in, n_out); with the conversion on, the
+        # channels-last pass transposes the weights, so do it here when that pass does not run
+        layer['weight_data'] = layer['weight_data'].transpose()
     if class_object.bias is not None:
         layer['bias_data'] = class_object.bias.data.numpy()
     else:

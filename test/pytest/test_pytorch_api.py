@@ -61,6 +61,29 @@ def test_linear(test_case_id, backend, io_type):
     assert list(hls_model.get_layers())[1].attributes['n_out'] == 1
 
 
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('channels_last_conversion', ['off', 'internal', 'full'])
+def test_linear_channels_last_conversion(test_case_id, backend, io_type, channels_last_conversion):
+    model = torch.nn.Sequential(nn.Linear(5, 3), nn.ReLU(), nn.Linear(3, 2))
+    model.eval()
+
+    X_input = np.random.rand(10, 5)
+    X_input = np.round(X_input * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    config = config_from_pytorch_model(
+        model, (5,), granularity='name', backend=backend, channels_last_conversion=channels_last_conversion
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(X_input)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.01)
+
+
 # TODO: add ThresholdedReLU test when it can be made to pass
 @pytest.mark.parametrize(
     'activation_function',
