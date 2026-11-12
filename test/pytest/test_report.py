@@ -312,3 +312,18 @@ def test_build_options_have_defaults(backend):
     options = inspect.signature(hls4ml.backends.get_backend(backend).build).parameters
 
     assert set(options) - {'model', 'log_to_stdout'} <= set(defaults)
+
+
+def test_csynth_interface(tmp_path):
+    """The RTL ports come from the C synthesis XML, the BRAM widths from the solution report next to it."""
+    report = _parse_csynth_xml(vivado_report_dir / 'myproject_csynth.xml')
+    tdata = next(p for p in report['RtlPorts'] if p['name'] == 'fc1_input_V_data_0_V_TDATA')
+    assert (tdata['IOProtocol'], tdata['Dir'], tdata['Bits']) == ('axis', 'in', '16')
+    assert 'BramInterfaces' not in report
+
+    shutil.copy(vivado_report_dir / 'myproject_csynth.xml', tmp_path)
+    (tmp_path / 'csynth.rpt').write_text(
+        '* BRAM\n+---+\n| Interface | Data Width | Address Width |\n+---+\n| w2_PORTA | 96 | 32 |\n+---+\n\n'
+    )
+    report = _parse_csynth_xml(tmp_path / 'myproject_csynth.xml')
+    assert report['BramInterfaces'] == {'w2_PORTA': {'DataWidth': 96, 'AddressWidth': 32}}

@@ -2,8 +2,9 @@
 Loading weights from external BRAM
 ==================================
 
-.. note::
-    This feature is being evaluated for re-implementation. We welcome feedback from users on how to make the implementation more flexible.
+.. warning::
+    ``BramFactor`` is deprecated. The ``ExternalParameters`` layer attribute selects the parameters to expose
+    per layer instead; see :doc:`runtime_parameter_banks`.
 
 ``hls4ml`` can optionally store weights in BRAMs external to the design. This is supported in the Vivado/Vitis and Catapult backends. It is the responsibility of the user to ensure the weights are properly loaded during the operation of the design.
 

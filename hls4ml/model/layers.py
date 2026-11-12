@@ -497,6 +497,9 @@ class Dense(Layer):
         WeightAttribute('bias'),
         TypeAttribute('weight'),
         TypeAttribute('bias'),
+        ConfigurableAttribute(
+            'external_parameters', value_type=list, default=[], description=descriptions.external_parameters
+        ),
     ]
 
     def initialize(self):
@@ -539,6 +542,9 @@ class Conv1D(Layer):
         WeightAttribute('bias'),
         TypeAttribute('weight'),
         TypeAttribute('bias'),
+        ConfigurableAttribute(
+            'external_parameters', value_type=list, default=[], description=descriptions.external_parameters
+        ),
     ]
 
     def initialize(self):
@@ -644,6 +650,9 @@ class Conv2D(Layer):
         WeightAttribute('bias'),
         TypeAttribute('weight'),
         TypeAttribute('bias'),
+        ConfigurableAttribute(
+            'external_parameters', value_type=list, default=[], description=descriptions.external_parameters
+        ),
     ]
 
     def initialize(self):

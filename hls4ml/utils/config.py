@@ -259,7 +259,6 @@ def config_from_keras_model(
         model_config['Precision']['maximum'] = max_precision
     model_config['ReuseFactor'] = default_reuse_factor
     model_config['Strategy'] = 'Latency'
-    model_config['BramFactor'] = 1_000_000_000
     model_config['TraceOutput'] = False
 
     config['Model'] = model_config
@@ -356,7 +355,6 @@ def config_from_pytorch_model(
     model_config['ChannelsLastConversion'] = channels_last_conversion
     model_config['TransposeOutputs'] = transpose_outputs
     model_config['Strategy'] = 'Latency'
-    model_config['BramFactor'] = 1_000_000_000
     model_config['TraceOutput'] = False
 
     config['Model'] = model_config
@@ -496,7 +494,6 @@ def config_from_onnx_model(
         model_config['Precision']['maximum'] = max_precision
     model_config['ReuseFactor'] = default_reuse_factor
     model_config['Strategy'] = 'Latency'
-    model_config['BramFactor'] = 1_000_000_000
     model_config['TraceOutput'] = False
 
     config['Model'] = model_config
