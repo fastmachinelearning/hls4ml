@@ -13,7 +13,7 @@ Currently ``hls4ml`` officially supports the following boards and tool versions:
 * `alveo-u55c <https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html>`_ (Vitis and Vivado 2024.2 with the ``xilinx_u55c_gen3x16_xdma_3_202210_1`` platform, ``axi_master`` with ``driver='xrt'``)
 * `alveo-u250 <https://www.xilinx.com/products/boards-and-kits/alveo/u250.html>`_ (Vitis and Vivado 2024.2 with the ``xilinx_u250_gen3x16_xdma_4_1_202210_1`` platform, ``axi_master`` with ``driver='xrt'``)
 * `alveo-u200 <https://www.xilinx.com/products/boards-and-kits/alveo/u200.html>`_ (Vitis and Vivado 2024.2 with the ``xilinx_u200_gen3x16_xdma_2_202110_1`` platform, ``axi_master`` with ``driver='xrt'``)
-* ``alveo-u50`` and ``alveo-u280`` (not tested on hardware, no ``kernel_slr``)
+* ``alveo-u50`` and ``alveo-u280``
 
 If you use another board, another Vivado version, or want to optimize the system design for your own workload, you can build your own platform. The steps are covered in the platform setup tutorial in the accelerator backend section of the `hls4ml-tutorial <https://github.com/fastmachinelearning/hls4ml-tutorial>`_ repository.
 
