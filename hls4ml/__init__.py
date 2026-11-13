@@ -1,3 +1,5 @@
+import sys
+
 from hls4ml import converters, report, utils  # noqa: F401, E402
 
 try:
@@ -9,16 +11,7 @@ except ImportError:
 
 
 def reseed(newseed):
-    print(f'\npytest-randomly: reseed with {newseed}')
-    try:
-        import tensorflow
-
-        tensorflow.random.set_seed(newseed)
-    except ImportError:
-        print('\nTensorFlow seed not set')
-    try:
-        import torch
-
-        torch.manual_seed(newseed)
-    except ImportError:
-        print('\nPyTorch seed not set')
+    if 'tensorflow' in sys.modules:
+        sys.modules['tensorflow'].random.set_seed(newseed)
+    if 'torch' in sys.modules:
+        sys.modules['torch'].manual_seed(newseed)
