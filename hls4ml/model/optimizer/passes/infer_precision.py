@@ -3,6 +3,7 @@ from collections.abc import Iterable
 
 import numpy as np
 
+from hls4ml.model.layers import LSTM, Bidirectional
 from hls4ml.model.optimizer import ConfigurableOptimizerPass
 from hls4ml.model.optimizer.passes.bit_exact import minimal_kif
 from hls4ml.model.types import (
@@ -121,10 +122,16 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         default_precision = model_config.backend.convert_precision_string(model_config.model_precision['default'])
         weight_name = type_name.removesuffix('_t')
         if weight_name in node.weights and isinstance(default_precision, FixedPrecisionType):
+            width, integer = default_precision.width, default_precision.integer
+            # The LSTM forget gate bias is usually initialized to 1, which needs two integer bits when signed
+            min_integer = 2 if default_precision.signed else 1
+            if self._holds_lstm_bias(node, weight_name) and integer < min_integer:
+                width += min_integer - integer
+                integer = min_integer
             # Weights are constants, so rounding and saturating them costs nothing at run time
             default_precision = FixedPrecisionType(
-                default_precision.width,
-                default_precision.integer,
+                width,
+                integer,
                 default_precision.signed,
                 rounding_mode=RoundingMode.RND_CONV,
                 saturation_mode=SaturationMode.SAT,
@@ -134,6 +141,17 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         node.types[type_name].precision = default_precision
         if weight_name in node.weights:
             node.weights[weight_name].update_precision(default_precision)
+
+    @staticmethod
+    def _holds_lstm_bias(node, weight_name):
+        if isinstance(node, LSTM):
+            return weight_name in ('bias', 'bias_i', 'bias_f', 'bias_c', 'bias_o')
+        if isinstance(node, Bidirectional):
+            return any(
+                weight_name == f'{direction}_bias' and node.get_attr(f'{direction}_class_name', '').endswith('LSTM')
+                for direction in ('forward', 'backward')
+            )
+        return False
 
     def _infer_output_matching_precision(self, node, types_to_infer):
         assert 'result_t' in types_to_infer and len(types_to_infer) == 1
