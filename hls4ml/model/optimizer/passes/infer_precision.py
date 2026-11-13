@@ -91,6 +91,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['ParametrizedActivation']:
             return self._infer_par_act_precision(node, types_to_infer)
 
+        if node_class in ['StreamingSNN']:
+            return self._infer_streaming_snn_precision(node, types_to_infer)
+
         if node_class in ['PReLU']:
             return self._infer_prelu_act_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
@@ -617,6 +620,15 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('param_t')
 
         return inferred_types
+
+    def _infer_streaming_snn_precision(self, node, types_to_infer):
+        if 'result_t' not in types_to_infer:
+            return []
+
+        # The count of output spikes, at most one per time step
+        width = max(16, math.ceil(math.log2(node.get_attr('n_steps') + 1)))
+        node.types['result_t'].precision = IntegerPrecisionType(width=width, signed=False)
+        return ['result_t']
 
 
 def _get_precision_from_constant(value: int | float, max_width=8):
