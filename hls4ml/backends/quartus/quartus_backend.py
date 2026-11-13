@@ -258,6 +258,16 @@ class QuartusBackend(FPGABackend):
 
         layer.set_attr('index_t', index_t)
 
+        # The kernel declares the recurrent parts as CONFIG_T::weight_t and CONFIG_T::bias_t, so they must have those types
+        weight_t = layer.types['weight_t']
+        bias_t = layer.types['bias_t']
+        layer.add_weights_variable(
+            name='recurrent_weight', var_name='wr{index}', type_name=weight_t.name, precision=weight_t.precision
+        )
+        layer.add_weights_variable(
+            name='recurrent_bias', var_name='br{index}', type_name=bias_t.name, precision=bias_t.precision
+        )
+
     @layer_optimizer(Conv1D)
     def init_conv1d(self, layer):
         # This can happen if we assign weights of Dense layer to 1x1 Conv1D
