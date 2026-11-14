@@ -14,7 +14,7 @@ test_root_path = Path(__file__).parent
 def generate_data(input_shape):
     shape = (5000, *input_shape)
     d = np.random.normal(0, 2, shape)
-    modify_entries = np.random.randint(0, 1, shape) < 0.05
+    modify_entries = np.random.random(shape) < 0.05
     d[modify_entries] = d[modify_entries] * 5 + 10
     return np.clip(d, -32, 31)
 
@@ -117,3 +117,16 @@ def test_softmax_skipped(test_case_id, softmax_impl, backend, io_type):
     y_keras_dense = dense(X).numpy()  # type: ignore
     y_hls4ml = hls_model.predict(X).reshape(y_keras_dense.shape)  # type: ignore
     np.testing.assert_allclose(y_hls4ml, y_keras_dense, rtol=0, atol=2e-2)
+
+
+def test_generate_data_perturbs_only_selected_entries(monkeypatch):
+    # A deterministic mask catches randint(0, 1), which selects every entry.
+    monkeypatch.setattr(np.random, 'normal', lambda *args: np.ones(args[-1]))
+    monkeypatch.setattr(
+        np.random,
+        'random',
+        lambda shape: np.broadcast_to([0.01, 0.50, 0.04, 0.99], shape),
+    )
+
+    data = generate_data.__wrapped__((4,))
+    np.testing.assert_array_equal(data, np.broadcast_to([15.0, 1.0, 15.0, 1.0], data.shape))
