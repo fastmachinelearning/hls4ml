@@ -125,8 +125,8 @@ def test_generate_data_perturbs_only_selected_entries(monkeypatch):
     monkeypatch.setattr(
         np.random,
         'random',
-        lambda shape: np.array([[0.01, 0.50, 0.04, 0.99]]),
+        lambda shape: np.broadcast_to([0.01, 0.50, 0.04, 0.99], shape),
     )
 
     data = generate_data.__wrapped__((4,))
-    np.testing.assert_array_equal(data, [[15.0, 1.0, 15.0, 1.0]])
+    np.testing.assert_array_equal(data, np.broadcast_to([15.0, 1.0, 15.0, 1.0], data.shape))
