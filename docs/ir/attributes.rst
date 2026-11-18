@@ -1443,13 +1443,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -1559,13 +1559,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
