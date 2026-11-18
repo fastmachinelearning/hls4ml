@@ -261,7 +261,7 @@ def test_resource_cell(test_case_id, model_cls, n_states, reuse_factor):
     np.testing.assert_array_equal(predictions[1], predictions[0])
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
 def test_rnn(test_case_id, backend, io_type):
     model = RNN()
