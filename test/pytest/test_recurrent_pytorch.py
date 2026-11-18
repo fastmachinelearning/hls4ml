@@ -379,7 +379,7 @@ def _convert(model, test_case_id, backend, input_shape=(None, n_timesteps, n_in)
 @pytest.mark.parametrize(
     'rnn_cls,backend',
     [(nn.GRU, 'Vivado'), (nn.LSTM, 'Vivado'), (nn.RNN, 'Vivado')],
-    ids=['gru', 'lstm', 'rnn', 'rnn-quartus'],
+    ids=['gru', 'lstm', 'rnn'],
 )
 def test_rnn_sequence_output(test_case_id, rnn_cls, backend):
     model = SequenceModel(rnn_cls)
