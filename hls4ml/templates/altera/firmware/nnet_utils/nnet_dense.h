@@ -36,9 +36,13 @@ struct dense_config {
     template <class x_T, class y_T> using product = nnet::product::mult<x_T, y_T>;
 };
 
-template <class data_T, class res_T, typename CONFIG_T>
-void dense_rf_gt(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
-                 const typename CONFIG_T::bias_t &biases) {
+// The weight and bias types are not deduced from the arguments, so they are those of CONFIG_T unless given explicitly
+template <class T> struct dense_non_deduced { typedef T type; };
+
+template <class data_T, class res_T, typename CONFIG_T, class weight_T = typename CONFIG_T::weight_t,
+          class bias_T = typename CONFIG_T::bias_t>
+void dense_rf_gt(const data_T &data, res_T &res, const typename dense_non_deduced<weight_T>::type &weights,
+                 const typename dense_non_deduced<bias_T>::type &biases) {
     assert((CONFIG_T::multiplier_limit % CONFIG_T::n_out == 0 || CONFIG_T::reuse_factor >= CONFIG_T::n_in) &&
            "The current Reuse Factor is not allowed");
     assert((CONFIG_T::reuse_factor > CONFIG_T::n_in) && "This function is correct only for RF > N_IN");
@@ -102,9 +106,10 @@ Store:
         res[ires] = cast<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(acc[ires]); // acc[jj];
     }
 }
-template <class data_T, class res_T, typename CONFIG_T>
-void dense_rf_lt(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
-                 const typename CONFIG_T::bias_t &biases) {
+template <class data_T, class res_T, typename CONFIG_T, class weight_T = typename CONFIG_T::weight_t,
+          class bias_T = typename CONFIG_T::bias_t>
+void dense_rf_lt(const data_T &data, res_T &res, const typename dense_non_deduced<weight_T>::type &weights,
+                 const typename dense_non_deduced<bias_T>::type &biases) {
     assert((CONFIG_T::multiplier_limit % CONFIG_T::n_out == 0 || CONFIG_T::reuse_factor >= CONFIG_T::n_in) &&
            "The current Reuse Factor is not allowed");
     assert((CONFIG_T::multiplier_limit == CONFIG_T::block_factor) && "This function is correct only for RF <= N_IN");
@@ -151,13 +156,14 @@ Result:
         res[ires] = cast<typename data_T::value_type, typename res_T::value_type, CONFIG_T>(acc[ires]);
     }
 }
-template <class data_T, class res_T, typename CONFIG_T>
-void dense_resource(const data_T &data, res_T &res, const typename CONFIG_T::weight_t &weights,
-                    const typename CONFIG_T::bias_t &biases) {
+template <class data_T, class res_T, typename CONFIG_T, class weight_T = typename CONFIG_T::weight_t,
+          class bias_T = typename CONFIG_T::bias_t>
+void dense_resource(const data_T &data, res_T &res, const typename dense_non_deduced<weight_T>::type &weights,
+                    const typename dense_non_deduced<bias_T>::type &biases) {
     if (CONFIG_T::reuse_factor <= CONFIG_T::n_in) {
-        dense_rf_lt<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        dense_rf_lt<data_T, res_T, CONFIG_T, weight_T, bias_T>(data, res, weights, biases);
     } else {
-        dense_rf_gt<data_T, res_T, CONFIG_T>(data, res, weights, biases);
+        dense_rf_gt<data_T, res_T, CONFIG_T, weight_T, bias_T>(data, res, weights, biases);
     }
 }
 } // namespace nnet

@@ -633,6 +633,12 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
+* reloadable_weights: bool (Default: False)
+
+  * If set to True, the weights are stored in on-chip memory that can be reloaded at run time without reprogramming the FPGA. The number of switchable weight sets is set by the backend option weight_sets. Currently only supported by the Altera backend.
+
+  * Available in: Altera
+
 * strategy: list [latency,resource] (Default: latency)
 
   * Available in: Libero
