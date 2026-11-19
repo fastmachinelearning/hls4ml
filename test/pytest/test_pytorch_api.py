@@ -61,6 +61,88 @@ def test_linear(test_case_id, backend, io_type):
     assert list(hls_model.get_layers())[1].attributes['n_out'] == 1
 
 
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('channels_last_conversion', ['full', 'internal'])
+@pytest.mark.parametrize('transpose_outputs', [True, False])
+@pytest.mark.parametrize('in_shape', [(4, 5), (2, 4, 5)])
+def test_linear_multidimensional_channels_last(
+    test_case_id, backend, io_type, channels_last_conversion, transpose_outputs, in_shape
+):
+    # Linear acts on the last axis, which is not the channel axis of a channels_first tensor
+    model = nn.Sequential(nn.Linear(5, 6), nn.ReLU(), nn.Linear(6, 3))
+    model.eval()
+
+    X_input = np.random.rand(10, *in_shape)
+    X_input = np.round(X_input * 2**10) * 2**-10
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+    if not transpose_outputs:
+        pytorch_prediction = pytorch_prediction.transpose(0, *range(2, pytorch_prediction.ndim), 1)
+    if channels_last_conversion == 'internal':
+        X_input = np.ascontiguousarray(X_input.transpose(0, *range(2, X_input.ndim), 1))
+
+    config = config_from_pytorch_model(
+        model,
+        in_shape,
+        backend=backend,
+        channels_last_conversion=channels_last_conversion,
+        transpose_outputs=transpose_outputs,
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+    hls_model.compile()
+
+    hls_prediction = np.asarray(hls_model.predict(X_input)).reshape(pytorch_prediction.shape)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.05)
+
+
+class FanOutModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear1 = nn.Linear(5, 6)
+        self.linear2 = nn.Linear(6, 6)
+        self.conv = nn.Conv1d(4, 4, 1)
+
+    def forward(self, x):
+        y = self.linear1(x)
+        return self.linear2(y) + torch.relu(self.conv(y))
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('channels_last_conversion', ['full', 'internal'])
+@pytest.mark.parametrize('transpose_outputs', [True, False])
+def test_channels_last_fan_out(test_case_id, backend, io_type, channels_last_conversion, transpose_outputs):
+    # The transposes around linear1 have to feed both of its consumers, and the output transpose must not share the
+    # type of the layer it follows (which matters in io_stream)
+    model = FanOutModel()
+    model.eval()
+
+    X_input = np.random.rand(10, 4, 5)
+    X_input = np.round(X_input * 2**10) * 2**-10
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+    if not transpose_outputs:
+        pytorch_prediction = pytorch_prediction.transpose(0, 2, 1)
+    if channels_last_conversion == 'internal':
+        X_input = np.ascontiguousarray(X_input.transpose(0, 2, 1))
+
+    config = config_from_pytorch_model(
+        model,
+        (4, 5),
+        backend=backend,
+        channels_last_conversion=channels_last_conversion,
+        transpose_outputs=transpose_outputs,
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+    hls_model.compile()
+
+    hls_prediction = np.asarray(hls_model.predict(X_input)).reshape(pytorch_prediction.shape)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.05)
+
+
 # TODO: add ThresholdedReLU test when it can be made to pass
 @pytest.mark.parametrize(
     'activation_function',

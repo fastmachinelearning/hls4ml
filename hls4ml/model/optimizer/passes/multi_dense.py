@@ -62,6 +62,8 @@ class ReplaceMultidimensionalDenseWithConv(OptimizerPass):
 
         class_name = 'Conv' + str(dim) + 'D'
         conv_node = model.make_node(class_name, node.name, conv_attrs, node.inputs.copy())
+        if hasattr(node, 'channels_last_converted'):
+            conv_node.channels_last_converted = node.channels_last_converted
         model.replace_node(node, conv_node)
 
         return True
