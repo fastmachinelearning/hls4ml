@@ -7,15 +7,15 @@ Input
 =====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -31,17 +31,17 @@ Constant
 ========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
 
 * value: ndarray
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -57,12 +57,6 @@ Activation
 ==========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -70,6 +64,12 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -105,14 +105,6 @@ ParametrizedActivation
 ======================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* param_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -124,6 +116,14 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* param_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -161,14 +161,6 @@ PReLU
 =====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* param_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -180,6 +172,14 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* param_t: NamedType
 
 Weight attributes
 -----------------
@@ -221,12 +221,6 @@ Softmax
 =======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -234,6 +228,12 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -309,16 +309,6 @@ IFNeuron
 ========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* threshold_t: NamedType
-
-* membrane_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -334,6 +324,16 @@ Type attributes
 * threshold_mode: str (Default: scalar)
 
 * reset_mechanism: list [subtract,zero] (Default: subtract)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* threshold_t: NamedType
+
+* membrane_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -352,18 +352,6 @@ Configurable attributes
 LIFNeuron
 =========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* beta_t: NamedType
-
-* threshold_t: NamedType
-
-* membrane_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -385,6 +373,18 @@ Type attributes
 
 * reset_mechanism: list [subtract,zero] (Default: subtract)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* beta_t: NamedType
+
+* threshold_t: NamedType
+
+* membrane_t: NamedType
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -405,14 +405,6 @@ SNNReadout
 ==========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* membrane_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -428,6 +420,14 @@ Type attributes
 * state_reset_policy: list [fixed_window,tlast,host_pulse,never] (Default: fixed_window)
 
 * decision_rule: list [argmax_spike_count,first_to_threshold,threshold_then_argmax,binary_logit,argmax_membrane] (Default: argmax_membrane)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* membrane_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -447,12 +447,6 @@ TernaryTanh
 ===========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -460,6 +454,12 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -495,16 +495,6 @@ HardActivation
 ==============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* slope_t: NamedType
-
-* shift_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -516,6 +506,16 @@ Type attributes
 * slope: float (Default: 0.2)
 
 * shift: float (Default: 0.5)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* slope_t: NamedType
+
+* shift_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -555,17 +555,17 @@ Reshape
 =======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
 
 * target_shape: Sequence
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -581,16 +581,6 @@ Dense
 =====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -598,6 +588,16 @@ Type attributes
 * n_in: int
 
 * n_out: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -641,15 +641,15 @@ Conv
 ====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -679,16 +679,6 @@ Conv1D
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -708,6 +698,16 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -759,16 +759,6 @@ Conv2D
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -800,6 +790,16 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -851,16 +851,6 @@ Conv2DBatchnorm
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -892,6 +882,16 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -943,18 +943,6 @@ SeparableConv1D
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* depthwise_t: NamedType
-
-* pointwise_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -976,6 +964,18 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* depthwise_t: NamedType
+
+* pointwise_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1037,20 +1037,6 @@ DepthwiseConv1D
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1088,6 +1074,20 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1147,18 +1147,6 @@ SeparableConv2D
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* depthwise_t: NamedType
-
-* pointwise_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1192,6 +1180,18 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* depthwise_t: NamedType
+
+* pointwise_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1253,20 +1253,6 @@ DepthwiseConv2D
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1329,6 +1315,20 @@ Type attributes
 
 * pad_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
 Weight attributes
 -----------------
 * weight: WeightVariable
@@ -1387,16 +1387,6 @@ Conv1DTranspose
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1416,6 +1406,16 @@ Type attributes
 * dilation_width: int (Default: 1)
 
 * crop_left: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1491,16 +1491,6 @@ Conv2DTranspose
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1532,6 +1522,16 @@ Type attributes
 * crop_top: int
 
 * crop_left: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1619,16 +1619,6 @@ BatchNormalization
 ==================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* scale_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1640,6 +1630,16 @@ Type attributes
 * use_gamma: bool (Default: True)
 
 * use_beta: bool (Default: True)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* scale_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1673,12 +1673,6 @@ Pooling1D
 =========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1700,6 +1694,12 @@ Type attributes
 * count_pad: bool (Default: False)
 
 * pool_op: list [Max,Average]
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -1735,12 +1735,6 @@ Pooling2D
 =========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1774,6 +1768,12 @@ Type attributes
 * count_pad: bool (Default: False)
 
 * pool_op: list [Max,Average]
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -1809,12 +1809,6 @@ GlobalPooling1D
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1826,6 +1820,12 @@ Type attributes
 * keepdims: bool (Default: False)
 
 * pool_op: list [Max,Average]
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -1855,12 +1855,6 @@ GlobalPooling2D
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1874,6 +1868,12 @@ Type attributes
 * keepdims: bool (Default: False)
 
 * pool_op: list [Max,Average]
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -1903,12 +1903,6 @@ ZeroPadding1D
 =============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1923,6 +1917,12 @@ Type attributes
 
 * pad_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1936,12 +1936,6 @@ Configurable attributes
 ZeroPadding2D
 =============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1965,6 +1959,12 @@ Type attributes
 
 * pad_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1978,12 +1978,6 @@ Configurable attributes
 Cropping1D
 ==========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1999,6 +1993,12 @@ Type attributes
 
 * crop_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -2012,12 +2012,6 @@ Configurable attributes
 Cropping2D
 ==========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -2041,6 +2035,12 @@ Type attributes
 
 * crop_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -2055,15 +2055,15 @@ Merge
 =====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2087,15 +2087,15 @@ MatMul
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2125,23 +2125,23 @@ Dot
 ===
 Base attributes
 ---------------
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
 Type attributes
 ---------------
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2179,23 +2179,23 @@ Concatenate
 ===========
 Base attributes
 ---------------
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
 Type attributes
 ---------------
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2227,12 +2227,6 @@ Resize
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2248,6 +2242,12 @@ Type attributes
 * n_chan: int
 
 * align_corners: bool (Default: False)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2265,15 +2265,15 @@ Transpose
 =========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2289,14 +2289,6 @@ Embedding
 =========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* embeddings_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2306,6 +2298,14 @@ Type attributes
 * n_out: int
 
 * vocab_size: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* embeddings_t: NamedType
 
 Weight attributes
 -----------------
@@ -2335,18 +2335,6 @@ SimpleRNN
 =========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* recurrent_weight_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2360,6 +2348,18 @@ Type attributes
 * return_state: bool (Default: False)
 
 * pass_initial_states: bool (Default: False)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* recurrent_weight_t: NamedType
 
 Weight attributes
 -----------------
@@ -2429,20 +2429,6 @@ LSTM
 ====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* recurrent_weight_t: NamedType
-
-* recurrent_bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2462,6 +2448,20 @@ Type attributes
 * direction: list [forward,backward] (Default: forward)
 
 * time_major: bool (Default: False)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* recurrent_weight_t: NamedType
+
+* recurrent_bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -2533,20 +2533,6 @@ GRU
 ===
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* recurrent_weight_t: NamedType
-
-* recurrent_bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2568,6 +2554,20 @@ Type attributes
 * time_major: bool (Default: False)
 
 * apply_reset_gate: list [before,after] (Default: after)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* recurrent_weight_t: NamedType
+
+* recurrent_bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -2639,28 +2639,6 @@ Bidirectional
 =============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* forward_weight_t: NamedType
-
-* forward_bias_t: NamedType
-
-* forward_recurrent_weight_t: NamedType
-
-* forward_recurrent_bias_t: NamedType
-
-* backward_weight_t: NamedType
-
-* backward_bias_t: NamedType
-
-* backward_recurrent_weight_t: NamedType
-
-* backward_recurrent_bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2682,6 +2660,28 @@ Type attributes
 * backward_activation: str
 
 * backward_recurrent_activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* forward_weight_t: NamedType
+
+* forward_bias_t: NamedType
+
+* forward_recurrent_weight_t: NamedType
+
+* forward_recurrent_bias_t: NamedType
+
+* backward_weight_t: NamedType
+
+* backward_bias_t: NamedType
+
+* backward_recurrent_weight_t: NamedType
+
+* backward_recurrent_bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -2763,12 +2763,6 @@ TimeDistributed
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2778,6 +2772,12 @@ Type attributes
 * n_time_steps: int
 
 * output_shape: list
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2801,15 +2801,15 @@ GarNet
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2833,23 +2833,23 @@ GarNetStack
 ===========
 Base attributes
 ---------------
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
 Type attributes
 ---------------
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2881,12 +2881,6 @@ Quant
 =====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2896,6 +2890,12 @@ Type attributes
 * rounding_mode: str
 
 * signed: bool
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2919,15 +2919,15 @@ BipolarQuant
 ============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2943,16 +2943,6 @@ ApplyAlpha
 ==========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* scale_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2964,6 +2954,16 @@ Type attributes
 * use_gamma: bool (Default: True)
 
 * use_beta: bool (Default: True)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* scale_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -2997,15 +2997,15 @@ BatchNormOnnx
 =============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3029,12 +3029,6 @@ LayerGroup
 ==========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3048,6 +3042,12 @@ Type attributes
 * data_reader: object
 
 * output_shape: list
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3063,12 +3063,6 @@ SymbolicExpression
 ==================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3078,6 +3072,12 @@ Type attributes
 * n_symbols: int
 
 * lut_functions: list (Default: [])
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3093,16 +3093,6 @@ LayerNormalization
 ==================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* scale_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3114,6 +3104,16 @@ Type attributes
 * axis: int (Default: 2)
 
 * epsilon_power_of_10: int (Default: 3)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* scale_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -3177,18 +3177,6 @@ EinsumDense
 ===========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* accum_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3198,6 +3186,18 @@ Type attributes
 * inp_shape: tuple
 
 * out_shape: tuple
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* accum_t: NamedType
 
 Weight attributes
 -----------------
@@ -3225,14 +3225,6 @@ Einsum
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3244,6 +3236,14 @@ Type attributes
 * inp1_shape: tuple
 
 * out_shape: tuple
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -3261,23 +3261,23 @@ BiasAdd
 =======
 Base attributes
 ---------------
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
 Type attributes
 ---------------
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3309,15 +3309,15 @@ DACombinational
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3332,12 +3332,6 @@ Configurable attributes
 SparseInputReduce
 =================
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -3355,6 +3349,12 @@ Type attributes
 
 * hash_bits: int (Default: 10)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -3369,18 +3369,6 @@ SparseConv2D
 ============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* accum_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3392,6 +3380,18 @@ Type attributes
 * n_filt: int
 
 * kernel_size: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* accum_t: NamedType
 
 Weight attributes
 -----------------
@@ -3419,12 +3419,6 @@ SparseActivation
 ================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3434,6 +3428,12 @@ Type attributes
 * n_chan: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3448,14 +3448,6 @@ Configurable attributes
 SparsePooling2D
 ===============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -3475,6 +3467,14 @@ Type attributes
 
 * pool_op: str (Default: avg)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -3491,12 +3491,6 @@ SparseFlatten
 =============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3508,6 +3502,12 @@ Type attributes
 * out_height: int
 
 * out_width: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3523,15 +3523,15 @@ FixedPointQuantizer
 ===================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3547,19 +3547,19 @@ UnaryLUT
 ========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
 
 * n_in: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
 Weight attributes
 -----------------
@@ -3577,19 +3577,19 @@ Configurable attributes
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
-Repack
-======
+Clone
+=====
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3601,19 +3601,19 @@ Configurable attributes
 
   * The datatype (precision) of the output tensor.
 
-Clone
-=====
+Repack
+======
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3629,14 +3629,6 @@ BatchNormalizationQuantizedTanh
 ===============================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3644,6 +3636,14 @@ Type attributes
 * n_in: int
 
 * n_filt: int (Default: 0)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -3659,19 +3659,33 @@ Configurable attributes
 
 * reuse_factor: int (Default: 1)
 
-PointwiseConv1D
-===============
+Broadcast
+=========
 Base attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
-* weight_t: NamedType
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
 
-* bias_t: NamedType
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
 
-Type attributes
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+PointwiseConv1D
+===============
+Base attributes
 ---------------
 * index: int
 
@@ -3692,6 +3706,16 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -3743,16 +3767,6 @@ PointwiseConv2D
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3784,6 +3798,16 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -3830,27 +3854,3 @@ Backend-specific attributes
   * "LineBuffer" implementation is preferred over "Encoded" for most use cases. This attribute only applies to io_stream.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
-
-Broadcast
-=========
-Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
-* index: int
-
-  * Internal node counter used for bookkeeping and variable/tensor naming.
-
-Configurable attributes
------------------------
-* trace: int (Default: False)
-
-  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
-
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
