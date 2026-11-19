@@ -29,13 +29,13 @@ def extract_pquant_quantizer_config(q, tensor: 'KerasTensor', is_input: bool = N
         raise ValueError(f'Tensor {tensor.name} has at least one dimension with no fixed size')
 
     k, i, f = q.quantizer.quantizer.kif if q.use_hgq else (q.k, q.i, q.f)
-    k, B, I = k, k + i + f, k + i  # type: ignore # noqa: E741
-    k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)  # noqa: E741
-    I = np.where(B > 0, I, 0)  # noqa: E741 # type: ignore
+    k, B, I = k, k + i + f, k + i  # type: ignore
+    k, B, I = ops.convert_to_numpy(k), ops.convert_to_numpy(B), ops.convert_to_numpy(I)
+    I = np.where(B > 0, I, 0)  # type: ignore
 
     k = np.broadcast_to(k.astype(np.int16), (1,) + shape)  # type: ignore
     B = np.broadcast_to(B.astype(np.int16), (1,) + shape)  # type: ignore
-    I = np.broadcast_to(I.astype(np.int16), (1,) + shape)  # noqa: E741
+    I = np.broadcast_to(I.astype(np.int16), (1,) + shape)
 
     overflow_mode: str = getattr(q, 'overflow_mode' if q.use_hgq else 'overflow', 'SAT')
     round_mode: str = q.round_mode

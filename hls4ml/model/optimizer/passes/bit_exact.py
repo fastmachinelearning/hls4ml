@@ -71,11 +71,12 @@ def get_input_layers(layer: Layer) -> list[Layer]:
     inp_names = layer.inputs
     ret = []
     for name in inp_names:
+        graph_name = name
         if name not in model.graph.keys():  # in stream_io, <name>_cpt\d+ may be used instead of <name>
             matched = rm_cpy.match(name)
             assert matched, f'Layer {layer.name} has input {name} which is not in the model (keys: {model.graph.keys()})'
-            name = matched.group('name')
-        ret.append(model.graph[name])
+            graph_name = matched.group('name')
+        ret.append(model.graph[graph_name])
     return ret
 
 
