@@ -34,20 +34,6 @@ repos:
   - id: pyupgrade
     args: ["--py310-plus"]
 
-- repo: https://github.com/pycqa/flake8
-  rev: 7.4.1
-  hooks:
-  - id: flake8
-    exclude: docs/conf.py
-    additional_dependencies: [flake8-bugbear, flake8-print]
-    args: ['--max-line-length=125',  # github viewer width
-           '--extend-ignore=E203,T201,F401',
-           # E203 is not PEP8 compliant
-           # F401 included in ruff (behaves slightly differently for noqa flags)
-           '--per-file-ignores=hls4ml/model/optimizer/passes/bit_exact.py:E741',
-           # i for #int w/o sign, I for #int w/ sign when massively processing bw conversions
-    ]
-
 - repo: https://github.com/mgedmin/check-manifest
   rev: "0.51"
   hooks:

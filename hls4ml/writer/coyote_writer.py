@@ -163,8 +163,8 @@ class CoyoteWriter(VitisWriter):
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
                             newline += '    // ' + layer.name + '\n'
-                            for line in func:
-                                newline += '    ' + line + '\n'
+                            for func_line in func:
+                                newline += '    ' + func_line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
                             vars = layer.get_variables()
                             newline += '#ifndef __SYNTHESIS__\n'
@@ -222,8 +222,8 @@ class CoyoteWriter(VitisWriter):
         build_lib_src = (filedir / '../templates/coyote/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', model.config.get_project_name())
+            for template_line in src.readlines():
+                line = template_line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
                 dst.write(line)
 
@@ -233,8 +233,8 @@ class CoyoteWriter(VitisWriter):
         cmake_src = os.path.join(filedir, '../templates/coyote/CMakeLists.txt')
         cmake_dst = f'{model.config.get_output_dir()}/CMakeLists.txt'
         with open(cmake_src) as src, open(cmake_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', model.config.get_project_name())
+            for template_line in src.readlines():
+                line = template_line.replace('myproject', model.config.get_project_name())
                 dst.write(line)
 
     def write_model_wrapper(self, model):

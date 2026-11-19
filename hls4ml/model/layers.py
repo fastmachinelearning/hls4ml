@@ -110,8 +110,9 @@ class Layer(Serializable):
             self._set_accum_t()
 
             layer_config = self.model.config.get_layer_config(self)
-            for config_key, config_value in layer_config.items():
-                config_key = convert_to_snake_case(config_key)
+            for key, value in layer_config.items():
+                config_key = convert_to_snake_case(key)
+                config_value = value
                 if config_key.endswith('_t') and isinstance(
                     config_value, str
                 ):  # TODO maybe move this to __setitem__ of AttributeDict?
@@ -156,7 +157,8 @@ class Layer(Serializable):
             all_attributes[attr.name] = attr
 
         # Validate existing attributes
-        for attr_name, attr_value in self.attributes.items():
+        for attr_name, value in self.attributes.items():
+            attr_value = value
             if isinstance(attr_value, PrecisionType):
                 attr_value = self._wrap_precision_to_type(f'{self.name}_{attr_name}', attr_value)
                 self.set_attr(attr_name, attr_value)
