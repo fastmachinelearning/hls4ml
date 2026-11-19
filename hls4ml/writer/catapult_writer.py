@@ -342,8 +342,8 @@ class CatapultWriter(Writer):
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
                             newline += '    // ' + layer.name + '\n'
-                            for line in func:
-                                newline += '    ' + line + '\n'
+                            for func_line in func:
+                                newline += '    ' + func_line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
                             newline += '#ifndef __SYNTHESIS__\n'
                             for var in vars:
@@ -746,9 +746,9 @@ class CatapultWriter(Writer):
         srcpath = (filedir / '../templates/catapult/build_prj.tcl').resolve()
         dstpath = Path(f'{model.config.get_output_dir()}/build_prj.tcl').resolve()
         with open(srcpath) as src, open(dstpath, 'w') as dst:
-            for line in src.readlines():
-                indent = line[: len(line) - len(line.lstrip())]
-                line = line.replace('myproject', model.config.get_project_name())
+            for template_line in src.readlines():
+                indent = template_line[: len(template_line) - len(template_line.lstrip())]
+                line = template_line.replace('myproject', model.config.get_project_name())
                 line = line.replace('CATAPULT_DIR', model.config.get_project_dir())
                 if '#hls-fpga-machine-learning insert techlibs' in line:
                     if model.config.get_config_value('Technology') is None:
@@ -778,8 +778,8 @@ class CatapultWriter(Writer):
         build_lib_src = (filedir / '../templates/catapult/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', model.config.get_project_name())
+            for template_line in src.readlines():
+                line = template_line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
                 dst.write(line)

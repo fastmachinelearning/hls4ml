@@ -871,8 +871,8 @@ class QuartusWriter(Writer):
         makefile_src = (filedir / '../templates/quartus/Makefile').resolve()
         makefile_dst = Path(f'{model.config.get_output_dir()}/Makefile').resolve()
         with open(makefile_src) as src, open(makefile_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', model.config.get_project_name())
+            for template_line in src.readlines():
+                line = template_line.replace('myproject', model.config.get_project_name())
 
                 if 'DEVICE   :=' in line:
                     line = 'DEVICE   := {}\n'.format(model.config.get_config_value('Part'))
@@ -883,8 +883,8 @@ class QuartusWriter(Writer):
         build_lib_src = (filedir / '../templates/quartus/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', model.config.get_project_name())
+            for template_line in src.readlines():
+                line = template_line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
                 dst.write(line)

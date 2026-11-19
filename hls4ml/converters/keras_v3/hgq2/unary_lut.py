@@ -71,7 +71,7 @@ class QUnaryLUTHandler(QLayerHandler, KerasV3LayerHandler):
             k, i, f = (ops.convert_to_numpy(x).ravel().item() for x in oq.kif)
             table = fixed_q(table, k, i, f)  # type: ignore
 
-            k, b, I = bool(k), k + i + f, k + i  # noqa: E741
+            k, b, I = bool(k), k + i + f, k + i
             table_t = FixedPrecisionType(b, I, k)
         else:
             assert isinstance(oq, FloatPointQuantizer)

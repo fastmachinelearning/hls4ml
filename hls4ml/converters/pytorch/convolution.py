@@ -168,7 +168,7 @@ def parse_conv_transpose_layer(operation, layer_name, input_names, input_shapes,
     # the end, or as many as the `output_size` of the call needs
     axes = [('width', 'left')] if len(px_in_shape) == 1 else [('height', 'top'), ('width', 'left')]
     px_out_shape = []
-    for (axis, side), n_in, k, s, d, p, op, n_out in zip(
+    for (axis, side), n_in, k, s, d, p, op, out_size in zip(
         axes,
         px_in_shape,
         class_object.kernel_size,
@@ -178,6 +178,7 @@ def parse_conv_transpose_layer(operation, layer_name, input_names, input_shapes,
         class_object.output_padding,
         output_size or [None] * len(px_in_shape),
     ):
+        n_out = out_size
         if n_out is None:
             n_out = (n_in - 1) * s - 2 * p + d * (k - 1) + op + 1
         layer[f'in_{axis}'] = n_in
