@@ -56,6 +56,9 @@ conv1d_config_template = """struct config{index} : nnet::conv1d_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
+
+    static constexpr weight_t weights = {weights};
+    static constexpr bias_t biases = {biases};
 }};
 """
 
@@ -65,7 +68,7 @@ conv1d_task_sequence_template = (
     'task_sequence<nnet::conv_1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 )
 
-conv_stream_function_template = '{name}.async({w}, {b});'
+conv_stream_function_template = '{name}.async();'
 
 conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
 
@@ -73,11 +76,15 @@ conv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_strea
 depthconv1d_function_template = (
     'nnet::depthwise_conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 )
+depthconv1d_task_sequence_template = (
+    'task_sequence<nnet::depthwise_conv_1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+)
 depthconv1d_include_list = [
     'nnet_utils/nnet_conv1d.h',
     'nnet_utils/nnet_conv1d_resource.h',
     'nnet_utils/nnet_depthconv1d.h',
     'nnet_utils/nnet_depthconv1d_resource.h',
+    'nnet_utils/nnet_depthconv1d_stream.h',
 ]
 
 
@@ -93,6 +100,8 @@ class Conv1DConfigTemplate(LayerConfigTemplate):
         if conv_params['dilation'] != 1:
             raise RuntimeError('dilation != 1 not supported yet')
         conv_params['config_t'] = f'config{node.index}_mult'
+        conv_params['weights'] = node.get_weights('weight').name
+        conv_params['biases'] = node.get_weights('bias').name
         conv_config = self.template.format(**conv_params)
 
         mult_params = self._default_config_params(node)
@@ -137,13 +146,11 @@ class Conv1DTaskSequenceTemplate(TaskSequenceTemplate):
 
 class ConvStreamFunctionTemplate(StreamFunctionCallTemplate):
     def __init__(self):
-        super().__init__((Conv1D, Conv2D, Conv2DBatchnorm))
+        super().__init__((Conv1D, Conv2D, Conv2DBatchnorm, DepthwiseConv1D, DepthwiseConv2D))
         self.template = conv_stream_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['w'] = node.get_weights('weight').name
-        params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
@@ -152,6 +159,12 @@ class DepthwiseConv1DFunctionTemplate(Conv1DFunctionTemplate):
     def __init__(self):
         super(Conv1DFunctionTemplate, self).__init__(DepthwiseConv1D, include_header=depthconv1d_include_list)
         self.template = depthconv1d_function_template
+
+
+class DepthwiseConv1DTaskSequenceTemplate(Conv1DTaskSequenceTemplate):
+    def __init__(self):
+        super(Conv1DTaskSequenceTemplate, self).__init__(DepthwiseConv1D)
+        self.template = depthconv1d_task_sequence_template
 
 
 """ 2D Conv """
@@ -187,6 +200,9 @@ conv2d_config_template = """struct config{index} : nnet::conv2d_config {{
     typedef {bias_t.name} bias_t;
     typedef {weight_t.name} weight_t;
     typedef {config_t} mult_config;
+
+    static constexpr weight_t weights = {weights};
+    static constexpr bias_t biases = {biases};
 }};\n"""
 
 conv2d_function_template = 'nnet::conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -210,6 +226,8 @@ class Conv2DConfigTemplate(LayerConfigTemplate):
         if conv_params['dilation'] != 1:
             raise RuntimeError('dilation != 1 not supported yet')
         conv_params['config_t'] = f'config{node.index}_mult'
+        conv_params['weights'] = node.get_weights('weight').name
+        conv_params['biases'] = node.get_weights('bias').name
         conv_config = self.template.format(**conv_params)
 
         mult_params = self._default_config_params(node)
@@ -255,11 +273,15 @@ class Conv2DTaskSequenceTemplate(TaskSequenceTemplate):
 depthconv2d_function_template = (
     'nnet::depthwise_conv_2d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 )
+depthconv2d_task_sequence_template = (
+    'task_sequence<nnet::depthwise_conv_2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+)
 depthconv2d_include_list = [
     'nnet_utils/nnet_conv2d.h',
     'nnet_utils/nnet_conv2d_resource.h',
     'nnet_utils/nnet_depthconv2d.h',
     'nnet_utils/nnet_depthconv2d_resource.h',
+    'nnet_utils/nnet_depthconv2d_stream.h',
 ]
 
 
@@ -267,3 +289,9 @@ class DepthwiseConv2DFunctionTemplate(Conv2DFunctionTemplate):
     def __init__(self):
         super(Conv2DFunctionTemplate, self).__init__(DepthwiseConv2D, include_header=depthconv2d_include_list)
         self.template = depthconv2d_function_template
+
+
+class DepthwiseConv2DTaskSequenceTemplate(Conv2DTaskSequenceTemplate):
+    def __init__(self):
+        super(Conv2DTaskSequenceTemplate, self).__init__(DepthwiseConv2D)
+        self.template = depthconv2d_task_sequence_template

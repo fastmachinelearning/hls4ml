@@ -11,8 +11,7 @@ namespace nnet {
 // ****************************************************
 //       Streaming Batch Normalization
 // ****************************************************
-template <class data_pipe, class res_pipe, typename CONFIG_T>
-void normalize_stream(typename CONFIG_T::scale_t scale, typename CONFIG_T::bias_t bias) {
+template <class data_pipe, class res_pipe, typename CONFIG_T> void normalize_stream() {
 
     constexpr unsigned multiplier_limit = DIV_ROUNDUP(CONFIG_T::n_in, CONFIG_T::reuse_factor);
     constexpr unsigned pipeline = CONFIG_T::n_in / multiplier_limit;
@@ -35,8 +34,9 @@ BatchNormLoop:
                 norm_index = j % CONFIG_T::n_filt;
             out_data[j] =
                 CONFIG_T::template product<typename ExtractPipeType<data_pipe>::value_type::value_type,
-                                           typename CONFIG_T::scale_t::value_type>::product(in_data[j], scale[norm_index]) +
-                bias[norm_index];
+                                           typename CONFIG_T::scale_t::value_type>::product(in_data[j],
+                                                                                            CONFIG_T::scale[norm_index]) +
+                CONFIG_T::bias[norm_index];
         }
 
         res_pipe::write(out_data);

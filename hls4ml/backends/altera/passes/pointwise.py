@@ -24,17 +24,17 @@ pointwise_conv2d_function_template = (
 )
 
 pointwise_conv1d_task_sequence_template = (
-    'task_sequence<nnet::pintwise_conv_1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::pointwise_conv_1d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 )
 
 pointwise_conv2d_task_sequence_template = (
-    'task_sequence<nnet::pintwise_conv_2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
+    'task_sequence<nnet::pointwise_conv_2d_{data_format}_stream<{input_pipe}, {output_pipe}, {config}>> {name};'
 )
 
-pointwise_conv_stream_function_template = '{name}.async({w}, {b});'
+pointwise_conv_stream_function_template = '{name}.async();'
 
-sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h']
-sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h']
+sepconv1d_include_list = ['nnet_utils/nnet_conv1d.h', 'nnet_utils/nnet_conv1d_stream.h']
+sepconv2d_include_list = ['nnet_utils/nnet_conv2d.h', 'nnet_utils/nnet_conv2d_stream.h']
 
 
 class PointwiseConv1DConfigTemplate(Conv1DConfigTemplate):
@@ -63,7 +63,7 @@ class PointwiseConv1DFunctionTemplate(FunctionCallTemplate):
 class PointwiseConv1DTaskSequenceTemplate(TaskSequenceTemplate):
     def __init__(self):
         super().__init__(PointwiseConv1D)
-        self.template = pointwise_conv1d_function_template
+        self.template = pointwise_conv1d_task_sequence_template
 
     def format(self, node):
         params = self._default_function_params(node)
@@ -99,7 +99,7 @@ class PointwiseConv2DFunctionTemplate(FunctionCallTemplate):
 class PointwiseConv2DTaskSequenceTemplate(TaskSequenceTemplate):
     def __init__(self):
         super().__init__(PointwiseConv2D)
-        self.template = pointwise_conv1d_function_template
+        self.template = pointwise_conv2d_task_sequence_template
 
     def format(self, node):
         params = self._default_function_params(node)
@@ -112,11 +112,10 @@ class PointwiseConv2DTaskSequenceTemplate(TaskSequenceTemplate):
 class PointwiseConvStreamFunctionTemplate(StreamFunctionCallTemplate):
     def __init__(self):
         super().__init__((PointwiseConv1D, PointwiseConv2D))
+        self.template = pointwise_conv_stream_function_template
 
     def format(self, node):
         params = self._default_function_params(node)
-        params['w'] = node.get_weights('weight').name
-        params['b'] = node.get_weights('bias').name
 
         return self.template.format(**params)
 
@@ -134,6 +133,9 @@ def register_pointwise(backend):
     backend.register_template(PointwiseConv1DFunctionTemplate)
     backend.register_template(PointwiseConv2DConfigTemplate)
     backend.register_template(PointwiseConv2DFunctionTemplate)
+    backend.register_template(PointwiseConv1DTaskSequenceTemplate)
+    backend.register_template(PointwiseConv2DTaskSequenceTemplate)
+    backend.register_template(PointwiseConvStreamFunctionTemplate)
 
 
 class OptimizePointwiseConv(OptimizerPass):
@@ -142,7 +144,10 @@ class OptimizePointwiseConv(OptimizerPass):
             node.class_name in ('Conv1D', 'Conv2D')
             and node.get_attr('filt_height', 1) == 1
             and node.get_attr('filt_width') == 1
-            and node.model.config.get_config_value('IOType') == 'io_parallel'
+            and (
+                node.model.config.get_config_value('IOType') == 'io_parallel'
+                or all(node.get_attr(pad, 0) == 0 for pad in ('pad_top', 'pad_bottom', 'pad_left', 'pad_right'))
+            )
         )
 
     def transform(self, model, node):

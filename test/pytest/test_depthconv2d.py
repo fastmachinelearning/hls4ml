@@ -32,6 +32,8 @@ input_size_options = [3]
         ('Vivado', 'io_stream', 'resource'),
         ('Vitis', 'io_stream', 'resource'),
         ('Catapult', 'io_stream', 'latency'),
+        ('Altera', 'io_parallel', 'resource'),
+        ('Altera', 'io_stream', 'resource'),
         ('XLS', 'io_parallel', 'latency'),
     ],
 )
