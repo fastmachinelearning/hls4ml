@@ -279,15 +279,17 @@ def parse_pytorch_model(config, verbose=True):
                 for arg in node.args:
                     if isinstance(arg, tuple):
                         for input in arg:
+                            source = input
                             if hasattr(input, 'name') and 'getitem' in input.name:
-                                input = resolve_getitem_source(input.name)
-                            input_shapes.append(output_shapes[str(input)])
-                            input_names.append(inputs_map.get(str(input), str(input)))
+                                source = resolve_getitem_source(input.name)
+                            input_shapes.append(output_shapes[str(source)])
+                            input_names.append(inputs_map.get(str(source), str(source)))
                     else:
+                        source = arg
                         if hasattr(arg, 'name') and 'getitem' in arg.name:
-                            arg = resolve_getitem_source(arg.name)
-                        input_shapes.append(output_shapes[str(arg)])
-                        input_names.append(inputs_map.get(str(arg), str(arg)))
+                            source = resolve_getitem_source(arg.name)
+                        input_shapes.append(output_shapes[str(source)])
+                        input_names.append(inputs_map.get(str(source), str(source)))
 
             # if a 'getitem' is the input to a node, step back in the graph to find the real source of the input
             elif 'getitem' in node.args[0].name:

@@ -29,7 +29,7 @@ def fixed_quantizer_to_hls4ml_t(q: 'FixedPointQuantizerBase', take_max=False):
         i = int(i.max())
         f = int(f.max())
 
-    k, b, I = k, k + i + f, k + i  # noqa: E741
+    k, b, I = k, k + i + f, k + i
     b = max(1, b)
     round_mode = q.round_mode
     if round_mode.startswith('S_'):

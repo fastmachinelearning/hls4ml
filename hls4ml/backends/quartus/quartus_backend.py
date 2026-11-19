@@ -258,6 +258,12 @@ class QuartusBackend(FPGABackend):
 
         layer.set_attr('index_t', index_t)
 
+        # The kernel declares the recurrent parts as CONFIG_T::weight_t and CONFIG_T::bias_t, so they must have those types
+        for name, parent in (('recurrent_weight', 'weight_t'), ('recurrent_bias', 'bias_t')):
+            var = layer.weights[name]
+            var.type.name = layer.types[parent].name
+            var.update_precision(layer.types[parent].precision)
+
     @layer_optimizer(Conv1D)
     def init_conv1d(self, layer):
         # This can happen if we assign weights of Dense layer to 1x1 Conv1D
@@ -356,6 +362,9 @@ class QuartusBackend(FPGABackend):
         rec_weights_data = layer.weights['recurrent_weight'].data
         bias_data = layer.weights['bias'].data
 
+        # The kernel declares every part as CONFIG_T::weight_t or CONFIG_T::bias_t, so they must have those types
+        weight_t = layer.types['weight_t']
+        bias_t = layer.types['bias_t']
         weight_types = ['i', 'f', 'c', 'o']
         for i in range(0, 4):
             layer.add_weights_variable(
@@ -364,6 +373,8 @@ class QuartusBackend(FPGABackend):
                 data=weights_data[
                     0 : layer.get_attr('n_in'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
                 ],
+                type_name=weight_t.name,
+                precision=weight_t.precision,
                 quantizer=layer.get_attr('weight_quantizer'),
                 compression=None,
             )
@@ -373,6 +384,8 @@ class QuartusBackend(FPGABackend):
                 data=rec_weights_data[
                     0 : layer.get_attr('n_out'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
                 ],
+                type_name=weight_t.name,
+                precision=weight_t.precision,
                 quantizer=layer.get_attr('weight_quantizer'),
                 compression=None,
             )
@@ -380,6 +393,8 @@ class QuartusBackend(FPGABackend):
                 name=f'bias_{weight_types[i]}',
                 var_name=f'bias_{weight_types[i]}_{{index}}',
                 data=bias_data[i * layer.get_attr('n_out') : (i + 1) * (layer.get_attr('n_out'))],
+                type_name=bias_t.name,
+                precision=bias_t.precision,
                 quantizer=layer.get_attr('weight_quantizer'),
                 compression=None,
             )

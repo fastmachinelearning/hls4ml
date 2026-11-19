@@ -1,14 +1,14 @@
 {
     "CSynthesisReport": {
         "TargetClockPeriod": "5.00",
-        "EstimatedClockPeriod": "3.629",
+        "EstimatedClockPeriod": "3.635",
         "BestLatency": "35",
         "WorstLatency": "35",
         "IntervalMin": "36",
         "IntervalMax": "36",
-        "DSP": "8",
+        "DSP": "6",
         "FF": "256",
-        "LUT": "619",
+        "LUT": "690",
         "BRAM_18K": "0",
         "URAM": "0",
         "AvailableBRAM_18K": "5376",

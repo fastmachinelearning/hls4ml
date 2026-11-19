@@ -1,4 +1,4 @@
-from hls4ml.model.layers import Conv1D, Conv2D
+from hls4ml.model.layers import Conv1D, Conv1DTranspose, Conv2D, Conv2DTranspose
 from hls4ml.model.optimizer import ModelOptimizerPass
 
 
@@ -50,7 +50,10 @@ class SetPipelineStyle(ModelOptimizerPass):
 
     def _maybe_set_dataflow_conv_layers(self, model):
         for layer in model.get_layers():
-            if isinstance(layer, (Conv1D, Conv2D)) and layer.attributes['n_partitions'] != 1:
+            if (
+                isinstance(layer, (Conv1D, Conv2D, Conv1DTranspose, Conv2DTranspose))
+                and layer.attributes['n_partitions'] != 1
+            ):
                 # pragma dataflow is having weird behavior if II is supposed to be 1
                 self._set_pipeline_style(model, 'dataflow')
                 return True
@@ -101,7 +104,7 @@ class SetPipelineStyle(ModelOptimizerPass):
                     'WARNING: Model strategy "Resource" will lead to bad QoR in combination '
                     'with pipeline style set to "pipeline".'
                 )
-            if any(isinstance(layer, (Conv1D, Conv2D)) for layer in model.get_layers()):
+            if any(isinstance(layer, (Conv1D, Conv2D, Conv1DTranspose, Conv2DTranspose)) for layer in model.get_layers()):
                 print('WARNING: Convolution layers require "dataflow" pipeline style.')
         for layer_type, strategy in model.config.layer_type_strategy.items():
             if strategy.lower() == 'resource' and model.config.pipeline_style.lower() == 'pipeline':

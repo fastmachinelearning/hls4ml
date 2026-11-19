@@ -224,5 +224,4 @@ def test_multiple_outputs(test_case_id, batch):
     # test trace as well
     y_hls, hls_trace = hls_model.trace(X1)
     for y_i, y_hls_i in zip(y, y_hls):
-        y_hls_i = y_hls_i.reshape(y_i.shape)
-        np.testing.assert_allclose(y_i, y_hls_i, rtol=0)
+        np.testing.assert_allclose(y_i, y_hls_i.reshape(y_i.shape), rtol=0)
