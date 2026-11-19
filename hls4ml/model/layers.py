@@ -110,8 +110,9 @@ class Layer(Serializable):
             self._set_accum_t()
 
             layer_config = self.model.config.get_layer_config(self)
-            for config_key, config_value in layer_config.items():
-                config_key = convert_to_snake_case(config_key)
+            for key, value in layer_config.items():
+                config_key = convert_to_snake_case(key)
+                config_value = value
                 if config_key.endswith('_t') and isinstance(
                     config_value, str
                 ):  # TODO maybe move this to __setitem__ of AttributeDict?
@@ -156,7 +157,8 @@ class Layer(Serializable):
             all_attributes[attr.name] = attr
 
         # Validate existing attributes
-        for attr_name, attr_value in self.attributes.items():
+        for attr_name, value in self.attributes.items():
+            attr_value = value
             if isinstance(attr_value, PrecisionType):
                 attr_value = self._wrap_precision_to_type(f'{self.name}_{attr_name}', attr_value)
                 self.set_attr(attr_name, attr_value)
@@ -798,6 +800,64 @@ class DepthwiseConv2D(Conv2D):
             name='weight', var_name='w{index}', data='depthwise', quantizer=self.get_attr('depthwise_quantizer')
         )
 
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+
+class Conv1DTranspose(Layer):
+    _expected_attributes = [
+        Attribute('in_width'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+        Attribute('filt_width'),
+        Attribute('stride_width'),
+        Attribute('dilation_width', default=1),
+        Attribute('crop_left'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_width'], self.attributes['n_filt']]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_width']]
+        self.add_output_variable(shape)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
+        self.add_bias(quantizer=self.get_attr('bias_quantizer'))
+
+
+class Conv2DTranspose(Layer):
+    _expected_attributes = [
+        Attribute('in_height'),
+        Attribute('in_width'),
+        Attribute('out_height'),
+        Attribute('out_width'),
+        Attribute('n_chan'),
+        Attribute('n_filt'),
+        Attribute('filt_height'),
+        Attribute('filt_width'),
+        Attribute('stride_height'),
+        Attribute('stride_width'),
+        Attribute('dilation_height', default=1),
+        Attribute('dilation_width', default=1),
+        Attribute('crop_top'),
+        Attribute('crop_left'),
+        WeightAttribute('weight'),
+        WeightAttribute('bias'),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+    ]
+
+    def initialize(self):
+        if self.get_attr('data_format') == 'channels_last':
+            shape = [self.attributes['out_height'], self.attributes['out_width'], self.attributes['n_filt']]
+        else:
+            shape = [self.attributes['n_filt'], self.attributes['out_height'], self.attributes['out_width']]
+        self.add_output_variable(shape)
+        self.add_weights(quantizer=self.get_attr('weight_quantizer'))
         self.add_bias(quantizer=self.get_attr('bias_quantizer'))
 
 
@@ -2028,6 +2088,10 @@ layer_map = {
     'QSeparableConv2D': SeparableConv2D,
     'DepthwiseConv2D': DepthwiseConv2D,
     'QDepthwiseConv2D': DepthwiseConv2D,
+    'Conv1DTranspose': Conv1DTranspose,
+    'Conv2DTranspose': Conv2DTranspose,
+    'QConv1DTranspose': Conv1DTranspose,
+    'QConv2DTranspose': Conv2DTranspose,
     'BatchNormalization': BatchNormalization,
     'QBatchNormalization': BatchNormalization,
     'MaxPooling1D': Pooling1D,

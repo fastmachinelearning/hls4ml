@@ -82,7 +82,7 @@ def _(layer: Conv1D | Conv2D):
 def _(node: EinsumDense):
     inp_tpose_idx = node.attributes['inp_tpose_idxs']
     L = node.attributes['n_free_data']
-    I = node.attributes['n_inplace']  # noqa: E741
+    I = node.attributes['n_inplace']
     C = node.attributes['n_contract']
 
     k, i, f = _get_input_kif(node)
@@ -173,7 +173,7 @@ class FuseQuantizerIntoDALayers(OptimizerPass):
     def transform(self, model: 'ModelGraph', node: FixedPointQuantizer):
         for out_layer in get_output_layers(node):
             k, i, f = get_kernel_inp_kif(out_layer)
-            B, I = i + f + k, i + k  # noqa: E741
+            B, I = i + f + k, i + k
 
             quantization_lines, replaces = [], []
             for i, (_k, _B, _I) in enumerate(zip(k, B, I)):

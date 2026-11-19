@@ -17,6 +17,19 @@ Known issues
   they use ``io_stream`` and the ``Latency`` strategy, or the ``Resource`` strategy with a reuse factor of 1. ``Vitis HLS`` 2024.1 is not affected. With
   2023.2, raising the clock uncertainty to 35% (``clock_uncertainty='35%'``) was enough for the models tested, at the cost of one to three extra
   clock cycles per time step.
+* With ``Vivado HLS`` 2020.1, ``Conv1DTranspose`` and ``Conv2DTranspose`` layers with the ``Latency`` strategy may not meet the target clock at the
+  default clock uncertainty. Raising the clock uncertainty to 27% (``clock_uncertainty='27%'``) was enough for most of the models tested, though some
+  layers required more. The same can happen with ``io_stream`` and the ``Resource`` strategy at a small reuse factor. ``Vitis HLS`` 2024.1 is not affected.
+* With ``Vitis HLS`` 2024.1, the ``io_stream`` implementation of ``Conv1DTranspose`` and ``Conv2DTranspose`` takes one clock cycle more per input
+  than the interval given in :ref:`Transposed convolution` in some layers where the first of its two processes is the slower one.
+* The following are not supported with ``Vitis HLS`` 2025.1:
+
+  * ``Conv1D`` and ``Conv2D`` with ``io_parallel``: co-simulation does not finish when the model is a dataflow region, which is the default for
+    models with convolutions.
+  * ``Dense`` with ``io_parallel`` and the ``Resource`` strategy: C synthesis did not finish in six hours for most of the models tested,
+    even small ones.
+  * ``Conv1DTranspose`` and ``Conv2DTranspose``.
+  * The ``Fused`` strategy, whose interval is less predictable with this version (see :doc:`Fused Strategy <../advanced/fused>`).
 
 Fused strategy
 ==============

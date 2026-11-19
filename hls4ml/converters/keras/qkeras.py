@@ -1,4 +1,4 @@
-from hls4ml.converters.keras.convolution import parse_conv1d_layer, parse_conv2d_layer
+from hls4ml.converters.keras.convolution import parse_conv1d_layer, parse_conv2d_layer, parse_conv_transpose_layer
 from hls4ml.converters.keras.core import parse_batchnorm_layer, parse_dense_layer
 from hls4ml.converters.keras.recurrent import parse_rnn_layer
 from hls4ml.converters.keras_v2_to_hls import keras_handler, parse_default_keras_layer
@@ -44,6 +44,16 @@ def parse_qconv_layer(keras_layer, input_names, input_shapes, data_reader):
         layer['depthwise_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
     else:
         layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
+    layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
+
+    return layer, output_shape
+
+
+@keras_handler('QConv1DTranspose', 'QConv2DTranspose')
+def parse_qconv_transpose_layer(keras_layer, input_names, input_shapes, data_reader):
+    layer, output_shape = parse_conv_transpose_layer(keras_layer, input_names, input_shapes, data_reader)
+
+    layer['weight_quantizer'] = get_quantizer_from_config(keras_layer, 'kernel')
     layer['bias_quantizer'] = get_quantizer_from_config(keras_layer, 'bias')
 
     return layer, output_shape

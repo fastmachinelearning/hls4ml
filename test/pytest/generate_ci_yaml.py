@@ -45,6 +45,7 @@ KERAS3_LIST = {
     'test_multiout_onnx',
     'test_keras_v3_profiling',
     'test_sparsepixels',
+    'test_conv_transpose',
 }
 QKERAS3_LIST = {'test_qkerasV3'}
 KERAS3_BACKEND_SPECIFIC_LIST = {
