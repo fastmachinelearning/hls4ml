@@ -81,3 +81,10 @@ time_distributed_loop = (
     'If set to "unroll", the loop will be unrolled. This may result in excessive resource use and cannot be used in '
     '"io_stream" mode. If set to "pipeline", the loop will be pipelined.'
 )
+
+# Weight-related attributes
+
+external_parameters = (
+    'Roles of the layer\'s parameters (for example ["weight", "bias"]) that become ports of the top function '
+    'instead of being compiled into the design, so their values can be provided at run time.'
+)

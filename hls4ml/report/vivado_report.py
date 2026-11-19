@@ -75,6 +75,21 @@ def _find_solutions(sln_dir):
     return solutions
 
 
+def _parse_bram_table(rpt_file):
+    """The data and address width of each BRAM interface, from the '* BRAM' table of the solution report.
+
+    The XML only gives the port width, which Vitis rounds up to a power-of-two number of bytes.
+    """
+    bram = {}
+    with open(rpt_file) as f:
+        section = re.search(r'^\* BRAM\n(.*?)\n\n', f.read(), re.S | re.M)
+    for line in section.group(1).splitlines() if section else []:
+        cells = [c.strip() for c in line.strip().strip('|').split('|')]
+        if len(cells) == 3 and cells[1].isdigit() and cells[2].isdigit():
+            bram[cells[0]] = {'DataWidth': int(cells[1]), 'AddressWidth': int(cells[2])}
+    return bram
+
+
 def _find_reports(sln_dir, top_func_name, full_report=False):
     csim_file = sln_dir + f'/csim/report/{top_func_name}_csim.log'
     if os.path.isfile(csim_file):
@@ -143,6 +158,13 @@ def _parse_csynth_xml(syn_file):
         if child.tag == 'DSP48E':
             child.tag = 'DSP'
         c_synth_report['Available' + child.tag] = child.text
+    # Interface
+    c_synth_report['RtlPorts'] = [
+        {child.tag: (child.text or '').strip() for child in port} for port in root.findall('./InterfaceSummary/RtlPorts')
+    ]
+    rpt_file = os.path.join(os.path.dirname(syn_file), 'csynth.rpt')
+    if os.path.isfile(rpt_file):
+        c_synth_report['BramInterfaces'] = _parse_bram_table(rpt_file)
     return c_synth_report
 
 
