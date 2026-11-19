@@ -17,6 +17,9 @@ after profiling the data. Another option is to pass a maximum precision using th
 inference will never set a bitwidth larger than the bitwidth of the ``max_precision`` or an integer part larger than the integer part of the ``max_precision`` that is passed.
 (The bitwidth and integer parts of the ``max_precision`` are treated separately.)
 
+Weights, biases and other constant weight types that are set to ``'auto'`` and have no quantizer use the width and integer part of the model's default precision,
+but with convergent rounding (``RND_CONV``) and saturation (``SAT``) enabled. Since the weights are constants, this has no cost in the generated hardware.
+
 When manually setting bitwidths, the accumulator can overflow, and the precision may need to be reduced. For the accumulator, it is usually a bad idea to explicitly
 enable rounding or saturation modes since it dramatically increases the execution time. For other types (e.g. output types or weight types), however, rounding and saturation handling
 can be enabled as needed.

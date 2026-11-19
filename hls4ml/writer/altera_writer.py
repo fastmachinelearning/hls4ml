@@ -535,8 +535,8 @@ class AlteraWriter(Writer):
             open(os.path.join(filedir, '../templates/altera/CMakeLists.txt')) as f,
             open(f'{model.config.get_output_dir()}/CMakeLists.txt', 'w') as fout,
         ):
-            for line in f.readlines():
-                line = line.replace('myproject', model.config.get_project_name())
+            for template_line in f.readlines():
+                line = template_line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
                 if 'set(FPGA_DEVICE' in line:

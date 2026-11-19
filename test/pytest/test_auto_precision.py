@@ -18,6 +18,7 @@ from tensorflow.keras.models import Sequential
 
 import hls4ml
 from hls4ml.model.optimizer.passes.infer_precision import _get_precision_from_constant
+from hls4ml.model.types import RoundingMode, SaturationMode
 
 test_root_path = Path(__file__).parent
 
@@ -56,12 +57,14 @@ def input_shape_3d(backend):
 @pytest.fixture()
 def data_1d(backend):
     X = np.random.rand(100, *input_shape_1d(backend))
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     return X
 
 
 @pytest.fixture()
 def data_2d(backend):
     X = np.random.rand(100, *input_shape_2d(backend))
+    X = np.round(X * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
     return X
 
 
@@ -288,6 +291,32 @@ def test_auto_precision_dense(test_case_id, keras_model_dense, data_1d, io_type,
     y_keras = model.predict(data).flatten()
     y_hls = hls_model.predict(data).flatten()
     np.testing.assert_allclose(y_keras, y_hls, rtol=2e-2, atol=5e-2, verbose=True)
+
+
+def test_auto_precision_weight_rounding(test_case_id):
+    """Weights that fall back to the default precision should round and saturate."""
+    model = Sequential()
+    model.add(Dense(2, input_shape=(1,), name='first_layer'))
+    model.compile()
+    lsb = 2**-10
+    model.get_layer('first_layer').set_weights([np.array([[0.75 * lsb, 40.0]]), np.zeros(2)])
+
+    config = hls4ml.utils.config_from_keras_model(model, default_precision='ap_fixed<16,6>', granularity='model')
+    config['LayerName'] = {'first_layer': {'Precision': {'weight': 'auto', 'bias': 'auto'}}}
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=odir, backend='Vivado')
+
+    layer = hls_model.graph['first_layer']
+    for type_name in ('weight_t', 'bias_t'):
+        precision = layer.types[type_name].precision
+        assert (precision.width, precision.integer, precision.signed) == (16, 6, True)
+        assert precision.rounding_mode == RoundingMode.RND_CONV
+        assert precision.saturation_mode == SaturationMode.SAT
+    assert layer.get_output_variable().type.precision.rounding_mode == RoundingMode.TRN
+
+    hls_model.compile()
+    y_hls = hls_model.predict(np.ones((1, 1))).flatten()
+    np.testing.assert_array_equal(y_hls, [lsb, 32 - lsb])
 
 
 @pytest.mark.parametrize(
