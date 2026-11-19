@@ -3625,19 +3625,25 @@ Configurable attributes
 
   * The datatype (precision) of the output tensor.
 
-Broadcast
-=========
+BatchNormalizationQuantizedTanh
+===============================
 Base attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
+* accum_t: NamedType
+
 Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* n_in: int
+
+* n_filt: int (Default: 0)
 
 Configurable attributes
 -----------------------
@@ -3648,6 +3654,10 @@ Configurable attributes
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
+
+* reuse_factor: int (Default: 1)
 
 PointwiseConv1D
 ===============
@@ -3821,25 +3831,19 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
-BatchNormalizationQuantizedTanh
-===============================
+Broadcast
+=========
 Base attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
-* accum_t: NamedType
-
 Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
-
-* n_in: int
-
-* n_filt: int (Default: 0)
 
 Configurable attributes
 -----------------------
@@ -3850,7 +3854,3 @@ Configurable attributes
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-* reuse_factor: int (Default: 1)
