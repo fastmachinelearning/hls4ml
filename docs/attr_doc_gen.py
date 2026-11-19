@@ -113,12 +113,12 @@ def write_all_attributes(all_layers_attrs):
             if len(attr_list.base_attrs) > 0:
                 file.write('Base attributes\n')
                 file.write('---------------\n')
-                print_attrs(attr_list.type_attrs, file)
+                print_attrs(attr_list.base_attrs, file)
 
             if len(attr_list.type_attrs) > 0:
                 file.write('Type attributes\n')
                 file.write('---------------\n')
-                print_attrs(attr_list.base_attrs, file)
+                print_attrs(attr_list.type_attrs, file)
 
             if len(attr_list.weight_attrs) > 0:
                 file.write('Weight attributes\n')
