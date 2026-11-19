@@ -1,3 +1,4 @@
+import copy
 import subprocess
 from pathlib import Path
 from warnings import warn
@@ -216,8 +217,8 @@ class AlteraBackend(FPGABackend):
         builddir.mkdir(exist_ok=True)
         try:
             subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
-        except subprocess.CalledProcessError:
-            raise RuntimeError('Could not find ahls. Please configure the Altera HLS IP Gen toolchain appropriately')
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError('Could not find ahls. Please configure the Altera HLS IP Gen toolchain appropriately') from e
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
@@ -380,6 +381,7 @@ class AlteraBackend(FPGABackend):
             layer.add_weights_variable(
                 name=f'weight_{weight_types[i]}',
                 var_name=f'kernel_{weight_types[i]}_{{index}}',
+                precision=copy.deepcopy(layer.types['weight_t'].precision),
                 data=weights_data[
                     0 : layer.get_attr('n_in'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
                 ],
@@ -389,6 +391,7 @@ class AlteraBackend(FPGABackend):
             layer.add_weights_variable(
                 name=f'recurrent_weight_{weight_types[i]}',
                 var_name=f'recurrent_kernel_{weight_types[i]}_{{index}}',
+                precision=copy.deepcopy(layer.types['recurrent_weight_t'].precision),
                 data=rec_weights_data[
                     0 : layer.get_attr('n_out'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
                 ],
@@ -398,6 +401,7 @@ class AlteraBackend(FPGABackend):
             layer.add_weights_variable(
                 name=f'bias_{weight_types[i]}',
                 var_name=f'bias_{weight_types[i]}_{{index}}',
+                precision=copy.deepcopy(layer.types['bias_t'].precision),
                 data=bias_data[i * layer.get_attr('n_out') : (i + 1) * (layer.get_attr('n_out'))],
                 quantizer=layer.get_attr('weight_quantizer'),
                 compression=None,

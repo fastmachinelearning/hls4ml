@@ -23,12 +23,12 @@ def reduce_model(model):
     """
     try:
         from kerassurgeon import Surgeon
-    except ModuleNotFoundError:
+    except ModuleNotFoundError as e:
         raise Exception(
             'Keras Surgeon not installed. Unable to reduce model footprint '
             'Please install up-to-date Keras Surgeon compatible with TensorFlow 2.3+ and QKeras '
             'Installation from git: https://github.com/fastmachinelearning/keras-surgeon'
-        )
+        ) from e
 
     # Initiate surgeon
     surgeon = Surgeon(model)
