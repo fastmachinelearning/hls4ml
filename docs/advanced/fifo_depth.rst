@@ -62,3 +62,82 @@ Similarly, the FIFO buffers can be optimized while using the ``Vitis`` backend w
                                                         output_dir='hls4mlprj_fifo_depth_opt',
                                                         part='xc7z020clg400-1',
                                                         backend='Vitis')
+
+Trace-based optimization with FIFO-Advisor (``VitisUnified`` backend)
+=====================================================================
+
+The ``VitisUnified`` backend also provides ``vitisunified:fifo_depth_optimization_advisor``, which sizes the FIFOs between layers without RTL co-simulation.
+It runs C synthesis once at the default depths, models the design with `LightningSim <https://github.com/sharc-lab/LightningSim>`_,
+searches depth assignments with the solvers of `FIFO-Advisor <https://github.com/sharc-lab/fifo-advisor>`_,
+and applies a point of their combined Pareto front of latency and BRAM. Enable only one of the two flows.
+
+.. code-block:: Python
+
+    config['Flows'] = ['vitisunified:fifo_depth_optimization_advisor']
+    hls4ml.model.optimizer.get_optimizer('vitisunified:fifo_depth_optimization_advisor').configure(
+        selection='min_bram',
+        search_scope='compute',
+    )
+
+    hls_model = hls4ml.converters.convert_from_keras_model(model,
+                                                        io_type='io_stream',
+                                                        hls_config=config,
+                                                        output_dir='hls4mlprj_fifo_depth_advisor',
+                                                        part='xczu9eg-ffvb1156-2-e',
+                                                        backend='VitisUnified',
+                                                        axi_mode='axi_master')
+
+The pass accepts the following options:
+
+* ``selection``: ``'min_bram'`` (default), ``'min_latency'``, or a function that takes the Pareto front and returns one point.
+* ``search_scope``: ``'compute'`` (default) searches only the FIFOs between layers.
+  ``'all'`` also searches the AXI wrapper FIFOs, which are not written back.
+* ``solvers``: any of ``'heuristic'``, ``'sa'``, ``'group-sa'``, ``'random'`` and ``'group-random'`` (default: all).
+* ``write_report``: also write ``fifo_depths_advisor.json`` with the Pareto front and the result of each solver (default ``True``).
+* ``skip_synthesis``: analyse an existing solution synthesised at the default depths (default ``False``).
+
+FIFO-Advisor installation
+-------------------------
+
+The flow needs the ``lightningsim`` and ``fifo_advisor`` packages, which are not hls4ml dependencies.
+LightningSim is distributed through its own conda channel for linux-64, and FIFO-Advisor requires Python 3.11 or newer,
+so the flow runs on linux-64 with Python 3.11 or 3.12. An environment can be created with:
+
+.. code-block:: yaml
+
+    name: hls4ml-fifo-advisor
+    channels:
+      - conda-forge
+      - https://sharc-lab.github.io/LightningSim/repo
+    dependencies:
+      - python=3.11
+      - lightningsim=0.2.6
+      - numpy
+      - scipy<1.16
+      - pymoo
+      - pandas
+      - matplotlib
+      - seaborn
+      - h5py
+      - pyyaml
+      - pip
+
+FIFO-Advisor is installed from its repository, and hls4ml from a source checkout with the ``VitisUnified`` backend:
+
+.. code-block:: bash
+
+    conda env create -f environment.yml
+    conda activate hls4ml-fifo-advisor
+    pip install --no-deps git+https://github.com/sharc-lab/fifo-advisor.git@bc49e72
+    pip install .                   # in the hls4ml source directory
+    pip install tensorflow==2.14.1  # Keras 2, Python 3.11 only
+
+With Python 3.12, install ``"keras>=3.10" "tensorflow<2.20"`` instead of ``tensorflow==2.14.1``.
+TensorFlow 2.20 and newer cannot be used: LightningSim crashes while reading the design.
+Vitis must be on ``PATH``. The flow is tested on Ubuntu 22.04 with Vitis 2023.2.
+
+FIFO-Advisor limitations
+------------------------
+
+* Only the ``axi_master`` interface is supported.
+* The depths come from LightningSim's model of the schedule; confirm them with a co-simulation of the rebuilt design.

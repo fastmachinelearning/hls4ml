@@ -237,3 +237,6 @@ class VitisUnifiedBackend(VitisBackend):
             'fifo_depth_profiling', profiling_passes, requires=[self._default_flow], backend=self.name
         )
         register_flow('fifo_depth_optimization', writer_passes, requires=[profiling_flow], backend=self.name)
+
+        advisor_passes = ['vitisunified:fifo_depth_optimization_advisor'] + writer_passes
+        register_flow('fifo_depth_optimization_advisor', advisor_passes, requires=[self._default_flow], backend=self.name)
