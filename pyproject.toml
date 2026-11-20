@@ -107,6 +107,28 @@ git_describe_command = [
 ]
 write_to = "hls4ml/_version.py"
 
+[tool.pixi]
+workspace.channels = [ "conda-forge" ]
+workspace.platforms = [ "linux-64", "osx-arm64" ]
+dependencies.python = ">=3.10"
+pypi-dependencies.hls4ml = { path = ".", editable = true }
+# The ci-* features back the environments mirroring test/pytest/ci-template.yml
+# ortools==9.4.1874 (optimization) has no wheels beyond Python 3.10
+feature.ci-keras2.dependencies = { python = "3.10.*" }
+feature.ci-keras2.platforms = [ "linux-64" ]
+# TensorFlow 2.14 is built against NumPy 1.x but does not cap it in its metadata; qkeras imports pyparsing undeclared
+feature.ci-keras2.pypi-dependencies = { numpy = "<2", pyparsing = "*" }
+# xls-python only publishes manylinux_2_34 wheels
+feature.ci-keras2.system-requirements = { libc = "2.34" }
+feature.ci-keras3.dependencies = { python = "3.12.*" }
+feature.ci-keras3.platforms = [ "linux-64" ]
+feature.ci-keras3.system-requirements = { libc = "2.34" }
+environments.default = { solve-group = "default" }
+environments.doc = { features = [ "doc" ], solve-group = "default" }
+environments.testing = { features = [ "ci-keras2", "da", "testing", "testing-keras2", "sr", "optimization", "xls" ] }
+environments.testing-keras3 = { features = [ "ci-keras3", "da", "testing", "testing-keras3", "sr", "xls" ] }
+environments.testing-qkeras-v3 = { features = [ "ci-keras3", "qkeras-v3" ] }
+
 [tool.ruff]
 target-version = "py310"
 line-length = 125
