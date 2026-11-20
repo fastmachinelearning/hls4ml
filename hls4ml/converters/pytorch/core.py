@@ -129,11 +129,11 @@ def parse_activation_layer(operation, layer_name, input_names, input_shapes, nod
     if layer['class_name'] == 'Softmax':
         if layer.get('axis') is None:
             layer['axis'] = -1
+        ax = layer['axis'] if layer['axis'] >= 0 else len(input_shapes[0]) + layer['axis']
+        layer['n_outer'] = math.prod(input_shapes[0][1:ax])
+        layer['n_inner'] = math.prod(input_shapes[0][ax + 1 :])
         if layer['axis'] == len(input_shapes[0]) - 1:
             layer['axis'] = -1  # the last dimension, in its canonical form
-        if 'IOType' in config:
-            if config['IOType'] == 'io_stream' and layer['axis'] != -1:
-                raise Exception('dim needs to be -1 for io_stream')
 
     output_shape = input_shapes[0]
     return layer, output_shape

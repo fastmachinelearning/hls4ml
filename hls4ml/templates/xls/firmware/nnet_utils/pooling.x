@@ -20,6 +20,8 @@ pub fn pooling_1d
     <OUT_NB: u32, OUT_BE: s32,
     ROUNDING: RoundingMode,
     OVERFLOW: OverflowMode,
+    ACCUM_NB: u32, ACCUM_BE: s32,
+    ACCUM_ROUNDING: RoundingMode, ACCUM_OVERFLOW: OverflowMode,
     POOLING_OP: PoolingOperation,
     // Pool
     POOL_SIZE: u32,
@@ -38,12 +40,9 @@ pub fn pooling_1d
     // Output dims
     OUT_DIM_0: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
     OUT_DIM_1: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
-    // Precision for max_or_sum accumulator
-    ACC_NB: u32 = {match POOLING_OP {
-        PoolingOperation::MAX => IN_NB,
-        PoolingOperation::AVERAGE => IN_NB + std::clog2(POOL_SIZE)
-    }},
-    ACC_BE: s32 = {IN_BE},
+    // Precision of an exact sum over the pool (AVERAGE only)
+    SUM_NB: u32 = {IN_NB + std::clog2(POOL_SIZE)},
+    SUM_BE: s32 = {IN_BE},
     >
 (
     x: FixedPoint<IN_NB, IN_BE>[IN_DIM_1][IN_DIM_0]
@@ -60,9 +59,9 @@ pub fn pooling_1d
             let in_pos: s32 = ((out_pos as s32) * (STRIDE as s32)) - (PAD_LEFT as s32);
 
             // Initial value
-            let max_or_sum: FixedPoint<ACC_NB, ACC_BE> = match POOLING_OP {
-                PoolingOperation::MAX => fixed_point_util::min_value<ACC_NB, ACC_BE>(),
-                PoolingOperation::AVERAGE => zero!<FixedPoint<ACC_NB, ACC_BE>>()
+            let max_or_sum: FixedPoint<ACCUM_NB, ACCUM_BE> = match POOLING_OP {
+                PoolingOperation::MAX => fixed_point_util::min_value<ACCUM_NB, ACCUM_BE>(),
+                PoolingOperation::AVERAGE => zero!<FixedPoint<ACCUM_NB, ACCUM_BE>>()
             };
             let (max_or_sum, num_elements) = for (k, (max_or_sum, num_elements)) in 0..POOL_SIZE {
                 let ii = in_pos + (k as s32);
@@ -82,14 +81,20 @@ pub fn pooling_1d
                     };
                     let max_or_sum = match POOLING_OP {
                         PoolingOperation::MAX => {
-                            // val and acc have the same precision in this case,
-                            // widening is needed only to prevent compilation error.
-                            assert_fmt!(ACC_NB == IN_NB, "max_pooling_op_width");
-                            const_assert!(ACC_BE == IN_BE);
-                            let val_widened = fixed_point::make_fixed_point<ACC_BE>(val.significand as sN[ACC_NB]);
-                            fixed_point_util::max(max_or_sum, val_widened)
+                            let val = fixed_point_util::resize<ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW>(val);
+                            fixed_point_util::max(max_or_sum, val)
                         },
-                        PoolingOperation::AVERAGE => fixed_point_util::add_already_widened(val, max_or_sum)
+                        PoolingOperation::AVERAGE => {
+                            if (ACCUM_NB >= SUM_NB && ACCUM_BE <= SUM_BE) {
+                                // ACCUM_T is wide enough, no need for rounding/overflow on each iteration
+                                fixed_point_util::add_already_widened(val, max_or_sum)
+                            } else {
+                                let val = fixed_point_util::resize<ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW>(val);
+                                fixed_point_util::resize<ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW>(
+                                    fixed_point::add(val, max_or_sum)
+                                )
+                            }
+                        }
                     };
                     (max_or_sum, num_elements + u32:1)
                 }
@@ -103,8 +108,10 @@ pub fn pooling_1d
                     max_or_sum
                 ),
                 PoolingOperation::AVERAGE =>{
-                    let avg_significand = max_or_sum.significand / (num_elements as sN[ACC_NB]);
-                    let avg = fixed_point::make_fixed_point<ACC_BE>(avg_significand);
+                    // The division happens at ACCUM_T resolution, matching the C++ reference
+                    // (nnet_pooling.h: `accum_t y = 0; y += x[i]; y /= length;`).
+                    let avg_significand = max_or_sum.significand / (num_elements as sN[ACCUM_NB]);
+                    let avg = fixed_point::make_fixed_point<ACCUM_BE>(avg_significand);
                     fixed_point_util::resize<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(
                         avg
                     )
@@ -122,6 +129,8 @@ pub fn pooling_2d
     <OUT_NB: u32, OUT_BE: s32,
     ROUNDING: RoundingMode,
     OVERFLOW: OverflowMode,
+    ACCUM_NB: u32, ACCUM_BE: s32,
+    ACCUM_ROUNDING: RoundingMode, ACCUM_OVERFLOW: OverflowMode,
     POOLING_OP: PoolingOperation,
     // Pool
     POOL_HEIGHT: u32, POOL_WIDTH: u32,
@@ -144,12 +153,9 @@ pub fn pooling_2d
     OUT_DIM_0: u32 = {data_format::from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[0]},
     OUT_DIM_1: u32 = {data_format::from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[1]},
     OUT_DIM_2: u32 = {data_format::from_height_width_chans(OUT_HEIGHT, OUT_WIDTH, IN_CHANNELS, DATA_FORMAT)[2]},
-    // Precision for max_or_sum accumulator
-    ACC_NB: u32 = {match POOLING_OP {
-        PoolingOperation::MAX => IN_NB,
-        PoolingOperation::AVERAGE => IN_NB + std::clog2(POOL_HEIGHT * POOL_WIDTH)
-    }},
-    ACC_BE: s32 = {IN_BE},
+    // Precision of an exact sum over the pool (AVERAGE only)
+    SUM_NB: u32 = {IN_NB + std::clog2(POOL_HEIGHT * POOL_WIDTH)},
+    SUM_BE: s32 = {IN_BE},
     >
 (
     x: FixedPoint<IN_NB, IN_BE>[IN_DIM_2][IN_DIM_1][IN_DIM_0]
@@ -169,9 +175,9 @@ pub fn pooling_2d
                 let in_j: s32 = ((out_j as s32) * (STRIDE_WIDTH as s32)) - (PAD_LEFT as s32);
 
                 // Initial value
-                let max_or_sum: FixedPoint<ACC_NB, ACC_BE> = match POOLING_OP {
-                    PoolingOperation::MAX => fixed_point_util::min_value<ACC_NB, ACC_BE>(),
-                    PoolingOperation::AVERAGE => zero!<FixedPoint<ACC_NB, ACC_BE>>()
+                let max_or_sum: FixedPoint<ACCUM_NB, ACCUM_BE> = match POOLING_OP {
+                    PoolingOperation::MAX => fixed_point_util::min_value<ACCUM_NB, ACCUM_BE>(),
+                    PoolingOperation::AVERAGE => zero!<FixedPoint<ACCUM_NB, ACCUM_BE>>()
                 };
                 let (max_or_sum, num_elements) = for (di, (max_or_sum, num_elements)) in 0..POOL_HEIGHT {
                     for (dj, (max_or_sum, num_elements)) in 0..POOL_WIDTH {
@@ -194,14 +200,20 @@ pub fn pooling_2d
                             };
                             let max_or_sum = match POOLING_OP {
                                 PoolingOperation::MAX => {
-                                    // val and acc have the same precision in this case,
-                                    // widening is needed only to prevent compilation error.
-                                    assert_fmt!(ACC_NB == IN_NB, "max_pooling_op_width");
-                                    const_assert!(ACC_BE == IN_BE);
-                                    let val_widened = fixed_point::make_fixed_point<ACC_BE>(val.significand as sN[ACC_NB]);
-                                    fixed_point_util::max(max_or_sum, val_widened)
+                                    let val = fixed_point_util::resize<ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW>(val);
+                                    fixed_point_util::max(max_or_sum, val)
                                 },
-                                PoolingOperation::AVERAGE => fixed_point_util::add_already_widened(val, max_or_sum)
+                                PoolingOperation::AVERAGE => {
+                                    if (ACCUM_NB >= SUM_NB && ACCUM_BE <= SUM_BE) {
+                                        // ACCUM_T is wide enough, no need for rounding/overflow on each iteration
+                                        fixed_point_util::add_already_widened(val, max_or_sum)
+                                    } else {
+                                        let val = fixed_point_util::resize<ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW>(val);
+                                        fixed_point_util::resize<ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW>(
+                                            fixed_point::add(val, max_or_sum)
+                                        )
+                                    }
+                                }
                             };
                             (max_or_sum, num_elements + u32:1)
                         }
@@ -215,8 +227,10 @@ pub fn pooling_2d
                         max_or_sum
                     ),
                     PoolingOperation::AVERAGE =>{
-                        let avg_significand = max_or_sum.significand / (num_elements as sN[ACC_NB]);
-                        let avg = fixed_point::make_fixed_point<ACC_BE>(avg_significand);
+                        // The division happens at ACCUM_T resolution, matching the C++ reference
+                        // (nnet_pooling.h: `accum_t y = 0; y += x[i]; y /= length;`).
+                        let avg_significand = max_or_sum.significand / (num_elements as sN[ACCUM_NB]);
+                        let avg = fixed_point::make_fixed_point<ACCUM_BE>(avg_significand);
                         fixed_point_util::resize<OUT_NB, OUT_BE, ROUNDING, OVERFLOW>(
                             avg
                         )
@@ -236,6 +250,8 @@ pub fn global_pooling_1d<
     OUT_NB: u32, OUT_BE: s32,
     ROUNDING: RoundingMode,
     OVERFLOW: OverflowMode,
+    ACCUM_NB: u32, ACCUM_BE: s32,
+    ACCUM_ROUNDING: RoundingMode, ACCUM_OVERFLOW: OverflowMode,
     POOLING_OP: PoolingOperation,
     DATA_FORMAT: DataFormat,
     // Input
@@ -252,7 +268,7 @@ pub fn global_pooling_1d<
 >
 (x: FixedPoint<IN_NB, IN_BE>[IN_DIM_1][IN_DIM_0])
 -> FixedPoint<OUT_NB, OUT_BE>[IN_CHANNELS] {
-    let res_2d = pooling_1d<OUT_NB, OUT_BE, ROUNDING, OVERFLOW, POOLING_OP, POOL_SIZE, STRIDE, PAD_LEFT, PAD_RIGHT, COUNT_PAD, DATA_FORMAT>(x);
+    let res_2d = pooling_1d<OUT_NB, OUT_BE, ROUNDING, OVERFLOW, ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW, POOLING_OP, POOL_SIZE, STRIDE, PAD_LEFT, PAD_RIGHT, COUNT_PAD, DATA_FORMAT>(x);
     fixed_point_util::flatten_2d(res_2d)
 }
 
@@ -260,6 +276,8 @@ pub fn global_pooling_2d<
     OUT_NB: u32, OUT_BE: s32,
     ROUNDING: RoundingMode,
     OVERFLOW: OverflowMode,
+    ACCUM_NB: u32, ACCUM_BE: s32,
+    ACCUM_ROUNDING: RoundingMode, ACCUM_OVERFLOW: OverflowMode,
     POOLING_OP: PoolingOperation,
     DATA_FORMAT: DataFormat,
     // Input
@@ -280,8 +298,70 @@ pub fn global_pooling_2d<
 >
 (x: FixedPoint<IN_NB, IN_BE>[IN_DIM_2][IN_DIM_1][IN_DIM_0])
 -> FixedPoint<OUT_NB, OUT_BE>[IN_CHANNELS] {
-    let res_3d = pooling_2d<OUT_NB, OUT_BE, ROUNDING, OVERFLOW, POOLING_OP, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, COUNT_PAD, DATA_FORMAT>(x);
+    let res_3d = pooling_2d<OUT_NB, OUT_BE, ROUNDING, OVERFLOW, ACCUM_NB, ACCUM_BE, ACCUM_ROUNDING, ACCUM_OVERFLOW, POOLING_OP, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, COUNT_PAD, DATA_FORMAT>(x);
     fixed_point_util::flatten_3d(res_3d)
+}
+
+// Global pooling with the natural (exact) accumulator; pool size is the whole input.
+pub fn global_pooling_1d_default
+    <POOLING_OP: PoolingOperation,
+    DATA_FORMAT: DataFormat,
+    // Input
+    IN_NB: u32, IN_BE: s32,
+    IN_DIM_0: u32, IN_DIM_1: u32,
+    // Defaults
+    OUT_NB: u32 = {IN_NB}, OUT_BE: s32 = {IN_BE},
+    ROUNDING: RoundingMode = {RoundingMode::TRN},
+    OVERFLOW: OverflowMode = {OverflowMode::WRAP},
+    // Derived input dims
+    IN_SIZE: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
+    IN_CHANNELS: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
+    ACCUM_NB: u32 = {match POOLING_OP {
+        PoolingOperation::MAX => IN_NB,
+        PoolingOperation::AVERAGE => IN_NB + std::clog2(IN_SIZE)
+    }},
+    ACCUM_BE: s32 = {IN_BE},
+    >
+(
+    x: FixedPoint<IN_NB, IN_BE>[IN_DIM_1][IN_DIM_0]
+)
+-> FixedPoint<OUT_NB, OUT_BE>[IN_CHANNELS] {
+    global_pooling_1d<
+        OUT_NB, OUT_BE, ROUNDING, OVERFLOW,
+        ACCUM_NB, ACCUM_BE, ROUNDING, OVERFLOW,
+        POOLING_OP, DATA_FORMAT
+    >(x)
+}
+
+pub fn global_pooling_2d_default
+    <POOLING_OP: PoolingOperation,
+    DATA_FORMAT: DataFormat,
+    // Input
+    IN_NB: u32, IN_BE: s32,
+    IN_DIM_0: u32, IN_DIM_1: u32, IN_DIM_2: u32,
+    // Defaults
+    OUT_NB: u32 = {IN_NB}, OUT_BE: s32 = {IN_BE},
+    ROUNDING: RoundingMode = {RoundingMode::TRN},
+    OVERFLOW: OverflowMode = {OverflowMode::WRAP},
+    // Derived input dims
+    IN_HEIGHT: u32 = {data_format::to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[0]},
+    IN_WIDTH: u32 = {data_format::to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[1]},
+    IN_CHANNELS: u32 = {data_format::to_height_width_chans(IN_DIM_0, IN_DIM_1, IN_DIM_2, DATA_FORMAT)[2]},
+    ACCUM_NB: u32 = {match POOLING_OP {
+        PoolingOperation::MAX => IN_NB,
+        PoolingOperation::AVERAGE => IN_NB + std::clog2(IN_HEIGHT * IN_WIDTH)
+    }},
+    ACCUM_BE: s32 = {IN_BE},
+    >
+(
+    x: FixedPoint<IN_NB, IN_BE>[IN_DIM_2][IN_DIM_1][IN_DIM_0]
+)
+-> FixedPoint<OUT_NB, OUT_BE>[IN_CHANNELS] {
+    global_pooling_2d<
+        OUT_NB, OUT_BE, ROUNDING, OVERFLOW,
+        ACCUM_NB, ACCUM_BE, ROUNDING, OVERFLOW,
+        POOLING_OP, DATA_FORMAT
+    >(x)
 }
 
 // Testing
@@ -321,6 +401,15 @@ fn test_pooling_const_case<
     OUT_SIZE: u32 = {OUT_HEIGHT},
     OUT_1D_DIM_0: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[0]},
     OUT_1D_DIM_1: u32 = {data_format::from_size_chans(OUT_SIZE, IN_CHANNELS, DATA_FORMAT)[1]},
+    // Natural accumulator: exact for both ops
+    ACCUM_NB_1D: u32 = {match POOLING_OP {
+        PoolingOperation::MAX => NB,
+        PoolingOperation::AVERAGE => NB + std::clog2(POOL_HEIGHT)
+    }},
+    ACCUM_NB_2D: u32 = {match POOLING_OP {
+        PoolingOperation::MAX => NB,
+        PoolingOperation::AVERAGE => NB + std::clog2(POOL_HEIGHT * POOL_WIDTH)
+    }},
 >(value: FixedPoint<NB, BE>) {
     let R = RoundingMode::TRN;
     let O = OverflowMode::WRAP;
@@ -334,6 +423,7 @@ fn test_pooling_const_case<
 
     let pooling_1d_result = pooling_1d<
         NB, BE, R, O,
+        ACCUM_NB_1D, BE, R, O,
         POOLING_OP,
         POOL_HEIGHT,
         STRIDE_HEIGHT, PAD_TOP, PAD_BOTTOM,
@@ -342,6 +432,7 @@ fn test_pooling_const_case<
         >(input_for_1d);
     let pooling_2d_result = pooling_2d<
         NB, BE, R, O,
+        ACCUM_NB_2D, BE, R, O,
         POOLING_OP,
         POOL_HEIGHT, POOL_WIDTH,
         STRIDE_HEIGHT, STRIDE_WIDTH,
@@ -365,8 +456,8 @@ fn test_pooling_const_case<
             COUNT_PAD, POOLING_OP, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, value);
     };
 
-    let global_pooling_1d_result = global_pooling_1d<NB, BE, R, O, POOLING_OP, DATA_FORMAT>(input_for_1d);
-    let global_pooling_2d_result = global_pooling_2d<NB, BE, R, O, POOLING_OP, DATA_FORMAT>(input_for_2d);
+    let global_pooling_1d_result = global_pooling_1d_default<POOLING_OP, DATA_FORMAT>(input_for_1d);
+    let global_pooling_2d_result = global_pooling_2d_default<POOLING_OP, DATA_FORMAT>(input_for_2d);
     assert_eq(expected_global, global_pooling_1d_result);
     assert_eq(expected_global, global_pooling_2d_result);
 }
@@ -454,6 +545,12 @@ pub fn pooling_1d_default
     PAD_LEFT: u32 = {u32:0},
     PAD_RIGHT: u32 = {u32:0},
     COUNT_PAD: bool = {false},
+    // Natural accumulator: exact for both ops
+    ACCUM_NB: u32 = {match POOLING_OP {
+        PoolingOperation::MAX => IN_NB,
+        PoolingOperation::AVERAGE => IN_NB + std::clog2(POOL_SIZE)
+    }},
+    ACCUM_BE: s32 = {IN_BE},
     // Derived input dims
     IN_SIZE: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[0]},
     IN_CHANNELS: u32 = {data_format::to_size_chans(IN_DIM_0, IN_DIM_1, DATA_FORMAT)[1]},
@@ -470,11 +567,13 @@ pub fn pooling_1d_default
     pooling_1d<
         OUT_NB, OUT_BE,
         ROUNDING, OVERFLOW,
+        ACCUM_NB, ACCUM_BE, ROUNDING, OVERFLOW,
         POOLING_OP, POOL_SIZE,
         STRIDE, PAD_LEFT, PAD_RIGHT, COUNT_PAD,
         DATA_FORMAT
     >(x)
 }
+
 
 #[test]
 fn test_pooling_1d() {
@@ -506,11 +605,11 @@ fn test_pooling_1d() {
     );
     assert_eq(
         expected_global_max_flat,
-        global_pooling_1d<NB, BE, R, O, PoolingOperation::MAX, DataFormat::CHANNELS_LAST>(x_last)
+        global_pooling_1d_default<PoolingOperation::MAX, DataFormat::CHANNELS_LAST>(x_last)
     );
     assert_eq(
         expected_global_avg_flat,
-        global_pooling_1d<NB, BE, R, O, PoolingOperation::AVERAGE, DataFormat::CHANNELS_LAST>(x_last)
+        global_pooling_1d_default<PoolingOperation::AVERAGE, DataFormat::CHANNELS_LAST>(x_last)
     );
 
     // CHANNELS_FIRST
@@ -527,11 +626,78 @@ fn test_pooling_1d() {
     );
     assert_eq(
         expected_global_max_flat,
-        global_pooling_1d<NB, BE, R, O, PoolingOperation::MAX, DataFormat::CHANNELS_FIRST>(x_first)
+        global_pooling_1d_default<PoolingOperation::MAX, DataFormat::CHANNELS_FIRST>(x_first)
     );
     assert_eq(
         expected_global_avg_flat,
-        global_pooling_1d<NB, BE, R, O, PoolingOperation::AVERAGE, DataFormat::CHANNELS_FIRST>(x_first)
+        global_pooling_1d_default<PoolingOperation::AVERAGE, DataFormat::CHANNELS_FIRST>(x_first)
+    );
+}
+
+// Regression test: the average is divided at ACCUM_T resolution, so an accumulator with extra
+// fractional bits (which is what hls4ml infers) keeps sub-input precision. Dividing at input
+// resolution instead would lose it.
+#[test]
+fn test_pooling_1d_avg_accum_resolution() {
+    let R = RoundingMode::TRN;
+    let O = OverflowMode::WRAP;
+
+    let OUT_NB = u32:16;
+    let OUT_BE = s32:-11;
+    let POOL_SIZE = u32:2;
+    let STRIDE = u32:2;
+    let PAD_LEFT = u32:0;
+    let PAD_RIGHT = u32:0;
+
+    // x = [1 LSB, 2 LSB] at 2^-10, pooled by 2; the exact mean is 1.5 LSB
+    let x = fixed_point_util::make_fixed_points_2d<-10>(s16[1][2]:[[s16:1], [s16:2]]);
+
+    // accum_t as hls4ml infers it for AveragePooling1D with pool_size 2 over <16, -10>:
+    // width 16 + 2*clog2(2) = 18, one extra fractional bit => binary exponent -11.
+    // The output keeps that extra bit, so the mean is representable and the difference shows.
+    let ACCUM_NB = u32:18;
+    let ACCUM_BE = s32:-11;
+    let expected = fixed_point_util::make_fixed_points_2d<-11>(s16[1][1]:[[s16:3]]);
+    assert_eq(
+        expected,
+        pooling_1d<OUT_NB, OUT_BE, R, O, ACCUM_NB, ACCUM_BE, R, O,
+            PoolingOperation::AVERAGE, POOL_SIZE, STRIDE, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_LAST>(x)
+    );
+
+    // Dividing at input resolution would give 3 LSB / 2 = 1 LSB at 2^-10, i.e. 2 at 2^-11.
+    let ACCUM_NB_NARROW = u32:17;
+    let ACCUM_BE_NARROW = s32:-10;
+    let wrong = fixed_point_util::make_fixed_points_2d<-11>(s16[1][1]:[[s16:2]]);
+    assert_eq(
+        wrong,
+        pooling_1d<OUT_NB, OUT_BE, R, O, ACCUM_NB_NARROW, ACCUM_BE_NARROW, R, O,
+            PoolingOperation::AVERAGE, POOL_SIZE, STRIDE, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_LAST>(x)
+    );
+}
+
+// A max-pooling accumulator wider than the input is legal and changes nothing.
+#[test]
+fn test_pooling_1d_max_wide_accum() {
+    let R = RoundingMode::TRN;
+    let O = OverflowMode::WRAP;
+
+    let OUT_NB = u32:16;
+    let OUT_BE = s32:-10;
+    let POOL_SIZE = u32:2;
+    let STRIDE = u32:2;
+    let PAD_LEFT = u32:0;
+    let PAD_RIGHT = u32:0;
+    // ACCUM_NB > IN_NB, and finer than the input as well
+    let ACCUM_NB = u32:24;
+    let ACCUM_BE = s32:-12;
+
+    let x = fixed_point_util::make_fixed_points_2d<-10>(s16[1][2]:[[s16:1024], [s16:1536]]);
+    let expected = fixed_point_util::make_fixed_points_2d<-10>(s16[1][1]:[[s16:1536]]);
+
+    assert_eq(
+        expected,
+        pooling_1d<OUT_NB, OUT_BE, R, O, ACCUM_NB, ACCUM_BE, R, O,
+            PoolingOperation::MAX, POOL_SIZE, STRIDE, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_LAST>(x)
     );
 }
 
@@ -568,25 +734,29 @@ fn test_pooling_2d() {
     let expected_global_max_flat = fixed_point_util::make_fixed_points_1d<0>([s16:16]);
     let expected_global_avg_flat = fixed_point_util::make_fixed_points_1d<0>([s16:8]);
 
+    // Natural accumulator: max stays in the input type, average needs clog2(2*2) = 2 extra bits
+    let ACC_MAX = NB;
+    let ACC_AVG = NB + u32:2;
+
     // CHANNELS_LAST
     let x_last = fixed_point_util::reshape_to_3d<IN_HEIGHT, IN_WIDTH, CHANNELS>(x_flat);
     let expected_max_last = fixed_point_util::reshape_to_3d<OUT_HEIGHT, OUT_WIDTH, CHANNELS>(expected_max_flat);
     let expected_avg_last = fixed_point_util::reshape_to_3d<OUT_HEIGHT, OUT_WIDTH, CHANNELS>(expected_avg_flat);
     assert_eq(
         expected_max_last,
-        pooling_2d<NB, BE, R, O, PoolingOperation::MAX, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_LAST>(x_last)
+        pooling_2d<NB, BE, R, O, ACC_MAX, BE, R, O, PoolingOperation::MAX, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_LAST>(x_last)
     );
     assert_eq(
         expected_avg_last,
-        pooling_2d<NB, BE, R, O, PoolingOperation::AVERAGE, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_LAST>(x_last)
+        pooling_2d<NB, BE, R, O, ACC_AVG, BE, R, O, PoolingOperation::AVERAGE, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_LAST>(x_last)
     );
     assert_eq(
         expected_global_max_flat,
-        global_pooling_2d<NB, BE, R, O, PoolingOperation::MAX, DataFormat::CHANNELS_LAST>(x_last)
+        global_pooling_2d_default<PoolingOperation::MAX, DataFormat::CHANNELS_LAST>(x_last)
     );
     assert_eq(
         expected_global_avg_flat,
-        global_pooling_2d<NB, BE, R, O, PoolingOperation::AVERAGE, DataFormat::CHANNELS_LAST>(x_last)
+        global_pooling_2d_default<PoolingOperation::AVERAGE, DataFormat::CHANNELS_LAST>(x_last)
     );
 
     // CHANNELS_FIRST
@@ -595,18 +765,18 @@ fn test_pooling_2d() {
     let expected_avg_first = fixed_point_util::reshape_to_3d<CHANNELS, OUT_HEIGHT, OUT_WIDTH>(expected_avg_flat);
     assert_eq(
         expected_max_first,
-        pooling_2d<NB, BE, R, O, PoolingOperation::MAX, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_FIRST>(x_first)
+        pooling_2d<NB, BE, R, O, ACC_MAX, BE, R, O, PoolingOperation::MAX, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_FIRST>(x_first)
     );
     assert_eq(
         expected_avg_first,
-        pooling_2d<NB, BE, R, O, PoolingOperation::AVERAGE, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_FIRST>(x_first)
+        pooling_2d<NB, BE, R, O, ACC_AVG, BE, R, O, PoolingOperation::AVERAGE, POOL_HEIGHT, POOL_WIDTH, STRIDE_HEIGHT, STRIDE_WIDTH, PAD_TOP, PAD_BOTTOM, PAD_LEFT, PAD_RIGHT, false, DataFormat::CHANNELS_FIRST>(x_first)
     );
     assert_eq(
         expected_global_max_flat,
-        global_pooling_2d<NB, BE, R, O, PoolingOperation::MAX, DataFormat::CHANNELS_FIRST>(x_first)
+        global_pooling_2d_default<PoolingOperation::MAX, DataFormat::CHANNELS_FIRST>(x_first)
     );
     assert_eq(
         expected_global_avg_flat,
-        global_pooling_2d<NB, BE, R, O, PoolingOperation::AVERAGE, DataFormat::CHANNELS_FIRST>(x_first)
+        global_pooling_2d_default<PoolingOperation::AVERAGE, DataFormat::CHANNELS_FIRST>(x_first)
     );
 }
