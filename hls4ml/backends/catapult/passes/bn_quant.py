@@ -163,6 +163,7 @@ class QuantizeDenseOutput(OptimizerPass):
             return False
         quantizer.bits = quantized_precision.width
         quantizer.hls_type = quantized_precision
+        # Quantized again from data_unquantized, so a pass before this one that changes the weights must update it too
         quantized_data = quantizer(node.weights['weight'].data_unquantized)
 
         weights = node.weights['weight']
