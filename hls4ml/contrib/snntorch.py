@@ -61,3 +61,37 @@ class SNNReadout(HLS4MLModule):
 
     def forward(self, x):
         return x
+
+
+class StreamingSNN(HLS4MLModule):
+    """Spiking network that hls4ml converts into one streaming block (arXiv:2611.00104).
+
+    Maps (batch, n_steps) inputs, one sample per time step, to the number of output spikes, (batch,). The layers are
+    ``Linear`` or ``Conv1d`` stages (all of one kind before the output stage), each followed by an snnTorch ``Leaky``; a
+    ``Conv1d`` with kernel size K > 1 follows ``ConstantPad1d((K - 1, 0), 0.0)``. The last stage has one neuron. Pass it
+    to the converter as a submodule, e.g. ``torch.nn.Sequential(OrderedDict(snn=model))``.
+    """
+
+    def __init__(self, *layers):
+        super().__init__()
+        self.layers = torch.nn.ModuleList(layers)
+
+    def forward(self, x):
+        if isinstance(x, torch.fx.Proxy):
+            raise TypeError(
+                'StreamingSNN cannot be the model passed to hls4ml; pass it as a submodule instead, '
+                'for example torch.nn.Sequential(OrderedDict(snn=model)).'
+            )
+        s = x.unsqueeze(1)
+        for layer in self.layers:
+            if type(layer).__name__ == 'Leaky':
+                mem, spikes = torch.zeros_like(s[..., 0]), []
+                for t in range(s.shape[-1]):
+                    spk, mem = layer(s[..., t], mem)
+                    spikes.append(spk)
+                s = torch.stack(spikes, dim=-1)
+            elif isinstance(layer, torch.nn.Linear):
+                s = layer(s.transpose(1, 2)).transpose(1, 2)
+            else:
+                s = layer(s)
+        return s.squeeze(1).sum(-1)
