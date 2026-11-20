@@ -21,7 +21,6 @@ def generate_data(input_shape):
 
 @pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'XLS'])
-@pytest.mark.parametrize('strategy', ['stable', 'latency', 'argmax'])
 @pytest.mark.parametrize(
     'input_bits,input_shape,table_bits,io_type,custom_accum',
     [
@@ -37,7 +36,7 @@ def generate_data(input_shape):
     ],
 )
 def test_softmax(
-    test_case_id, softmax_impl, backend, strategy, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum
+    test_case_id, softmax_impl, backend, generate_data, input_bits, input_shape, table_bits, io_type, custom_accum
 ):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
@@ -53,10 +52,6 @@ def test_softmax(
     table_type = f'fixed<{table_bits}, RND, SAT>'
 
     cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
-    # TODO this line does not work and should be replaced with
-    # cfg['LayerName']['softmax']['implementation'] = strategy
-    # See https://github.com/fastmachinelearning/hls4ml/issues/1443
-    cfg['LayerName']['softmax']['Strategy'] = strategy
     cfg['LayerName']['softmax']['inv_table_t'] = table_type
     cfg['LayerName']['softmax']['exp_table_t'] = table_type
     cfg['LayerName']['softmax']['accum_t'] = table_type
@@ -83,6 +78,30 @@ def test_softmax(
     print(f'Accuracy hls4ml relative to keras: {acc_hls4ml}')
 
     assert acc_hls4ml >= 0.98
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('implementation', ['latency', 'argmax'])
+def test_softmax_implementation(test_case_id, backend, io_type, implementation):
+    model = tf.keras.Sequential([tf.keras.Input(shape=(4,)), tf.keras.layers.Softmax(name='softmax')])
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    config['LayerName']['softmax']['Implementation'] = implementation
+    output_dir = test_root_path / test_case_id
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, backend=backend, io_type=io_type, output_dir=str(output_dir)
+    )
+    hls_model.compile()
+    parameters = (output_dir / 'firmware' / 'parameters.h').read_text()
+    assert f'implementation = nnet::softmax_implementation::{implementation};' in parameters
+
+    inputs = np.array([[-1.0, -0.5, 0.0, 0.5], [0.75, 0.0, -0.5, 0.25]], dtype=np.float32)
+    reference = model(inputs).numpy()
+    if implementation == 'argmax':
+        reference = np.eye(inputs.shape[-1])[reference.argmax(axis=-1)]
+
+    actual = hls_model.predict(inputs).reshape(reference.shape)
+    np.testing.assert_allclose(actual, reference, rtol=0, atol=0 if implementation == 'argmax' else 0.02)
 
 
 @pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
