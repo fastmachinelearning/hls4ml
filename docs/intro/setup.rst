@@ -29,6 +29,35 @@ version can be installed directly from ``git``:
 
    pip install git+https://github.com/fastmachinelearning/hls4ml@main
 
+Development environments with pixi
+----------------------------------
+
+For development on a local checkout, ``pyproject.toml`` also defines environments for `pixi <https://pixi.sh>`_. Pixi installs Python from
+``conda-forge`` and ``hls4ml`` itself in editable mode. Using pixi is optional; installing with ``pip`` into an environment of your choice
+(for example one created with ``conda``) works as before.
+
+.. code-block:: bash
+
+   git clone https://github.com/fastmachinelearning/hls4ml.git
+   cd hls4ml
+   pixi run python -c "import hls4ml"
+
+The following environments are available:
+
+* ``default``: ``hls4ml`` with its required dependencies only.
+* ``doc``: the dependencies needed to build this documentation.
+* ``testing``: the Keras v2 test environment (TensorFlow 2.14, QKeras, HGQ) with Python 3.10.
+* ``testing-keras3``: the Keras v3 test environment (Keras 3, HGQ2, PQuant) with Python 3.12.
+* ``testing-qkeras-v3``: QKeras-v3 with Python 3.12.
+
+The ``testing`` environments mirror those used in continuous integration and are only available on Linux (glibc 2.34 or newer).
+Select an environment with ``-e``, for example:
+
+.. code-block:: bash
+
+   pixi run -e testing-keras3 pytest test/pytest/test_keras_v3_api.py
+   pixi shell -e testing
+
 
 Dependencies
 ============
