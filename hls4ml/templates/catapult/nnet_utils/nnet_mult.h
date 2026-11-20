@@ -135,9 +135,10 @@ template <class x_T, class w_T> class after_init<both_binary<x_T, w_T>> : public
 template <class data_T, typename CONFIG_T>
 using init_sum = product::after_init<typename CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>>;
 
-// The value a sum of n_in products starts from. The sum adds products from product_after_init
-template <class data_T, typename CONFIG_T> inline typename CONFIG_T::accum_t init(typename CONFIG_T::bias_t b) {
-    return init_sum<data_T, CONFIG_T>::template init<typename CONFIG_T::accum_t>(b, CONFIG_T::n_in);
+// The value a sum of n products starts from, n_in by default. The sum adds products from product_after_init
+template <class data_T, typename CONFIG_T>
+inline typename CONFIG_T::accum_t init(typename CONFIG_T::bias_t b, int n = CONFIG_T::n_in) {
+    return init_sum<data_T, CONFIG_T>::template init<typename CONFIG_T::accum_t>(b, n);
 }
 
 // The product of data and weight in a sum that starts at init
