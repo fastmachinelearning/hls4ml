@@ -33,21 +33,19 @@ def parse_linear_layer(operation, layer_name, input_names, input_shapes, node, c
     layer['name'] = layer_name
     layer['inputs'] = input_names
 
-    layer['weight_data'] = class_object.weight.data.numpy()
-    if config.get('HLSConfig', {}).get('Model', {}).get('ChannelsLastConversion', 'off') == 'off':
-        # PyTorch stores (n_out, n_in) and Dense expects (n_in, n_out); with the conversion on, the
-        # channels-last pass transposes the weights, so do it here when that pass does not run
-        layer['weight_data'] = layer['weight_data'].transpose()
+    if class_object is None:
+        raise Exception('parsing of torch.nn.functional.linear not supported yet, please use torch.nn.Linear class')
+
+    # PyTorch stores Linear weights as (n_out, n_in), Dense expects (n_in, n_out). This is a storage
+    # convention, independent of the data format, so it is handled here for every ChannelsLastConversion mode
+    layer['weight_data'] = class_object.weight.data.numpy().transpose()
     if class_object.bias is not None:
         layer['bias_data'] = class_object.bias.data.numpy()
     else:
         layer['bias_data'] = None
 
-    if class_object is not None:
-        layer['n_in'] = class_object.in_features
-        layer['n_out'] = class_object.out_features
-    else:
-        raise Exception('parsing of torch.nn.functional.linear not supported yet, please use torch.nn.Linear class')
+    layer['n_in'] = class_object.in_features
+    layer['n_out'] = class_object.out_features
 
     # Handling whether bias is used or not
     if class_object.bias is None:

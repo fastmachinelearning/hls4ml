@@ -84,6 +84,26 @@ def test_linear_channels_last_conversion(test_case_id, backend, io_type, channel
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.01)
 
 
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_linear_sequence_input_no_conversion(test_case_id, io_type):
+    # nn.Linear acts on the last axis, which makes 'off' the natural mode for (seq, features) inputs.
+    # The multi-dimensional Dense is replaced by a Conv1D, which reads the weights in the Dense layout.
+    model = torch.nn.Sequential(nn.Linear(5, 3), nn.ReLU(), nn.Linear(3, 2))
+    model.eval()
+
+    X_input = np.random.rand(10, 4, 5)
+    X_input = np.round(X_input * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+
+    config = config_from_pytorch_model(model, (4, 5), channels_last_conversion='off', transpose_outputs=False)
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type=io_type)
+    hls_model.compile()
+
+    hls_prediction = np.reshape(hls_model.predict(X_input), pytorch_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.01)
+
+
 # TODO: add ThresholdedReLU test when it can be made to pass
 @pytest.mark.parametrize(
     'activation_function',
