@@ -97,7 +97,9 @@ def test_linear_sequence_input_no_conversion(test_case_id, io_type):
 
     config = config_from_pytorch_model(model, (4, 5), channels_last_conversion='off', transpose_outputs=False)
     output_dir = str(test_root_path / test_case_id)
-    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type=io_type)
+    hls_model = convert_from_pytorch_model(
+        model, hls_config=config, output_dir=output_dir, backend='Vivado', io_type=io_type
+    )
     hls_model.compile()
 
     hls_prediction = np.reshape(hls_model.predict(X_input), pytorch_prediction.shape)
