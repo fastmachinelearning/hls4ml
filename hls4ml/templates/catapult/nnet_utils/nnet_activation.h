@@ -544,16 +544,27 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
 template <unsigned K, int W1, int I1, bool S1, ac_q_mode Q1, ac_o_mode O1, int W2, int I2, bool S2, ac_q_mode Q2,
           ac_o_mode O2>
 void ac_softmax_pwl_wrapper(const ac_fixed<W1, I1, S1, Q1, O1> (&input)[K], ac_fixed<W2, I2, S2, Q2, O2> (&output)[K]) {
-    // AC Math softmax takes at most 5 integer bits besides the sign, as it cannot hold the exponential of larger
-    // values, so wider inputs are saturated to that range
-    const int I_in = (I1 - S1 > 5) ? 5 + S1 : I1;
-    const int W_in = AC_MAX(W1 - I1 + I_in, 1);
-    ac_fixed<W_in, I_in, S1, Q1, AC_SAT> input_sat[K];
-    for (unsigned int x = 0; x < K; x++)
-        input_sat[x] = input[x];
+    // AC Math softmax takes at most 5 integer bits besides the sign, as it cannot hold the exponential of larger values.
+    // Wider inputs are shifted so that the largest is 0, which leaves the softmax unchanged, and saturated at -32, which
+    // only changes inputs whose exponential is below 1e-13 of the largest one's
+    const bool wide = I1 - S1 > 5;
+    const int I_in = wide ? 6 : I1;
+    const int W_in = wide ? AC_MAX(W1 - I1 + 6, 1) : W1;
+    ac_fixed<W_in, I_in, wide || S1, Q1, wide ? AC_SAT : O1> input_in[K];
+    if (wide) {
+        ac_fixed<W1, I1, S1, Q1, O1> largest = input[0];
+        for (unsigned int x = 1; x < K; x++)
+            if (input[x] > largest)
+                largest = input[x];
+        for (unsigned int x = 0; x < K; x++)
+            input_in[x] = input[x] - largest;
+    } else {
+        for (unsigned int x = 0; x < K; x++)
+            input_in[x] = input[x];
+    }
     ac_fixed<W2, I2, false, Q2, O2> tmp[K];
-    ac_math::ac_softmax_pwl<AC_TRN, false, 0, 0, AC_TRN, AC_WRAP, false, 0, 0, AC_TRN, AC_WRAP, K, W_in, I_in, S1, Q1,
-                            AC_SAT, W2, I2, Q2, O2>(input_sat, tmp);
+    ac_math::ac_softmax_pwl<AC_TRN, false, 0, 0, AC_TRN, AC_WRAP, false, 0, 0, AC_TRN, AC_WRAP, K, W_in, I_in, wide || S1,
+                            Q1, wide ? AC_SAT : O1, W2, I2, Q2, O2>(input_in, tmp);
     for (unsigned int x = 0; x < K; x++)
         output[x] = tmp[x];
 }

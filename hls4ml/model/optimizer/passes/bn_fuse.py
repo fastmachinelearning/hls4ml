@@ -12,7 +12,7 @@ class FuseBatchNormalization(OptimizerPass):
     weight/scale of 1 or a bias of 0, this optimizer does not merge nodes when both the weight and scale or both biases
     are quantized.
 
-    Note:  Consider restricting this to ApplyAlpha.  Batch Normalization quantization seems to be ignored.
+    Note:  Consider restricting this to ApplyAlpha.
 
     Note:  This optimizer may not be safe if weights are updateable. May need to turn off.
     """
