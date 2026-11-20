@@ -68,7 +68,8 @@ def parse_activation_layer(node, input_names, input_shapes, graph):
 
         elif layer['class_name'] in ['ELU', 'LeakyReLU', 'ThresholdedReLU']:
             layer['activation'] = layer['class_name']
-            layer['activ_param'] = get_onnx_attribute(node, 'alpha', 0.01)
+            # ONNX default of `alpha`: 0.01 for LeakyRelu, 1.0 for Elu and ThresholdedRelu
+            layer['activ_param'] = get_onnx_attribute(node, 'alpha', 0.01 if layer['class_name'] == 'LeakyReLU' else 1.0)
 
         else:
             layer['activation'] = layer['class_name']
