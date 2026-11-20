@@ -82,7 +82,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/altera.html">Altera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
 </ul>
@@ -208,7 +207,6 @@ version can be installed directly from <code class="docutils literal notranslate
 <ul class="simple">
 <li><p>Xilinx Vivado HLS 2020.1 for synthesis for Xilinx FPGAs using the <code class="docutils literal notranslate"><span class="pre">Vivado</span></code> backend. Older versions may work, but use at your own risk.</p></li>
 <li><p>Vitis HLS 2023.1 or newer is required for synthesis for Xilinx FPGAs using the <code class="docutils literal notranslate"><span class="pre">Vitis</span></code> backend.</p></li>
-<li><p>Intel Quartus 20.1 to 21.4 for synthesis for Intel/Altera FPGAs using the <code class="docutils literal notranslate"><span class="pre">Quartus</span></code> backend.</p></li>
 <li><p>Altera HLS IP Gen (version 2026.1.0 tested) and recent Intel/Altera Quartus for Intel/Altera FPGAs using the <code class="docutils literal notranslate"><span class="pre">Altera</span></code> backend.</p></li>
 </ul>
 <p>Catapult HLS 2024.1_1 or 2024.2 can be used to synthesize both for ASICs and FPGAs.</p>
@@ -324,9 +322,6 @@ Here we give line-by-line instructions to demonstrate the general workflow.</p>
 
 <span class="c1"># For QKeras-v3 frontend</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">qkeras</span><span class="o">-</span><span class="n">v3</span><span class="p">]</span>
-
-<span class="c1"># For Quartus report parsing</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">quartus</span><span class="o">-</span><span class="n">report</span><span class="p">]</span>
 
 <span class="c1"># For snnTorch frontend</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">hls4ml</span><span class="p">[</span><span class="n">snn</span><span class="p">]</span>

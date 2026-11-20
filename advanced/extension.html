@@ -78,7 +78,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/altera.html">Altera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
 </ul>
@@ -286,8 +285,9 @@ These two templates determine how to populate the config template based on the l
 </pre></div>
 </div>
 <p>Now, we need to tell hls4ml about the existence of this new layer by registering it.
-We also need to register the parser (a.k.a. the layer handler), the template passes, and the HLS implementation source code with the particular backend.
-In this case, the HLS code is valid for both the Vivado and Quartus backends.</p>
+We also need to register the parser (a.k.a. the layer handler), the
+template passes, and the HLS implementation source code with the particular backend.
+In this case, the HLS code is valid for the Vivado backend.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Register the converter for custom Keras layer</span>
 <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">register_keras_v2_layer_handler</span><span class="p">(</span><span class="s1">'KReverse'</span><span class="p">,</span> <span class="n">parse_reverse_layer</span><span class="p">)</span>
 <span class="c1"># For keras v3, use register on subclassed KerasV3LayerHandler from hls4ml.converters.keras_v3._base instead</span>
@@ -295,16 +295,14 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.</p
 <span class="c1"># Register the hls4ml's IR layer</span>
 <span class="n">hls4ml</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">register_layer</span><span class="p">(</span><span class="s1">'KReverse'</span><span class="p">,</span> <span class="n">HReverse</span><span class="p">)</span>
 
-<span class="k">for</span> <span class="n">backend_id</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'Vivado'</span><span class="p">,</span> <span class="s1">'Quartus'</span><span class="p">]:</span>
-    <span class="c1"># Register the optimization passes (if any)</span>
-    <span class="n">backend</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">backend_id</span><span class="p">)</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">backends</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="s1">'Vivado'</span><span class="p">)</span>
 
-    <span class="c1"># Register template passes for the given backend</span>
-    <span class="n">backend</span><span class="o">.</span><span class="n">register_template</span><span class="p">(</span><span class="n">HReverseConfigTemplate</span><span class="p">)</span>
-    <span class="n">backend</span><span class="o">.</span><span class="n">register_template</span><span class="p">(</span><span class="n">HReverseFunctionTemplate</span><span class="p">)</span>
+<span class="c1"># Register template passes for the backend</span>
+<span class="n">backend</span><span class="o">.</span><span class="n">register_template</span><span class="p">(</span><span class="n">HReverseConfigTemplate</span><span class="p">)</span>
+<span class="n">backend</span><span class="o">.</span><span class="n">register_template</span><span class="p">(</span><span class="n">HReverseFunctionTemplate</span><span class="p">)</span>
 
-    <span class="c1"># Register HLS implementation</span>
-    <span class="n">backend</span><span class="o">.</span><span class="n">register_source</span><span class="p">(</span><span class="s1">'/path/to/your/nnet_reverse.h'</span><span class="p">)</span>
+<span class="c1"># Register HLS implementation</span>
+<span class="n">backend</span><span class="o">.</span><span class="n">register_source</span><span class="p">(</span><span class="s1">'/path/to/your/nnet_reverse.h'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Finally, we can actually test the <code class="docutils literal notranslate"><span class="pre">hls4ml</span></code> custom layer compared to the Keras one.</p>
@@ -320,20 +318,18 @@ In this case, the HLS code is valid for both the Vivado and Quartus backends.</p
 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">(</span><span class="mi">8</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'int32'</span><span class="p">)</span>
 <span class="n">kres</span> <span class="o">=</span> <span class="n">kmodel</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-<span class="k">for</span> <span class="n">backend_id</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'Vivado'</span><span class="p">,</span> <span class="s1">'Quartus'</span><span class="p">]:</span>
+<span class="n">hmodel</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span>
+    <span class="n">kmodel</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="o">=</span><span class="s1">'hls4mlprj_extensions_Vivado'</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="s1">'Vivado'</span><span class="p">,</span>
+    <span class="n">io_type</span><span class="o">=</span><span class="s1">'io_parallel'</span><span class="p">,</span>
+    <span class="n">hls_config</span><span class="o">=</span><span class="p">{</span><span class="s1">'Model'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'Precision'</span><span class="p">:</span> <span class="s1">'ap_int&lt;6&gt;'</span><span class="p">,</span> <span class="s1">'ReuseFactor'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span>
+<span class="p">)</span>
 
-    <span class="n">hmodel</span> <span class="o">=</span> <span class="n">hls4ml</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">convert_from_keras_model</span><span class="p">(</span>
-        <span class="n">kmodel</span><span class="p">,</span>
-        <span class="n">output_dir</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="sa">f</span><span class="s1">'hls4mlprj_extensions_</span><span class="si">{</span><span class="n">backend_id</span><span class="si">}</span><span class="s1">'</span><span class="p">),</span>
-        <span class="n">backend</span><span class="o">=</span><span class="n">backend_id</span><span class="p">,</span>
-        <span class="n">io_type</span><span class="o">=</span><span class="s1">'io_parallel'</span><span class="p">,</span>
-        <span class="n">hls_config</span><span class="o">=</span><span class="p">{</span><span class="s1">'Model'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'Precision'</span><span class="p">:</span> <span class="s1">'ap_int&lt;6&gt;'</span><span class="p">,</span> <span class="s1">'ReuseFactor'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span>
-    <span class="p">)</span>
+<span class="n">hmodel</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+<span class="n">hres</span> <span class="o">=</span> <span class="n">hmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">))</span>
 
-    <span class="n">hmodel</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
-    <span class="n">hres</span> <span class="o">=</span> <span class="n">hmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">))</span>
-
-    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_equal</span><span class="p">(</span><span class="n">kres</span><span class="p">,</span> <span class="n">hres</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_equal</span><span class="p">(</span><span class="n">kres</span><span class="p">,</span> <span class="n">hres</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

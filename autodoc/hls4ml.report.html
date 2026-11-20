@@ -76,7 +76,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/altera.html">Altera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
 </ul>
@@ -114,7 +113,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.altera_report">hls4ml.report.altera_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.catapult_report">hls4ml.report.catapult_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.libero_report">hls4ml.report.libero_report module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.quartus_report">hls4ml.report.quartus_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.vitis_unified_report">hls4ml.report.vitis_unified_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report.vivado_report">hls4ml.report.vivado_report module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-hls4ml.report">Module contents</a></li>
@@ -227,61 +225,6 @@
 <dt class="sig sig-object py" id="hls4ml.report.libero_report.parse_utilization_data">
 <span class="sig-prename descclassname"><span class="pre">hls4ml.report.libero_report.</span></span><span class="sig-name descname"><span class="pre">parse_utilization_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.libero_report.parse_utilization_data" title="Link to this definition"></a></dt>
 <dd><p>Parses ‘Resource Usage’ section.</p>
-</dd></dl>
-
-</section>
-<section id="module-hls4ml.report.quartus_report">
-<span id="hls4ml-report-quartus-report-module"></span><h2>hls4ml.report.quartus_report module<a class="headerlink" href="#module-hls4ml.report.quartus_report" title="Link to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.report.quartus_report.parse_quartus_report">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.report.quartus_report.</span></span><span class="sig-name descname"><span class="pre">parse_quartus_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hls_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_to_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.quartus_report.parse_quartus_report" title="Link to this definition"></a></dt>
-<dd><p>Parse a report from a given Quartus project as a dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>hls_dir</strong> (<em>string</em>) – The directory where the project is found</p></li>
-<li><p><strong>write_to_file</strong> (<em>bool</em>) – A flag indicating whether to write the results to a separate file</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The report dictionary, containing latency, resource usage etc.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>results (dict)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.report.quartus_report.read_js_object">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.report.quartus_report.</span></span><span class="sig-name descname"><span class="pre">read_js_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">js_script</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.quartus_report.read_js_object" title="Link to this definition"></a></dt>
-<dd><p>Reads the JavaScript file and return a dictionary of variables defined in the script.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>js_script</strong> (<em>string</em>)</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dictionary of variables defines in script</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="hls4ml.report.quartus_report.read_quartus_report">
-<span class="sig-prename descclassname"><span class="pre">hls4ml.report.quartus_report.</span></span><span class="sig-name descname"><span class="pre">read_quartus_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hls_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_browser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.report.quartus_report.read_quartus_report" title="Link to this definition"></a></dt>
-<dd><p>Parse and print the Quartus report to print the report. Optionally open a browser.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>hls_dir</strong> (<em>string</em>) – The directory where the project is found</p></li>
-<li><p><strong>open_browser</strong> – whether to open a browser</p></li>
-<li><p><strong>optional</strong> – whether to open a browser</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
 </dd></dl>
 
 </section>

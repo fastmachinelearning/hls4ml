@@ -36,14 +36,6 @@ hls4ml.writer.libero\_writer module
    :show-inheritance:
    :undoc-members:
 
-hls4ml.writer.quartus\_writer module
-------------------------------------
-
-.. automodule:: hls4ml.writer.quartus_writer
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
 hls4ml.writer.symbolic\_writer module
 -------------------------------------
 

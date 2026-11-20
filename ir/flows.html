@@ -76,7 +76,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../backend/altera.html">Altera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/vitis_unified.html">VitisUnified</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/catapult.html">Catapult</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../backend/quartus.html">Quartus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/sr.html">SymbolicExpression</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../backend/xls.html">XLS</a></li>
 </ul>
@@ -157,8 +156,8 @@ an optimizer pass that runs on the full model is <a class="reference internal" h
 perform the transformation from the <code class="docutils literal notranslate"><span class="pre">transform</span></code> function. The boolean return value of <code class="docutils literal notranslate"><span class="pre">transform</span></code> indicates if the optimizer pass made changes to the
 model graph that may require running the optimizers again. In that case, optimizers in a flow are run again.</p>
 <p>Optimizers can be general, independent of the backend, in which case they are located in <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.passes.html#module-hls4ml.model.optimizer.passes" title="hls4ml.model.optimizer.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.model.optimizer.passes</span></code></a>, or they may be backend-specific,
-in which case they are located in a folder dependent on the backend, e.g., <a class="reference internal" href="../autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes" title="hls4ml.backends.vivado.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.backends.vivado.passes</span></code></a> or
-<a class="reference internal" href="../autodoc/hls4ml.backends.quartus.passes.html#module-hls4ml.backends.quartus.passes" title="hls4ml.backends.quartus.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.backends.quartus.passes</span></code></a>. A common set of optimizers that are used by FPGA backends are located in <a class="reference internal" href="../autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes" title="hls4ml.backends.fpga.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.backends.fpga.passes</span></code></a>.</p>
+in which case they are located in a folder dependent on the backend, e.g., <a class="reference internal" href="../autodoc/hls4ml.backends.vivado.passes.html#module-hls4ml.backends.vivado.passes" title="hls4ml.backends.vivado.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.backends.vivado.passes</span></code></a>.
+A common set of optimizers that are used by FPGA backends are located in <a class="reference internal" href="../autodoc/hls4ml.backends.fpga.passes.html#module-hls4ml.backends.fpga.passes" title="hls4ml.backends.fpga.passes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hls4ml.backends.fpga.passes</span></code></a>.</p>
 <p>Certain optimizers are used frequently enough that it makes sense to define special classes, which inherit from <a class="reference internal" href="../autodoc/hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a>:</p>
 <blockquote>
 <div><ul class="simple">
