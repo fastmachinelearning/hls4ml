@@ -3,7 +3,14 @@ import numpy as np
 from hls4ml.model.layers import ApplyAlpha, Conv1DTranspose, Conv2DTranspose
 from hls4ml.model.optimizer import ConfigurableOptimizerPass, OptimizerPass, register_pass
 from hls4ml.model.quantizers import QKerasPO2Quantizer
-from hls4ml.model.types import FixedPrecisionType, IntegerPrecisionType, NamedType
+from hls4ml.model.types import (
+    ExponentPrecisionType,
+    ExponentWeightVariable,
+    FixedPrecisionType,
+    IntegerPrecisionType,
+    NamedType,
+    XnorPrecisionType,
+)
 
 
 class OutputRoundingSaturationMode(ConfigurableOptimizerPass):
@@ -81,6 +88,7 @@ def register_qkeras():
     register_pass('output_rounding_saturation_mode', OutputRoundingSaturationMode)
     register_pass('qkeras_factorize_alpha', QKerasFactorizeAlpha)
     register_pass('extract_ternary_threshold', ExtractTernaryThreshold)
+    register_pass('narrow_binary_po2_exponents', NarrowBinaryPo2Exponents)
 
 
 class QKerasFactorizeAlpha(OptimizerPass):
@@ -90,13 +98,22 @@ class QKerasFactorizeAlpha(OptimizerPass):
     """
 
     def match(self, node):
-        q_layer = node.class_name in ['Dense', 'Conv1D', 'Conv2D', 'Conv2DBatchnorm', 'Conv1DTranspose', 'Conv2DTranspose']
-        has_w_quant = node.get_attr('weight_quantizer') is not None
+        q_layer = node.class_name in [
+            'Dense',
+            'Conv1D',
+            'Conv2D',
+            'Conv2DBatchnorm',
+            'Conv1DTranspose',
+            'Conv2DTranspose',
+            'DepthwiseConv1D',
+            'DepthwiseConv2D',
+        ]
+        has_w_quant = self.weight_quantizer(node) is not None
         has_b_quant = node.get_attr('bias_quantizer') is not None
         has_w_alpha, has_b_alpha = False, False
         if has_w_quant:
-            if hasattr(node.get_attr('weight_quantizer'), 'alpha'):
-                w_alpha = node.get_attr('weight_quantizer').alpha
+            if hasattr(self.weight_quantizer(node), 'alpha'):
+                w_alpha = self.weight_quantizer(node).alpha
                 has_w_alpha = w_alpha != 1 and w_alpha is not None
             else:
                 has_w_alpha = False
@@ -108,6 +125,9 @@ class QKerasFactorizeAlpha(OptimizerPass):
                 has_b_alpha = False
         is_match = q_layer and ((has_w_quant and has_w_alpha) or (has_b_quant and has_b_alpha))
         return is_match
+
+    def weight_quantizer(self, node):
+        return node.get_attr('depthwise_quantizer' if 'Depthwise' in node.class_name else 'weight_quantizer')
 
     def transform(self, model, node):
         # The quantizer has to be applied to set the scale attribute
@@ -129,6 +149,10 @@ class QKerasFactorizeAlpha(OptimizerPass):
         unscale = 1.0 / scale
 
         new_weights = unscale * qweights  # use the quantized weights for safety
+        if 'Depthwise' in node.class_name and not isinstance(quantizer.scale, (int, float)):
+            # QKeras scales a depthwise kernel along its last axis, the depth multiplier, while each output channel is an
+            # input channel times a depth multiplier
+            scale = np.broadcast_to(scale, weights.shape)[(0,) * (weights.ndim - 2)].reshape(-1)
 
         qcfg = quantizer.get_config()
         alpha = qcfg['alpha']
@@ -148,10 +172,10 @@ class QKerasFactorizeAlpha(OptimizerPass):
             bias_quantizer = node.weights['bias'].quantizer
         node.weights['bias'].data = np.zeros(bias.shape)
 
-        has_w_quant = node.get_attr('weight_quantizer') is not None
+        has_w_quant = self.weight_quantizer(node) is not None
         has_b_quant = node.get_attr('bias_quantizer') is not None
         if has_w_quant:
-            node.attributes['weight_quantizer'].alpha = 1
+            self.weight_quantizer(node).alpha = 1
         if has_b_quant:
             node.attributes['bias_quantizer'].alpha = 1
 
@@ -170,7 +194,7 @@ class QKerasFactorizeAlpha(OptimizerPass):
             n_in = node.get_attr('n_out')
 
         # the name of the new ApplyAlpha node
-        alpha_name = node.get_attr('name') + '_alpha'
+        alpha_name = node.name + '_alpha'
 
         # make the precision auto
         alpha_precision = {'Precision': 'auto'}
@@ -210,19 +234,10 @@ class QKerasFactorizeAlpha(OptimizerPass):
         if node.get_attr('bias_quantizer') is not None:
             node.attributes['bias_quantizer'].alpha = 1
 
-        scale_quantizer = scale_precision = None
+        scale_quantizer = None
         if alpha == 'auto_po2':
-            inp = node.get_input_node()
-            if inp.class_name == 'Activation' and inp.get_attr('activation') in ['binary', 'binary_tanh']:
-                # A binary input can reach the scale as 0 for -1 and 1 for +1. A power-of-two scale is applied as a shift,
-                # which would take these as the numbers 0 and 1. A fixed-point scale that holds the powers of two exactly
-                # is multiplied instead, which takes them as -1 and +1.
-                exponents = np.round(np.log2(scale)).astype('int')
-                high, low = int(exponents.max()), int(exponents.min())
-                scale_precision = FixedPrecisionType(high - low + 1, high + 1, signed=False)
-            else:
-                scale_bits = np.maximum(np.abs(np.log2(scale)).max().astype('int') + 1, 2)
-                scale_quantizer = QKerasPO2Quantizer({'class_name': 'quantized_po2', 'config': {'bits': scale_bits}})
+            scale_bits = np.maximum(np.abs(np.log2(scale)).max().astype('int') + 1, 2)
+            scale_quantizer = QKerasPO2Quantizer({'class_name': 'quantized_po2', 'config': {'bits': scale_bits}})
 
         alpha_name = node.get_attr('name') + '_input_alpha'
         alpha_precision = {'Precision': 'auto'}
@@ -238,7 +253,6 @@ class QKerasFactorizeAlpha(OptimizerPass):
             'reuse_factor': node.get_attr('reuse_factor'),
             'scale_data': scale,
             'scale_quantizer': scale_quantizer,
-            'scale_precision': scale_precision,
             'bias_data': np.zeros(scale.shape),
             'trace': node.get_attr('trace', False),
         }
@@ -260,7 +274,7 @@ class ExtractTernaryThreshold(OptimizerPass):
 
     def transform(self, model, node):
         shape = node.get_input_variable().shape
-        scale = np.full(shape, 0.5 / node.get_attr('threshold', 0.5))
+        scale = np.full(shape[-1], 0.5 / node.get_attr('threshold', 0.5))
         bias = np.zeros_like(scale)
         node.set_attr('threshold', 0.5)
 
@@ -270,7 +284,7 @@ class ExtractTernaryThreshold(OptimizerPass):
             'inputs': node.get_input_node().outputs,
             'outputs': node.inputs,
             'n_in': node.get_attr('n_in'),
-            'n_filt': node.get_attr('n_filt', -1),
+            'n_filt': shape[-1] if len(shape) > 1 else -1,
             'reuse_factor': node.get_attr('reuse_factor'),
             'scale_data': scale,
             'bias_data': bias,
@@ -280,3 +294,34 @@ class ExtractTernaryThreshold(OptimizerPass):
         layer = model.make_node(ApplyAlpha, node.name + '_scale', attrs, node.inputs.copy())
         model.insert_node(layer, before=node)
         return True
+
+
+class NarrowBinaryPo2Exponents(OptimizerPass):
+    """Power-of-two weights are stored as exponents, in a field as wide as the quantizer allows. The product of such a
+    weight and binary data is +-2^e, in a type that holds 2^e for every exponent of the field, which costs logic when
+    the weights are read from memory. In layers with a binary input, this pass narrows the field to the exponents the
+    weights use.
+    """
+
+    def match(self, node):
+        return any(self.width(var) < var.type.precision.width for var in self.exponent_weights(node))
+
+    def transform(self, model, node):
+        for var in self.exponent_weights(node):
+            var.update_precision(ExponentPrecisionType(width=self.width(var), signed=True))
+        return False
+
+    def exponent_weights(self, node):
+        # The power-of-two weights that multiply the input of the layer
+        names = [name for name in ('weight', 'scale') if isinstance(node.weights.get(name), ExponentWeightVariable)]
+        if not names or not isinstance(node.get_input_variable().type.precision, XnorPrecisionType):
+            return []
+        return [node.weights[name] for name in names]
+
+    def width(self, var):
+        # The width of a signed field that holds the exponents of the nonzero weights
+        data = np.asarray(var.data, dtype=float)
+        exponents = np.round(np.log2(np.abs(data[data != 0]))).astype(int)
+        if exponents.size == 0:
+            return var.type.precision.width
+        return max(int(exponents.max()).bit_length(), int(-exponents.min() - 1).bit_length()) + 1

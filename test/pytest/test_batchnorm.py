@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import BatchNormalization, DepthwiseConv1D, DepthwiseConv2D
 from tensorflow.keras.models import Sequential
 
 import hls4ml
@@ -47,6 +47,32 @@ def test_batchnorm(test_case_id, model, data, backend, io_type):
     y_keras = np.squeeze(model.predict(data))
     y_hls = hls_model.predict(data)
     np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=atol, verbose=True)
+
+
+@pytest.mark.parametrize('layer', [DepthwiseConv1D, DepthwiseConv2D])
+def test_batchnorm_after_depthwise(test_case_id, layer):
+    """A batch normalization after a depthwise convolution, which hls4ml folds into the convolution."""
+
+    input_shape = (8, 3) if layer is DepthwiseConv1D else (8, 8, 3)
+    model = Sequential([layer(3, input_shape=input_shape), BatchNormalization()])
+    rng = np.random.default_rng(0)
+    model.layers[0].set_weights([rng.uniform(-1, 1, w.shape) for w in model.layers[0].get_weights()])
+    model.layers[1].set_weights(
+        [rng.uniform(0.5, 1.5, 3), rng.uniform(-1, 1, 3), rng.uniform(-1, 1, 3), rng.uniform(0.5, 1.5, 3)]
+    )
+
+    config = hls4ml.utils.config_from_keras_model(
+        model, default_precision='fixed<24,8>', granularity='name', backend='Vitis'
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, backend='Vitis', hls_config=config, output_dir=output_dir)
+    hls_model.compile()
+    assert 'BatchNormalization' not in [node.class_name for node in hls_model.graph.values()]
+
+    X = rng.uniform(-1, 1, (100, *input_shape))
+    y_keras = model.predict(X)
+    y_hls = hls_model.predict(X).reshape(y_keras.shape)
+    np.testing.assert_allclose(y_keras, y_hls, rtol=0, atol=1e-3)
 
 
 def test_batchnorm_rejects_non_channel_axis(test_case_id):
