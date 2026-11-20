@@ -86,7 +86,8 @@ template <class x_T, class w_T> class weight_exponential : public Product {
 
 template <class x_T, class w_T> class data_binary_weight_exponential : public Product {
   public:
-    // Holds 2^e exactly for every exponent e of the weight type
+    // Holds 2^e exactly for every exponent e of the exponent field, which must be signed
+    static_assert(w_T::second_type::sign, "The exponent field of power-of-two weights must be signed");
     static const int max_shift = 1 << (w_T::second_type::width - 1);
     using r_T = ac_fixed<2 * max_shift + 1, max_shift + 1, true>;
     inline static r_T product(x_T a, w_T w) {
