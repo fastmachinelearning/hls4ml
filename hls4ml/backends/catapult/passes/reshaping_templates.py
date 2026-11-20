@@ -1,5 +1,6 @@
 from hls4ml.backends.template import FunctionCallTemplate, LayerConfigTemplate
 from hls4ml.model.layers import Resize, Transpose, ZeroPadding1D, ZeroPadding2D
+from hls4ml.model.types import XnorPrecisionType
 
 # ZeroPadding templates
 
@@ -9,6 +10,7 @@ zeropad1d_config_template = """struct config{index} : nnet::padding1d_config {{
     static const unsigned out_width = {out_width};
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
+    static const bool binary_input = {binary_input};
 }};\n"""
 
 zeropad2d_config_template = """struct config{index} : nnet::padding2d_config {{
@@ -21,6 +23,7 @@ zeropad2d_config_template = """struct config{index} : nnet::padding2d_config {{
     static const unsigned pad_bottom = {pad_bottom};
     static const unsigned pad_left = {pad_left};
     static const unsigned pad_right = {pad_right};
+    static const bool binary_input = {binary_input};
 }};\n"""
 
 zeropad1d_function_template = 'nnet::zeropad1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output});'
@@ -39,6 +42,7 @@ class ZeroPaddingConfigTemplate(LayerConfigTemplate):
 
     def format(self, node):
         params = self._default_config_params(node)
+        params['binary_input'] = str(isinstance(node.get_input_variable().type.precision, XnorPrecisionType)).lower()
         return self.templates[node.class_name].format(**params)
 
 

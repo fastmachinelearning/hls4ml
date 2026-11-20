@@ -526,7 +526,10 @@ class FPGABackend(Backend):
         )
         product = 'mult'
         if isinstance(weight_T, ExponentPrecisionType):
-            product = 'weight_exponential'
+            if isinstance(data_T, XnorPrecisionType):
+                product = 'data_binary_weight_exponential'
+            else:
+                product = 'weight_exponential'
         else:
             # if binary
             if isinstance(weight_T, XnorPrecisionType) and isinstance(data_T, XnorPrecisionType):

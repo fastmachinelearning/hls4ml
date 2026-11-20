@@ -52,6 +52,7 @@
     advanced/da
     advanced/fused
     advanced/precision
+    advanced/binary
     advanced/fifo_depth
     advanced/extension
     advanced/snn
