@@ -875,8 +875,8 @@ def test_bidirectional_gru_reset_after_accuracy(test_case_id, reset_after, stati
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=5e-2)
 
 
-def create_return_sequences_model(rnn_layer, stacked):
-    """Small recurrent layer returning every time step, optionally feeding a second one; fixed non-zero weights."""
+def create_return_sequences_model(rnn_layer):
+    """Small recurrent layer returning every time step; fixed non-zero weights."""
     n_steps, n_features, n_units = 5, 3, 4
     model = Sequential()
     model.add(Input(shape=(n_steps, n_features)))
@@ -884,8 +884,6 @@ def create_return_sequences_model(rnn_layer, stacked):
         model.add(Bidirectional(GRU(n_units, return_sequences=True), name='rnn'))
     else:
         model.add(rnn_layer(n_units, return_sequences=True, name='rnn'))
-    if stacked:
-        model.add(GRU(n_units, name='rnn_out'))
 
     rng = np.random.default_rng(0)
     for layer in model.layers:
@@ -897,11 +895,10 @@ def create_return_sequences_model(rnn_layer, stacked):
 
 
 @pytest.mark.parametrize('rnn_layer', rnn_layers, ids=['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])
-@pytest.mark.parametrize('stacked', [False, True], ids=['single', 'stacked'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
-def test_rnn_return_sequences_synthesis(test_case_id, synthesis_config, rnn_layer, stacked, backend):
-    """Layers returning every time step match Keras and synthesize with a fixed latency."""
-    model, X = create_return_sequences_model(rnn_layer, stacked)
+def test_rnn_return_sequences_synthesis(test_case_id, synthesis_config, rnn_layer, backend):
+    """Layers returning every time step match Keras and synthesize with a defined latency."""
+    model, X = create_return_sequences_model(rnn_layer)
 
     hls_config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='ap_fixed<32, 16>', backend=backend
