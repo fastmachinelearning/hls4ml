@@ -1,4 +1,4 @@
-from hls4ml.model.layers import Activation, BatchNormalization, Conv1D, Conv2D, Dense
+from hls4ml.model.layers import Activation, BatchNormalization, Conv1D, Conv1DTranspose, Conv2D, Conv2DTranspose, Dense
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.types import UnspecifiedPrecisionType
 
@@ -15,7 +15,7 @@ class EliminateLinearActivation(OptimizerPass):
         return True
 
 
-_safe_parents = (Dense, Conv1D, Conv2D, BatchNormalization, Activation)
+_safe_parents = (Dense, Conv1D, Conv2D, Conv1DTranspose, Conv2DTranspose, BatchNormalization, Activation)
 
 
 class MergeLinearActivation(OptimizerPass):

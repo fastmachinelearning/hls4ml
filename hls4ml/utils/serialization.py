@@ -207,7 +207,8 @@ def _serialize_array_attrs(attr_dict, layer_name, dest_dir):
 
 def _serialize_sequence(seq, name_prefix, layer_name, dest_dir):
     serialized = []
-    for idx, val in enumerate(seq):
+    for idx, item in enumerate(seq):
+        val = item
         if isinstance(val, dict):
             _serialize_array_attrs(val, name_prefix + '_' + str(idx), dest_dir)
         if isinstance(val, np.ndarray):
@@ -254,7 +255,8 @@ def _deserialize_array_attrs(src_dir, attr_dict):
 
 def _deserialize_sequence(src_dir, seq):
     deserialized = []
-    for val in seq:
+    for item in seq:
+        val = item
         if isinstance(val, dict):
             _deserialize_array_attrs(src_dir, val)
         if isinstance(val, str) and val.startswith('@ndarray:'):

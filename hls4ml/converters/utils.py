@@ -286,6 +286,51 @@ def compute_padding_2d_pytorch(
     return (out_height, out_width, pad_top, pad_bottom, pad_left, pad_right)
 
 
+def compute_conv_transpose_output(pad_type, in_size, stride, filt_size, dilation=1, output_padding=None):
+    """Computes the output size of a Keras transposed convolution along one axis, and the number of positions removed
+    from the start of its full output.
+
+    The full output has ``(in_size - 1) * stride + (filt_size - 1) * dilation + 1`` positions. With ``same`` padding, the
+    positions removed from the start follow TensorFlow's rule for the convolution that the transposed convolution is the
+    gradient of. With ``valid`` padding nothing is removed, and the output is longer than the full output when the kernel
+    is shorter than the stride.
+
+    Args:
+        pad_type (str): Padding type, one of ``same`` or ``valid`` (case insensitive).
+        in_size (int): Input size.
+        stride (int): Stride length.
+        filt_size (int): Length of the kernel window.
+        dilation (int, optional): Dilation factor of the kernel. Defaults to 1.
+        output_padding (int, optional): Number of positions added to the end of the output, or ``None`` to let Keras
+            choose it. Defaults to None.
+
+    Raises:
+        Exception: Raised if the padding type is unknown.
+
+    Returns:
+        tuple: Tuple containing the output size and the number of positions removed from the start of the full output.
+    """
+
+    dilated_filt_size = (filt_size - 1) * dilation + 1
+    full_size = (in_size - 1) * stride + dilated_filt_size
+    if pad_type.lower() == 'same':
+        if output_padding is None:
+            out_size = in_size * stride
+        else:
+            out_size = full_size - 2 * (dilated_filt_size // 2) + output_padding
+        crop = max(full_size - out_size, 0) // 2
+    elif pad_type.lower() == 'valid':
+        if output_padding is None:
+            out_size = in_size * stride + max(dilated_filt_size - stride, 0)
+        else:
+            out_size = full_size + output_padding
+        crop = 0
+    else:
+        raise Exception(f'Unknown padding type: {pad_type}')
+
+    return (out_size, crop)
+
+
 def is_depthwise_conv(class_object):
     """Checks if a given convolutional layer is a depthwise convolution.
 

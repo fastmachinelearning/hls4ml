@@ -627,8 +627,8 @@ def _make_vivado_tables(vivado_report, make_table_template, titles=('Resource ut
     }
 
     tables = make_table_template(titles[0], area_rows)
-    for title, rows in [(titles[1], timing_rows), (titles[2], power_rows)]:
-        rows = {row_title: key for row_title, key in rows.items() if key in vivado_report}
+    for title, candidate_rows in [(titles[1], timing_rows), (titles[2], power_rows)]:
+        rows = {row_title: key for row_title, key in candidate_rows.items() if key in vivado_report}
         if rows:
             tables += make_table_template(title, rows)
 
