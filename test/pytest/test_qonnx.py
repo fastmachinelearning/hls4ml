@@ -547,3 +547,37 @@ def test_bnn(test_case_id, request, model_name, io_type, backend, strategy):
         # note, y_hls4ml returns xnor type, so let's interpret it
         y_hls4ml_logical = 2 * y_hls4ml - 1
         np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml_logical.ravel())
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('axis', [1, -1])
+def test_softmax_multidim(test_case_id, axis, io_type, backend):
+    """Multidimensional softmax normalizes along axis."""
+    if backend == 'Altera' and io_type == 'io_parallel':
+        pytest.skip('Altera io_parallel does not support multidimensional softmax')
+    graph = onnx.helper.make_graph(
+        [onnx.helper.make_node('Softmax', ['x'], ['y'], axis=axis, name='softmax')],
+        'softmax',
+        [onnx.helper.make_tensor_value_info('x', onnx.TensorProto.FLOAT, [1, 4, 6])],
+        [onnx.helper.make_tensor_value_info('y', onnx.TensorProto.FLOAT, [1, 4, 6])],
+    )
+    model = cleanup_model(ModelWrapper(onnx.helper.make_model(graph, opset_imports=[onnx.helper.make_opsetid('', 13)])))
+    X = np.random.default_rng(0).uniform(-4, 4, (200, 4, 6)).astype(np.float32)
+    y_ref = np.exp(X) / np.exp(X).sum(axis=axis, keepdims=True)
+
+    config = hls4ml.utils.config.config_from_onnx_model(model, backend=backend, default_precision='fixed<16,6>')
+    output_dir = str(test_root_path / test_case_id)
+    if io_type == 'io_stream' and axis != -1:
+        with pytest.raises(ValueError, match='last axis'):
+            hls4ml.converters.convert_from_onnx_model(
+                model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+            )
+        return
+
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+    y_hls = np.asarray(hls_model.predict(X)).reshape(y_ref.shape)
+    np.testing.assert_allclose(y_hls, y_ref, atol=0.05)

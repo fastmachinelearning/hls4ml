@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from hls4ml.model.types import (
@@ -97,9 +99,17 @@ class ACFixedPrecisionDefinition(PrecisionDefinition):
             self.saturation_bits,
         ]
         if args[0] == 1:
-            # Currently Altera ac_fixed requires at least two bits for both signed and unsigned cases
-            # Should be fixed in the future once Altera supports 1-bit unsigned ac_fixed
+            # Currently Altera ac_fixed requires at least two bits for both signed and unsigned cases.
+            # Adding an integer bit keeps the step and every representable value, but a cast of an
+            # out-of-range value saturates or wraps at the 2-bit range instead of the 1-bit one.
+            warnings.warn(
+                f'ac_fixed<1,{args[1]},{args[2]}> is widened to ac_fixed<2,{args[1] + 1},{args[2]}>; '
+                'out-of-range values are no longer saturated or wrapped to the 1-bit range.',
+                stacklevel=2,
+            )
             args[0] = 2
+            args[1] += 1
+
         if args[3] == 'AC_TRN' and args[4] == 'AC_WRAP':
             # This is the default, so we won't write the full definition for brevity
             args[3] = args[4] = None

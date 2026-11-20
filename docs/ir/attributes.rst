@@ -285,23 +285,33 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
-* exp_table_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
+* exp_table_t: NamedType (Default: auto)
 
   * The datatype (precision) used for the values of the lookup table.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
-* inv_table_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
+* inv_table_t: NamedType (Default: auto)
 
   * The datatype (precision) used for the values of the lookup table.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
-* inv_inp_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
+* inv_inp_t: NamedType (Default: auto)
+
+  * What the accumulated value is cast to before accessing the inversion table (only in stable)
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
-* accum_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
+* inp_norm_t: NamedType (Default: auto)
+
+  * The internal width used for the exp table lookup (only in stable)
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* accum_t: NamedType (Default: auto)
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
