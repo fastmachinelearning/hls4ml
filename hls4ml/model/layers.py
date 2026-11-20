@@ -1236,7 +1236,6 @@ class BatchNormOnnx(Layer):
         self.add_output_variable(shape)
 
 
-# TODO:  We currently seem to ignore the quantizers to mean, variance, etc.
 class BatchNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
