@@ -72,8 +72,8 @@ def test_layernorm(test_case_id, model, data, backend):
     )
     hls_model.compile()
 
-    # Predict
-    y_pytorch = model(torch.Tensor(data)).detach().numpy().flatten()
+    # Predict, the output is channels_last as transpose_outputs is False
+    y_pytorch = model(torch.Tensor(data)).detach().numpy().transpose(0, 2, 1).flatten()
     y_hls = hls_model.predict(data).flatten()
     np.testing.assert_allclose(y_pytorch, y_hls, rtol=0, atol=5e-2, verbose=True)
 
@@ -91,6 +91,40 @@ def test_layernorm_no_affine(test_case_id, data, backend):
     )
     hls_model.compile()
 
-    y_pytorch = model(torch.Tensor(data)).detach().numpy().flatten()
+    y_pytorch = model(torch.Tensor(data)).detach().numpy().transpose(0, 2, 1).flatten()
     y_hls = hls_model.predict(data).flatten()
+    np.testing.assert_allclose(y_pytorch, y_hls, rtol=0, atol=5e-2, verbose=True)
+
+
+@pytest.mark.parametrize('backend', ['Vivado'])
+@pytest.mark.parametrize('channels_last_conversion', ['full', 'internal'])
+@pytest.mark.parametrize('transpose_outputs', [True, False])
+@pytest.mark.parametrize('with_linear', [True, False])
+def test_layernorm_channels_last(
+    test_case_id, model, data, backend, channels_last_conversion, transpose_outputs, with_linear
+):
+    if with_linear:
+        model = nn.Sequential(model, nn.Linear(in_shape[-1], 3))
+        model.eval()
+
+    config = hls4ml.utils.config_from_pytorch_model(
+        model,
+        in_shape,
+        granularity='name',
+        backend=backend,
+        channels_last_conversion=channels_last_conversion,
+        transpose_outputs=transpose_outputs,
+    )
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_pytorch_model(
+        model, backend=backend, hls_config=config, io_type='io_parallel', output_dir=output_dir
+    )
+    hls_model.compile()
+
+    y_pytorch = model(torch.Tensor(data)).detach().numpy()
+    if not transpose_outputs:
+        y_pytorch = y_pytorch.transpose(0, 2, 1)
+    if channels_last_conversion == 'internal':
+        data = np.ascontiguousarray(data.transpose(0, 2, 1))
+    y_hls = hls_model.predict(data).reshape(y_pytorch.shape)
     np.testing.assert_allclose(y_pytorch, y_hls, rtol=0, atol=5e-2, verbose=True)
