@@ -8,7 +8,7 @@ To enable XLS:
 
 .. code-block:: bash
 
-    pip install hls4ml[xls]
+    pip install hls4ml[xls] "quantizers<2"
 
 hls4ml uses the `pyxls <https://calad0i.github.io/pyxls/>`_ package to access the XLS API.
 pyxls comes with batteries included, and a separate XLS installation is not required.

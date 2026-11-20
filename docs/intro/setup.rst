@@ -12,12 +12,32 @@ The latest release of ``hls4ml`` can be installed with ``pip``:
 
 .. code-block::
 
-   pip install hls4ml
+   pip install hls4ml "quantizers<2"
+
+.. note::
+   ``hls4ml`` 1.3.0 does not constrain the version of ``quantizers``, and ``quantizers`` 2.0 is incompatible with it. Until a
+   release with this constraint is available, add ``"quantizers<2"`` when installing ``hls4ml`` from PyPI, as in the commands on
+   this page. The development version already includes the constraint.
 
 .. warning::
-   Previously, versions of hls4ml were made available on ``conda-forge``. These are outdated and should NOT be used. Installing with ``pip`` is currently the only supported method.
+   Previously, versions of hls4ml were made available on ``conda-forge``. These are outdated and should NOT be used. Installing from PyPI, with ``pip`` or ``pixi`` as described below, is currently the only supported method.
 
 Some features of ``hls4ml`` need extra dependencies. See the `Optional Dependencies <#optional-dependencies>`_ section for more details.
+
+Installing with pixi
+--------------------
+
+``hls4ml`` can also be added to a `pixi <https://pixi.sh>`_ project as a PyPI dependency. Python itself has to be added from
+``conda-forge`` first:
+
+.. code-block:: bash
+
+   pixi init my-project
+   cd my-project
+   pixi add "python=3.12"
+   pixi add --pypi hls4ml "quantizers<2"
+
+Optional dependencies are added in the same way, for example ``pixi add --pypi "hls4ml[onnx]" "quantizers<2"``.
 
 Development version
 -------------------
@@ -202,58 +222,58 @@ Optional Dependencies
 .. code-block::
 
    # For distributed arithmetic
-   pip install hls4ml[da]
+   pip install hls4ml[da] "quantizers<2"
 
    # For HGQ frontend
-   pip install hls4ml[hgq]
+   pip install hls4ml[hgq] "quantizers<2"
 
    # For HGQ2 frontend
-   pip install hls4ml[hgq2]
+   pip install hls4ml[hgq2] "quantizers<2"
 
    # For Keras v3 frontend
-   pip install hls4ml[keras-v3]
+   pip install hls4ml[keras-v3] "quantizers<2"
 
    # For ONNX frontend
-   pip install hls4ml[onnx]
+   pip install hls4ml[onnx] "quantizers<2"
 
    # For DSP-aware pruning
-   pip install hls4ml[optimization]
+   pip install hls4ml[optimization] "quantizers<2"
 
    # For PQuantML frontend
-   pip install hls4ml[pquant-ml]
+   pip install hls4ml[pquant-ml] "quantizers<2"
 
    # For weights and activation range visualization
-   pip install hls4ml[profiling]
+   pip install hls4ml[profiling] "quantizers<2"
 
    # For QKeras frontend
-   pip install hls4ml[qkeras]
+   pip install hls4ml[qkeras] "quantizers<2"
 
    # For QKeras-v3 frontend
-   pip install hls4ml[qkeras-v3]
+   pip install hls4ml[qkeras-v3] "quantizers<2"
 
    # For snnTorch frontend
-   pip install hls4ml[snn]
+   pip install hls4ml[snn] "quantizers<2"
 
    # For SparsePixels frontend
-   pip install hls4ml[sparsepixels]
+   pip install hls4ml[sparsepixels] "quantizers<2"
 
    # For symbolic regression
-   pip install hls4ml[sr]
+   pip install hls4ml[sr] "quantizers<2"
 
    # For XLS backend
-   pip install hls4ml[xls]
+   pip install hls4ml[xls] "quantizers<2"
 
    # For documentation building (developers)
-   pip install hls4ml[doc]
+   pip install hls4ml[doc] "quantizers<2"
 
    # For testing (developers)
-   pip install hls4ml[testing]
+   pip install hls4ml[testing] "quantizers<2"
 
    # For Keras testing (developers)
-   pip install hls4ml[testing-keras2]
+   pip install hls4ml[testing-keras2] "quantizers<2"
 
    # For Keras v3 testing (developers)
-   pip install hls4ml[testing-keras3]
+   pip install hls4ml[testing-keras3] "quantizers<2"
 
    # For QKeras-v3 testing (developers)
-   pip install hls4ml[testing-qkeras-v3]
+   pip install hls4ml[testing-qkeras-v3] "quantizers<2"

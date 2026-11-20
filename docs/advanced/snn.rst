@@ -8,7 +8,7 @@ Install the SNN frontend dependencies with:
 
 .. code-block:: bash
 
-   pip install hls4ml[snn]
+   pip install hls4ml[snn] "quantizers<2"
 
 Backend support
 ===============

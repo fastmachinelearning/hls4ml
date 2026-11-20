@@ -6,7 +6,7 @@ In the ``hls4ml`` configuration file, it is possible to specify the model ``Prec
 
 Using a low precision can help reduce the FPGA resource usage of a model, but may result in loss of model performance if chosen inappropriately. The profiling tools in ``hls4ml`` help you to decide the appropriate model precision.
 
-Profiling uses some extra dependencies. To install them, run ``pip install hls4ml[profiling]``. The profiling tools are provided as a ``Python`` module which you can use.
+Profiling uses some extra dependencies. To install them, run ``pip install hls4ml[profiling] "quantizers<2"``. The profiling tools are provided as a ``Python`` module which you can use.
 
 Three types of objects can be provided: **a model object**\ , **test data**\ , and a **ModelGraph object**. The model can be Keras or PyTorch.
 You will need to initialise these objects by using a trained model, loading a model from a file, and loading your data. The Keras model and data each need to be in the format that would normally allow you to run, e.g. ``model.predict(X)``.
