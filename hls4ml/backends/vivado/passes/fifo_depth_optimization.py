@@ -67,6 +67,8 @@ class FifoDepthOptimization(ConfigurableOptimizerPass, ModelOptimizerPass):
         if not (model.config.get_config_value('IOType') == 'io_stream'):
             raise RuntimeError('To use this optimization you have to set `IOType` field to `io_stream` in the HLS config')
 
+        self.values.clear()
+
         # initialize all the fifos to `profiling_fifo_depth` so that they will be automatically implemented in BRAMs
         # and so they will be profiled
         if profiling_fifo_depth:
