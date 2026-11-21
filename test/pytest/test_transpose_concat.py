@@ -48,22 +48,18 @@ def hls_model(keras_model, request, test_case_id):
     [
         ('io_stream', 'Vivado'),
         ('io_stream', 'Vitis'),
-        ('io_stream', 'Quartus'),
         ('io_stream', 'Altera'),
         ('io_parallel', 'Vivado'),
         ('io_parallel', 'Vitis'),
-        ('io_parallel', 'Quartus'),
         ('io_parallel', 'Altera'),
     ],
     indirect=True,
     ids=[
         'vivado_stream',
-        'vitis_streamq',
-        'quartus_stream',
+        'vitis_stream',
         'altera_stream',
         'vivado_parallel',
         'vitis_parallel',
-        'quartus_parallel',
         'altera_parallel',
     ],
 )
