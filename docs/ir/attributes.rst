@@ -619,6 +619,10 @@ Configurable attributes
 
 * bias_t: NamedType
 
+* external_parameters: list (Default: [])
+
+  * Roles of the layer's parameters (for example ["weight", "bias"]) that become ports of the top function instead of being compiled into the design, so their values can be provided at run time.
+
 Backend-specific attributes
 ---------------------------
 * accum_t: NamedType
@@ -729,6 +733,10 @@ Configurable attributes
 
 * bias_t: NamedType
 
+* external_parameters: list (Default: [])
+
+  * Roles of the layer's parameters (for example ["weight", "bias"]) that become ports of the top function instead of being compiled into the design, so their values can be provided at run time.
+
 Backend-specific attributes
 ---------------------------
 * accum_t: NamedType
@@ -821,6 +829,10 @@ Configurable attributes
 
 * bias_t: NamedType
 
+* external_parameters: list (Default: [])
+
+  * Roles of the layer's parameters (for example ["weight", "bias"]) that become ports of the top function instead of being compiled into the design, so their values can be provided at run time.
+
 Backend-specific attributes
 ---------------------------
 * accum_t: NamedType
@@ -912,6 +924,10 @@ Configurable attributes
 * weight_t: NamedType
 
 * bias_t: NamedType
+
+* external_parameters: list (Default: [])
+
+  * Roles of the layer's parameters (for example ["weight", "bias"]) that become ports of the top function instead of being compiled into the design, so their values can be provided at run time.
 
 Backend-specific attributes
 ---------------------------
@@ -1112,6 +1128,10 @@ Configurable attributes
 * weight_t: NamedType
 
 * bias_t: NamedType
+
+* external_parameters: list (Default: [])
+
+  * Roles of the layer's parameters (for example ["weight", "bias"]) that become ports of the top function instead of being compiled into the design, so their values can be provided at run time.
 
 * weight_t: NamedType
 
@@ -1352,6 +1372,10 @@ Configurable attributes
 * weight_t: NamedType
 
 * bias_t: NamedType
+
+* external_parameters: list (Default: [])
+
+  * Roles of the layer's parameters (for example ["weight", "bias"]) that become ports of the top function instead of being compiled into the design, so their values can be provided at run time.
 
 * weight_t: NamedType
 
@@ -3737,6 +3761,10 @@ Configurable attributes
 
 * bias_t: NamedType
 
+* external_parameters: list (Default: [])
+
+  * Roles of the layer's parameters (for example ["weight", "bias"]) that become ports of the top function instead of being compiled into the design, so their values can be provided at run time.
+
 Backend-specific attributes
 ---------------------------
 * accum_t: NamedType
@@ -3828,6 +3856,10 @@ Configurable attributes
 * weight_t: NamedType
 
 * bias_t: NamedType
+
+* external_parameters: list (Default: [])
+
+  * Roles of the layer's parameters (for example ["weight", "bias"]) that become ports of the top function instead of being compiled into the design, so their values can be provided at run time.
 
 Backend-specific attributes
 ---------------------------
