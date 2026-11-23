@@ -26,13 +26,13 @@ Detailed tutorials on how to use `hls4ml`'s various functionalities can be found
 
 # Installation
 ```bash
-pip install hls4ml "quantizers<2"
+pip install hls4ml
 ```
 
 To install the extra dependencies for profiling:
 
 ```bash
-pip install hls4ml[profiling] "quantizers<2"
+pip install hls4ml[profiling]
 ```
 
 # Getting Started
