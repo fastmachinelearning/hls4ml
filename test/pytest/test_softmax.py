@@ -208,13 +208,15 @@ def test_softmax_values(test_case_id, backend, implementation, io_type):
 
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
-@pytest.mark.parametrize('input_precision', ['fixed<10,3,RND_CONV,SAT>', 'ufixed<1,1>'])
+@pytest.mark.parametrize('input_precision', ['fixed<10,3,RND_CONV,SAT>', 'ufixed<1,1>', 'ufixed<8,0>'])
 def test_softmax_stable_inp_norm(test_case_id, backend, input_precision):
     """x_max - x_i can reach twice the input range; the inferred inp_norm_t must hold it without wrapping,
-    and must be usable as a table index even for a 1-bit input."""
+    and must be usable as a table index even for a 1-bit input or one without integer bits."""
     np.random.seed(0)
     if input_precision == 'ufixed<1,1>':
         X = (np.random.rand(1000, 8) > 0.5).astype(float)
+    elif input_precision == 'ufixed<8,0>':
+        X = np.random.rand(1000, 8)
     else:
         X = np.random.rand(1000, 8) * 8 - 4
     model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
@@ -252,6 +254,33 @@ def test_softmax_stable_model_precision(test_case_id, backend, default_precision
         model, granularity='model', backend=backend, default_precision=default_precision
     )
     cfg['LayerType'] = {'Softmax': {'Implementation': 'stable'}}
+
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=cfg, io_type='io_parallel', output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
+
+    err = np.abs(y_hls4ml - y_keras)
+    assert err.mean() < 0.005
+    assert err.max() < 0.05
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+def test_softmax_latency_no_integer_bits(test_case_id, backend):
+    """The latency exp table is indexed by the input type, which may have no integer bits."""
+    np.random.seed(0)
+    X = np.random.rand(1000, 8)
+    model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
+    model.compile()
+
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    cfg['LayerName']['softmax']['Implementation'] = 'latency'
+    inp_layer_name = next(iter(cfg['LayerName'].keys()))
+    cfg['LayerName'][inp_layer_name]['Precision']['result'] = 'ufixed<8,0>'
 
     odir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(

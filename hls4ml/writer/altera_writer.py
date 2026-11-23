@@ -757,7 +757,7 @@ class AlteraWriter(Writer):
                         if N > fp_bits:
                             raise Exception('Table size is bigger than what precision allows')
 
-                        maxval = 2**fp_integer - 1
+                        table_max = layer.get_attr(f'{table_kind}_table_t').precision.max
                         half_prec = 2.0 ** (fp_integer - N - 1) if N < fp_bits else 0.0
 
                         if table_kind == 'exp':
@@ -768,11 +768,8 @@ class AlteraWriter(Writer):
                             )
 
                         for i in range(table_size):
-                            # Norm type is always > 1, so force unsigned regardless of the quantiser's signedness,
-                            # but keep the width
-                            f = FixedPointEmulator(fp_bits, fp_integer, signed=False)
-                            f.set_msb_bits(uint_to_binary(i, N))
-                            x = f.to_float()
+                            # The index is the top N bits of the (non-negative) input
+                            x = i * 2.0 ** (fp_integer - N)
 
                             if table_kind == 'exp':
                                 if half_prec and x > 0:  # x > 0 preserves (x_max - x) == 0 => exp(0) = 1
@@ -781,10 +778,9 @@ class AlteraWriter(Writer):
                             else:
                                 if half_prec and x != 1.0:  # preserve the special case where x = exp(0) => x = 0
                                     x += half_prec
-                                real_val = 1.0 / x if x > 0 else maxval
+                                real_val = 1.0 / x if x > 0 else table_max
 
-                            if real_val > maxval:
-                                real_val = maxval
+                            real_val = min(real_val, table_max)
 
                             h_file.write(sep + str(real_val))
                             sep = ', '
