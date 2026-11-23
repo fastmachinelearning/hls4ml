@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hls4ml.backends.vitis.passes package &mdash; hls4ml 1.3.0 documentation</title>
+  <title>hls4ml.backends.vitis.passes package &mdash; hls4ml 1.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
@@ -15,7 +15,7 @@
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/documentation_options.js?v=bb516dca"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
@@ -687,6 +687,146 @@ The backend and io_parallel are checked earlier, by ValidateFusedStrategy and Va
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-hls4ml.backends.vitis.passes.streaming_snn">
+<span id="hls4ml-backends-vitis-passes-streaming-snn-module"></span><h2>hls4ml.backends.vitis.passes.streaming_snn module<a class="headerlink" href="#module-hls4ml.backends.vitis.passes.streaming_snn" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.streaming_snn.</span></span><span class="sig-name descname"><span class="pre">GenerateStreamingSNN</span></span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Generates the C++ of the block into nnet_code_gen.h, since its structure (number and kind of stages, their widths
+and kernel sizes) varies with the model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'generate_streaming_snn'</span></span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.streaming_snn.</span></span><span class="sig-name descname"><span class="pre">SetStreamingSNNInterface</span></span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>The block reads one input sample per clock cycle and pipelines its own loop over time steps, so the top function
+has no array pragmas and no top-level PIPELINE. Runs in the writer flow, since loading a saved model sets them again.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'set_streaming_snn_interface'</span></span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNConfigTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.streaming_snn.</span></span><span class="sig-name descname"><span class="pre">StreamingSNNConfigTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNConfigTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.LayerConfigTemplate" title="hls4ml.backends.template.LayerConfigTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerConfigTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNConfigTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNConfigTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNFunctionTemplate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.streaming_snn.</span></span><span class="sig-name descname"><span class="pre">StreamingSNNFunctionTemplate</span></span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNFunctionTemplate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.backends.html#hls4ml.backends.template.FunctionCallTemplate" title="hls4ml.backends.template.FunctionCallTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCallTemplate</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNFunctionTemplate.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNFunctionTemplate.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.backends.vitis.passes.streaming_snn.</span></span><span class="sig-name descname"><span class="pre">ValidateStreamingSNN</span></span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'validate_streaming_snn'</span></span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; hls4ml 1.3.0 documentation</title>
+  <title>Index &mdash; hls4ml 1.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/sphinx_contributors.css?v=fe9086e2" />
@@ -14,7 +14,7 @@
     <link rel="shortcut icon" href="_static/hls4ml_logo.svg"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="_static/documentation_options.js?v=bb516dca"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -1390,6 +1390,10 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate.format">(hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNConfigTemplate.format">(hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNConfigTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNFunctionTemplate.format">(hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNFunctionTemplate method)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate.format">(hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhConfigTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate.format">(hls4ml.backends.vivado.passes.bn_quant.BatchNormalizationQuantizedTanhFunctionTemplate method)</a>
@@ -1647,6 +1651,8 @@
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_stream.GenerateConvStreamingInstructions">(class in hls4ml.backends.vivado.passes.conv_stream)</a>
 </li>
       </ul></li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN">GenerateStreamingSNN (class in hls4ml.backends.vitis.passes.streaming_snn)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.unrolled_codegen.GenerateUnrolledDenseResource">GenerateUnrolledDenseResource (class in hls4ml.backends.vivado.passes.unrolled_codegen)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.qkeras.get_activation_quantizer">get_activation_quantizer() (in module hls4ml.converters.keras.qkeras)</a>
@@ -2675,6 +2681,13 @@
 
       <ul>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.fused_templates">module</a>
+</li>
+      </ul></li>
+      <li>
+    hls4ml.backends.vitis.passes.streaming_snn
+
+      <ul>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.streaming_snn">module</a>
 </li>
       </ul></li>
       <li>
@@ -4143,6 +4156,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SparsePooling2D.initialize">(hls4ml.model.layers.SparsePooling2D method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.StreamingSNN.initialize">(hls4ml.model.layers.StreamingSNN method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.SymbolicExpression.initialize">(hls4ml.model.layers.SymbolicExpression method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.TernaryTanh.initialize">(hls4ml.model.layers.TernaryTanh method)</a>
@@ -4408,6 +4423,12 @@
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate.match">(hls4ml.backends.vitis.passes.fused_templates.DenseFusedConfigTemplate method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate.match">(hls4ml.backends.vitis.passes.fused_templates.DenseFusedFunctionTemplate method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN.match">(hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface.match">(hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN.match">(hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.match">(hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh method)</a>
 </li>
@@ -4800,6 +4821,8 @@
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.fused_templates">hls4ml.backends.vitis.passes.fused_templates</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#module-hls4ml.backends.vitis.passes.streaming_snn">hls4ml.backends.vitis.passes.streaming_snn</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vitis.html#module-hls4ml.backends.vitis.vitis_backend">hls4ml.backends.vitis.vitis_backend</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.html#module-hls4ml.backends.vivado">hls4ml.backends.vivado</a>
@@ -5150,6 +5173,12 @@
       <ul>
         <li><a href="autodoc/hls4ml.backends.catapult.passes.html#hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.name">(hls4ml.backends.catapult.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D attribute)</a>
 </li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN.name">(hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN attribute)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface.name">(hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface attribute)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN.name">(hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN attribute)</a>
+</li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D.name">(hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv1D attribute)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D.name">(hls4ml.backends.vivado.passes.conv_same_pad.InsertZeroPaddingBeforeConv2D attribute)</a>
@@ -5159,12 +5188,12 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.snn.PropagateSNNReadoutWindowSize.name">(hls4ml.model.optimizer.passes.snn.PropagateSNNReadoutWindowSize attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.NamedType">NamedType (class in hls4ml.model.types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.NamedTypeConverter">NamedTypeConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.namespace">namespace (hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition property)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.CompressedWeightVariable.next">next() (hls4ml.model.types.CompressedWeightVariable method)</a>
@@ -5454,6 +5483,8 @@
       <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.snn.parse_snn_readout_layer">parse_snn_readout_layer() (in module hls4ml.converters.pytorch.snn)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.reshape.parse_squeeze_layer">parse_squeeze_layer() (in module hls4ml.converters.pytorch.reshape)</a>
+</li>
+      <li><a href="autodoc/hls4ml.converters.pytorch.html#hls4ml.converters.pytorch.snn.parse_streaming_snn_layer">parse_streaming_snn_layer() (in module hls4ml.converters.pytorch.snn)</a>
 </li>
       <li><a href="autodoc/hls4ml.converters.keras.html#hls4ml.converters.keras.recurrent.parse_time_distributed_layer">parse_time_distributed_layer() (in module hls4ml.converters.keras.recurrent)</a>
 </li>
@@ -5998,6 +6029,8 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.serialize_state">serialize_state() (hls4ml.model.layers.Layer method)</a>
 
       <ul>
+        <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.StreamingSNN.serialize_state">(hls4ml.model.layers.StreamingSNN method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.BinaryQuantizer.serialize_state">(hls4ml.model.quantizers.BinaryQuantizer method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.QKerasBinaryQuantizer.serialize_state">(hls4ml.model.quantizers.QKerasBinaryQuantizer method)</a>
@@ -6070,6 +6103,8 @@
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.set_thresholds">set_thresholds() (hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.pipeline_style.SetPipelineStyle">SetPipelineStyle (class in hls4ml.backends.vivado.passes.pipeline_style)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface">SetStreamingSNNInterface (class in hls4ml.backends.vitis.passes.streaming_snn)</a>
 </li>
       <li><a href="autodoc/hls4ml.utils.html#hls4ml.utils.qinterval.QIntervalArray.shape">shape (hls4ml.utils.qinterval.QIntervalArray property)</a>
 </li>
@@ -6160,6 +6195,12 @@
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StaticWeightVariableDefinition">StaticWeightVariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.altera.html#hls4ml.backends.altera.altera_template.StreamFunctionCallTemplate">StreamFunctionCallTemplate (class in hls4ml.backends.altera.altera_template)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.StreamingSNN">StreamingSNN (class in hls4ml.model.layers)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNConfigTemplate">StreamingSNNConfigTemplate (class in hls4ml.backends.vitis.passes.streaming_snn)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.StreamingSNNFunctionTemplate">StreamingSNNFunctionTemplate (class in hls4ml.backends.vitis.passes.streaming_snn)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.StreamVariableConverter">StreamVariableConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
@@ -6321,6 +6362,12 @@
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy.transform">(hls4ml.backends.vitis.passes.fuse_dense.SubstituteUnfusedStrategy method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.fuse_dense.ValidateDenseFusion.transform">(hls4ml.backends.vitis.passes.fuse_dense.ValidateDenseFusion method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN.transform">(hls4ml.backends.vitis.passes.streaming_snn.GenerateStreamingSNN method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface.transform">(hls4ml.backends.vitis.passes.streaming_snn.SetStreamingSNNInterface method)</a>
+</li>
+        <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN.transform">(hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN method)</a>
 </li>
         <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh.transform">(hls4ml.backends.vivado.passes.bn_quant.MergeBatchNormAndQuantizedTanh method)</a>
 </li>
@@ -6580,6 +6627,8 @@
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateResourceUnrolledStrategy">ValidateResourceUnrolledStrategy (class in hls4ml.backends.vitis.passes.feature_check)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.feature_check.ValidateStdCppTypes">ValidateStdCppTypes (class in hls4ml.backends.vitis.passes.feature_check)</a>
+</li>
+      <li><a href="autodoc/hls4ml.backends.vitis.passes.html#hls4ml.backends.vitis.passes.streaming_snn.ValidateStreamingSNN">ValidateStreamingSNN (class in hls4ml.backends.vitis.passes.streaming_snn)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable">ValidateUserLookupTable (class in hls4ml.backends.symbolic.passes.validate_lut)</a>
 </li>

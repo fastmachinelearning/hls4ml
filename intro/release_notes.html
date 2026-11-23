@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Release Notes &mdash; hls4ml 1.3.0 documentation</title>
+  <title>Release Notes &mdash; hls4ml 1.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx_contributors.css?v=fe9086e2" />
@@ -15,7 +15,7 @@
     <link rel="shortcut icon" href="../_static/hls4ml_logo.svg"/>
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=1f29e9d3"></script>
+      <script src="../_static/documentation_options.js?v=bb516dca"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">How to Contribute</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#release-1-3-1">iris 1.3.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#release-1-3-0">iris 1.3.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#release-1-2-0">hyacinth 1.2.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#release-1-1-0">gladiolus 1.1.0</a></li>
@@ -161,6 +162,19 @@
              
   <section id="release-notes">
 <h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading"></a></h1>
+<section id="release-1-3-1">
+<h2>iris 1.3.1<a class="headerlink" href="#release-1-3-1" title="Link to this heading"></a></h2>
+<p><em>Released on 2026-11-23 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v1.3.1">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/1.3.1/">PyPI</a></em></p>
+<p>Patch release with fixes to dependencies so that the tool installs correctly.
+Pins quantizers version to &lt; 2 to prevent broken setups after pip install. Also fixes the HGQ2 attention conversion and picks the correct version for that.</p>
+<p><strong>Full Changelog</strong>: <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/compare/v1.3.0...v1.3.1">https://github.com/fastmachinelearning/hls4ml/compare/v1.3.0…v1.3.1</a></p>
+<section id="what-s-changed">
+<h3>What’s Changed<a class="headerlink" href="#what-s-changed" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Backport install fixes for 1.3.1 by &#64;vloncar in <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/pull/1625">https://github.com/fastmachinelearning/hls4ml/pull/1625</a></p></li>
+</ul>
+</section>
+</section>
 <section id="release-1-3-0">
 <h2>iris 1.3.0<a class="headerlink" href="#release-1-3-0" title="Link to this heading"></a></h2>
 <p><em>Released on 2026-03-20 - <a class="reference external" href="https://github.com/fastmachinelearning/hls4ml/releases/tag/v1.3.0">GitHub</a> - <a class="reference external" href="https://pypi.org/project/hls4ml/1.3.0/">PyPI</a></em></p>

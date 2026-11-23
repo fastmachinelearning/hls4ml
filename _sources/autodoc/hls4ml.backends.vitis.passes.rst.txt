@@ -36,6 +36,14 @@ hls4ml.backends.vitis.passes.fused\_templates module
    :show-inheritance:
    :undoc-members:
 
+hls4ml.backends.vitis.passes.streaming\_snn module
+--------------------------------------------------
+
+.. automodule:: hls4ml.backends.vitis.passes.streaming_snn
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Module contents
 ---------------
 
