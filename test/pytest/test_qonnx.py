@@ -581,3 +581,34 @@ def test_softmax_multidim(test_case_id, axis, io_type, backend):
     hls_model.compile()
     y_hls = np.asarray(hls_model.predict(X)).reshape(y_ref.shape)
     np.testing.assert_allclose(y_hls, y_ref, atol=0.05)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_activation_name_casing(test_case_id, io_type, backend):
+    """The ONNX converter does not lowercase activation names (ReLU), so the config and the call must agree on casing."""
+    rng = np.random.default_rng(0)
+    W = rng.uniform(-1, 1, (8, 4)).astype(np.float32)
+    b = rng.uniform(-1, 1, (4,)).astype(np.float32)
+    graph = onnx.helper.make_graph(
+        [
+            onnx.helper.make_node('MatMul', ['x', 'W'], ['h'], name='matmul'),
+            onnx.helper.make_node('Add', ['h', 'b'], ['z'], name='add'),
+            onnx.helper.make_node('Relu', ['z'], ['y'], name='relu'),
+        ],
+        'dense_relu',
+        [onnx.helper.make_tensor_value_info('x', onnx.TensorProto.FLOAT, [1, 8])],
+        [onnx.helper.make_tensor_value_info('y', onnx.TensorProto.FLOAT, [1, 4])],
+        initializer=[onnx.numpy_helper.from_array(W, 'W'), onnx.numpy_helper.from_array(b, 'b')],
+    )
+    model = cleanup_model(ModelWrapper(onnx.helper.make_model(graph, opset_imports=[onnx.helper.make_opsetid('', 13)])))
+    X = rng.uniform(-2, 2, (100, 8)).astype(np.float32)
+    y_ref = np.maximum(X @ W + b, 0)
+
+    config = hls4ml.utils.config.config_from_onnx_model(model, backend=backend, default_precision='fixed<16,6>')
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model, hls_config=config, output_dir=str(test_root_path / test_case_id), backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+    y_hls = np.asarray(hls_model.predict(X)).reshape(y_ref.shape)
+    np.testing.assert_allclose(y_hls, y_ref, atol=0.05)
