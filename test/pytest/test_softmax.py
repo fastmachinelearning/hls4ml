@@ -57,9 +57,6 @@ def test_softmax(
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')
 
-    if backend == 'XLS' and table_bits == 'auto':
-        pytest.skip('XLS backend does not support setting the table_bits to auto')
-
     if backend == 'XLS' and implementation == 'legacy':
         pytest.skip('XLS backend does not support the legacy implementation')
 
@@ -204,11 +201,13 @@ def test_softmax_legacy_table_sizes(test_case_id, backend, io_type, exp_table_si
     assert err.max() < 0.1
 
 
-@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('implementation', ['stable', 'latency', 'legacy'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_values(test_case_id, backend, implementation, io_type):
     """Compare the softmax outputs themselves, which an argmax-based accuracy check cannot distinguish from argmax."""
+    if backend == 'XLS' and (io_type != 'io_parallel' or implementation == 'legacy'):
+        pytest.skip('XLS backend only supports io_parallel and has no legacy implementation')
     np.random.seed(0)
     X = np.random.rand(1000, 8) * 8 - 4
     model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])

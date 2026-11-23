@@ -410,13 +410,13 @@ pub fn softmax_latency
     OVERFLOW: OverflowMode,
     NB_IN: u32, BE_IN: s32,
     NB_EXP: u32, BE_EXP: s32, SIZE_EXP: u32, LOG2_STEP_EXP: s32,
-    NB_INV: u32, BE_INV: s32, SIZE_INV: u32, LOG2_STEP_INV: s32,
+    NB_INV_IN: u32, BE_INV_IN: s32, NB_INV: u32, BE_INV: s32, SIZE_INV: u32, LOG2_STEP_INV: s32,
     DIM: u32,
     NB_SUM_EXP: u32 = {NB_EXP + std::clog2(DIM)},
     BE_SUM_EXP: s32 = {BE_EXP}>(
         y: FixedPoint<NB_IN, BE_IN>[DIM],
         exp_lut: LookupTable<NB_IN, BE_IN, NB_EXP, BE_EXP, SIZE_EXP, LOG2_STEP_EXP>,
-        inv_lut: LookupTable<NB_INV, BE_INV, NB_INV, BE_INV, SIZE_INV, LOG2_STEP_INV>,
+        inv_lut: LookupTable<NB_INV_IN, BE_INV_IN, NB_INV, BE_INV, SIZE_INV, LOG2_STEP_INV>,
     ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
 
     // Compute exp() with Lookup Tables
@@ -426,7 +426,7 @@ pub fn softmax_latency
     let sum_exp = for (i, acc) in 0..DIM {
         fixed_point_util::add_already_widened(exp[i], acc)
     }(zero!<FixedPoint<NB_SUM_EXP, BE_SUM_EXP>>());
-    let sum_exp = fixed_point_util::resize<NB_INV, BE_INV, ROUNDING, OVERFLOW>(sum_exp);
+    let sum_exp = fixed_point_util::resize<NB_INV_IN, BE_INV_IN, ROUNDING, OVERFLOW>(sum_exp);
     let inv_sum_exp = lookup_table::eval(inv_lut, sum_exp);
 
     // Compute softmax
@@ -448,7 +448,7 @@ pub fn softmax_stable
     OVERFLOW: OverflowMode,
     NB_IN: u32, BE_IN: s32,
     NB_EXP: u32, BE_EXP: s32, SIZE_EXP: u32, LOG2_STEP_EXP: s32,
-    NB_INV: u32, BE_INV: s32, SIZE_INV: u32, LOG2_STEP_INV: s32,
+    NB_INV_IN: u32, BE_INV_IN: s32, NB_INV: u32, BE_INV: s32, SIZE_INV: u32, LOG2_STEP_INV: s32,
     DIM: u32,
     // x_max - x_i
     NB_DIFF: u32 = {NB_IN + 1}, BE_DIFF: s32 = {BE_IN},
@@ -459,7 +459,7 @@ pub fn softmax_stable
         // f(x) = exp(-x)
         exp_neg_lut: LookupTable<NB_DIFF, BE_DIFF, NB_EXP, BE_EXP, SIZE_EXP, LOG2_STEP_EXP>,
         // f(x) = 1/x
-        inv_lut: LookupTable<NB_INV, BE_INV, NB_INV, BE_INV, SIZE_INV, LOG2_STEP_INV>,
+        inv_lut: LookupTable<NB_INV_IN, BE_INV_IN, NB_INV, BE_INV, SIZE_INV, LOG2_STEP_INV>,
     ) -> FixedPoint<NB_OUT, BE_OUT>[DIM] {
 
     let x_max = fixed_point_util::max_1d(x);
@@ -476,7 +476,7 @@ pub fn softmax_stable
         fixed_point_util::add_already_widened(exp[i], acc)
     }(zero!<FixedPoint<NB_SUM_EXP, BE_SUM_EXP>>());
     // Truncate.
-    let sum_exp = fixed_point_util::resize<NB_INV, BE_INV, ROUNDING, OVERFLOW>(sum_exp);
+    let sum_exp = fixed_point_util::resize<NB_INV_IN, BE_INV_IN, ROUNDING, OVERFLOW>(sum_exp);
     // 1 / sum(exp)
     let inv_sum_exp = lookup_table::eval(inv_lut, sum_exp);
 
