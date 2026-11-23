@@ -3,6 +3,7 @@ from collections.abc import Iterable
 
 import numpy as np
 
+from hls4ml.model.layers import LSTM, Bidirectional
 from hls4ml.model.optimizer import ConfigurableOptimizerPass
 from hls4ml.model.optimizer.passes.bit_exact import minimal_kif
 from hls4ml.model.types import (
@@ -91,6 +92,9 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
         if node_class in ['ParametrizedActivation']:
             return self._infer_par_act_precision(node, types_to_infer)
 
+        if node_class in ['StreamingSNN']:
+            return self._infer_streaming_snn_precision(node, types_to_infer)
+
         if node_class in ['PReLU']:
             return self._infer_prelu_act_precision(node, types_to_infer)
         # What about quantized activation layer? Setting it to 'auto' manually will break it here. We should prevent
@@ -119,11 +123,38 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
     def _infer_default_type(self, node, type_name):
         model_config = node.model.config
         default_precision = model_config.backend.convert_precision_string(model_config.model_precision['default'])
-        # No need to change the name of the NamedType since we use the default precision
-        node.types[type_name].precision = default_precision
         weight_name = type_name.removesuffix('_t')
+        if weight_name in node.weights and isinstance(default_precision, FixedPrecisionType):
+            width, integer = default_precision.width, default_precision.integer
+            # The LSTM forget gate bias is usually initialized to 1, which needs two integer bits when signed
+            min_integer = 2 if default_precision.signed else 1
+            if self._holds_lstm_bias(node, weight_name) and integer < min_integer:
+                width += min_integer - integer
+                integer = min_integer
+            # Weights are constants, so rounding and saturating them costs nothing at run time
+            default_precision = FixedPrecisionType(
+                width,
+                integer,
+                default_precision.signed,
+                rounding_mode=RoundingMode.RND_CONV,
+                saturation_mode=SaturationMode.SAT,
+            )
+            node.types[type_name].name = node.name + '_' + type_name
+        # Otherwise there is no need to change the name of the NamedType since we use the default precision
+        node.types[type_name].precision = default_precision
         if weight_name in node.weights:
             node.weights[weight_name].update_precision(default_precision)
+
+    @staticmethod
+    def _holds_lstm_bias(node, weight_name):
+        if isinstance(node, LSTM):
+            return weight_name in ('bias', 'bias_i', 'bias_f', 'bias_c', 'bias_o')
+        if isinstance(node, Bidirectional):
+            return any(
+                weight_name == f'{direction}_bias' and node.get_attr(f'{direction}_class_name', '').endswith('LSTM')
+                for direction in ('forward', 'backward')
+            )
+        return False
 
     def _infer_output_matching_precision(self, node, types_to_infer):
         assert 'result_t' in types_to_infer and len(types_to_infer) == 1
@@ -617,6 +648,15 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('param_t')
 
         return inferred_types
+
+    def _infer_streaming_snn_precision(self, node, types_to_infer):
+        if 'result_t' not in types_to_infer:
+            return []
+
+        # The count of output spikes, at most one per time step
+        width = max(16, math.ceil(math.log2(node.get_attr('n_steps') + 1)))
+        node.types['result_t'].precision = IntegerPrecisionType(width=width, signed=False)
+        return ['result_t']
 
 
 def _get_precision_from_constant(value: int | float, max_width=8):

@@ -162,7 +162,7 @@ def extract_optimizers_from_path(opt_path, module_path, initializer=None):
     if not module_path.endswith('.'):
         module_path += '.'
 
-    for module in os.listdir(opt_path):
+    for module in sorted(os.listdir(opt_path)):
         if module == '__init__.py' or module[-3:] != '.py':
             continue
         try:
