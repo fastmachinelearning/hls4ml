@@ -617,7 +617,7 @@ class ModelGraph(Serializable):
         if next_node is not None:
             next_node.inputs[input_idx] = node.outputs[0]
         else:
-            self.outputs = [node.outputs[0] if name == prev_node.outputs[0] else name for name in self.outputs]
+            self.replace_output(prev_node.outputs[0], node.outputs[0])
 
         new_graph = OrderedDict()
         for k, v in self.graph.items():
@@ -766,6 +766,23 @@ class ModelGraph(Serializable):
         if len(self.outputs) == 1 and out_name in self.outputs:
             variable.type.name = 'result_t'
         self.output_vars[out_name] = variable
+
+    def replace_output(self, old_name, new_name):
+        """Make the tensor ``new_name`` a model output in place of ``old_name``.
+
+        The tensor that is no longer an output gets back its own type name, so that it doesn't share ``result_t`` with
+        the new output.
+
+        Args:
+            old_name (str): Name of the current output tensor
+            new_name (str): Name of the tensor that replaces it
+        """
+        self.outputs = [new_name if name == old_name else name for name in self.outputs]
+        old_var = self.output_vars.get(old_name)
+        if old_var is not None and old_var.type.name == 'result_t':
+            producer = next(node for node in self.graph.values() if old_name in node.outputs)
+            old_var.type.name = f'layer{producer.index}_t'
+        self.register_output_variable(new_name, self.output_vars[new_name])
 
     def get_output_variables(self):
         variables = []
