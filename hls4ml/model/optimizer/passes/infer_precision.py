@@ -730,6 +730,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
             inferred_types.append('result_t')
 
         return inferred_types
+
     def _infer_streaming_snn_precision(self, node, types_to_infer):
         if 'result_t' not in types_to_infer:
             return []
