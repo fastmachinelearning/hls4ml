@@ -119,8 +119,6 @@ pypi-dependencies.hls4ml = { path = ".", editable = true }
 # ortools==9.4.1874 (optimization) has no wheels beyond Python 3.10
 feature.ci-keras2.dependencies = { python = "3.10.*" }
 feature.ci-keras2.platforms = [ "linux-64" ]
-# TensorFlow 2.14 is built against NumPy 1.x but does not cap it in its metadata; qkeras imports pyparsing undeclared
-feature.ci-keras2.pypi-dependencies = { numpy = "<2", pyparsing = "*" }
 # xls-python only publishes manylinux_2_34 wheels
 feature.ci-keras2.system-requirements = { libc = "2.34" }
 feature.ci-keras3.dependencies = { python = "3.12.*" }
