@@ -171,6 +171,40 @@ def test_softmax_explicit_table_size(test_case_id, backend):
 
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('exp_table_size, inv_table_size', [(256, 4096), (4096, 2048)])
+def test_softmax_legacy_table_sizes(test_case_id, backend, io_type, exp_table_size, inv_table_size):
+    """The legacy lookups must be indexed by each table's own size, not by TableSize."""
+    np.random.seed(0)
+    X = np.random.rand(1000, 8) * 8 - 4
+    model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(8,), name='softmax')])
+    model.compile()
+
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    cfg['LayerName']['softmax']['Implementation'] = 'legacy'
+    cfg['LayerName']['softmax']['TableSize'] = 1024
+    cfg['LayerName']['softmax']['ExpTableSize'] = exp_table_size
+    cfg['LayerName']['softmax']['InvTableSize'] = inv_table_size
+    for table in ('inv_table', 'exp_table'):
+        cfg['LayerName']['softmax']['Precision'][table] = 'ufixed<18,8,RND_CONV,SAT>'
+    inp_layer_name = next(iter(cfg['LayerName'].keys()))
+    cfg['LayerName'][inp_layer_name]['Precision']['result'] = 'fixed<16,6,RND_CONV,SAT>'
+
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    y_keras = model.predict(X)
+    y_hls4ml = hls_model.predict(X).reshape(y_keras.shape)
+
+    err = np.abs(y_hls4ml - y_keras)
+    assert err.mean() < 0.01
+    assert err.max() < 0.1
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 @pytest.mark.parametrize('implementation', ['stable', 'latency', 'legacy'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_softmax_values(test_case_id, backend, implementation, io_type):

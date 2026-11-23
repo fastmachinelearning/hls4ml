@@ -288,8 +288,8 @@ SoftmaxInitLoop:
                 if (i == j) {
                     exp_diff_res = 1;
                 } else {
-                    auto data_round = (data_cache[j] - data_cache[i]) * CONFIG_T::table_size / 16;
-                    int index = data_round + 8 * CONFIG_T::table_size / 16;
+                    auto data_round = (data_cache[j] - data_cache[i]) * CONFIG_T::exp_table_size / 16;
+                    int index = data_round + 8 * CONFIG_T::exp_table_size / 16;
                     if (index < 0)
                         index = 0;
                     if (index > CONFIG_T::exp_table_size - 1)
@@ -308,7 +308,7 @@ SoftmaxInitLoop:
         for (unsigned j = 0; j < res_T::size; j++) {
             #pragma HLS UNROLL
 
-            int exp_res_index = exp_res[j] * CONFIG_T::table_size / 64;
+            int exp_res_index = exp_res[j] * CONFIG_T::inv_table_size / 64;
             if (exp_res_index < 0)
                 exp_res_index = 0;
             if (exp_res_index > CONFIG_T::inv_table_size - 1)

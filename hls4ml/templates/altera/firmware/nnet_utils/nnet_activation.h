@@ -189,7 +189,7 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_legacy(cons
 New_loop:
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        data_round[ii] = (data[ii] * CONFIG_T::table_size / 16).to_int();
+        data_round[ii] = (data[ii] * CONFIG_T::exp_table_size / 16).to_int();
     }
 NN_Outer:
     #pragma unroll
@@ -202,22 +202,22 @@ NN_Outer:
                 exp_res_temp += 1;
             } else {
                 int _data_cache = (data_round[jj] - data_round[ii]);
-                int index = _data_cache + 8 * CONFIG_T::table_size / 16;
+                int index = _data_cache + 8 * CONFIG_T::exp_table_size / 16;
 
                 if (index < 0)
                     index = 0;
-                if (index > CONFIG_T::table_size - 1)
-                    index = CONFIG_T::table_size - 1;
+                if (index > CONFIG_T::exp_table_size - 1)
+                    index = CONFIG_T::exp_table_size - 1;
 
                 typename CONFIG_T::exp_table_t temp_exp = CONFIG_T::exp_table[index];
                 exp_res_temp += temp_exp;
             }
         }
-        int exp_res_index = (exp_res_temp * CONFIG_T::table_size / 64).to_int();
+        int exp_res_index = (exp_res_temp * CONFIG_T::inv_table_size / 64).to_int();
         if (exp_res_index < 0)
             exp_res_index = 0;
-        if (exp_res_index > CONFIG_T::table_size - 1)
-            exp_res_index = CONFIG_T::table_size - 1;
+        if (exp_res_index > CONFIG_T::inv_table_size - 1)
+            exp_res_index = CONFIG_T::inv_table_size - 1;
         res[ii] = CONFIG_T::invert_table[exp_res_index];
     }
 }

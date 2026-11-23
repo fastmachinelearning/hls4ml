@@ -415,12 +415,12 @@ SoftmaxInitLoop:
                 if (i == j) {
                     exp_diff_res = 1;
                 } else {
-                    int data_round = ((data_cache[j] - data_cache[i]) * CONFIG_T::table_size / 16).to_int();
-                    int index = data_round + 8 * CONFIG_T::table_size / 16;
+                    int data_round = ((data_cache[j] - data_cache[i]) * CONFIG_T::exp_table_size / 16).to_int();
+                    int index = data_round + 8 * CONFIG_T::exp_table_size / 16;
                     if (index < 0)
                         index = 0;
-                    if (index > CONFIG_T::table_size - 1)
-                        index = CONFIG_T::table_size - 1;
+                    if (index > CONFIG_T::exp_table_size - 1)
+                        index = CONFIG_T::exp_table_size - 1;
                     exp_diff_res = CONFIG_T::exp_table[index];
                 }
                 exp_res[i] += exp_diff_res;
@@ -431,11 +431,11 @@ SoftmaxInitLoop:
     SoftmaxInvPackLoop:
         #pragma unroll
         for (unsigned j = 0; j < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; j++) {
-            int exp_res_index = (exp_res[j] * CONFIG_T::table_size / 64).to_int();
+            int exp_res_index = (exp_res[j] * CONFIG_T::inv_table_size / 64).to_int();
             if (exp_res_index < 0)
                 exp_res_index = 0;
-            if (exp_res_index > CONFIG_T::table_size - 1)
-                exp_res_index = CONFIG_T::table_size - 1;
+            if (exp_res_index > CONFIG_T::inv_table_size - 1)
+                exp_res_index = CONFIG_T::inv_table_size - 1;
             out_pack[j] = static_cast<typename ExtractPipeType<res_pipe>::value_type::value_type>(
                 CONFIG_T::invert_table[exp_res_index]);
         }
