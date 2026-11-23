@@ -125,7 +125,7 @@ def create_pqlayer_model(layer: str, use_hgq: bool):
 
 
 def get_data(shape: tuple[int, ...], v: float, max_scale: float):
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(np.random.randint(2**31))
     a1 = rng.uniform(-v, v, shape).astype(np.float32)
     a2 = rng.uniform(0, max_scale, (1, *shape[1:])).astype(np.float32)
     return torch.tensor((a1 * a2), dtype=torch.float32)
