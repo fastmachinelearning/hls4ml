@@ -751,6 +751,19 @@
 <section id="id28">
 <h3>Base attributes<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
 <ul class="simple">
+<li><p>index: int</p>
+<ul>
+<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
+</ul>
+</li>
+<li><p>n_steps: int</p></li>
+<li><p>family: list [dense,conv]</p></li>
+<li><p>stages: list</p></li>
+</ul>
+</section>
+<section id="id29">
+<h3>Type attributes<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<ul class="simple">
 <li><p>result_t: NamedType</p>
 <ul>
 <li><p>The datatype (precision) of the output tensor.</p></li>
@@ -764,19 +777,6 @@
 </ul>
 </li>
 <li><p>membrane_t: NamedType (Default: fixed&lt;24,12,TRN,WRAP,0&gt;)</p></li>
-</ul>
-</section>
-<section id="id29">
-<h3>Type attributes<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
-<ul class="simple">
-<li><p>index: int</p>
-<ul>
-<li><p>Internal node counter used for bookkeeping and variable/tensor naming.</p></li>
-</ul>
-</li>
-<li><p>n_steps: int</p></li>
-<li><p>family: list [dense,conv]</p></li>
-<li><p>stages: list</p></li>
 </ul>
 </section>
 <section id="id30">

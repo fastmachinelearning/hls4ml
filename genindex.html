@@ -403,10 +403,12 @@
 </li>
       <li><a href="autodoc/hls4ml.converters.keras_v3.html#hls4ml.converters.keras_v3.recurrent.BidirectionalHandler">BidirectionalHandler (class in hls4ml.converters.keras_v3.recurrent)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.BinaryQuantizer">BinaryQuantizer (class in hls4ml.model.quantizers)</a>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.binary_precision">binary_precision() (hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.quantizers.BinaryQuantizer">BinaryQuantizer (class in hls4ml.model.quantizers)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.BipolarQuant">BipolarQuant (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bipolar_quant_opt.BipolarQuantConstantParameters">BipolarQuantConstantParameters (class in hls4ml.model.optimizer.passes.bipolar_quant_opt)</a>
@@ -1054,6 +1056,8 @@
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.expand_time_distributed.ExpandTimeDistributed">ExpandTimeDistributed (class in hls4ml.model.optimizer.passes.expand_time_distributed)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Layer.expected_attributes">expected_attributes (hls4ml.model.layers.Layer attribute)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.exponent_weights">exponent_weights() (hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.ExponentPrecisionType">ExponentPrecisionType (class in hls4ml.model.types)</a>
 </li>
@@ -4554,6 +4558,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.match">(hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.match">(hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode.match">(hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha.match">(hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha method)</a>
@@ -5188,13 +5194,15 @@
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.snn.PropagateSNNReadoutWindowSize.name">(hls4ml.model.optimizer.passes.snn.PropagateSNNReadoutWindowSize attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.NamedType">NamedType (class in hls4ml.model.types)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.NamedTypeConverter">NamedTypeConverter (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.xls.html#hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition.namespace">namespace (hls4ml.backends.xls.xls_types.XLSFunctionCallDefinition property)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents">NarrowBinaryPo2Exponents (class in hls4ml.model.optimizer.passes.qkeras)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.CompressedWeightVariable.next">next() (hls4ml.model.types.CompressedWeightVariable method)</a>
 
@@ -5703,6 +5711,8 @@
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.Quant">Quant (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.quant_opt.QuantConstantParameters">QuantConstantParameters (class in hls4ml.model.optimizer.passes.quant_opt)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.BatchNormalization.quantized_data">quantized_data() (hls4ml.model.layers.BatchNormalization method)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.altera.passes.html#hls4ml.backends.altera.passes.bn_quant.QuantizeDenseOutput">QuantizeDenseOutput (class in hls4ml.backends.altera.passes.bn_quant)</a>
 
@@ -6240,6 +6250,8 @@
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.TernaryTanh">TernaryTanh (class in hls4ml.model.layers)</a>
 </li>
+      <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.threshold_range">threshold_range() (hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.layers.TimeDistributed">TimeDistributed (class in hls4ml.model.layers)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.vivado.passes.html#hls4ml.backends.vivado.passes.recurrent_templates.TimeDistributedConfigTemplate">TimeDistributedConfigTemplate (class in hls4ml.backends.vivado.passes.recurrent_templates)</a>
@@ -6491,6 +6503,8 @@
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold.transform">(hls4ml.model.optimizer.passes.qkeras.ExtractTernaryThreshold method)</a>
 </li>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.transform">(hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents method)</a>
+</li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode.transform">(hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode method)</a>
 </li>
         <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha.transform">(hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha method)</a>
@@ -6632,14 +6646,16 @@
 </li>
       <li><a href="autodoc/hls4ml.backends.symbolic.passes.html#hls4ml.backends.symbolic.passes.validate_lut.ValidateUserLookupTable">ValidateUserLookupTable (class in hls4ml.backends.symbolic.passes.validate_lut)</a>
 </li>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.ExponentPrecisionType.value_precision">value_precision() (hls4ml.model.types.ExponentPrecisionType method)</a>
+</li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.Variable">Variable (class in hls4ml.model.types)</a>
 </li>
       <li><a href="autodoc/hls4ml.backends.fpga.html#hls4ml.backends.fpga.fpga_types.VariableDefinition">VariableDefinition (class in hls4ml.backends.fpga.fpga_types)</a>
 </li>
-      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.attributes.VariableMapping">VariableMapping (class in hls4ml.model.attributes)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.html#hls4ml.model.attributes.VariableMapping">VariableMapping (class in hls4ml.model.attributes)</a>
+</li>
       <li><a href="autodoc/hls4ml.backends.vitis.html#hls4ml.backends.vitis.vitis_backend.VitisBackend">VitisBackend (class in hls4ml.backends.vitis.vitis_backend)</a>
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.vitis_unified_writer.VitisUnifiedWriter">VitisUnifiedWriter (class in hls4ml.writer.vitis_unified_writer)</a>
@@ -6680,11 +6696,19 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.weight_quantizer">weight_quantizer() (hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization method)</a>
+
+      <ul>
+        <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha.weight_quantizer">(hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha method)</a>
+</li>
+      </ul></li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.attributes.WeightAttribute">WeightAttribute (class in hls4ml.model.attributes)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.attributes.WeightMapping">WeightMapping (class in hls4ml.model.attributes)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.WeightVariable">WeightVariable (class in hls4ml.model.types)</a>
+</li>
+      <li><a href="autodoc/hls4ml.model.optimizer.passes.html#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.width">width() (hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents method)</a>
 </li>
       <li><a href="autodoc/hls4ml.model.html#hls4ml.model.types.SaturationMode.WRAP">WRAP (hls4ml.model.types.SaturationMode attribute)</a>
 </li>
@@ -6812,10 +6836,10 @@
       </ul></li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_host_code">write_host_code() (hls4ml.writer.coyote_writer.CoyoteWriter method)</a>
 </li>
-      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_layer">write_layer() (hls4ml.writer.xls_writer.XLSWriter method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_layer">write_layer() (hls4ml.writer.xls_writer.XLSWriter method)</a>
+</li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.xls_writer.XLSWriter.write_layers">write_layers() (hls4ml.writer.xls_writer.XLSWriter method)</a>
 </li>
       <li><a href="autodoc/hls4ml.writer.html#hls4ml.writer.coyote_writer.CoyoteWriter.write_model_wrapper">write_model_wrapper() (hls4ml.writer.coyote_writer.CoyoteWriter method)</a>

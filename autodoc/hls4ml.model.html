@@ -908,6 +908,11 @@ BatchNormalization after the scale and bias are determined</p>
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.BatchNormalization.initialize" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.layers.BatchNormalization.quantized_data">
+<span class="sig-name descname"><span class="pre">quantized_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.layers.BatchNormalization.quantized_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -1892,6 +1897,12 @@ higher-dimensional tensors, which are defined as arrays or FIFO streams in the g
 <dd><p>Bases: <a class="reference internal" href="#hls4ml.model.types.PrecisionType" title="hls4ml.model.types.PrecisionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrecisionType</span></code></a></p>
 <p>Convenience class to differentiate ‘regular’ integers from those which represent exponents,
 for QKeras po2 quantizers, for example.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.types.ExponentPrecisionType.value_precision">
+<span class="sig-name descname"><span class="pre">value_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.types.ExponentPrecisionType.value_precision" title="Link to this definition"></a></dt>
+<dd><p>The fixed-point type that holds the given values, 0 or +-2^e, exactly.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">

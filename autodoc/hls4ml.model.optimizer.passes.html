@@ -623,7 +623,7 @@ interval arithmetic to determine the bitwidths semi-symbolically. BW&gt;=128 are
 have the output type specified. There is a further check on the compatibility to merge: except in cases when merging a
 weight/scale of 1 or a bias of 0, this optimizer does not merge nodes when both the weight and scale or both biases
 are quantized.</p>
-<p>Note:  Consider restricting this to ApplyAlpha.  Batch Normalization quantization seems to be ignored.</p>
+<p>Note:  Consider restricting this to ApplyAlpha.</p>
 <p>Note:  This optimizer may not be safe if weights are updateable. May need to turn off.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.match">
@@ -641,6 +641,11 @@ are quantized.</p>
 <span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.transform" title="Link to this definition"></a></dt>
 <dd><p>Fuse weight and bias of Dense/Conv1D/Conv2D layer with BN values.</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.weight_quantizer">
+<span class="sig-name descname"><span class="pre">weight_quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.bn_fuse.FuseBatchNormalization.weight_quantizer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -1441,6 +1446,52 @@ layer configured with the correct threshold.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.qkeras.</span></span><span class="sig-name descname"><span class="pre">NarrowBinaryPo2Exponents</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.OptimizerPass" title="hls4ml.model.optimizer.optimizer.OptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerPass</span></code></a></p>
+<p>Power-of-two weights are stored as exponents, in a field as wide as the quantizer allows. The product of such a
+weight and binary data is +-2^e, in a type that holds 2^e for every exponent of the field, which costs logic when
+the weights are read from memory. In layers with a binary input, this pass narrows the field to the exponents the
+weights use.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.exponent_weights">
+<span class="sig-name descname"><span class="pre">exponent_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.exponent_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.match" title="Link to this definition"></a></dt>
+<dd><p>Predicate to match on a given node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – Node in the model graph to try matching the optimizer on.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.transform" title="Link to this definition"></a></dt>
+<dd><p>Transformation to apply if matching was successful.</p>
+<p>Transform should return a boolean value indicating if the model graph was altered (by adding/removing nodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.graph.ModelGraph" title="hls4ml.model.graph.ModelGraph"><em>ModelGraph</em></a>) – Model to optimize</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="hls4ml.model.html#hls4ml.model.layers.Layer" title="hls4ml.model.layers.Layer"><em>Layer</em></a>) – The matched node in the model graph.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.width">
+<span class="sig-name descname"><span class="pre">width</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.NarrowBinaryPo2Exponents.width" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hls4ml.model.optimizer.passes.qkeras.</span></span><span class="sig-name descname"><span class="pre">OutputRoundingSaturationMode</span></span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.OutputRoundingSaturationMode" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="hls4ml.model.optimizer.html#hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass" title="hls4ml.model.optimizer.optimizer.ConfigurableOptimizerPass"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurableOptimizerPass</span></code></a></p>
@@ -1518,6 +1569,11 @@ and an ‘ApplyAlpha’ layer is inserted to reapply the scale.</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha.weight_quantizer">
+<span class="sig-name descname"><span class="pre">weight_quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.model.optimizer.passes.qkeras.QKerasFactorizeAlpha.weight_quantizer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

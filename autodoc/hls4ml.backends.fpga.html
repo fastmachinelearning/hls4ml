@@ -552,6 +552,12 @@ directory specified in the <cite>config</cite>.</p>
 The mean, variance, beta, gamma parameters are folded into the threshold(s) at which the
 sign of the input flips after the quantized (binary or ternary) Tanh activation.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.binary_precision">
+<span class="sig-name descname"><span class="pre">binary_precision</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.binary_precision" title="Link to this definition"></a></dt>
+<dd><p>The output type of a binary activation: 1-bit binary, where 0 stands for -1, or 0 and 1 with use_01.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.initialize" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -560,6 +566,13 @@ sign of the input flips after the quantized (binary or ternary) Tanh activation.
 <dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.set_thresholds">
 <span class="sig-name descname"><span class="pre">set_thresholds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ternary_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.set_thresholds" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.threshold_range">
+<span class="sig-name descname"><span class="pre">threshold_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hls4ml.backends.fpga.fpga_layers.BatchNormalizationQuantizedTanh.threshold_range" title="Link to this definition"></a></dt>
+<dd><p>The thresholds one step beyond the range of an input of the given precision, at which a comparison is always
+or never true, and a type that holds them. Thresholds outside that range are moved to these.</p>
+</dd></dl>
 
 </dd></dl>
 
