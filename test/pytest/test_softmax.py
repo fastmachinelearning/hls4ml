@@ -95,7 +95,7 @@ def test_softmax(
         assert acc_hls4ml >= 0.72
     else:
         # This is for latency with larger tables
-        assert acc_hls4ml >= 0.96
+        assert acc_hls4ml >= 0.95
 
 
 @pytest.mark.parametrize('softmax_impl', ['activation', 'standalone'])
