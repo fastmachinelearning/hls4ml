@@ -139,8 +139,9 @@ template <class data_T, class res_T, typename CONFIG_T> void softmax_stable(cons
     [[intel::fpga_register]] typename CONFIG_T::accum_t exp_res[CONFIG_T::n_in];
     #pragma unroll
     for (unsigned i = 0; i < CONFIG_T::n_in; i++) {
-        exp_res[i] = CONFIG_T::exp_table[softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(
-            d_xi_xmax[i])]; // input_t, CONFIG_T
+        unsigned x = softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(d_xi_xmax[i]);
+        // The maximum is exactly exp(0) = 1, which keeps it strictly above anything else in the first bucket
+        exp_res[i] = (d_xi_xmax[i] == 0) ? typename CONFIG_T::exp_table_t(1) : CONFIG_T::exp_table[x];
     }
 
     // Explicitly sum previously calculated exponentials with an adder tree

@@ -307,9 +307,9 @@ SoftmaxArrayLoop:
 
         #pragma unroll
         for (unsigned j = 0; j < input_arr_size; j++) {
-            exp_res[j] =
-                CONFIG_T::exp_table[softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(
-                    d_xi_xmax[j])];
+            unsigned x = softmax_idx_from_real_val<typename CONFIG_T::inp_norm_t, CONFIG_T::exp_table_size>(d_xi_xmax[j]);
+            // The maximum is exactly exp(0) = 1, which keeps it strictly above anything else in the first bucket
+            exp_res[j] = (d_xi_xmax[j] == 0) ? typename CONFIG_T::exp_table_t(1) : CONFIG_T::exp_table[x];
         }
 
         // Explicitly sum the results with an adder tree.

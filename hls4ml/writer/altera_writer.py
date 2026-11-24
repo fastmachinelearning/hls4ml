@@ -772,8 +772,8 @@ class AlteraWriter(Writer):
                             x = i * 2.0 ** (fp_integer - N)
 
                             if table_kind == 'exp':
-                                if half_prec and x > 0:  # x > 0 preserves (x_max - x) == 0 => exp(0) = 1
-                                    x += half_prec
+                                # Bucket midpoint; (x_max - x) == 0 is handled exactly by the kernel
+                                x += half_prec
                                 real_val = math.exp(-(x * scale))
                             else:
                                 if half_prec and x != 1.0:  # preserve the special case where x = exp(0) => x = 0

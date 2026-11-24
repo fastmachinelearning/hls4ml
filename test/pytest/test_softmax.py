@@ -275,6 +275,32 @@ def test_softmax_stable_inp_norm(test_case_id, backend, input_precision):
 
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('n_classes', [5, 10])
+def test_softmax_stable_argmax(test_case_id, backend, io_type, n_classes):
+    """Inputs close to the maximum must not tie with it, so argmax matches the argmax of the quantized inputs."""
+    np.random.seed(0)
+    X = np.random.rand(20000, n_classes) * 8 - 4
+    model = tf.keras.models.Sequential([tf.keras.layers.Activation('softmax', input_shape=(n_classes,), name='softmax')])
+    model.compile()
+
+    cfg = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    cfg['LayerName']['softmax']['Implementation'] = 'stable'
+    inp_layer_name = next(iter(cfg['LayerName'].keys()))
+    cfg['LayerName'][inp_layer_name]['Precision']['result'] = 'fixed<16,6,RND_CONV,SAT>'
+
+    odir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=cfg, io_type=io_type, output_dir=odir, backend=backend
+    )
+    hls_model.compile()
+
+    X_q = np.round(X * 2**10) / 2**10
+    y_hls4ml = hls_model.predict(X).reshape(X.shape)
+    np.testing.assert_array_equal(np.argmax(y_hls4ml, axis=-1), np.argmax(X_q, axis=-1))
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
 @pytest.mark.parametrize('default_precision', ['fixed<16,6>', 'fixed<24,12>'])
 def test_softmax_stable_model_precision(test_case_id, backend, default_precision):
     """With only a model-level precision, the softmax internal types are inferred rather than set to the model default."""
