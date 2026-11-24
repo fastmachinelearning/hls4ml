@@ -303,6 +303,16 @@ class ExponentPrecisionType(PrecisionType):
         typestring = '{signed}int<{width}>'.format(signed='u' if not self.signed else '', width=self.width)
         return typestring
 
+    def value_precision(self, data):
+        """The fixed-point type that holds the given values, 0 or +-2^e, exactly."""
+
+        magnitudes = np.abs(np.asarray(data, dtype=float))
+        exponents = np.round(np.log2(magnitudes[magnitudes > 0])).astype(int)
+        if exponents.size == 0:
+            return IntegerPrecisionType(width=2, signed=True)
+        integer = max(int(exponents.max()), 0) + 2
+        return FixedPrecisionType(integer + max(-int(exponents.min()), 0), integer, signed=True)
+
 
 class FloatPrecisionType(PrecisionType):
     """

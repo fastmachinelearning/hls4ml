@@ -59,6 +59,7 @@ KERAS3_BACKEND_SPECIFIC_LIST = {
 # Value = chunk size per CI job
 SPLIT_BY_TEST_CASE = {
     'test_keras_api': 1,
+    'test_qkerasV3': 10,
 }
 
 
@@ -150,12 +151,13 @@ def generate_test_yaml(test_root='.'):
         chunk_size = SPLIT_BY_TEST_CASE[stem]
         needs_examples = uses_example_model(path)
         needs_coyote = uses_coyote(path)
+        extends = '.pytest-qkeras-v3-only' if stem in QKERAS3_LIST else '.pytest'
 
         for i, batch in enumerate(batched(test_ids, chunk_size)):
             job_name = f'{name_base}_part{i}'
             test_file_args = ' '.join(batch).strip().replace('\n', ' ')
             diff_yml = yaml.safe_load(
-                template.format(job_name, '.pytest', test_file_args, int(needs_examples), int(needs_coyote))
+                template.format(job_name, extends, test_file_args, int(needs_examples), int(needs_coyote))
             )
             if yml is None:
                 yml = diff_yml
@@ -181,7 +183,9 @@ def generate_test_yaml(test_root='.'):
         )
         yml.update(diff_yml)
 
-    qkeras3_paths = [path for path in test_root.glob('**/test_*.py') if path.stem in QKERAS3_LIST]
+    qkeras3_paths = [
+        path for path in test_root.glob('**/test_*.py') if path.stem in QKERAS3_LIST - SPLIT_BY_TEST_CASE.keys()
+    ]
     qkeras3_need_examples = [uses_example_model(path) for path in qkeras3_paths]
     qkeras3_need_coyote = [uses_coyote(path) for path in qkeras3_paths]
 
