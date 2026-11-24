@@ -22,6 +22,7 @@ class SeparableToDepthwiseAndConv(OptimizerPass):
         'pad_right',
         'filt_width',
         'stride_width',
+        'dilation',
         'dilation_width',
         'in_height',
         'out_height',

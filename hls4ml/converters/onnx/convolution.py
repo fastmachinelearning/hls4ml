@@ -13,19 +13,21 @@ def parse_conv_layer(node, input_names, input_shapes, graph):
     layer['inputs'] = input_names
     layer['outputs'] = node.output
 
-    strides = get_onnx_attribute(node, 'strides')
     kernel_shape = get_onnx_attribute(node, 'kernel_shape')
+    if kernel_shape is None:
+        kernel_shape = input_shapes[1][1:-1]
+    strides = get_onnx_attribute(node, 'strides', [1] * len(kernel_shape))
     # Note:  currently don't have support for auto_pad.
-    pads = get_onnx_attribute(node, 'pads')
+    pads = get_onnx_attribute(node, 'pads', [0] * (2 * len(kernel_shape)))
     dilations = get_onnx_attribute(node, 'dilations')
     if dilations is None:
-        dilations = [1] * len(layer['kernel_shape'])
+        dilations = [1] * len(kernel_shape)
 
     layer['in_width'] = input_shapes[0][-2]
     layer['n_chan'] = input_shapes[0][-1]
     layer['n_filt'] = input_shapes[1][0]
 
-    layer['group'] = int(get_onnx_attribute(node, 'group'))
+    layer['group'] = int(get_onnx_attribute(node, 'group', 1))
     if layer['group'] != 1:
         layer['depth_multiplier'] = get_onnx_attribute(node, 'group') / layer['n_chan']
         if not layer['depth_multiplier'].is_integer():
@@ -42,14 +44,14 @@ def parse_conv_layer(node, input_names, input_shapes, graph):
     if layer['n_dim'] == 1:
         # this is 1D convolution
         full_width = layer['in_width'] + pads[0] + pads[1]
-        eff_kernel_width = kernel_shape[0] * dilations[0]
+        eff_kernel_width = (kernel_shape[0] - 1) * dilations[0] + 1
         layer['out_width'] = int(np.ceil((full_width - eff_kernel_width + 1) / strides[0]))
         # for compatibility interpret some variables
         layer['pad_left'] = pads[0]
         layer['pad_right'] = pads[1]
         layer['filt_width'] = kernel_shape[0]
         layer['stride_width'] = strides[0]
-        layer['dilation_width'] = dilations[0]
+        layer['dilation'] = dilations[0]
     else:
         # 2d
         layer['in_height'] = input_shapes[0][-3]
