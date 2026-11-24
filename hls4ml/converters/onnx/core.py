@@ -31,6 +31,9 @@ activation_layers = [
     'Softplus',
 ]
 
+# ONNX default of the `alpha` attribute for each activation that has one
+_onnx_alpha_defaults = {'LeakyReLU': 0.01, 'ELU': 1.0, 'ThresholdedReLU': 1.0}
+
 activation_map = {
     'Relu': 'ReLU',
     'Tanh': 'Activation',
@@ -68,8 +71,7 @@ def parse_activation_layer(node, input_names, input_shapes, graph):
 
         elif layer['class_name'] in ['ELU', 'LeakyReLU', 'ThresholdedReLU']:
             layer['activation'] = layer['class_name']
-            # ONNX default of `alpha`: 0.01 for LeakyRelu, 1.0 for Elu and ThresholdedRelu
-            layer['activ_param'] = get_onnx_attribute(node, 'alpha', 0.01 if layer['class_name'] == 'LeakyReLU' else 1.0)
+            layer['activ_param'] = get_onnx_attribute(node, 'alpha', _onnx_alpha_defaults[layer['class_name']])
 
         else:
             layer['activation'] = layer['class_name']
