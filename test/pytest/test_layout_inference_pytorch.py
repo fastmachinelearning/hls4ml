@@ -144,10 +144,10 @@ for _name in ['conv1d_flatten_linear', 'conv2d']:
     known_failures[(_name, 'off', 'io_parallel')] = 'crash in im2col codegen: channels-first conv unsupported'
     known_failures[(_name, 'off', 'io_stream')] = 'compile error: no conv_*_cf kernel'
 known_failures[('maxpool2d', 'off', 'io_stream')] = 'compile error: no channels-first streaming pooling'
-for _mode in ['off', 'internal', 'full']:
-    known_failures[('layernorm_on_seq', _mode, 'io_stream')] = 'compile error: LayerNorm has no io_stream kernel'
 
 vitis_models = ['linear_on_seq', 'gru_seq', 'conv1d_flatten_linear']
+# LayerNorm has no io_stream kernel on any backend
+io_parallel_only = ['layernorm_on_seq']
 
 
 def to_channels_last(x):
@@ -167,7 +167,7 @@ def _cases():
                 continue
             for mode in ['off', 'internal', 'full']:
                 for io_type in ['io_parallel', 'io_stream']:
-                    if backend == 'Vitis' and io_type == 'io_stream':
+                    if io_type == 'io_stream' and (backend == 'Vitis' or name in io_parallel_only):
                         continue
                     reason = known_failures.get((name, mode, io_type))
                     marks = [pytest.mark.xfail(strict=True, reason=reason)] if reason else []
