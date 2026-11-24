@@ -16,7 +16,7 @@ test_root_path = Path(__file__).parent
 
 @pytest.mark.parametrize('strategy', ['latency'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize(
     'operation',
     [
@@ -44,7 +44,8 @@ def test_einsum_dense(test_case_id, backend, io_type, strategy, operation):
 
     data = np.random.rand(1000, *inp_shape)
     output_dir = str(test_root_path / test_case_id)
-    hls_config = {'Model': {'Precision': 'ap_fixed<32,8>', 'ReuseFactor': 1}, 'Strategy': strategy}
+    precision = 'ac_fixed<32,8,true>' if backend == 'Altera' else 'ap_fixed<32,8>'
+    hls_config = {'Model': {'Precision': precision, 'ReuseFactor': 1}, 'Strategy': strategy}
     model_hls = convert_from_keras_model(
         model, backend=backend, output_dir=output_dir, hls_config=hls_config, io_type=io_type
     )

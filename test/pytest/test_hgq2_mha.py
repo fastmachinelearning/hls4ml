@@ -15,8 +15,10 @@ from hls4ml.converters import convert_from_keras_model
 test_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('strategy', ('latency', 'distributed_arithmetic'))
-def test_hgq2_mha(test_case_id, strategy):
+@pytest.mark.parametrize(
+    'backend, strategy', (('Vivado', 'latency'), ('Vivado', 'distributed_arithmetic'), ('Altera', 'latency'))
+)
+def test_hgq2_mha(test_case_id, backend, strategy):
     with QuantizerConfigScope(f0=3, i0=2):
         q = keras.layers.Input((8, 9))
         k = keras.layers.Input((12, 7))
@@ -31,11 +33,13 @@ def test_hgq2_mha(test_case_id, strategy):
 
     r_keras = trace_minmax(model, data, return_results=True)
 
+    precision = 'ac_fixed<2,0>' if backend == 'Altera' else 'ap_fixed<1,0>'
     model_hls = convert_from_keras_model(
         model,
+        backend=backend,
         output_dir=str(test_path / test_case_id),
         io_type='io_parallel',
-        hls_config={'Model': {'Precision': 'ap_fixed<1,0>', 'ReuseFactor': 1, 'Strategy': strategy}},
+        hls_config={'Model': {'Precision': precision, 'ReuseFactor': 1, 'Strategy': strategy}},
     )
 
     model_hls.compile()
