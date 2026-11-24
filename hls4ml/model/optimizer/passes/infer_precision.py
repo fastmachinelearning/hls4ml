@@ -1,5 +1,6 @@
 import math
 from collections.abc import Iterable
+from copy import copy
 
 import numpy as np
 
@@ -726,7 +727,7 @@ class InferPrecisionTypes(ConfigurableOptimizerPass):
 
         if 'result_t' in types_to_infer:
             # if not set, just choose the inv_table_t type
-            node.types['result_t'].precision = node.types['inv_table_t'].precision
+            node.types['result_t'].precision = copy(node.types['inv_table_t'].precision)
             inferred_types.append('result_t')
 
         return inferred_types

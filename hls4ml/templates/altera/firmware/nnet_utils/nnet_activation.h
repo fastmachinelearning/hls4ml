@@ -99,19 +99,6 @@ template <class data_T, class res_T, typename CONFIG_T> void sigmoid(const data_
 
 enum class softmax_implementation { latency = 0, legacy = 1, stable = 2, argmax = 3 };
 
-template <class data_T, unsigned table_size> inline unsigned softmax_idx_from_real_val_negative(const data_T x) {
-    // Number of address bits for table
-    static constexpr int N = ceillog2<table_size>::val;
-
-    // Slice the top N bits of the input
-    [[intel::fpga_register]] ac_int<N, false> y = x.template slc<N>(x.width - N - 1);
-
-    // If x is the most negative value, the slice will be 0, so we need to set the 0-th bit to ensure correctness
-    if (x != 0 && y == 0)
-        y[0] = 1;
-    return y.to_uint();
-}
-
 template <class data_T, unsigned table_size> inline unsigned softmax_idx_from_real_val(const data_T x) {
     // Number of address bits for table
     static constexpr int N = ceillog2<table_size>::val;

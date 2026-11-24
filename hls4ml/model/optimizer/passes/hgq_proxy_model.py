@@ -85,7 +85,7 @@ class FuseFixedPointQuantizer(OptimizerPass):
                 return False
             config = node.model.config.config
             if (
-                config['Backend'].lower() in ('altera', 'quartus')
+                config['Backend'].lower() == 'altera'
                 and config['IOType'] == 'io_parallel'
                 and int(node.mask_kbi[1].ravel()[0]) == 1
             ):

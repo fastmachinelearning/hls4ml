@@ -776,7 +776,8 @@ class AlteraWriter(Writer):
                                 x += half_prec
                                 real_val = math.exp(-(x * scale))
                             else:
-                                if half_prec and x != 1.0:  # preserve the special case where x = exp(0) => x = 0
+                                # No midpoint for a sum of exactly 1, when only the maximum contributes
+                                if half_prec and x != 1.0:
                                     x += half_prec
                                 real_val = 1.0 / x if x > 0 else table_max
 

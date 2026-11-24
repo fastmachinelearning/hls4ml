@@ -23,19 +23,17 @@ def generate_data(input_shape):
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('implementation', ['stable', 'latency', 'argmax', 'legacy'])
 @pytest.mark.parametrize(
-    'input_bits,input_shape,table_bits,io_type,custom_accum',
+    'input_bits,input_shape,table_bits,io_type',
     [
-        ('16,6', (8,), 'auto', 'io_parallel', False),
-        ('16,6', (8,), 'auto', 'io_stream', False),
-        ('16,6', (8,), '18,8', 'io_parallel', False),
-        ('16,6', (8,), '18,8', 'io_stream', False),
-        ('16,6', (8,), '18,8', 'io_parallel', True),
-        ('16,6', (8,), '18,8', 'io_stream', True),
-        ('16,6', (8,), '9,3', 'io_parallel', False),
-        ('16,6', (8,), '9,3', 'io_stream', False),
-        ('9,6', (8,), '18,8', 'io_parallel', False),
-        ('9,6', (8,), '18,8', 'io_stream', False),
-        ('16,6', (8, 8, 3), '18,8', 'io_stream', False),
+        ('16,6', (8,), 'auto', 'io_parallel'),
+        ('16,6', (8,), 'auto', 'io_stream'),
+        ('16,6', (8,), '18,8', 'io_parallel'),
+        ('16,6', (8,), '18,8', 'io_stream'),
+        ('16,6', (8,), '9,3', 'io_parallel'),
+        ('16,6', (8,), '9,3', 'io_stream'),
+        ('9,6', (8,), '18,8', 'io_parallel'),
+        ('9,6', (8,), '18,8', 'io_stream'),
+        ('16,6', (8, 8, 3), '18,8', 'io_stream'),
     ],
 )
 def test_softmax(
@@ -48,7 +46,6 @@ def test_softmax(
     input_shape,
     table_bits,
     io_type,
-    custom_accum,
 ):
 
     if backend == 'Catapult' and implementation == 'argmax':
@@ -75,11 +72,6 @@ def test_softmax(
     cfg['LayerName']['softmax']['Precision']['inv_table'] = table_type
     cfg['LayerName']['softmax']['Precision']['exp_table'] = table_type
     cfg['LayerName']['softmax']['Precision']['inv_inp'] = table_type
-    if custom_accum:
-        if backend not in ['Vivado', 'Vitis']:
-            pytest.skip('Custom accumulators are only supported for Vivado and Vitis backends')
-        # W, I = map(int, input_bits.split(','))  # noqa: E741
-        # cfg['LayerName']['softmax']['Precision']['inv_inp'] = f'ufixed<{W + 2},{I + 2}>'
     inp_layer_name = next(iter(cfg['LayerName'].keys()))
     cfg['LayerName'][inp_layer_name]['Precision']['result'] = f'fixed<{input_bits}, RND_CONV, SAT>'
 

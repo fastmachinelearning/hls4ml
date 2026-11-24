@@ -245,17 +245,7 @@ class ActivationConfigTemplate(LayerConfigTemplate):
         params['type'] = node.get_attr('activation')
 
         if params['type'].lower() == 'softmax':
-            # If no table size is specified, assume default size of 1024
-            params.setdefault('exp_table_size', params['table_size'])
-            params.setdefault('inv_table_size', params['table_size'])
-
-            # This is for non-quantised layers where table size is not a layer attribute
-            if node.get_attr('exp_table_size', -1) == -1:
-                node.set_attr('exp_table_size', params['exp_table_size'])
-
-            if node.get_attr('inv_table_size', -1) == -1:
-                node.set_attr('inv_table_size', params['inv_table_size'])
-
+            # The per-table sizes are set by fix_softmax_table_size
             params.setdefault('exp_scale', 1.0)
             params.setdefault('parallelization_factor', -1)
 
