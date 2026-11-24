@@ -57,15 +57,14 @@ void dense_latency(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_out],
         Product2:
             for (unsigned int jj = 0; jj < CONFIG_T::n_out; jj++) {
                 int index = ii * CONFIG_T::n_out + jj;
-                mult[index] =
-                    CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::product(cache, weights[index]);
+                mult[index] = product_after_init<data_T, CONFIG_T>(cache, weights[index]);
             }
         }
 
     // Initialize accumulator with input biases
     ResetAccum:
         for (unsigned int iacc = 0; iacc < CONFIG_T::n_out; iacc++) {
-            acc[iacc] = (typename CONFIG_T::accum_t)biases[iacc];
+            acc[iacc] = init<data_T, CONFIG_T>(biases[iacc]);
         }
 
     // Accumulate multiplication result

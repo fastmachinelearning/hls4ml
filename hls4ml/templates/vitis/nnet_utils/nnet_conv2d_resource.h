@@ -50,7 +50,7 @@ PartitionLoop:
         InitAccumLoop:
             for (unsigned i_acc = 0; i_acc < mult_n_out; i_acc++) {
                 #pragma HLS UNROLL
-                acc[i_pxl][i_acc] = (typename CONFIG_T::accum_t)biases[i_acc];
+                acc[i_pxl][i_acc] = init<data_T, typename CONFIG_T::mult_config>(biases[i_acc]);
             }
         }
 
@@ -70,8 +70,8 @@ PartitionLoop:
                 for (unsigned i_pxl = 0; i_pxl < CONFIG_T::n_pixels; i_pxl++) {
                     #pragma HLS UNROLL
 
-                    acc[i_pxl][i_out] += static_cast<typename CONFIG_T::accum_t>(
-                        CONFIG_T::mult_config::template product<data_T, typename CONFIG_T::mult_config::weight_t>::product(
+                    acc[i_pxl][i_out] +=
+                        static_cast<typename CONFIG_T::accum_t>(product_after_init<data_T, typename CONFIG_T::mult_config>(
                             data_buf[i_pxl][i_in], weights_2d[i_blk][i_rf]));
                 }
 
