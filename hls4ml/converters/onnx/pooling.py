@@ -29,11 +29,12 @@ def parse_pool_layer(node, input_names, input_shapes, graph):
     if len(input_shapes[0]) == 3:  # 1D
         layer['class_name'] = info + 'Pooling1D'
 
-        layer['n_filt'] = input_shapes[0][1]
-        layer['n_in'] = input_shapes[0][2]
+        layer['n_in'] = input_shapes[0][1]
+        layer['n_filt'] = input_shapes[0][2]
 
         layer['pool_width'] = kernel_shape[0]
         layer['stride_width'] = strides[0]
+        layer['pad_left'], layer['pad_right'] = pads
 
         # formula from ONNX Operators.md documentation
         layer['n_out'] = int(
