@@ -1,19 +1,18 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = [ "setuptools>=61", "setuptools-scm>=8" ]
+requires = [ "setuptools>=77", "setuptools-scm>=8" ]
 
 [project]
 name = "hls4ml"
 description = "Machine learning in FPGAs using HLS"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 authors = [ { name = "hls4ml Team" } ]
 requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: C++",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.10",
@@ -88,7 +87,11 @@ optional-dependencies.testing-qkeras-v3 = [
   "tensorflow>=2.21",
 ]
 optional-dependencies.xls = [ "xls-python>=0.1.9875" ]
+urls.Changelog = "https://github.com/fastmachinelearning/hls4ml/releases"
+urls.Documentation = "https://fastmachinelearning.org/hls4ml"
 urls.Homepage = "https://fastmachinelearning.org/hls4ml"
+urls.Issues = "https://github.com/fastmachinelearning/hls4ml/issues"
+urls.Repository = "https://github.com/fastmachinelearning/hls4ml"
 scripts.hls4ml = "hls4ml.cli:main"
 entry-points."pytest_randomly.random_seeder".hls4ml = "hls4ml:reseed"
 
