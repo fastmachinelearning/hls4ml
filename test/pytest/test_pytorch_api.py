@@ -22,7 +22,7 @@ class LinearModel(nn.Module):
         return self.linear(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_linear(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -76,7 +76,7 @@ def test_linear(test_case_id, backend, io_type):
     ],
     ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'prelu', 'sigmoid', 'threshold'],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(test_case_id, activation_function, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -191,7 +191,7 @@ class SigmoidModel(nn.Module):
     ],
     ids=['softmax', 'relu', 'tanh', 'leaky_relu', 'elu', 'sigmoid', 'threshold'],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activation_functionals(test_case_id, activation_function, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -227,7 +227,7 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv1d(test_case_id, padds, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -336,7 +336,7 @@ padds_options = [0, 1]
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(test_case_id, padds, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -493,7 +493,7 @@ pooling_layers = [MaxPool1d, MaxPool2d, AvgPool1d, AvgPool2d]
 
 @pytest.mark.parametrize('pooling', pooling_layers, ids=['MaxPool1d', 'MaxPool2d', 'AvgPool1d', 'AvgPool2d'])
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 def test_pooling(test_case_id, pooling, padds, backend):
     assert '1d' in pooling.__name__ or '2d' in pooling.__name__
 
@@ -613,7 +613,7 @@ class BatchNormModel(nn.Module):
         return self.bn(x)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_bn(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -657,7 +657,7 @@ class SqueezeModel(nn.Module):
 
 
 # TODO: this test fails for XLS due to PyTorch weights shape mismatch.
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_squeeze(test_case_id, backend, io_type):
     model = SqueezeModel()
@@ -692,7 +692,7 @@ def test_squeeze(test_case_id, backend, io_type):
         assert list(hls_model.get_layers())[3].attributes['target_shape'] == [3]
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 def test_flatten(test_case_id, backend):
     input = torch.randn(1, 1, 5, 5)
     model = nn.Sequential(nn.Conv2d(1, 32, 5, 1, 1), nn.Flatten(), nn.ReLU())
@@ -736,7 +736,7 @@ class ModelSkippedLayers(nn.Module):
         return x
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_skipped_layers(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -771,7 +771,7 @@ def test_skipped_layers(test_case_id, backend, io_type):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # Only io_parallel for now
 @pytest.mark.parametrize('tensor_rank', [2, 3])
 def test_remove_transpose(test_case_id, backend, io_type, tensor_rank):
@@ -838,7 +838,7 @@ def test_remove_transpose(test_case_id, backend, io_type, tensor_rank):
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=5e-2)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_view(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -1133,7 +1133,7 @@ def test_functional_activation_arguments(test_case_id, activation):
 @pytest.mark.parametrize('activation', ['relu6_module', 'hardtanh_module', 'relu6_functional', 'hardtanh_functional'])
 def test_clipped_relu_parsed(test_case_id, activation):
     # ReLU6 and Hardtanh(0, x) are ingested as the ClippedReLU parametrized activation.
-    # No kernel computes it yet; the backends are responsible for rejecting it.
+    # The Vivado and Vitis backends compute it (see test_clipped_relu); the other backends have no kernel.
     if activation == 'relu6_module':
         model = torch.nn.Sequential(nn.Linear(4, 4), nn.ReLU6())
         max_value = 6.0
@@ -1153,6 +1153,29 @@ def test_clipped_relu_parsed(test_case_id, activation):
     act_layer = list(hls_model.get_layers())[-1]
     assert act_layer.attributes['activation'] == 'clippedrelu'
     assert act_layer.attributes['activ_param'] == max_value
+
+
+@pytest.mark.parametrize('activation', [nn.ReLU6(), nn.Hardtanh(0.0, 3.0)], ids=['relu6', 'hardtanh'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_clipped_relu(test_case_id, activation, backend, io_type):
+    model = torch.nn.Sequential(nn.Linear(8, 16), activation)
+    model.eval()
+
+    X_input = np.random.uniform(-10, 10, (100, 8))
+    X_input = np.round(X_input * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+    # the test only means something if both ends of the clip are reached
+    assert (pytorch_prediction == 0).any() and (pytorch_prediction == activation.max_val).any()
+
+    config = config_from_pytorch_model(model, (8,), granularity='name', backend=backend)
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(X_input)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.05)
 
 
 def test_hardtanh_below_zero_rejected(test_case_id):

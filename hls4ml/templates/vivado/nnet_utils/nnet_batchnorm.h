@@ -79,7 +79,8 @@ struct batchnorm_quantized_tanh_config {
 
 template <class data_T, typename CONFIG_T>
 void normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T::n_in],
-                           data_T threshold[CONFIG_T::n_scale_bias]) {
+                           typename CONFIG_T::threshold_t threshold[CONFIG_T::n_scale_bias],
+                           ap_uint<1> flip[CONFIG_T::n_scale_bias]) {
     #pragma HLS PIPELINE
     #pragma HLS ARRAY_PARTITION variable=res complete
 
@@ -88,7 +89,8 @@ void normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T:
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         datareg = data[ii];
         int norm_index = CONFIG_T::n_filt == -1 ? ii : ii % CONFIG_T::n_filt;
-        if (datareg >= threshold[norm_index])
+        // A flipped channel (negative scale) is 1 at or below its threshold
+        if (flip[norm_index] ? datareg <= threshold[norm_index] : datareg >= threshold[norm_index])
             cache = 1;
         else
             cache = 0;
@@ -99,7 +101,9 @@ void normalize_binary_tanh(data_T data[CONFIG_T::n_in], ap_uint<1> res[CONFIG_T:
 
 template <class data_T, typename CONFIG_T>
 void normalize_ternary_tanh(data_T data[CONFIG_T::n_in], ap_int<2> res[CONFIG_T::n_in],
-                            data_T threshold_hi[CONFIG_T::n_scale_bias], data_T threshold_lo[CONFIG_T::n_scale_bias]) {
+                            typename CONFIG_T::threshold_hi_t threshold_hi[CONFIG_T::n_scale_bias],
+                            typename CONFIG_T::threshold_lo_t threshold_lo[CONFIG_T::n_scale_bias],
+                            ap_uint<1> flip[CONFIG_T::n_scale_bias]) {
     #pragma HLS PIPELINE
     #pragma HLS ARRAY_PARTITION variable=res complete
 
@@ -108,9 +112,10 @@ void normalize_ternary_tanh(data_T data[CONFIG_T::n_in], ap_int<2> res[CONFIG_T:
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         datareg = data[ii];
         int norm_index = CONFIG_T::n_filt == -1 ? ii : ii % CONFIG_T::n_filt;
-        if (datareg > threshold_hi[norm_index])
+        // A flipped channel (negative scale) is 1 below the high threshold and -1 at or above the low one
+        if (flip[norm_index] ? datareg < threshold_hi[norm_index] : datareg > threshold_hi[norm_index])
             cache = 1;
-        else if (datareg <= threshold_lo[norm_index])
+        else if (flip[norm_index] ? datareg >= threshold_lo[norm_index] : datareg <= threshold_lo[norm_index])
             cache = -1;
         else
             cache = 0;

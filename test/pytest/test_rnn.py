@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from keras.layers import GRU, LSTM, Bidirectional, Input, SimpleRNN
 from keras.models import Model, Sequential
+from synthesis_helpers import run_synthesis_test
 
 import hls4ml
 
@@ -96,7 +97,7 @@ def compare_weights(hls_weights, keras_weights, keras_layer):
 def test_rnn_parsing(test_case_id, rnn_layer, return_sequences):
     model = create_model_parsing(rnn_layer, return_sequences)
 
-    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vivado')
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend='Vitis')
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir)
 
@@ -116,6 +117,7 @@ def create_model_accuracy(rnn_layer, return_sequences):
     # Subtract 0.5 to include negative values
     input_shape = (12, 8)
     X = np.random.rand(50, *input_shape) - 0.5
+    X = np.round(X * 2**22) * 2**-22
 
     layer_name = rnn_layer.__name__
     model = Sequential()
@@ -159,7 +161,6 @@ def create_model_accuracy(rnn_layer, return_sequences):
 @pytest.mark.parametrize(
     'rnn_layer, backend, io_type, strategy',
     [
-        (SimpleRNN, 'Quartus', 'io_parallel', 'resource'),
         (SimpleRNN, 'Altera', 'io_parallel', 'resource'),
         (SimpleRNN, 'Vivado', 'io_parallel', 'resource'),
         (SimpleRNN, 'Vivado', 'io_parallel', 'latency'),
@@ -173,7 +174,6 @@ def create_model_accuracy(rnn_layer, return_sequences):
         (LSTM, 'Vivado', 'io_parallel', 'latency'),
         (LSTM, 'Vitis', 'io_parallel', 'resource'),
         (LSTM, 'Vitis', 'io_parallel', 'latency'),
-        (LSTM, 'Quartus', 'io_parallel', 'resource'),
         (LSTM, 'Altera', 'io_parallel', 'resource'),
         (LSTM, 'Vivado', 'io_stream', 'resource'),
         (LSTM, 'Vivado', 'io_stream', 'latency'),
@@ -183,13 +183,11 @@ def create_model_accuracy(rnn_layer, return_sequences):
         (GRU, 'Vivado', 'io_parallel', 'latency'),
         (GRU, 'Vitis', 'io_parallel', 'resource'),
         (GRU, 'Vitis', 'io_parallel', 'latency'),
-        (GRU, 'Quartus', 'io_parallel', 'resource'),
         (GRU, 'Altera', 'io_parallel', 'resource'),
         (GRU, 'Vivado', 'io_stream', 'resource'),
         (GRU, 'Vivado', 'io_stream', 'latency'),
         (GRU, 'Vitis', 'io_stream', 'resource'),
         (GRU, 'Vitis', 'io_stream', 'latency'),
-        (GRU, 'Quartus', 'io_stream', 'resource'),
         (GRU, 'Altera', 'io_stream', 'resource'),
         (Bidirectional, 'Vivado', 'io_parallel', 'resource'),
         (Bidirectional, 'Vivado', 'io_parallel', 'latency'),
@@ -197,7 +195,6 @@ def create_model_accuracy(rnn_layer, return_sequences):
         (Bidirectional, 'Vitis', 'io_parallel', 'latency'),
     ],
     ids=[
-        'SimpleRNN-Quartus-io_parallel-resource',
         'SimpleRNN-Altera-io_parallel-resource',
         'SimpleRNN-Vivado-io_parallel-resource',
         'SimpleRNN-Vivado-io_parallel-latency',
@@ -211,7 +208,6 @@ def create_model_accuracy(rnn_layer, return_sequences):
         'LSTM-Vivado-io_parallel-latency',
         'LSTM-Vitis-io_parallel-resource',
         'LSTM-Vitis-io_parallel-latency',
-        'LSTM-Quartus-io_parallel-resource',
         'LSTM-Altera-io_parallel-resource',
         'LSTM-Vivado-io_stream-resource',
         'LSTM-Vivado-io_stream-latency',
@@ -221,13 +217,11 @@ def create_model_accuracy(rnn_layer, return_sequences):
         'GRU-Vivado-io_parallel-latency',
         'GRU-Vitis-io_parallel-resource',
         'GRU-Vitis-io_parallel-latency',
-        'GRU-Quartus-io_parallel-resource',
         'GRU-Altera-io_parallel-resource',
         'GRU-Vivado-io_stream-resource',
         'GRU-Vivado-io_stream-latency',
         'GRU-Vitis-io_stream-resource',
         'GRU-Vitis-io_stream-latency',
-        'GRU-Quartus-io_stream-resource',
         'GRU-Altera-io_stream-resource',
         'Bidirectional-Vivado-io_parallel-resource',
         'Bidirectional-Vivado-io_parallel-latency',
@@ -242,7 +236,7 @@ def test_rnn_accuracy(test_case_id, rnn_layer, return_sequences, backend, io_typ
 
     model, X = create_model_accuracy(rnn_layer, return_sequences)
 
-    default_precision = 'ap_fixed<32, 16>' if backend in ['Vivado', 'Vitis'] else 'ac_fixed<32, 16, true>'
+    default_precision = 'fixed<32, 10>'
     hls_config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision=default_precision, backend=backend
     )
@@ -668,11 +662,11 @@ def test_bidirectional_gru_accuracy(test_case_id):
     model.add(Bidirectional(GRU(4)))
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision='ap_fixed<32, 16>', backend='Vivado'
+        model, granularity='name', default_precision='fixed<32, 10>', backend='Vitis'
     )
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vitis'
     )
     hls_model.compile()
 
@@ -693,11 +687,11 @@ def test_bidirectional_no_bias(test_case_id, cell_type):
         model.add(Bidirectional(LSTM(4, use_bias=False)))
 
     hls_config = hls4ml.utils.config_from_keras_model(
-        model, granularity='name', default_precision='ap_fixed<32, 16>', backend='Vivado'
+        model, granularity='name', default_precision='fixed<32, 10>', backend='Vitis'
     )
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
-        model, hls_config=hls_config, output_dir=output_dir, backend='Vivado'
+        model, hls_config=hls_config, output_dir=output_dir, backend='Vitis'
     )
     hls_model.compile()
 
@@ -872,6 +866,55 @@ def test_bidirectional_gru_reset_after_accuracy(test_case_id, reset_after, stati
     keras_prediction = model.predict(X)
     hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
     np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=5e-2)
+
+
+def create_return_sequences_model(rnn_layer):
+    """Small recurrent layer returning every time step; fixed non-zero weights."""
+    n_steps, n_features, n_units = 5, 3, 4
+    model = Sequential()
+    model.add(Input(shape=(n_steps, n_features)))
+    if rnn_layer is Bidirectional:
+        model.add(Bidirectional(GRU(n_units, return_sequences=True), name='rnn'))
+    else:
+        model.add(rnn_layer(n_units, return_sequences=True, name='rnn'))
+
+    rng = np.random.default_rng(0)
+    for layer in model.layers:
+        weights = [rng.uniform(-1, 1, w.shape) for w in layer.get_weights()]
+        layer.set_weights([(np.round(w * 2**16) * 2**-16).astype('float32') for w in weights])
+    X = rng.uniform(-1, 1, (50, n_steps, n_features))
+    X = (np.round(X * 2**16) * 2**-16).astype('float32')
+    return model, X
+
+
+@pytest.mark.parametrize('rnn_layer', rnn_layers, ids=['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_rnn_return_sequences_synthesis(test_case_id, synthesis_config, rnn_layer, backend):
+    """Layers returning every time step match Keras and synthesize with a defined latency."""
+    model, X = create_return_sequences_model(rnn_layer)
+
+    hls_config = hls4ml.utils.config_from_keras_model(
+        model, granularity='name', default_precision='ap_fixed<32, 16>', backend=backend
+    )
+    for name, layer_config in hls_config['LayerName'].items():
+        if name.startswith('rnn'):
+            layer_config['Strategy'] = 'Resource'
+            layer_config['ReuseFactor'] = 4
+    if rnn_layer is SimpleRNN:
+        hls_config['LayerName']['rnn']['TableSize'] = 4096
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=hls_config, output_dir=output_dir, backend=backend, io_type='io_parallel'
+    )
+    hls_model.compile()
+
+    keras_prediction = model.predict(X)
+    hls_prediction = hls_model.predict(X).reshape(keras_prediction.shape)
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0.0, atol=5e-2)
+
+    run_synthesis_test(
+        config=synthesis_config, hls_model=hls_model, baseline_file_name=f'{test_case_id}.json', backend=backend
+    )
 
 
 @pytest.mark.parametrize('rnn_layer', [SimpleRNN, LSTM, GRU], ids=['SimpleRNN', 'LSTM', 'GRU'])

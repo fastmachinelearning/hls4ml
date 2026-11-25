@@ -29,7 +29,7 @@ import hls4ml
 test_root_path = Path(__file__).parent
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_dense(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -93,7 +93,7 @@ def test_dense(test_case_id, backend, io_type):
         Activation(activation='sigmoid', name='sigmoid'),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_activations(test_case_id, activation_function, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -129,7 +129,7 @@ padds_options = ['same', 'valid']
 
 
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('activation', ['elu', 'relu'])
 def test_conv1d(test_case_id, padds, backend, io_type, activation):
@@ -216,7 +216,7 @@ padds_options = ['same', 'valid']
 
 @pytest.mark.parametrize('chans', chans_options)
 @pytest.mark.parametrize('padds', padds_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'Catapult', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_conv2d(test_case_id, chans, padds, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -383,7 +383,7 @@ pooling_layers = [MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D
 @pytest.mark.parametrize('pooling', pooling_layers)
 @pytest.mark.parametrize('padds', padds_options)
 @pytest.mark.parametrize('chans', chans_options)
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'Catapult', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'Catapult', 'XLS'])
 def test_pooling(test_case_id, pooling, padds, chans, backend):
     assert '1D' in pooling.__name__ or '2D' in pooling.__name__
 
@@ -504,7 +504,7 @@ def test_pooling(test_case_id, pooling, padds, chans, backend):
     #         assert hls_pool.attributes['pad_right'] == 0
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Catapult', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Catapult', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_reused_layer(test_case_id, backend, io_type):
     if backend == 'XLS' and io_type != 'io_parallel':
@@ -597,12 +597,35 @@ def test_conv_routes_depthwise_shaped_groups(test_case_id):
 
 def test_relu_max_value_parsed(test_case_id):
     # max_value (e.g. ReLU6) is ingested as a ClippedReLU parametrized activation.
-    # No backend maps it to a kernel yet; the backends are responsible for rejecting it.
+    # The Vivado and Vitis backends compute it (see test_relu_max_value); the other backends have no kernel.
     model = keras.Sequential([keras.layers.Input((8,)), Dense(4), keras.layers.ReLU(max_value=6.0)])
     hls_model = _convert_parse_only(model, test_case_id)
     activations = {str(layer.get_attr('activation', '')).lower(): layer for layer in hls_model.get_layers()}
     assert 'clippedrelu' in activations
     assert activations['clippedrelu'].get_attr('activ_param') == 6.0
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_relu_max_value(test_case_id, backend, io_type):
+    model = keras.Sequential([keras.layers.Input((8,)), Dense(16), keras.layers.ReLU(max_value=3.0)])
+
+    X_input = np.random.uniform(-10, 10, (100, 8))
+    X_input = np.round(X_input * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    keras_prediction = model.predict(X_input, verbose=0)  # type: ignore
+    # the test only means something if both ends of the clip are reached
+    assert (keras_prediction == 0).any() and (keras_prediction == 3.0).any()
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type
+    )
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(X_input)
+
+    np.testing.assert_allclose(hls_prediction, keras_prediction, rtol=0, atol=0.05)
 
 
 def test_relu_rejects_max_value_combo(test_case_id):

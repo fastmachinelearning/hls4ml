@@ -51,7 +51,7 @@ class Upsample2DModel(nn.Module):
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_pytorch_upsampling1d(test_case_id, data_1d, io_type, backend):
     model = Upsample1DModel()
 
@@ -81,7 +81,7 @@ def test_pytorch_upsampling1d(test_case_id, data_1d, io_type, backend):
 
 
 @pytest.mark.parametrize('io_type', ['io_parallel'])  # Fractional scaling doesn't work with io_stream
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_pytorch_upsampling2d(test_case_id, data_2d, io_type, backend):
     model = Upsample2DModel()
 

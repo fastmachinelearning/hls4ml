@@ -145,3 +145,117 @@ def parse_snn_readout_layer(operation, layer_name, input_names, input_shapes, no
     output_shape = input_shapes[0][:]
     output_shape[-1] = 1
     return layer, output_shape
+
+
+def _streaming_snn_pad_error(layer_name):
+    return NotImplementedError(
+        f'Layer {layer_name}: StreamingSNN needs ConstantPad1d((K - 1, 0), 0.0) directly before each Conv1d with kernel '
+        'size K > 1, and nowhere else.'
+    )
+
+
+def _parse_streaming_snn_scalar(lif, name, layer_name, default=None):
+    value = _to_numpy(getattr(lif, name, default), name).reshape(-1)
+    if value.size != 1:
+        raise NotImplementedError(f'Layer {layer_name}: StreamingSNN supports only a scalar {name} in each Leaky.')
+    return float(value[0])
+
+
+def _parse_streaming_snn_leaky(lif, layer_name):
+    if str(getattr(lif, 'reset_mechanism', 'subtract')).lower() != 'subtract' or not getattr(lif, 'reset_delay', True):
+        raise NotImplementedError(
+            f'Layer {layer_name}: StreamingSNN supports only reset_mechanism="subtract" with reset_delay=True.'
+        )
+    for option in ('inhibition', 'state_quant', 'init_hidden'):
+        if getattr(lif, option, False):
+            raise NotImplementedError(f'Layer {layer_name}: StreamingSNN does not support a Leaky with {option}.')
+    if _parse_streaming_snn_scalar(lif, 'graded_spikes_factor', layer_name, 1.0) != 1.0:
+        raise NotImplementedError(f'Layer {layer_name}: StreamingSNN does not support graded spikes.')
+
+    beta = _parse_streaming_snn_scalar(lif, 'beta', layer_name)
+    threshold = _parse_streaming_snn_scalar(lif, 'threshold', layer_name)
+    # The block spikes at >= threshold and snnTorch at >: with a zero threshold the block would also fire at rest
+    if not np.isfinite(beta) or not 0 < threshold < np.inf:
+        raise NotImplementedError(f'Layer {layer_name}: StreamingSNN needs a finite beta and a finite, positive threshold.')
+    return min(max(beta, 0.0), 1.0), threshold  # beta clamped as in snnTorch
+
+
+def _parse_streaming_snn_conv(conv, pad, layer_name):
+    if conv.stride != (1,) or conv.dilation != (1,) or conv.groups != 1 or conv.padding not in ('valid', (0,)):
+        raise NotImplementedError(
+            f'Layer {layer_name}: StreamingSNN supports only Conv1d with stride 1, dilation 1, groups 1 and no padding.'
+        )
+    kernel_size = conv.kernel_size[0]
+    causal_pad = ((kernel_size - 1, 0), 0.0) if kernel_size > 1 else None
+    if (None if pad is None else (tuple(pad.padding), float(pad.value))) != causal_pad:
+        raise _streaming_snn_pad_error(layer_name)
+    return conv.weight.detach().cpu().numpy()
+
+
+@pytorch_handler('StreamingSNN')
+def parse_streaming_snn_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation == 'StreamingSNN'
+
+    # Checked here, since other backends would silently skip the layer. The config helpers parse without a backend.
+    backend = config.get('Backend', 'Vivado' if 'HLSConfig' in config else 'Vitis')
+    io_type = config.get('IOType', 'io_parallel')
+    if str(backend).lower() != 'vitis' or io_type != 'io_parallel':
+        raise NotImplementedError(
+            f'Layer {layer_name}: StreamingSNN supports only the Vitis backend with io_parallel, got {backend}, {io_type}.'
+        )
+    if len(input_shapes[0]) != 2:
+        raise NotImplementedError(f'Layer {layer_name}: StreamingSNN expects an input of shape (n_steps,).')
+
+    # Each stage is a Linear or Conv1d (after its causal ConstantPad1d) and the Leaky after it
+    stages, stage_classes, pad, needs_leaky = [], [], None, False
+    for module in class_object.layers:
+        module_class = type(module).__name__
+        if module_class not in ('Linear', 'Conv1d', 'ConstantPad1d', 'Leaky'):
+            raise NotImplementedError(f'Layer {layer_name}: StreamingSNN does not support {module_class}.')
+        if pad is not None and module_class != 'Conv1d':
+            raise _streaming_snn_pad_error(layer_name)
+        if module_class == 'Leaky':
+            if not needs_leaky:
+                raise NotImplementedError(
+                    f'Layer {layer_name}: each Leaky in a StreamingSNN must follow a Linear or Conv1d.'
+                )
+            stages[-1]['beta'], stages[-1]['threshold'] = _parse_streaming_snn_leaky(module, layer_name)
+            needs_leaky = False
+        elif needs_leaky:
+            raise NotImplementedError(f'Layer {layer_name}: each Linear or Conv1d in a StreamingSNN needs a Leaky after it.')
+        elif module_class == 'ConstantPad1d':
+            pad = module
+        else:
+            if module_class == 'Linear':
+                weight = module.weight.detach().cpu().numpy()[:, :, np.newaxis]
+            else:
+                weight = _parse_streaming_snn_conv(module, pad, layer_name)
+                pad = None
+            n_out, n_in, kernel_size = weight.shape
+            bias = np.zeros(n_out, np.float32) if module.bias is None else module.bias.detach().cpu().numpy()
+            stages.append({'n_in': n_in, 'n_out': n_out, 'kernel_size': kernel_size, 'weight': weight, 'bias': bias})
+            stage_classes.append(module_class)
+            needs_leaky = True
+    if pad is not None:
+        raise _streaming_snn_pad_error(layer_name)
+    if needs_leaky:
+        raise NotImplementedError(f'Layer {layer_name}: each Linear or Conv1d in a StreamingSNN needs a Leaky after it.')
+    if len(stages) < 2 or stages[0]['n_in'] != 1 or stages[-1]['n_out'] != 1 or stages[-1]['kernel_size'] != 1:
+        raise NotImplementedError(
+            f'Layer {layer_name}: StreamingSNN needs one input channel, at least one stage before the output stage, and an '
+            'output stage with one neuron (Linear, or Conv1d with kernel size 1).'
+        )
+    if len(set(stage_classes[:-1])) != 1:
+        raise NotImplementedError(
+            f'Layer {layer_name}: the StreamingSNN stages before the output must be all Linear or all Conv1d.'
+        )
+
+    layer = {}
+    layer['class_name'] = 'StreamingSNN'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+    layer['n_steps'] = int(input_shapes[0][1])
+    layer['family'] = 'dense' if stage_classes[0] == 'Linear' else 'conv'
+    layer['stages'] = stages
+
+    return layer, [input_shapes[0][0], 1]

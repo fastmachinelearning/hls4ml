@@ -332,7 +332,9 @@ class Layer(Serializable):
             precision = quantizer.hls_type
             type_name = name + '{index}_t'
             data = quantizer(data)
-            if isinstance(quantizer.hls_type, ExponentPrecisionType):
+            if isinstance(quantizer.hls_type, ExponentPrecisionType) and name == 'bias':
+                precision = quantizer.hls_type.value_precision(data)
+            elif isinstance(quantizer.hls_type, ExponentPrecisionType):
                 exponent_type = True
 
         if compression:
@@ -708,6 +710,8 @@ class Conv2DBatchnorm(Conv2D):
         bias_q = self.get_attr('bias_quantizer')
         if bias_q is not None:
             self.weights['bias'].data = bias_q(folded_bias)
+            if isinstance(bias_q.hls_type, ExponentPrecisionType):
+                self.weights['bias'].update_precision(bias_q.hls_type.value_precision(self.weights['bias'].data))
         else:
             self.weights['bias'].data = folded_bias
 
@@ -1220,6 +1224,30 @@ class SNNReadout(Layer):
         self._set_type_t('membrane')
 
 
+class StreamingSNN(Layer):
+    _expected_attributes = [
+        Attribute('n_steps'),
+        ChoiceAttribute('family', choices=['dense', 'conv'], configurable=False),
+        Attribute('stages', value_type=list),
+        TypeAttribute('weight'),
+        TypeAttribute('bias'),
+        TypeAttribute('accum', default=FixedPrecisionType(24, 12), description=descriptions.accum_type),
+        TypeAttribute('membrane', default=FixedPrecisionType(24, 12)),
+    ]
+
+    def initialize(self):
+        self.add_output_variable([1])
+        self._set_type_t('weight')
+        self._set_type_t('bias')
+        self._set_type_t('membrane')
+
+    def serialize_state(self):
+        # The serializer replaces the arrays in the stage dicts with file references, so it gets copies of the dicts
+        state = super().serialize_state()
+        state['attributes']['stages'] = [dict(stage) for stage in self.get_attr('stages')]
+        return state
+
+
 class BatchNormOnnx(Layer):
     """
     A transient layer formed from ONNX BatchNormalization that gets converted to
@@ -1232,7 +1260,6 @@ class BatchNormOnnx(Layer):
         self.add_output_variable(shape)
 
 
-# TODO:  We currently seem to ignore the quantizers to mean, variance, etc.
 class BatchNormalization(Layer):
     _expected_attributes = [
         Attribute('n_in'),
@@ -1251,20 +1278,27 @@ class BatchNormalization(Layer):
         self.add_output_variable(shape)
 
         if self.get_attr('scale_data') is None:
-            gamma = self.get_attr('gamma_data')
-            var = self.get_attr('variance_data')
+            gamma = self.quantized_data('gamma') if self.get_attr('use_gamma') else self.get_attr('gamma_data')
+            var = self.quantized_data('variance')
             scale = gamma / np.sqrt(var + self.get_attr('epsilon'))
+            if self.get_attr('inverse_quantizer') is not None:
+                scale = self.get_attr('inverse_quantizer')(scale)
             self.add_weights_variable(name='scale', var_name='s{index}', data=scale)
         else:
             self.add_weights_variable(name='scale', var_name='s{index}')
 
         if self.get_attr('bias_data') is None:
-            beta = self.get_attr('beta_data')
-            mean = self.get_attr('mean_data')
+            beta = self.quantized_data('beta') if self.get_attr('use_beta') else self.get_attr('beta_data')
+            mean = self.quantized_data('mean')
             bias = beta - scale * mean
             self.add_weights_variable(name='bias', var_name='b{index}', data=bias)
         else:
             self.add_weights_variable(name='bias', var_name='b{index}')
+
+    def quantized_data(self, name):
+        quantizer = self.get_attr(f'{name}_quantizer')
+        data = self.get_attr(f'{name}_data')
+        return data if quantizer is None else quantizer(data)
 
 
 # TODO:  discuss whether this should be renamed to something more descriptive, and whether the class hierarchy makes sense
@@ -2067,6 +2101,7 @@ layer_map = {
     'IFNeuron': IFNeuron,
     'LIFNeuron': LIFNeuron,
     'SNNReadout': SNNReadout,
+    'StreamingSNN': StreamingSNN,
     'TernaryTanh': TernaryTanh,
     'HardActivation': HardActivation,
     'Reshape': Reshape,

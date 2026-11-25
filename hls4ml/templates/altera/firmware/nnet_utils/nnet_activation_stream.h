@@ -691,6 +691,8 @@ BinaryTanHActLoop:
 //       Ternary TanH Activation
 // *************************************************
 template <class data_pipe, class res_pipe, typename CONFIG_T> void ternary_tanh_stream() {
+    // As in QKeras: 1 at or above 0.5, -1 at or below -0.5
+    const ac_fixed<2, 1, true> half = 0.5;
 TernaryTanHActLoop:
     [[intel::initiation_interval(
         1)]] for (int i = 0; i < CONFIG_T::n_in / std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; i++) {
@@ -701,9 +703,9 @@ TernaryTanHActLoop:
     TernaryTanHPackLoop:
         #pragma unroll
         for (int j = 0; j < std::tuple_size<typename ExtractPipeType<res_pipe>::value_type>{}; j++) {
-            if (in_data[j] > 1)
+            if (in_data[j] >= half)
                 out_data[j] = static_cast<typename ExtractPipeType<res_pipe>::value_type::value_type>(1);
-            else if (in_data[j] <= -1)
+            else if (in_data[j] <= -half)
                 out_data[j] = static_cast<typename ExtractPipeType<res_pipe>::value_type::value_type>(-1);
             else
                 out_data[j] = static_cast<typename ExtractPipeType<res_pipe>::value_type::value_type>(0);

@@ -175,7 +175,6 @@ def get_activation_quantizer(keras_layer, input_names, activation_name='activati
         layer['class_name'] = 'HardActivation'
         layer['slope'] = 0.5  # the default values in QKeras
         layer['shift'] = 0.5
-        # Quartus seems to have trouble if the width is 1.
         layer['slope_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
         layer['shift_prec'] = FixedPrecisionType(width=2, integer=0, signed=False)
         layer[activation_name] = activation_config['class_name'].replace('quantized_', 'hard_')
@@ -210,6 +209,7 @@ def parse_qbatchnorm_layer(keras_layer, input_names, input_shapes, data_reader):
     layer['variance_quantizer'] = get_quantizer_from_config(keras_layer, 'variance')
     layer['beta_quantizer'] = get_quantizer_from_config(keras_layer, 'beta')
     layer['gamma_quantizer'] = get_quantizer_from_config(keras_layer, 'gamma')
+    layer['inverse_quantizer'] = get_quantizer_from_config(keras_layer, 'inverse')
 
     return layer, output_shape
 
