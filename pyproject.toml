@@ -111,7 +111,6 @@ git_describe_command = [
 write_to = "hls4ml/_version.py"
 
 [tool.ruff]
-target-version = "py310"
 line-length = 125
 indent-width = 4
 include = [ "hls4ml/**/*.py", "test/**/*.py" ]
@@ -181,4 +180,12 @@ ignore = [
   ".pre-commit-config.yaml",
   "docs/**",
   "hls4ml/_version.py",
+  "noxfile.py",
 ]
+
+[tool.pytest]
+ini_options.minversion = "6.0"
+ini_options.testpaths = [ "test/pytest" ]
+ini_options.addopts = [ "-ra", "--strict-config", "--strict-markers" ]
+ini_options.xfail_strict = true
+ini_options.log_level = "INFO"
