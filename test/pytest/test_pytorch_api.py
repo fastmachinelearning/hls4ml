@@ -713,7 +713,6 @@ def test_squeeze(test_case_id, backend, io_type):
     pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy().flatten()
 
     config = config_from_pytorch_model(model, (5,))
-    del config['Model']['ChannelsLastConversion']  # We don't want anything touched for this test
     output_dir = str(test_root_path / test_case_id)
 
     hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
