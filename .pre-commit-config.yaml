@@ -40,6 +40,12 @@ repos:
   - id: check-manifest
     stages: [manual]
 
+- repo: https://github.com/zizmorcore/zizmor-pre-commit
+  rev: v1.33.1
+  hooks:
+    - id: zizmor
+      stages: [manual]
+
 - repo: https://github.com/jmduarte/p-clang-format
   rev: "v1.0.4"
   hooks:
