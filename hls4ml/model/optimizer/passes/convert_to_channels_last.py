@@ -11,8 +11,9 @@ from hls4ml.model.types import WeightVariable
 
 
 class ChannelsLastConverter(OptimizerPass):
-    """Converts a model from channels_first to channels_last data format by transposing the weights of relevant layers
-    and adding a transpose layer for the inputs and outputs, if necessary"""
+    """Converts a model from channels_first to channels_last data format by adjusting the shapes and attributes of
+    relevant layers and adding a transpose layer for the inputs and outputs, if necessary. Weights are already stored
+    in channels_last order by the parser."""
 
     def match(self, node):
         # If this parameter has not been set, this model does not need to be converted
@@ -70,26 +71,6 @@ class ChannelsLastConverter(OptimizerPass):
                 node.mask_kbi = tuple(
                     np.transpose(t, transpose_map[t.ndim]) if t.ndim in transpose_map else t for t in node.mask_kbi
                 )
-            elif isinstance(node, Dense):
-                # The PyTorch parser already stores Linear weights as (n_in, n_out), the layout Dense expects
-                pass
-            else:
-                # Transpose weight tensors
-                tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
-                for tensor in tensors:
-                    try:
-                        t_shape = node.get_weights(tensor).shape
-                        if len(t_shape) == 2:
-                            weights_channels_last = node.get_weights(tensor).data.transpose()
-                            node.get_weights(tensor).data = weights_channels_last
-                        elif len(t_shape) == 3:
-                            weights_channels_last = node.get_weights(tensor).data.transpose([2, 1, 0])
-                            node.get_weights(tensor).data = weights_channels_last
-                        elif len(t_shape) == 4:
-                            weights_channels_last = node.get_weights(tensor).data.transpose([2, 3, 1, 0])
-                            node.get_weights(tensor).data = weights_channels_last
-                    except KeyError:
-                        pass
             try:
                 node.set_attr('data_format', 'channels_last')
             except AttributeError:
