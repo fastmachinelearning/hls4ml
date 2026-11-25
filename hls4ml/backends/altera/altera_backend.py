@@ -1,3 +1,4 @@
+import copy
 import subprocess
 from pathlib import Path
 from warnings import warn
@@ -37,7 +38,7 @@ class AlteraBackend(FPGABackend):
         self._register_flows()
 
     def _register_layer_attributes(self):
-        # Add RNN-specific recurrent_reuse_factor attribute
+        # Add RNN-specific table_size and table attributes
         rnn_layers = [
             SimpleRNN,
             LSTM,
@@ -46,7 +47,6 @@ class AlteraBackend(FPGABackend):
 
         for layer in rnn_layers:
             attrs = self.attribute_map.get(layer, [])
-            attrs.append(ConfigurableAttribute('recurrent_reuse_factor', default=1, description=descriptions.reuse_factor))
             attrs.append(ConfigurableAttribute('table_size', default=1024, description=descriptions.table_size))
             attrs.append(TypeAttribute('table', default=FixedPrecisionType(18, 8), description=descriptions.table_type))
             self.attribute_map[layer] = attrs
@@ -82,6 +82,7 @@ class AlteraBackend(FPGABackend):
             'altera:quantize_dense_output',
             'fuse_consecutive_batch_normalization',
             'altera:xnor_pooling',
+            'narrow_binary_po2_exponents',
         ]
         quantization_flow = register_flow('quantization', quantization_passes, requires=[init_flow], backend=self.name)
 
@@ -218,8 +219,8 @@ class AlteraBackend(FPGABackend):
         builddir.mkdir(exist_ok=True)
         try:
             subprocess.run('which ahls', shell=True, cwd=builddir, check=True)
-        except subprocess.CalledProcessError:
-            raise RuntimeError('Could not find ahls. Please configure the Altera HLS IP Gen toolchain appropriately')
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError('Could not find ahls. Please configure the Altera HLS IP Gen toolchain appropriately') from e
         subprocess.run('cmake ..', shell=True, cwd=builddir, check=True)
         subprocess.run(f'make {build_type}', shell=True, cwd=builddir, check=True)
 
@@ -280,6 +281,7 @@ class AlteraBackend(FPGABackend):
 
     @layer_optimizer(GRU)
     def init_gru(self, layer):
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
@@ -367,6 +369,7 @@ class AlteraBackend(FPGABackend):
 
     @layer_optimizer(LSTM)
     def init_lstm(self, layer):
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 
@@ -387,6 +390,7 @@ class AlteraBackend(FPGABackend):
             layer.add_weights_variable(
                 name=f'weight_{weight_types[i]}',
                 var_name=f'kernel_{weight_types[i]}_{{index}}',
+                precision=copy.deepcopy(layer.types['weight_t'].precision),
                 data=weights_data[
                     0 : layer.get_attr('n_in'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
                 ],
@@ -396,6 +400,7 @@ class AlteraBackend(FPGABackend):
             layer.add_weights_variable(
                 name=f'recurrent_weight_{weight_types[i]}',
                 var_name=f'recurrent_kernel_{weight_types[i]}_{{index}}',
+                precision=copy.deepcopy(layer.types['recurrent_weight_t'].precision),
                 data=rec_weights_data[
                     0 : layer.get_attr('n_out'), i * layer.get_attr('n_out') : (i + 1) * layer.get_attr('n_out')
                 ],
@@ -405,6 +410,7 @@ class AlteraBackend(FPGABackend):
             layer.add_weights_variable(
                 name=f'bias_{weight_types[i]}',
                 var_name=f'bias_{weight_types[i]}_{{index}}',
+                precision=copy.deepcopy(layer.types['bias_t'].precision),
                 data=bias_data[i * layer.get_attr('n_out') : (i + 1) * (layer.get_attr('n_out'))],
                 quantizer=layer.get_attr('weight_quantizer'),
                 compression=None,
@@ -412,6 +418,7 @@ class AlteraBackend(FPGABackend):
 
     @layer_optimizer(SimpleRNN)
     def init_simple_rnn(self, layer):
+        self._warn_removed_reuse_factors(layer, ['recurrent_reuse_factor'])
         reuse_factor = layer.model.config.get_reuse_factor(layer)
         layer.set_attr('recurrent_reuse_factor', reuse_factor)
 

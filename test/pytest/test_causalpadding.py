@@ -13,7 +13,7 @@ atol = 5e-3
 
 
 @pytest.mark.parametrize('io_type', ['io_stream', 'io_parallel'])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'XLS'])
 def test_causalpadding(test_case_id, io_type, backend):
     if backend == 'XLS' and io_type != 'io_parallel':
         pytest.skip(f'XLS backend only supports IOType: io_parallel, but got: {io_type}')

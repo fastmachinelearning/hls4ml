@@ -66,13 +66,15 @@ struct batchnorm_quantized_tanh_config {
 };
 
 template <class data_T, class res_T, typename CONFIG_T>
-void normalize_binary_tanh(const data_T &data, res_T &res, const typename CONFIG_T::threshold_t &threshold) {
+void normalize_binary_tanh(const data_T &data, res_T &res, const typename CONFIG_T::threshold_t &threshold,
+                           const typename CONFIG_T::flip_t &flip) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         ac_int<1, false> cache;
         auto datareg = data[ii];
         int norm_index = CONFIG_T::n_filt == -1 ? ii : ii % CONFIG_T::n_filt;
-        if (datareg >= threshold[norm_index])
+        // A flipped channel (negative scale) is 1 at or below its threshold
+        if (flip[norm_index] ? datareg <= threshold[norm_index] : datareg >= threshold[norm_index])
             cache = 1;
         else
             cache = 0;
@@ -83,15 +85,16 @@ void normalize_binary_tanh(const data_T &data, res_T &res, const typename CONFIG
 
 template <class data_T, class res_T, typename CONFIG_T>
 void normalize_ternary_tanh(const data_T &data, res_T &res, const typename CONFIG_T::threshold_hi_t &threshold_hi,
-                            const typename CONFIG_T::threshold_lo_t &threshold_lo) {
+                            const typename CONFIG_T::threshold_lo_t &threshold_lo, const typename CONFIG_T::flip_t &flip) {
     #pragma unroll
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
         ac_int<2, true> cache;
         auto datareg = data[ii];
         int norm_index = CONFIG_T::n_filt == -1 ? ii : ii % CONFIG_T::n_filt;
-        if (datareg > threshold_hi[norm_index])
+        // A flipped channel (negative scale) is 1 below the high threshold and -1 at or above the low one
+        if (flip[norm_index] ? datareg < threshold_hi[norm_index] : datareg > threshold_hi[norm_index])
             cache = 1;
-        else if (datareg <= threshold_lo[norm_index])
+        else if (flip[norm_index] ? datareg >= threshold_lo[norm_index] : datareg <= threshold_lo[norm_index])
             cache = -1;
         else
             cache = 0;

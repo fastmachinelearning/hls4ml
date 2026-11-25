@@ -197,8 +197,8 @@ def __solve_knapsack_branch_and_bound(values, weights, capacity, time_limit=sys.
     """
     try:
         from ortools.algorithms.python import knapsack_solver
-    except ModuleNotFoundError:
-        raise Exception('OR-Tools 9.7 or newer not found. Please install Google OR-Tools from pip.')
+    except ModuleNotFoundError as e:
+        raise Exception('OR-Tools 9.7 or newer not found. Please install Google OR-Tools from pip.') from e
 
     solver = knapsack_solver.KnapsackSolver(knapsack_solver.SolverType.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'BB')
     solver.set_time_limit(time_limit)
@@ -220,8 +220,8 @@ def __solve_knapsack_cbc_mip(values, weights, capacity, time_limit=sys.float_inf
     """
     try:
         from ortools.algorithms.python import knapsack_solver
-    except ModuleNotFoundError:
-        raise Exception('OR-Tools 9.7 or newer not found. Please install Google OR-Tools from pip.')
+    except ModuleNotFoundError as e:
+        raise Exception('OR-Tools 9.7 or newer not found. Please install Google OR-Tools from pip.') from e
 
     solver = knapsack_solver.KnapsackSolver(knapsack_solver.SolverType.KNAPSACK_MULTIDIMENSION_CBC_MIP_SOLVER, 'CBC')
     solver.set_time_limit(time_limit)

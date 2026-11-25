@@ -7,15 +7,15 @@ Input
 =====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -31,17 +31,17 @@ Constant
 ========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
 
 * value: ndarray
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -57,12 +57,6 @@ Activation
 ==========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -70,6 +64,12 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -87,32 +87,24 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 ParametrizedActivation
 ======================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* param_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -124,6 +116,14 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* param_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -143,31 +143,23 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 PReLU
 =====
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* param_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -180,6 +172,14 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* param_t: NamedType
 
 Weight attributes
 -----------------
@@ -203,29 +203,23 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Softmax
 =======
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -234,6 +228,12 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -251,73 +251,63 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * n_outer: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * n_inner: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * implementation: list [latency,stable,argmax,legacy] (Default: stable)
 
   * Choice of implementation of softmax function. "latency" provides good latency at the expense of extra resources. It performs well with a small number of classes. "stable" may require extra clock cycles but has better accuracy. "legacy" is the older implementation which has bad accuracy, but is fast and has low resource use. It is superseded by the "latency" implementation for most applications. "argmax" is a special implementation that can be used if only the output with the highest probability is important. Using this implementation will save resources and clock cycles.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * skip: bool (Default: False)
 
   * If enabled, skips the softmax node and returns the raw outputs.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * exp_table_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * inv_table_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * inv_inp_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * accum_t: NamedType (Default: fixed<18,8,RND,SAT,0>)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 IFNeuron
 ========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* threshold_t: NamedType
-
-* membrane_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -334,6 +324,16 @@ Type attributes
 * threshold_mode: str (Default: scalar)
 
 * reset_mechanism: list [subtract,zero] (Default: subtract)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* threshold_t: NamedType
+
+* membrane_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -352,18 +352,6 @@ Configurable attributes
 LIFNeuron
 =========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* beta_t: NamedType
-
-* threshold_t: NamedType
-
-* membrane_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -385,6 +373,18 @@ Type attributes
 
 * reset_mechanism: list [subtract,zero] (Default: subtract)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* beta_t: NamedType
+
+* threshold_t: NamedType
+
+* membrane_t: NamedType
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -405,14 +405,6 @@ SNNReadout
 ==========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* membrane_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -429,6 +421,14 @@ Type attributes
 
 * decision_rule: list [argmax_spike_count,first_to_threshold,threshold_then_argmax,binary_logit,argmax_membrane] (Default: argmax_membrane)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* membrane_t: NamedType
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -443,15 +443,59 @@ Configurable attributes
 
 * membrane_t: NamedType
 
-TernaryTanh
-===========
+StreamingSNN
+============
 Base attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* n_steps: int
+
+* family: list [dense,conv]
+
+* stages: list
+
+Type attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
-Type attributes
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* accum_t: NamedType (Default: fixed<24,12,TRN,WRAP,0>)
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
+
+* membrane_t: NamedType (Default: fixed<24,12,TRN,WRAP,0>)
+
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* accum_t: NamedType (Default: fixed<24,12,TRN,WRAP,0>)
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
+
+* membrane_t: NamedType (Default: fixed<24,12,TRN,WRAP,0>)
+
+TernaryTanh
+===========
+Base attributes
 ---------------
 * index: int
 
@@ -460,6 +504,12 @@ Type attributes
 * n_in: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -477,33 +527,23 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 HardActivation
 ==============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* slope_t: NamedType
-
-* shift_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -517,6 +557,16 @@ Type attributes
 
 * shift: float (Default: 0.5)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* slope_t: NamedType
+
+* shift_t: NamedType
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -537,35 +587,35 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_size: int (Default: 1024)
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Reshape
 =======
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
 
 * target_shape: Sequence
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -581,16 +631,6 @@ Dense
 =====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -598,6 +638,16 @@ Type attributes
 * n_in: int
 
 * n_out: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -625,13 +675,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * strategy: list [latency,resource] (Default: latency)
 
@@ -641,15 +691,15 @@ Conv
 ====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -667,27 +717,17 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Conv1D
 ======
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -709,6 +749,16 @@ Type attributes
 
 * pad_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
 Weight attributes
 -----------------
 * weight: WeightVariable
@@ -735,13 +785,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -759,16 +809,6 @@ Conv2D
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -801,6 +841,16 @@ Type attributes
 
 * pad_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
 Weight attributes
 -----------------
 * weight: WeightVariable
@@ -827,13 +877,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -851,16 +901,6 @@ Conv2DBatchnorm
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -893,6 +933,16 @@ Type attributes
 
 * pad_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
 Weight attributes
 -----------------
 * weight: WeightVariable
@@ -919,13 +969,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -943,18 +993,6 @@ SeparableConv1D
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* depthwise_t: NamedType
-
-* pointwise_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -976,6 +1014,18 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* depthwise_t: NamedType
+
+* pointwise_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1005,23 +1055,23 @@ Backend-specific attributes
 ---------------------------
 * depthwise_accum_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * pointwise_accum_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * depthwise_result_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * depthwise_reuse_factor: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * pointwise_reuse_factor: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)
 
@@ -1036,20 +1086,6 @@ Backend-specific attributes
 DepthwiseConv1D
 ===============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -1088,6 +1124,20 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1123,13 +1173,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -1147,18 +1197,6 @@ SeparableConv2D
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* depthwise_t: NamedType
-
-* pointwise_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -1192,6 +1230,18 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* depthwise_t: NamedType
+
+* pointwise_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1221,23 +1271,23 @@ Backend-specific attributes
 ---------------------------
 * depthwise_accum_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * pointwise_accum_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * depthwise_result_t: NamedType
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * depthwise_reuse_factor: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * pointwise_reuse_factor: int (Default: 1)
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)
 
@@ -1252,20 +1302,6 @@ Backend-specific attributes
 DepthwiseConv2D
 ===============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -1328,6 +1364,20 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1363,13 +1413,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -1383,19 +1433,241 @@ Backend-specific attributes
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
-BatchNormalization
-==================
+Conv1DTranspose
+===============
 Base attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* in_width: int
+
+* out_width: int
+
+* n_chan: int
+
+* n_filt: int
+
+* filt_width: int
+
+* stride_width: int
+
+* dilation_width: int (Default: 1)
+
+* crop_left: int
+
+Type attributes
 ---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
 
-* scale_t: NamedType
+* weight_t: NamedType
 
 * bias_t: NamedType
 
+Weight attributes
+-----------------
+* weight: WeightVariable
+
+* bias: WeightVariable
+
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+Backend-specific attributes
+---------------------------
+* accum_t: NamedType
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* reuse_factor: int (Default: 1)
+
+  * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* parallelization_factor: int (Default: 1)
+
+  * The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* slot_groups: tuple (Default: ())
+
+  * Set by the backend. The output is computed in blocks of stride positions, one block for each input position. For each kernel element, in the order of the rows of the weight matrix, the position in the block that it adds to.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* slot_shifts: tuple (Default: ())
+
+  * Set by the backend. For each kernel element, in the order of the rows of the weight matrix, how many blocks before the current block its input is, as (height, width).
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_buf: int (Default: 0)
+
+  * Set by the backend. The number of inputs multiplied for each block of outputs, which is the number of kernel elements times the number of input channels.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* first_block_width: int (Default: 0)
+
+  * Set by the backend. The index of the first block of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_blocks_width: int (Default: 0)
+
+  * Set by the backend. The number of blocks of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+Conv2DTranspose
+===============
+Base attributes
+---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* in_height: int
+
+* in_width: int
+
+* out_height: int
+
+* out_width: int
+
+* n_chan: int
+
+* n_filt: int
+
+* filt_height: int
+
+* filt_width: int
+
+* stride_height: int
+
+* stride_width: int
+
+* dilation_height: int (Default: 1)
+
+* dilation_width: int (Default: 1)
+
+* crop_top: int
+
+* crop_left: int
+
 Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+Weight attributes
+-----------------
+* weight: WeightVariable
+
+* bias: WeightVariable
+
+Configurable attributes
+-----------------------
+* trace: int (Default: False)
+
+  * Enables saving of layer output (tracing) when using hls_model.predict(...) or hls_model.trace(...)
+
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+Backend-specific attributes
+---------------------------
+* accum_t: NamedType
+
+  * The datatype (precision) used to store intermediate results of the computation within the layer.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* reuse_factor: int (Default: 1)
+
+  * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+
+* parallelization_factor: int (Default: 1)
+
+  * The number of outputs computed in parallel. Essentially the number of multiplications of input window with the convolution kernel occurring in parallel. A higher number results in more parallelism (lower latency and II) at the expense of resources used. Currently only supported in io_parallel.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* slot_groups: tuple (Default: ())
+
+  * Set by the backend. The output is computed in blocks of stride positions, one block for each input position. For each kernel element, in the order of the rows of the weight matrix, the position in the block that it adds to.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* slot_shifts: tuple (Default: ())
+
+  * Set by the backend. For each kernel element, in the order of the rows of the weight matrix, how many blocks before the current block its input is, as (height, width).
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_buf: int (Default: 0)
+
+  * Set by the backend. The number of inputs multiplied for each block of outputs, which is the number of kernel elements times the number of input channels.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* first_block_height: int (Default: 0)
+
+  * Set by the backend. The index of the first block of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_blocks_height: int (Default: 0)
+
+  * Set by the backend. The number of blocks of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* first_block_width: int (Default: 0)
+
+  * Set by the backend. The index of the first block of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+* n_blocks_width: int (Default: 0)
+
+  * Set by the backend. The number of blocks of outputs along this axis that cropping does not remove entirely.
+
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
+
+BatchNormalization
+==================
+Base attributes
 ---------------
 * index: int
 
@@ -1408,6 +1680,16 @@ Type attributes
 * use_gamma: bool (Default: True)
 
 * use_beta: bool (Default: True)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* scale_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -1435,17 +1717,11 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Pooling1D
 =========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1469,6 +1745,12 @@ Type attributes
 
 * pool_op: list [Max,Average]
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1485,13 +1767,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)
 
@@ -1502,12 +1784,6 @@ Backend-specific attributes
 Pooling2D
 =========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1543,6 +1819,12 @@ Type attributes
 
 * pool_op: list [Max,Average]
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1559,13 +1841,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * conv_implementation: list [LineBuffer,Encoded] (Default: LineBuffer)
 
@@ -1576,12 +1858,6 @@ Backend-specific attributes
 GlobalPooling1D
 ===============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1595,6 +1871,12 @@ Type attributes
 
 * pool_op: list [Max,Average]
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1611,23 +1893,17 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 GlobalPooling2D
 ===============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1643,6 +1919,12 @@ Type attributes
 
 * pool_op: list [Max,Average]
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1659,23 +1941,17 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 ZeroPadding1D
 =============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1691,6 +1967,12 @@ Type attributes
 
 * pad_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1704,12 +1986,6 @@ Configurable attributes
 ZeroPadding2D
 =============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1733,6 +2009,12 @@ Type attributes
 
 * pad_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1746,12 +2028,6 @@ Configurable attributes
 Cropping1D
 ==========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1767,6 +2043,12 @@ Type attributes
 
 * crop_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1780,12 +2062,6 @@ Configurable attributes
 Cropping2D
 ==========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -1809,6 +2085,12 @@ Type attributes
 
 * crop_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -1823,15 +2105,15 @@ Merge
 =====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -1849,21 +2131,21 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 MatMul
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -1881,35 +2163,35 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Dot
 ===
 Base attributes
 ---------------
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
 Type attributes
 ---------------
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -1935,35 +2217,35 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
+  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
 
 Concatenate
 ===========
 Base attributes
 ---------------
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
 Type attributes
 ---------------
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -1989,17 +2271,11 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 Resize
 ======
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -2017,6 +2293,12 @@ Type attributes
 
 * align_corners: bool (Default: False)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -2033,15 +2315,15 @@ Transpose
 =========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2057,14 +2339,6 @@ Embedding
 =========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* embeddings_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2074,6 +2348,14 @@ Type attributes
 * n_out: int
 
 * vocab_size: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* embeddings_t: NamedType
 
 Weight attributes
 -----------------
@@ -2097,23 +2379,11 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 SimpleRNN
 =========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* recurrent_weight_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -2128,6 +2398,18 @@ Type attributes
 * return_state: bool (Default: False)
 
 * pass_initial_states: bool (Default: False)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* recurrent_weight_t: NamedType
 
 Weight attributes
 -----------------
@@ -2161,17 +2443,17 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2179,37 +2461,23 @@ Backend-specific attributes
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * recurrent_reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult, Altera
+  * Available in: Catapult
 
 LSTM
 ====
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* recurrent_weight_t: NamedType
-
-* recurrent_bias_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -2230,6 +2498,20 @@ Type attributes
 * direction: list [forward,backward] (Default: forward)
 
 * time_major: bool (Default: False)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* recurrent_weight_t: NamedType
+
+* recurrent_bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -2265,17 +2547,17 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2283,37 +2565,23 @@ Backend-specific attributes
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * recurrent_reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult, Altera
+  * Available in: Catapult
 
 GRU
 ===
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* recurrent_weight_t: NamedType
-
-* recurrent_bias_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -2337,6 +2605,20 @@ Type attributes
 
 * apply_reset_gate: list [before,after] (Default: after)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* recurrent_weight_t: NamedType
+
+* recurrent_bias_t: NamedType
+
 Weight attributes
 -----------------
 * weight: WeightVariable
@@ -2371,17 +2653,17 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Coyote
 
@@ -2389,45 +2671,23 @@ Backend-specific attributes
 
   * The size of the lookup table used to approximate the function.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
   * The datatype (precision) used for the values of the lookup table.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, Altera, Coyote
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, Altera, Coyote
 
 * recurrent_reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Quartus, Catapult, Altera
+  * Available in: Catapult
 
 Bidirectional
 =============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* forward_weight_t: NamedType
-
-* forward_bias_t: NamedType
-
-* forward_recurrent_weight_t: NamedType
-
-* forward_recurrent_bias_t: NamedType
-
-* backward_weight_t: NamedType
-
-* backward_bias_t: NamedType
-
-* backward_recurrent_weight_t: NamedType
-
-* backward_recurrent_bias_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -2450,6 +2710,28 @@ Type attributes
 * backward_activation: str
 
 * backward_recurrent_activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* forward_weight_t: NamedType
+
+* forward_bias_t: NamedType
+
+* forward_recurrent_weight_t: NamedType
+
+* forward_recurrent_bias_t: NamedType
+
+* backward_weight_t: NamedType
+
+* backward_bias_t: NamedType
+
+* backward_recurrent_weight_t: NamedType
+
+* backward_recurrent_bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -2501,17 +2783,17 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * static: bool (Default: True)
 
-  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block.
+  * If set to True, will reuse the same recurrent block for computation, resulting in lower resource usage at the expense of serialized computation and higher latency/II. Only applies to io_parallel, as io_stream always reuses the same block. On Vivado and Vitis, the Resource strategy also always reuses the same block.
 
   * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Coyote
 
@@ -2531,12 +2813,6 @@ TimeDistributed
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2546,6 +2822,12 @@ Type attributes
 * n_time_steps: int
 
 * output_shape: list
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2569,15 +2851,15 @@ GarNet
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2595,29 +2877,29 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
+  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
 
 GarNetStack
 ===========
 Base attributes
 ---------------
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
 Type attributes
 ---------------
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2643,17 +2925,11 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Quartus, Quartus, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
+  * Available in: Vivado, Vivado, VivadoAccelerator, VivadoAccelerator, Vitis, Vitis, VitisUnified, VitisUnified, Catapult, Catapult, SymbolicExpression, SymbolicExpression, Altera, Altera, Coyote, Coyote, Libero, Libero, XLS, XLS
 
 Quant
 =====
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -2665,6 +2941,12 @@ Type attributes
 
 * signed: bool
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -2681,21 +2963,21 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 BipolarQuant
 ============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2711,16 +2993,6 @@ ApplyAlpha
 ==========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* scale_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2732,6 +3004,16 @@ Type attributes
 * use_gamma: bool (Default: True)
 
 * use_beta: bool (Default: True)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* scale_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -2759,21 +3041,21 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 BatchNormOnnx
 =============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2791,17 +3073,11 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 LayerGroup
 ==========
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -2817,6 +3093,12 @@ Type attributes
 
 * output_shape: list
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -2831,12 +3113,6 @@ SymbolicExpression
 ==================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2846,6 +3122,12 @@ Type attributes
 * n_symbols: int
 
 * lut_functions: list (Default: [])
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -2861,16 +3143,6 @@ LayerNormalization
 ==================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* scale_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2882,6 +3154,16 @@ Type attributes
 * axis: int (Default: 2)
 
 * epsilon_power_of_10: int (Default: 3)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* scale_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -2909,13 +3191,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * table_range_power2: int (Default: 0)
 
@@ -2945,18 +3227,6 @@ EinsumDense
 ===========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* accum_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -2966,6 +3236,18 @@ Type attributes
 * inp_shape: tuple
 
 * out_shape: tuple
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* accum_t: NamedType
 
 Weight attributes
 -----------------
@@ -2993,14 +3275,6 @@ Einsum
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3012,6 +3286,14 @@ Type attributes
 * inp1_shape: tuple
 
 * out_shape: tuple
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -3029,23 +3311,23 @@ BiasAdd
 =======
 Base attributes
 ---------------
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
-* result_t: NamedType
+* index: int
 
-  * The datatype (precision) of the output tensor.
+  * Internal node counter used for bookkeeping and variable/tensor naming.
 
 Type attributes
 ---------------
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
-* index: int
+* result_t: NamedType
 
-  * Internal node counter used for bookkeeping and variable/tensor naming.
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3071,21 +3353,21 @@ Backend-specific attributes
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 DACombinational
 ===============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3100,12 +3382,6 @@ Configurable attributes
 SparseInputReduce
 =================
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
 ---------------
 * index: int
 
@@ -3123,6 +3399,12 @@ Type attributes
 
 * hash_bits: int (Default: 10)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -3137,18 +3419,6 @@ SparseConv2D
 ============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-* accum_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3160,6 +3430,18 @@ Type attributes
 * n_filt: int
 
 * kernel_size: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
+* accum_t: NamedType
 
 Weight attributes
 -----------------
@@ -3187,12 +3469,6 @@ SparseActivation
 ================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3202,6 +3478,12 @@ Type attributes
 * n_chan: int
 
 * activation: str
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3216,14 +3498,6 @@ Configurable attributes
 SparsePooling2D
 ===============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -3243,6 +3517,14 @@ Type attributes
 
 * pool_op: str (Default: avg)
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
+
 Configurable attributes
 -----------------------
 * trace: int (Default: False)
@@ -3259,12 +3541,6 @@ SparseFlatten
 =============
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3276,6 +3552,12 @@ Type attributes
 * out_height: int
 
 * out_width: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3291,15 +3573,15 @@ FixedPointQuantizer
 ===================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3315,19 +3597,19 @@ UnaryLUT
 ========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
 
 * n_in: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* table_t: NamedType (Default: fixed<18,8,TRN,WRAP,0>)
 
 Weight attributes
 -----------------
@@ -3349,15 +3631,15 @@ Clone
 =====
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3373,15 +3655,15 @@ Repack
 ======
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3397,14 +3679,6 @@ BatchNormalizationQuantizedTanh
 ===============================
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* accum_t: NamedType
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
@@ -3412,6 +3686,14 @@ Type attributes
 * n_in: int
 
 * n_filt: int (Default: 0)
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* accum_t: NamedType
 
 Configurable attributes
 -----------------------
@@ -3431,15 +3713,15 @@ Broadcast
 =========
 Base attributes
 ---------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-Type attributes
----------------
 * index: int
 
   * Internal node counter used for bookkeeping and variable/tensor naming.
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
 
 Configurable attributes
 -----------------------
@@ -3454,16 +3736,6 @@ Configurable attributes
 PointwiseConv1D
 ===============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -3484,6 +3756,16 @@ Type attributes
 * pad_left: int
 
 * pad_right: int
+
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
 
 Weight attributes
 -----------------
@@ -3511,13 +3793,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 
@@ -3534,16 +3816,6 @@ Backend-specific attributes
 PointwiseConv2D
 ===============
 Base attributes
----------------
-* result_t: NamedType
-
-  * The datatype (precision) of the output tensor.
-
-* weight_t: NamedType
-
-* bias_t: NamedType
-
-Type attributes
 ---------------
 * index: int
 
@@ -3577,6 +3849,16 @@ Type attributes
 
 * pad_right: int
 
+Type attributes
+---------------
+* result_t: NamedType
+
+  * The datatype (precision) of the output tensor.
+
+* weight_t: NamedType
+
+* bias_t: NamedType
+
 Weight attributes
 -----------------
 * weight: WeightVariable
@@ -3603,13 +3885,13 @@ Backend-specific attributes
 
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * reuse_factor: int (Default: 1)
 
   * The number of times each multiplier is used by controlling the amount of pipelining/unrolling. A lower number results in more parallelism and lower latency at the expense of the resources used. Reuse factor = 1 corresponds to all multiplications executed in parallel, and hence, the lowest possible latency.
 
-  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Quartus, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
+  * Available in: Vivado, VivadoAccelerator, Vitis, VitisUnified, Catapult, SymbolicExpression, Altera, Coyote, Libero, XLS
 
 * parallelization_factor: int (Default: 1)
 

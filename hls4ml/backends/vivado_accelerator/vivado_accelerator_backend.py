@@ -23,6 +23,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
         vsynth=False,
         fifo_opt=False,
         bitfile=False,
+        pnr=False,
     ):
         # run the VivadoBackend build
         super().build(
@@ -35,6 +36,7 @@ class VivadoAcceleratorBackend(VivadoBackend):
             export=export,
             vsynth=vsynth,
             fifo_opt=fifo_opt,
+            pnr=pnr,
         )
         # Get Config to view Board and Platform
         from hls4ml.backends import VivadoAcceleratorConfig

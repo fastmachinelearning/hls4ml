@@ -56,9 +56,9 @@ def compare_dicts(data, baseline, tolerances):
 
         try:
             actual = float(actual)
-            expected = float(expected)
-            assert actual == pytest.approx(expected, rel=tolerance), (
-                f'{key}: expected {expected}, got {actual} (tolerance={tolerance * 100}%)'
+            expected_value = float(expected)
+            assert actual == pytest.approx(expected_value, rel=tolerance), (
+                f'{key}: expected {expected_value}, got {actual} (tolerance={tolerance * 100}%)'
             )
         except ValueError:
             assert actual == expected, f"{key}: expected '{expected}', got '{actual}'"
@@ -152,8 +152,8 @@ def run_synthesis_test(config, hls_model, baseline_file_name, backend):
     if not config.get('run_synthesis', False):
         return
 
-    # Skip Quartus and XLS backends
-    if backend in ['Quartus', 'XLS']:
+    # XLS does not produce a synthesis report for comparison.
+    if backend == 'XLS':
         return
 
     # Run synthesis

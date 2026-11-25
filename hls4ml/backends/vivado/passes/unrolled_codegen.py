@@ -4,7 +4,7 @@ import numpy as np
 
 from hls4ml.model.layers import GRU, LSTM, Conv1D, Conv2D, Dense, SimpleRNN
 from hls4ml.model.optimizer import OptimizerPass
-from hls4ml.model.types import Source
+from hls4ml.model.types import Source, XnorPrecisionType
 
 
 class GenerateUnrolledDenseResource(OptimizerPass):
@@ -92,7 +92,7 @@ class GenerateUnrolledDenseResource(OptimizerPass):
             '        InitAccum:\n'
             '        for (int i = 0; i < CONFIG_T::n_out; i++) {{{{\n'
             '            #pragma HLS UNROLL\n'
-            '            acc[i] = (typename CONFIG_T::accum_t) biases[i];\n'
+            '            acc[i] = init<data_T, CONFIG_T>(biases[i]);\n'
             '        }}}}\n'
             '\n'
         ).format(suffix=function_suffix)
@@ -131,7 +131,8 @@ class GenerateUnrolledDenseResource(OptimizerPass):
         # Zero DSPs are the DSP blocks that always have zero input
         # In this case, it is the number of rows in the transposed and reshaped weight matrix
         # The new shape is (parallel_mult, reuse_factor)
-        zeros = np.sum(~weights.data.reshape(block_factor, reuse_factor).any(1))
+        nonzero = self._nonzero(weights)
+        zeros = np.sum(~nonzero.reshape(block_factor, reuse_factor).any(1))
 
         # Used to pad the code to make it human-readable
         indent = '    '
@@ -148,12 +149,11 @@ class GenerateUnrolledDenseResource(OptimizerPass):
 
             mult_code += f'{indent * 3}M{ir}: {{{{\n'
             for _ in range(block_factor):
-                if weights.data.flatten()[w_index] != 0:
+                if nonzero[w_index]:
                     mult_code += (
                         f'{indent * 4}acc[{out_index}] += '
                         'static_cast<typename CONFIG_T::accum_t>'
-                        '(CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::'
-                        f'product(data[{in_index}], weights[{w_index}]));\n'
+                        f'(product_after_init<data_T, CONFIG_T>(data[{in_index}], weights[{w_index}]));\n'
                     )
 
                 w_index += reuse_factor
@@ -181,7 +181,8 @@ class GenerateUnrolledDenseResource(OptimizerPass):
         # Zero DSPs are the DSP blocks that always have zero input
         # In this case, it is the number of rows in the transposed and reshaped weight matrix
         # The new shape is (parallel_mult, reuse_factor)
-        zeros = np.sum(~weights.data.reshape(block_factor, reuse_factor).any(1))
+        nonzero = self._nonzero(weights)
+        zeros = np.sum(~nonzero.reshape(block_factor, reuse_factor).any(1))
 
         # Used to pad the code to make it human-readable
         indent = '    '
@@ -208,12 +209,11 @@ class GenerateUnrolledDenseResource(OptimizerPass):
 
             mult_code += f'{indent * 3}M{ir}: {{{{\n'
             for _ in range(block_factor):
-                if weights.data.flatten()[w_index] != 0:
+                if nonzero[w_index]:
                     mult_code += (
                         f'{indent * 4}acc[{int(out_index)}] += '
                         'static_cast<typename CONFIG_T::accum_t>'
-                        '(CONFIG_T::template product<data_T, typename CONFIG_T::weight_t>::'
-                        f'product(data[{in_index}], weights[{w_index}]));\n'
+                        f'(product_after_init<data_T, CONFIG_T>(data[{in_index}], weights[{w_index}]));\n'
                     )
 
                 w_index += reuse_factor
@@ -229,6 +229,13 @@ class GenerateUnrolledDenseResource(OptimizerPass):
         mult_code += f'{indent * 2}}}}}\n'
 
         return mult_code
+
+    def _nonzero(self, weights):
+        """Which of the weights give a product, as a flat array. A binary weight of 0 stands for -1."""
+
+        if isinstance(weights.type.precision, XnorPrecisionType):
+            return np.ones(weights.data.size, dtype=bool)
+        return weights.data.flatten() != 0
 
     def _add_backend_specific_pragmas_to_generated_code(self, code, backend):
         if backend.name == 'Vivado':

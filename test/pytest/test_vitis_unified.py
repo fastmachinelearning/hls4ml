@@ -248,8 +248,9 @@ def test_config_files_resolved_at_write(test_case_id, simple_unet, axi_mode):
     )
     hls_model.write()
 
-    for stale in ['project.tcl', 'build_prj.tcl', 'build_opt.tcl', 'vivado_synth.tcl']:
+    for stale in ['project.tcl', 'build_prj.tcl', 'build_opt.tcl']:
         assert not (output_dir / stale).exists()
+    assert (output_dir / 'vivado_synth.tcl').is_file()
 
     comp_dir = output_dir / 'vitis_workspace' / 'max_length_project'
     cfgs = {}
@@ -646,15 +647,21 @@ def test_build_returns_report_and_reset(test_case_id, simple_unet, axi_mode):
     (hls_prj / 'syn' / 'report' / f'max_length_project_{axi_mode}_csynth.xml').write_text(FAKE_CSYNTH_XML)
     (hls_prj / 'sim' / 'report' / f'max_length_project_{axi_mode}_cosim.rpt').write_text(FAKE_COSIM_RPT)
 
-    with pytest.warns(UserWarning, match='vsynth'):
-        report = hls_model.build(vsynth=True)
+    with pytest.warns(UserWarning, match='validation'):
+        report = hls_model.build(validation=True)
     assert report['CSynthesisReport']['LUT'] == '19834'
     assert report['CSynthesisReport']['AvailableDSP'] == '2520'
     assert report['CosimReport']['Status'] == 'Pass'
     assert report['CosimReport']['LatencyMax'] == '278'
 
+    # Reports of an earlier Vivado synthesis and bitfile build
+    (output_dir / 'vivado_impl.rpt').write_text('')
+    (output_dir / 'final_reports').mkdir(exist_ok=True)
+
     hls_model.build(reset=True)
     assert not hls_prj.parent.exists()
+    assert not (output_dir / 'vivado_impl.rpt').exists()
+    assert not (output_dir / 'final_reports').exists()
 
 
 # ===== 4. compile and predict: g++ only =====

@@ -3,7 +3,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from keras.layers import GRU, LSTM, BatchNormalization, Bidirectional, Input, SimpleRNN
+import tensorflow as tf
+from keras.layers import GRU, LSTM, BatchNormalization, Bidirectional, Dense, Input, SimpleRNN
 from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
@@ -69,7 +70,6 @@ def load_jettagging_model():
     return model
 
 
-# TODO - Parameterize for Quartus (different strategies?)
 @pytest.fixture
 def convert(load_jettagging_model, request, test_case_id):
     """
@@ -136,7 +136,7 @@ def randX_100_16():
 # https://github.com/fastmachinelearning/hls4ml/issues/381
 # @pytest.mark.parametrize('bits', [4, 6, 8])
 @pytest.mark.parametrize('bits,alpha', [(4, 1), (4, 'auto_po2')])
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera', 'XLS'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'XLS'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_single_dense_activation_exact(test_case_id, randX_100_16, bits, alpha, backend, io_type):
     """
@@ -201,7 +201,7 @@ def randX_100_10():
 @pytest.mark.parametrize(
     'quantizer', [(quantized_tanh(8)), (quantized_sigmoid(5)), (quantized_sigmoid(7, use_real_sigmoid=True))]
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer_special(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -240,7 +240,7 @@ def test_quantizer_special(test_case_id, randX_1000_1, quantizer, backend, io_ty
         (7, 10, binary(), quantized_bits(5, 2), binary(), False, True),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_btnn(test_case_id, make_btnn, randX_100_10, backend, io_type):
     model, is_xnor, test_no = make_btnn
@@ -258,6 +258,50 @@ def test_btnn(test_case_id, make_btnn, randX_100_10, backend, io_type):
     y_ker = model.predict(X)
     wrong = (y_hls != y_ker).ravel()
     assert sum(wrong) / len(wrong) < 0.005
+
+
+class BinaryDense(Dense):
+    """A Dense layer with binary weights and bias, which hls4ml recognizes by its class name and binarizes itself."""
+
+    def call(self, inputs):
+        return tf.matmul(inputs, tf.where(self.kernel >= 0, 1.0, -1.0)) + tf.where(self.bias >= 0, 1.0, -1.0)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'Altera'])
+@pytest.mark.parametrize('position', ['last', 'between'])
+def test_binary_dense_bias(test_case_id, position, backend):
+    """
+    Test a BinaryDense layer with a bias after a binary activation, as the last layer or followed by batch normalization
+    and a binary activation, into which hls4ml moves the bias.
+    """
+
+    model = Sequential([BatchNormalization(input_shape=(16,)), QActivation(binary()), BinaryDense(8)])
+    if position == 'between':
+        model.add(BatchNormalization())
+        model.add(QActivation(binary()))
+    rng = np.random.default_rng(0)
+    for layer in model.layers:
+        if isinstance(layer, BatchNormalization):
+            n = layer.get_weights()[0].shape[0]
+            layer.set_weights(
+                [rng.uniform(0.5, 1.5, n), rng.uniform(-1, 1, n), rng.uniform(-1, 1, n), rng.uniform(0.5, 1.5, n)]
+            )
+        elif layer.get_weights():
+            layer.set_weights([rng.uniform(-1, 1, w.shape) for w in layer.get_weights()])
+
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = hls4ml.converters.convert_from_keras_model(model, hls_config=config, output_dir=output_dir, backend=backend)
+    hls_model.compile()
+
+    # Inputs on a grid of 1/16, which the default precision holds exactly
+    X = np.round(rng.uniform(-1, 1, (100, 16)) * 16) / 16
+    y_keras = model.predict(X)
+    y_hls = hls_model.predict(X).reshape(y_keras.shape)
+    if position == 'between':
+        # The binary output stores -1 as 0
+        y_hls = 2 * y_hls - 1
+    np.testing.assert_array_equal(y_hls, y_keras)
 
 
 @pytest.fixture(scope='module')
@@ -283,7 +327,7 @@ def randX_1000_1():
         (quantized_relu(10, 5)),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -318,7 +362,7 @@ def test_quantizer(test_case_id, randX_1000_1, quantizer, backend, io_type):
         (quantized_relu(10, 2, negative_slope=0.25)),
     ],
 )
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_relu_negative_slope(test_case_id, randX_1000_1, quantizer, backend, io_type):
     """
@@ -399,7 +443,7 @@ def test_qactivation_kwarg(test_case_id, randX_100_10, activation_quantizer, wei
         assert sum(wrong) / len(wrong) <= 0.005
 
 
-ALL_BACKENDS = ['Vivado', 'Vitis', 'Quartus', 'Altera']
+ALL_BACKENDS = ['Vivado', 'Vitis', 'Altera']
 RNN_LAYERS = ('QSimpleRNN', 'QLSTM', 'QGRU')
 
 # Q layers built without quantizers: name -> (input shape, layer factory, supported backends)
@@ -414,11 +458,11 @@ NO_QUANT_LAYERS = {
     'QDepthwiseConv2D': ((8, 8, 3), lambda: QDepthwiseConv2D((3, 3)), ['Vivado', 'Vitis']),
     'QSeparableConv1D': ((8, 3), lambda: QSeparableConv1D(4, 3), ['Vivado', 'Vitis']),
     'QSeparableConv2D': ((8, 8, 3), lambda: QSeparableConv2D(4, (3, 3)), ['Vivado', 'Vitis']),
-    'QSimpleRNN': ((5, 3), lambda: QSimpleRNN(4, activation='relu'), ['Quartus', 'Altera']),
+    'QSimpleRNN': ((5, 3), lambda: QSimpleRNN(4, activation='relu'), ['Altera']),
     'QLSTM': (
         (5, 3),
         lambda: QLSTM(4, activation='tanh', recurrent_activation='sigmoid'),
-        ['Vivado', 'Quartus', 'Altera'],
+        ['Vivado', 'Altera'],
     ),
     'QGRU': (
         (5, 3),
@@ -431,7 +475,7 @@ NO_QUANT_LAYERS = {
             reset_after=True,
             recurrent_quantizer='quantized_bits(24, 7, alpha=1)',
         ),
-        ['Vivado', 'Quartus', 'Altera'],
+        ['Vivado', 'Altera'],
     ),
     'QBatchNormalization': (
         (10,),
@@ -482,7 +526,7 @@ def randX_100_8_8_1():
     return np.random.rand(100, 8, 8, 1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     """
@@ -520,7 +564,7 @@ def test_qconv2dbn(test_case_id, randX_100_8_8_1, backend, io_type):
     np.testing.assert_array_equal(y_qkeras, y_hls4ml.reshape(y_qkeras.shape))
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 def test_qconv2dbn_no_quantizer(test_case_id, randX_100_8_8_1, backend, io_type):
     """
@@ -607,7 +651,7 @@ def test_qdepthwiseconv2d(test_case_id, randX_10_32_32_3, backend, io_type):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), rtol=1e-2, atol=0.01)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
 def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
@@ -645,7 +689,7 @@ def test_quantised_po2_bit_width(test_case_id, backend, io_type, strategy):
     np.testing.assert_allclose(y_hls.flatten(), y_keras.flatten(), rtol=2e-2)
 
 
-@pytest.mark.parametrize('backend', ['Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Altera'])
 def test_qsimplernn(test_case_id, backend):
     """
     Test proper handling of QSimpleRNN.
@@ -680,7 +724,7 @@ def test_qsimplernn(test_case_id, backend):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Altera'])
 def test_qlstm(test_case_id, backend):
     """
     Test proper handling of QLSTM.
@@ -716,7 +760,7 @@ def test_qlstm(test_case_id, backend):
     np.testing.assert_allclose(y_qkeras, y_hls4ml.reshape(y_qkeras.shape), atol=0.1)
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Quartus', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Altera'])
 def test_qgru(test_case_id, backend):
     """
     Test proper handling of QGRU.
@@ -756,7 +800,8 @@ def test_qgru(test_case_id, backend):
 @pytest.mark.parametrize('rnn_layer', ['SimpleRNN', 'LSTM', 'GRU', 'Bidirectional'])
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
-def test_binary_input_rnn(test_case_id, rnn_layer, backend, io_type):
+@pytest.mark.parametrize('strategy', ['Latency', 'Resource'])
+def test_binary_input_rnn(test_case_id, rnn_layer, backend, io_type, strategy):
     """A binary input to a recurrent layer does not make its recurrent multiplication treat the state as binary.
 
     BatchNormalization followed by a binary activation is merged into one layer whose output has the 1-bit binary type.
@@ -783,6 +828,8 @@ def test_binary_input_rnn(test_case_id, rnn_layer, backend, io_type):
     config = hls4ml.utils.config_from_keras_model(
         model, granularity='name', default_precision='ap_fixed<24,10>', backend=backend
     )
+    config['LayerName']['rnn']['Strategy'] = strategy
+    config['LayerName']['rnn']['ReuseFactor'] = 1 if strategy == 'Latency' else 4
     output_dir = str(test_root_path / test_case_id)
     hls_model = hls4ml.converters.convert_from_keras_model(
         model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type

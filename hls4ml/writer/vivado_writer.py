@@ -207,14 +207,18 @@ class VivadoWriter(Writer):
                 pipeline_pragma = indent + f'#pragma HLS {pipeline_style.upper()}'
                 if pipeline_style == 'pipeline' and pipeline_ii is not None:
                     pipeline_pragma += f' II={pipeline_ii}\n'
+                elif pipeline_style == 'none':
+                    pipeline_pragma = ''
                 else:
                     pipeline_pragma += '\n'
 
                 if io_type == 'io_parallel':
                     for i in model_inputs:
-                        newline += indent + self._make_array_pragma(i) + '\n'
+                        if i.pragma is not None:
+                            newline += indent + self._make_array_pragma(i) + '\n'
                     for o in model_outputs:
-                        newline += indent + self._make_array_pragma(o) + '\n'
+                        if o.pragma is not None:
+                            newline += indent + self._make_array_pragma(o) + '\n'
                     # TODO discussed adding a handle for setting the interface mode for individual input and output arrays
                     # Probably the handle doesn't need to be exposed to the user but should be just set in hls_model.py
                     newline += indent + '#pragma HLS INTERFACE ap_vld port={},{} \n'.format(
@@ -252,8 +256,8 @@ class VivadoWriter(Writer):
                             newline += '    ' + func[0] + ' // ' + layer.name + '\n'
                         else:
                             newline += '    // ' + layer.name + '\n'
-                            for line in func:
-                                newline += '    ' + line + '\n'
+                            for func_line in func:
+                                newline += '    ' + func_line + '\n'
                         if model.config.trace_output and layer.get_attr('trace', False):
                             vars = layer.get_variables()
                             newline += '#ifndef __SYNTHESIS__\n'
@@ -1007,8 +1011,8 @@ class VivadoWriter(Writer):
         build_lib_src = (filedir / '../templates/vivado/build_lib.sh').resolve()
         build_lib_dst = Path(f'{model.config.get_output_dir()}/build_lib.sh').resolve()
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', model.config.get_project_name())
+            for template_line in src.readlines():
+                line = template_line.replace('myproject', model.config.get_project_name())
                 line = line.replace('mystamp', model.config.get_config_value('Stamp'))
 
                 dst.write(line)
@@ -1026,8 +1030,8 @@ class VivadoWriter(Writer):
         graph_project_names = ' '.join(f'"{g.config.get_output_dir().split("/")[-1]}"' for g in model.graphs)
 
         with open(build_lib_src) as src, open(build_lib_dst, 'w') as dst:
-            for line in src.readlines():
-                line = line.replace('myproject', model.config.config['OriginalProjectName'])
+            for template_line in src.readlines():
+                line = template_line.replace('myproject', model.config.config['OriginalProjectName'])
                 line = line.replace('myproject_stitched', model.config.config['ProjectName'])
                 line = line.replace('mystamp', model.config.config['Stamp'])
                 line = line.replace('mygraph_name_list', graph_project_names)

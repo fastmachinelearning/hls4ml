@@ -2,7 +2,7 @@ import os
 import re
 import stat
 from pathlib import Path
-from shutil import copytree
+from shutil import copyfile, copytree
 
 from hls4ml.backends.vitis_unified.vitis_unified_config import VitisUnifiedConfig
 from hls4ml.writer.vitis_writer import VitisWriter
@@ -176,9 +176,10 @@ class VitisUnifiedWriter(VitisWriter):
                 if block is not None:
                     fout.write(block(indent))
                     continue
+                filled = line
                 for token, value in (replacements or {}).items():
-                    line = line.replace(token, value)
-                fout.write(line)
+                    filled = filled.replace(token, value)
+                fout.write(filled)
 
     # ===== Build/config generation =====
     def write_build_script(self, model):
@@ -191,6 +192,15 @@ class VitisUnifiedWriter(VitisWriter):
         self._write_linker_dir(model)
         self._write_linker_launcher(model)
         self._write_linker_config(model)
+        self._write_vivado_synth_script(model)
+
+    def _write_vivado_synth_script(self, model):
+        """Copy the script that synthesizes, and optionally places and routes, the kernel with Vivado."""
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        copyfile(
+            os.path.join(filedir, '../templates/vivado/vivado_synth.tcl'),
+            os.path.join(model.config.get_output_dir(), 'vivado_synth.tcl'),
+        )
 
     def _write_bridge_build_script(self, model):
         output_path = f'{model.config.get_output_dir()}/build_lib.sh'
@@ -224,9 +234,10 @@ class VitisUnifiedWriter(VitisWriter):
         def cosim_block(indent):
             lines = ''
             for option in cosim_options:
+                filled = option
                 for token, value in replacements.items():
-                    option = option.replace(token, value)
-                lines += option + '\n'
+                    filled = filled.replace(token, value)
+                lines += filled + '\n'
             return lines
 
         self._fill_template(
