@@ -158,6 +158,8 @@ class ConvSoftmax(nn.Module):
     def __init__(self):
         super().__init__()
         self.c = nn.Conv1d(2, 3, 3)
+        # Large enough that the logits differ by more than the softmax lookup tables resolve
+        nn.init.uniform_(self.c.weight, -1, 1)
 
     def forward(self, x):
         return nn.functional.softmax(self.c(x), dim=-1)
@@ -198,8 +200,8 @@ models = {
     'conv1d_flatten_linear': (Conv1dNet, [(2, 8)], 'ap_fixed<24,10>'),
     'conv2d': (Conv2dOnly, [(2, 5, 5)], 'ap_fixed<24,10>'),
     'maxpool2d': (Pool2dOnly, [(2, 4, 4)], 'ap_fixed<24,10>'),
-    'upsample2d': (lambda: nn.Upsample(scale_factor=2), [(2, 4, 4)], 'ap_fixed<24,10>'),
-    'zeropad2d': (lambda: nn.ConstantPad2d(1, 0), [(2, 4, 4)], 'ap_fixed<24,10>'),
+    'upsample2d': (lambda: nn.Sequential(nn.Upsample(scale_factor=2)), [(2, 4, 4)], 'ap_fixed<24,10>'),
+    'zeropad2d': (lambda: nn.Sequential(nn.ConstantPad2d(1, 0)), [(2, 4, 4)], 'ap_fixed<24,10>'),
     'conv1d_bn': (ConvBN, [(2, 8)], 'ap_fixed<24,10>'),
     'concat_branches': (ConcatBranches, [(2, 8)], 'ap_fixed<24,10>'),
     'conv1d_softmax': (ConvSoftmax, [(2, 8)], 'ap_fixed<24,10>'),
@@ -211,14 +213,36 @@ models = {
 }
 
 atol = 0.03
-# LayerNorm and Softmax use lookup tables
-atol_overrides = {'layernorm_on_seq': 5e-2, 'conv1d_softmax': 5e-2}
+# LayerNorm and Softmax use lookup tables. With the default tables, softmax saturates near 0.24 for these logits, the
+# same as a 1-D softmax over one row does; normalising over the wrong axis gives errors around 0.3 to 0.5.
+atol_overrides = {'layernorm_on_seq': 5e-2, 'conv1d_softmax': 0.15}
 
-# Transpose layers left in the converted model with 'native' layouts at both ends, in io_parallel
+# Transpose layers left in the converted model with 'native' layouts at both ends, in io_parallel. In two_inputs the
+# Transpose before Flatten feeds a Concatenate, not a Dense layer, so it cannot be folded into the weights.
 expected_transposes = {name: 0 for name in models}
-expected_transposes.update({'conv1d_softmax': 1, 'fan_out': 1})
+expected_transposes.update({'conv1d_softmax': 1, 'fan_out': 1, 'two_inputs': 1})
 # io_stream cannot fold the Transpose before Flatten into the next Dense layer
-expected_transposes_stream = {'conv1d_flatten_linear': 1, 'two_inputs': 1}
+expected_transposes_stream = {'conv1d_flatten_linear': 1}
+# Additional Transpose layers with 'source' layouts: one per input whose first layer needs channels-last data and one
+# per output not stored in PyTorch order
+boundary_transposes = {name: 0 for name in models}
+boundary_transposes.update(
+    {
+        'conv1d_flatten_linear': 1,
+        'conv2d': 2,
+        'maxpool2d': 2,
+        'upsample2d': 2,
+        'zeropad2d': 2,
+        'conv1d_bn': 2,
+        'concat_branches': 2,
+        'conv1d_softmax': 1,
+        'conv_then_gru': 1,
+        'conv_then_token_linear': 1,
+        'token_linear_then_conv': 1,
+        'fan_out': 1,
+        'two_inputs': 1,
+    }
+)
 
 # LayerNorm has no io_stream kernel on any backend
 io_parallel_only = ['layernorm_on_seq']
@@ -291,7 +315,7 @@ def test_layout_inference(test_case_id, name, io_type, layout, backend):
     if io_type == 'io_stream':
         expected = expected_transposes_stream.get(name, expected)
     if layout == 'source':
-        expected += sum(entry['perm'] != sorted(entry['perm']) for entry in layouts['inputs'] + layouts['outputs'])
+        expected += boundary_transposes[name]
     assert count_transposes(hls_model) == expected
     if layout == 'source':
         assert all(entry['perm'] == sorted(entry['perm']) for entry in layouts['inputs'] + layouts['outputs'])
