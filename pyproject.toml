@@ -60,6 +60,7 @@ optional-dependencies.sr = [ "sympy>=1.13.1" ]
 optional-dependencies.testing = [
   "calmjs-parse",
   "onnx>=1.4",
+  "pyarrow",
   "pytest",
   "pytest-cov",
   "pytest-randomly",
@@ -84,6 +85,7 @@ optional-dependencies.testing-keras3 = [
 ]
 optional-dependencies.testing-qkeras-v3 = [
   "keras==3.14.1",
+  "pyarrow",
   "qkeras-v3>=1.2.3",
   "tensorflow>=2.21",
 ]
