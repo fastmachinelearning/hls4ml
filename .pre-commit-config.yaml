@@ -40,6 +40,12 @@ repos:
   - id: check-manifest
     stages: [manual]
 
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.4.3
+  hooks:
+    - id: codespell
+      additional_dependencies: ["tomli; python_version < '3.11'"]
+
 - repo: https://github.com/jmduarte/p-clang-format
   rev: "v1.0.4"
   hooks:

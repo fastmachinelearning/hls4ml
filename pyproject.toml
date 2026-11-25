@@ -173,6 +173,12 @@ lint.preview = true
 # Without this, lint.preview makes ruff print rule names instead of codes
 output-prefer-rule-codes = true
 
+[tool.codespell]
+# Identifiers in the kernels and tests (nin, padds, fpr, ...) and domain terms (THS: total hold slack, COO: coordinate format)
+ignore-words-list = "afterw,atmost,coo,couldn,dout,fpr,inout,nin,padds,pres,ressize,te,ths"
+skip = "hls4ml/templates/vivado/ap_types/*,hls4ml/templates/vitis_unified/ap_types/*,*.svg"
+uri-ignore-words-list = "*"
+
 [tool.check-manifest]
 ignore = [
   ".agents/**",
