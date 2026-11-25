@@ -539,6 +539,25 @@ void leaky_relu(data_T data[CONFIG_T::n_in], param_T alpha, res_T res[CONFIG_T::
 }
 
 // *************************************************
+//       Clipped RELU Activation
+// *************************************************
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void clippedrelu(data_T data[CONFIG_T::n_in], param_T max_val, res_T res[CONFIG_T::n_in]) {
+    #pragma HLS PIPELINE
+
+    data_T datareg;
+    for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        datareg = data[ii];
+        if (datareg < 0)
+            res[ii] = 0;
+        else if (datareg > max_val)
+            res[ii] = max_val;
+        else
+            res[ii] = datareg;
+    }
+}
+
+// *************************************************
 //       Thresholded RELU Activation
 // *************************************************
 template <class data_T, class param_T, class res_T, typename CONFIG_T>
