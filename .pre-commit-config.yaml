@@ -46,6 +46,13 @@ repos:
     - id: codespell
       additional_dependencies: ["tomli; python_version < '3.11'"]
 
+- repo: https://github.com/pre-commit/pygrep-hooks
+  rev: v1.10.0
+  hooks:
+    - id: rst-backticks
+    - id: rst-directive-colons
+    - id: rst-inline-touching-normal
+
 - repo: https://github.com/jmduarte/p-clang-format
   rev: "v1.0.4"
   hooks:
