@@ -13,9 +13,33 @@ The PyTorch/Brevitas parser is under heavy development and doesn't yet have the 
     The direct ingestion of models quantized with Brevitas is not supported currently. Instead, Brevitas models should be exported in the ONNX format (see `here <https://xilinx.github.io/brevitas/tutorials/onnx_export.html>`_) and read with the ``hls4ml``
     QONNX frontend. Issues may arise, for example, when non-power-of-2 or non-scalar quantization scales are used. Please reach out if you encounter any problems with this workflow.
 
-For multi-dimensional tensors, ``hls4ml`` follows the channels-last convention adopted by Keras, whereas PyTorch uses channels-first. By default, ``hls4ml`` will automatically transpose any tensors associated with weights and biases of the internal layers
-of the model. If the ``io_parallel`` I/O type (see :ref:`Concepts`) is used, a transpose node will be added to the model that also adjusts the input tensors. This is not available in the ``io_stream`` case and inputs must be transposed by the user.
-Outputs are not transposed back by default, but in the ``io_parallel`` case, a transpose node can be added. If not needed, these adjustments can also be switched off. See :py:class:`~hls4ml.utils.config.config_from_pytorch_model` for details.
+Tensor layout
+-------------
+
+PyTorch stores convolutional data channels-first, ``(C, H, W)``, while ``hls4ml`` implements convolutions, pooling and
+similar layers on channels-last data, ``(H, W, C)``. Layers such as ``Linear``, ``LayerNorm``, ``einsum`` and
+batch-first RNNs work on the last axis, so PyTorch's own order already suits them. ``hls4ml`` decides the stored order of
+every tensor from the layers that produce and use it, and inserts a transpose only where two layers disagree. Models
+that mix both kinds of layer, joined by ``permute`` or ``transpose``, are supported; a ``permute`` usually costs nothing,
+because the data is already stored in the order the next layer needs.
+
+The only layout choice left to the user is at the model boundary, set with the ``input_layout`` and ``output_layout``
+arguments of :py:func:`~hls4ml.utils.config.config_from_pytorch_model` (``InputLayout`` and ``OutputLayout`` in the
+``Model`` section of the configuration):
+
+* ``'source'`` (default): ``predict()`` takes inputs and returns outputs in PyTorch's order. A transpose is added at an
+  input whose first layer needs channels-last data, and at an output that is not stored in PyTorch's order.
+* ``'native'``: no transpose at the boundary. The data must be supplied, and is returned, in the order the adjacent
+  layer uses. ``hls_model.get_io_layouts()`` reports that order for each input and output, and
+  ``hls4ml.utils.transpose_utils.to_native_layout`` and ``to_source_layout`` convert NumPy arrays.
+
+Either argument can be a dict keyed by input or output name to set the layout per tensor. Transposes in ``io_stream``
+buffer a whole tensor, and ``hls4ml`` warns when it inserts one; ``'native'`` layouts avoid those at the boundary.
+
+The ``channels_last_conversion`` and ``transpose_outputs`` arguments are deprecated. ``'full'`` corresponds to
+``input_layout='source'``, ``'internal'`` to ``input_layout='native'``, and ``'off'`` has no effect;
+``transpose_outputs=True`` corresponds to ``output_layout='source'`` and ``False`` to ``output_layout='native'``.
+Setting ``LayoutInference`` to ``False`` in the ``Model`` section temporarily restores the previous conversion.
 
 Custom PyTorch layers can be supported through the :ref:`Extension API`; see that page for details.
 

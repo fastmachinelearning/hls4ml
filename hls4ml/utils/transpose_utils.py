@@ -36,3 +36,30 @@ def transpose_config_gen(name: str, shape: tuple[int, ...], perm: tuple[int, ...
         to_shape=', '.join(str(x) for x in new_shape),
         config_name=name,
     )
+
+
+def to_native_layout(x, perm):
+    """Reorder a batch of arrays from source layout to the stored layout given by ``perm``.
+
+    Args:
+        x (np.ndarray): Data with the batch axis first, in the source framework's axis order.
+        perm (list[int]): Permutation from ``ModelGraph.get_io_layouts()``, batch axis excluded.
+
+    Returns:
+        np.ndarray: Contiguous data in stored order.
+    """
+    return np.ascontiguousarray(np.transpose(x, [0] + [i + 1 for i in perm]))
+
+
+def to_source_layout(x, perm):
+    """Reorder a batch of arrays from the stored layout given by ``perm`` back to source layout.
+
+    Args:
+        x (np.ndarray): Data with the batch axis first, in stored order; reshape flat ``predict()`` output to
+            ``(-1, *stored_shape)`` first.
+        perm (list[int]): Permutation from ``ModelGraph.get_io_layouts()``, batch axis excluded.
+
+    Returns:
+        np.ndarray: Data in the source framework's axis order.
+    """
+    return np.transpose(x, [0] + [int(i) + 1 for i in np.argsort(perm)])
