@@ -3,11 +3,14 @@ import sys
 
 import numpy as np
 import tensorflow as tf
-from qkeras import QConv2D, QDense
-from tensorflow.keras.layers import Conv2D, Dense
 
 from hls4ml.optimization.dsp_aware_pruning.config import SUPPORTED_STRUCTURES
-from hls4ml.optimization.dsp_aware_pruning.keras.config import SUPPORTED_LAYERS, SUPPORTED_METRICS
+from hls4ml.optimization.dsp_aware_pruning.keras.config import (
+    CONV2D_LAYERS,
+    DENSE_LAYERS,
+    SUPPORTED_LAYERS,
+    SUPPORTED_METRICS,
+)
 from hls4ml.optimization.dsp_aware_pruning.knapsack import solve_knapsack
 
 
@@ -154,7 +157,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
 
             if structure_type == SUPPORTED_STRUCTURES.STRUCTURED:
                 # Dense -> Masking neurons (columns)
-                if isinstance(layer, (Dense, QDense)):
+                if isinstance(layer, DENSE_LAYERS):
                     # If pruning enabled, find cost associated with pruning each neuron
                     if model_attributes[layer.name].optimization_attributes.pruning:
                         vals_norm = np.linalg.norm(value, axis=0, ord=norm)
@@ -199,7 +202,7 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                     offsets[layer.name] = offset
 
                 # Conv2D -> Masking filters (W x H x C)
-                elif isinstance(layer, (Conv2D, QConv2D)):
+                elif isinstance(layer, CONV2D_LAYERS):
                     if model_attributes[layer.name].optimization_attributes.pruning:
                         vals_norm = np.linalg.norm(np.linalg.norm(value, axis=(0, 1), ord='fro'), axis=0, ord=norm)
                     else:
@@ -248,10 +251,10 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                     raise Exception('Consecutive patterns need to be a factor of matrix size')
 
                 # Transpose, as done in hls4ml Resource strategy
-                if isinstance(layer, (Dense, QDense)):
+                if isinstance(layer, DENSE_LAYERS):
                     value = value.T
                     transposed_shape = value.shape
-                elif isinstance(layer, (Conv2D, QConv2D)):
+                elif isinstance(layer, CONV2D_LAYERS):
                     value = np.transpose(value, axes=[3, 0, 1, 2])
                     transposed_shape = value.shape
 
@@ -322,10 +325,10 @@ def __get_masks_local(keras_model, model_attributes, sparsity, objective, metric
                             offset[range(j, j + number_of_patterns)] = mean
 
                             # Reshape into original shape and store result
-                if isinstance(layer, (Dense, QDense)):
+                if isinstance(layer, DENSE_LAYERS):
                     mask = np.reshape(mask, transposed_shape).T
                     offset = np.reshape(offset, transposed_shape).T
-                elif isinstance(layer, (Conv2D, QConv2D)):
+                elif isinstance(layer, CONV2D_LAYERS):
                     mask = np.transpose(np.reshape(mask, transposed_shape), (1, 2, 3, 0))
                     offset = np.transpose(np.reshape(offset, transposed_shape), (1, 2, 3, 0))
                 masks[layer.name] = mask
@@ -468,7 +471,7 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                         groups.append(group)
 
             if structure_type == SUPPORTED_STRUCTURES.STRUCTURED:
-                if isinstance(layer, (Dense, QDense)):
+                if isinstance(layer, DENSE_LAYERS):
                     if model_attributes[layer.name].optimization_attributes.pruning:
                         vals_norm = np.linalg.norm(value, axis=0, ord=norm)
                         vals_norm = vals_norm / np.max(vals_norm)
@@ -494,7 +497,7 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                                 )
                             )
 
-                elif isinstance(layer, (Conv2D, QConv2D)):
+                elif isinstance(layer, CONV2D_LAYERS):
                     if model_attributes[layer.name].optimization_attributes.pruning:
                         vals_norm = np.linalg.norm(np.linalg.norm(value, axis=(0, 1), ord='fro'), axis=0, ord=norm)
                         vals_norm = vals_norm / np.max(vals_norm)
@@ -530,10 +533,10 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                     raise Exception('Consecutive patterns need to be a factor of matrix size')
 
                 # Transpose, as done in hls4ml Resource strategy
-                if isinstance(layer, (Dense, QDense)):
+                if isinstance(layer, DENSE_LAYERS):
                     value = value.T
                     transposed_shape = value.shape
-                elif isinstance(layer, (Conv2D, QConv2D)):
+                elif isinstance(layer, CONV2D_LAYERS):
                     value = np.transpose(value, axes=[3, 0, 1, 2])
                     transposed_shape = value.shape
 
@@ -663,13 +666,13 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
             if structure_type == SUPPORTED_STRUCTURES.STRUCTURED:
                 mask = np.zeros(model_attributes[layer.name].weight_shape, layer.get_weights()[0].dtype)
                 offset = np.zeros(model_attributes[layer.name].weight_shape, layer.get_weights()[0].dtype)
-                if isinstance(layer, (Dense, QDense)):
+                if isinstance(layer, DENSE_LAYERS):
                     for i in selected_layer:
                         mask[:, groups[i].layer_position] = 1
                     for i in not_selected_layer:
                         if groups[i].optimization_type == 'sharing':
                             offset[:, groups[i].layer_position] = np.mean(layer.get_weights()[0][:, i])
-                if isinstance(layer, (Conv2D, QConv2D)):
+                if isinstance(layer, CONV2D_LAYERS):
                     for i in selected_layer:
                         mask[:, :, :, groups[i].layer_position] = 1
                     for i in not_selected_layer:
@@ -691,10 +694,10 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                 # Transpose shape, as done in hls4ml Resource strategy
                 # We need the weights to recalculate the block means
                 weight_shape = model_attributes[layer.name].weight_shape
-                if isinstance(layer, (Dense, QDense)):
+                if isinstance(layer, DENSE_LAYERS):
                     value = layer.get_weights()[0].T
                     transposed_shape = (weight_shape[1], weight_shape[0])
-                elif isinstance(layer, (Conv2D, QConv2D)):
+                elif isinstance(layer, CONV2D_LAYERS):
                     value = np.transpose(layer.get_weights()[0], (3, 0, 1, 2))
                     transposed_shape = (weight_shape[3], weight_shape[0], weight_shape[1], weight_shape[2])
 
@@ -732,10 +735,10 @@ def __get_masks_global(keras_model, model_attributes, sparsity, objective, metri
                             offset[range(j, j + number_of_patterns)] = mean
 
                             # Reshape into original shape and store result
-                if isinstance(layer, (Dense, QDense)):
+                if isinstance(layer, DENSE_LAYERS):
                     mask = np.reshape(mask, transposed_shape).T
                     offset = np.reshape(offset, transposed_shape).T
-                elif isinstance(layer, (Conv2D, QConv2D)):
+                elif isinstance(layer, CONV2D_LAYERS):
                     mask = np.transpose(np.reshape(mask, transposed_shape), (1, 2, 3, 0))
                     offset = np.transpose(np.reshape(offset, transposed_shape), (1, 2, 3, 0))
                 masks[layer.name] = mask
