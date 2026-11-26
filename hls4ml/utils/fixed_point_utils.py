@@ -44,7 +44,9 @@ class FixedPointEmulator:
     """
 
     def to_float(self):
-        bits = (list(self.integer_bits) + list(self.decimal_bits))[-self.N :]
+        # set_msb_bits stores the N bits at the front when F < 0 and at the back when I < 0
+        all_bits = list(self.integer_bits) + list(self.decimal_bits)
+        bits = all_bits[: self.N] if self.F < 0 else all_bits[-self.N :]
         val = 0
         for b in bits:
             val = (val << 1) | int(b)
