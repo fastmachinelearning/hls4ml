@@ -70,6 +70,9 @@ class ChannelsLastConverter(OptimizerPass):
                 node.mask_kbi = tuple(
                     np.transpose(t, transpose_map[t.ndim]) if t.ndim in transpose_map else t for t in node.mask_kbi
                 )
+            elif isinstance(node, Dense):
+                # The PyTorch parser already stores Linear weights as (n_in, n_out), the layout Dense expects
+                pass
             else:
                 # Transpose weight tensors
                 tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
