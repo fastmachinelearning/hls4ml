@@ -23,3 +23,6 @@ hls4mlprj_*
 /.cursor/
 /.github/instructions/
 /agent-docs.md
+
+# pixi environments
+.pixi/
