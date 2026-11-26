@@ -1133,7 +1133,7 @@ def test_functional_activation_arguments(test_case_id, activation):
 @pytest.mark.parametrize('activation', ['relu6_module', 'hardtanh_module', 'relu6_functional', 'hardtanh_functional'])
 def test_clipped_relu_parsed(test_case_id, activation):
     # ReLU6 and Hardtanh(0, x) are ingested as the ClippedReLU parametrized activation.
-    # No kernel computes it yet; the backends are responsible for rejecting it.
+    # The Vivado and Vitis backends compute it (see test_clipped_relu); the other backends have no kernel.
     if activation == 'relu6_module':
         model = torch.nn.Sequential(nn.Linear(4, 4), nn.ReLU6())
         max_value = 6.0
@@ -1153,6 +1153,29 @@ def test_clipped_relu_parsed(test_case_id, activation):
     act_layer = list(hls_model.get_layers())[-1]
     assert act_layer.attributes['activation'] == 'clippedrelu'
     assert act_layer.attributes['activ_param'] == max_value
+
+
+@pytest.mark.parametrize('activation', [nn.ReLU6(), nn.Hardtanh(0.0, 3.0)], ids=['relu6', 'hardtanh'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_clipped_relu(test_case_id, activation, backend, io_type):
+    model = torch.nn.Sequential(nn.Linear(8, 16), activation)
+    model.eval()
+
+    X_input = np.random.uniform(-10, 10, (100, 8))
+    X_input = np.round(X_input * 2**10) * 2**-10  # make it an exact ap_fixed<16,6>
+    pytorch_prediction = model(torch.Tensor(X_input)).detach().numpy()
+    # the test only means something if both ends of the clip are reached
+    assert (pytorch_prediction == 0).any() and (pytorch_prediction == activation.max_val).any()
+
+    config = config_from_pytorch_model(model, (8,), granularity='name', backend=backend)
+    output_dir = str(test_root_path / test_case_id)
+    hls_model = convert_from_pytorch_model(model, hls_config=config, output_dir=output_dir, backend=backend, io_type=io_type)
+    hls_model.compile()
+
+    hls_prediction = hls_model.predict(X_input)
+
+    np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.05)
 
 
 def test_hardtanh_below_zero_rejected(test_case_id):

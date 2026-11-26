@@ -21,6 +21,18 @@ import hls4ml
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../example-models').resolve()
 
+
+def import_channels_last_domain(model):
+    """
+    The stored channels-last models were made with qonnx 0.4.0 or older, which did not add the channels-last domain to
+    the opset imports. qonnx 1.0.0 then runs these ops at opset 1, where MaxPool has no ceil_mode. Add the domain at the
+    standard ONNX opset, as current qonnx does.
+    """
+    opsets = {opset.domain: opset.version for opset in model.model.opset_import}
+    if 'qonnx.custom_op.channels_last' not in opsets:
+        model.model.opset_import.append(onnx.helper.make_opsetid('qonnx.custom_op.channels_last', opsets['']))
+
+
 # The models
 
 
@@ -101,6 +113,8 @@ def sep_conv_model():
 
     model = ModelWrapper(dl_file)
 
+    import_channels_last_domain(model)
+
     return model
 
 
@@ -114,6 +128,8 @@ def branched_model():
 
     model = ModelWrapper(dl_file)
 
+    import_channels_last_domain(model)
+
     return model
 
 
@@ -126,6 +142,8 @@ def tiny_unet_model():
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
+
+    import_channels_last_domain(model)
 
     return model
 
