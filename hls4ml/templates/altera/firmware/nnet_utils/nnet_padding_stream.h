@@ -1,6 +1,8 @@
 #ifndef NNET_PADDING_STREAM_H_
 #define NNET_PADDING_STREAM_H_
 
+#include "nnet_padding.h"
+
 namespace nnet {
 
 template <class res_pipe, typename CONFIG_T> inline void fill_zero() {
@@ -17,7 +19,8 @@ template <class data_pipe, class res_pipe, typename CONFIG_T> inline void fill_d
     [[intel::fpga_register]] typename ExtractPipeType<res_pipe>::value_type res_part;
     #pragma unroll
     for (int i = 0; i < CONFIG_T::n_chan; i++) {
-        res_part[i] = data_part[i];
+        res_part[i] =
+            pad_copy<typename ExtractPipeType<res_pipe>::value_type::value_type, CONFIG_T::binary_input>(data_part[i]);
     }
     res_pipe::write(res_part);
 }

@@ -4,7 +4,23 @@ from pathlib import Path
 import keras
 import numpy as np
 import pytest
-from keras.layers import BatchNormalization, Dot, EinsumDense, Input
+from keras.layers import (
+    Add,
+    AveragePooling2D,
+    BatchNormalization,
+    Concatenate,
+    Cropping2D,
+    Dot,
+    EinsumDense,
+    GlobalMaxPooling2D,
+    Input,
+    Maximum,
+    MaxPooling2D,
+    Permute,
+    Reshape,
+    UpSampling2D,
+    ZeroPadding2D,
+)
 from keras.models import Model, Sequential
 from keras.utils import to_categorical
 from qkeras import QGRU, QLSTM, QSimpleRNN
@@ -1043,7 +1059,7 @@ def binary_layers(hls_model):
     ]
 
 
-@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera'])
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis', 'Altera', 'Catapult'])
 @pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
 @pytest.mark.parametrize(
     'kernel_quantizer',
@@ -1057,7 +1073,7 @@ def test_binary_input(test_case_id, layer, kernel_quantizer, backend, io_type):
     bias.
     """
 
-    if layer == 'depthwise' and backend not in ('Vivado', 'Vitis'):
+    if layer == 'depthwise' and backend == 'Altera':
         pytest.skip(f'{layer} is not supported on {backend}')
     bias = {'bias_quantizer': quantized_bits(8, 3)}
     if layer == 'dense':
@@ -1075,6 +1091,120 @@ def test_binary_input(test_case_id, layer, kernel_quantizer, backend, io_type):
         # The exponent field holds only the exponents of the weights, which keeps their products with binary data narrow
         assert hls_model.graph[tested.name].get_weights('weight').type.precision.width < 8
     np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('kernel_quantizer', [binary(alpha=1), quantized_bits(4, 0, alpha=1)], ids=['binary', 'bits'])
+@pytest.mark.parametrize('layer', ['conv1d', 'conv2d', 'depthwise', 'separable'])
+def test_binary_same_padding(test_case_id, layer, kernel_quantizer, backend, io_type):
+    """
+    Test convolutions with 'same' padding and a binary input. The binary type stores -1 as 0 and cannot hold the padded
+    zeros.
+    """
+
+    if layer in ('depthwise', 'separable') and backend != 'Vitis':
+        pytest.skip(f'{layer} is tested on Vitis only')
+    q = {'bias_quantizer': quantized_bits(8, 3), 'padding': 'same'}
+    if layer == 'conv1d':
+        input_shape, tested = (10, 4), QConv1D(5, 3, kernel_quantizer=kernel_quantizer, **q)
+    elif layer == 'conv2d':
+        input_shape, tested = (6, 6, 4), QConv2D(5, 3, kernel_quantizer=kernel_quantizer, **q)
+    elif layer == 'depthwise':
+        input_shape, tested = (6, 6, 4), QDepthwiseConv2D(3, depthwise_quantizer=kernel_quantizer, **q)
+    else:
+        input_shape, tested = (
+            (6, 6, 4),
+            QSeparableConv2D(5, 3, depthwise_quantizer=kernel_quantizer, pointwise_quantizer=kernel_quantizer, **q),
+        )
+    model = binary_input_model(input_shape, tested)
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize(
+    'layer',
+    [
+        'zero_padding',
+        'reshape',
+        'upsampling',
+        'transpose',
+        'cropping',
+        'concatenate',
+        'maximum',
+        'max_pooling_same',
+        'global_max_pooling',
+    ],
+)
+def test_binary_data_movement(test_case_id, layer, backend, io_type):
+    """
+    Test layers that move or select binary data, followed by a layer that computes with it.
+    """
+
+    if layer == 'cropping' and backend != 'Vitis':
+        pytest.skip(f'{layer} is not supported on {backend}')
+    if layer == 'max_pooling_same' and io_type == 'io_stream':
+        pytest.skip('Pooling in io_stream does not support padding')
+    input_shape, move = {
+        'zero_padding': ((4, 4, 4), ZeroPadding2D(1)),
+        'reshape': ((64,), Reshape((4, 4, 4))),
+        'upsampling': ((3, 3, 4), UpSampling2D(2)),
+        'transpose': ((6, 4, 4), Permute((2, 1, 3))),
+        'cropping': ((6, 6, 4), Cropping2D(1)),
+        'concatenate': ((6, 6, 4), lambda x: Concatenate()([x, x])),
+        'maximum': ((6, 6, 4), lambda x: Maximum()([x, Permute((2, 1, 3))(x)])),
+        'max_pooling_same': ((5, 5, 4), MaxPooling2D(2, padding='same')),
+        'global_max_pooling': ((6, 6, 4), GlobalMaxPooling2D()),
+    }[layer]
+    q = {'kernel_quantizer': quantized_bits(4, 0, alpha=1), 'bias_quantizer': quantized_bits(8, 3)}
+    tested = QDense(5, **q) if layer == 'global_max_pooling' else QConv2D(5, 3, **q)
+    model = binary_input_model(input_shape, lambda x: tested(move(x)))
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('layer', ['max_pooling', 'upsampling'])
+def test_binary_activation_after_data_movement(test_case_id, layer, backend, io_type):
+    """
+    Test a batch normalization and binary activation after a layer that moves binary data. The merged layer compares its
+    input with thresholds for the type of that input, which the moving layer gets after the merge.
+    """
+
+    input_shape, move = {'max_pooling': ((6, 6, 4), MaxPooling2D(2)), 'upsampling': ((3, 3, 4), UpSampling2D(2))}[layer]
+    q = {'kernel_quantizer': quantized_bits(4, 0, alpha=1), 'bias_quantizer': quantized_bits(8, 3)}
+    bn, tested = BatchNormalization(), QConv2D(5, 3, **q)
+    model = binary_input_model(input_shape, lambda x: tested(QActivation(binary())(bn(move(x)))))
+    # Thresholds on both sides of 0, and negative scales
+    rng = np.random.default_rng(1)
+    gamma, beta, mean, var = bn.get_weights()
+    bn.set_weights([rng.uniform(-2, 2, gamma.shape), rng.uniform(-2, 2, beta.shape), rng.uniform(-1, 1, mean.shape), var])
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult'])
+@pytest.mark.parametrize('layer', ['add', 'average_pooling'])
+def test_binary_input_not_supported(test_case_id, layer, backend):
+    """
+    Test that conversion stops for a layer that would take the 0 that stores -1 in binary data as 0.
+    """
+
+    compute = {'add': lambda x: Add()([x, x]), 'average_pooling': AveragePooling2D(2)}[layer]
+    model = binary_input_model((6, 6, 4), compute)
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name', backend=backend)
+    with pytest.raises(RuntimeError, match='has a binary input'):
+        hls4ml.converters.convert_from_keras_model(
+            model,
+            hls_config=config,
+            output_dir=str(test_root_path / test_case_id),
+            backend=backend,
+            # The DA fallback replaces the batch normalization, which then does not merge with the binary activation
+            allow_da_fallback=False,
+        )
 
 
 @pytest.mark.parametrize(
@@ -1218,6 +1348,32 @@ def test_qbatchnorm(test_case_id, activation, backend, io_type):
         np.testing.assert_allclose(y_hls4ml, y_keras, atol=0.01)
     else:
         np.testing.assert_array_equal(y_hls4ml, y_keras)
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Altera', 'Catapult'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+@pytest.mark.parametrize('layer', ['dense', 'conv2d'])
+@pytest.mark.parametrize('activation', [ternary(), quantized_relu(4, 2)], ids=['ternary', 'relu'])
+def test_po2_weights(test_case_id, activation, layer, backend, io_type):
+    """
+    Test power-of-two weights of the default 8 bits, with small and large exponents, after narrow data. Each product
+    must keep every bit of the input shifted by the exponent.
+    """
+
+    keras.utils.set_random_seed(0)
+    q = {'kernel_quantizer': quantized_po2(), 'bias_quantizer': quantized_bits(8, 3)}
+    if layer == 'dense':
+        input_shape, tested = (16,), QDense(5, **q)
+    else:
+        input_shape, tested = (6, 6, 3), QConv2D(4, 3, **q)
+    model = Sequential([Input(input_shape), QActivation(activation), tested])
+    rng = np.random.default_rng(0)
+    kernel, bias = tested.get_weights()
+    # Small enough for the float32 sums of Keras to be exact
+    kernel = rng.uniform(-1, 1, kernel.shape) * rng.choice([1 / 64, 4], kernel.shape)
+    tested.set_weights([kernel, rng.uniform(-1, 1, bias.shape)])
+    _, y_hls4ml, y_keras = predict_exact(model, test_case_id, backend, io_type)
+    np.testing.assert_array_equal(y_hls4ml, y_keras)
 
 
 @pytest.mark.parametrize('backend', ['Vitis', 'Altera'])
