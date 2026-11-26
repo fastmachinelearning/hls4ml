@@ -5,6 +5,11 @@ Hardware-aware Optimization API
 Pruning and weight sharing are effective techniques to reduce model footprint and computational requirements. The hls4ml Optimization API introduces hardware-aware pruning and weight sharing.
 By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the-box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization, etc.
 
+The Optimization API works with Keras 2 and with Keras 3 using the TensorFlow backend. Its dependencies are installed with ``pip install hls4ml[optimization]``.
+QKeras layers (``QDense`` and ``QConv2D``) can be optimized if QKeras is installed: ``qkeras`` with Keras 2, or ``qkeras-v3`` with Keras 3.
+With Keras 3, QKeras v3 currently requires Python 3.12 or older, because of the dependency versions required by OR-Tools and tensorflow-model-optimization.
+With Keras 2, do not use an optimizer with ``use_ema=True``. Between pruning steps the optimizer state is reset, and in Keras 2 this also resets the moving averages, so the weights shrink at the end of the following training.
+
 The code block below showcases three use cases of the hls4ml Optimization API - network sparsity (unstructured pruning), GPU FLOPs (structured pruning) and Vivado DSP utilization (pattern pruning). First, we start with unstructured pruning:
 
 .. code-block:: Python
@@ -71,7 +76,8 @@ The code block below showcases three use cases of the hls4ml Optimization API - 
 In a similar manner, it is possible to target GPU FLOPs or Vivado DSPs. However, in that case, sparsity is not equivalent to model sparsity.
 Instead, it is the sparsity of the target resource. As an example: Starting with a network utilizing 512 DSPs and a final sparsity of 50%; the optimized network will use 256 DSPs.
 
-To optimize GPU FLOPs, the code is similar to above:
+To optimize GPU FLOPs, the code is similar to above.
+After pruning, the removed neurons and filters are cut from the model with `Keras Surgeon <https://github.com/fastmachinelearning/keras-surgeon>`_, which has to be installed separately and does not support Keras 3:
 
 .. code-block:: Python
 
@@ -106,7 +112,7 @@ Finally, optimizing Vivado DSPs is possible, given an hls4ml config:
 
     # Create hls4ml config
     default_reuse_factor = 4
-    default_precision = 'ac_fixed<16, 6>'
+    default_precision = 'fixed<16,6>'
     hls_config = config_from_keras_model(baseline_model, granularity='name', default_precision=default_precision, default_reuse_factor=default_reuse_factor)
     hls_config['IOType'] = 'io_parallel'
     hls_config['Model']['Strategy'] = 'Resource'   # Strategy must be present for optimisation

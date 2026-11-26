@@ -85,6 +85,9 @@ def optimize_model(
         keras.Model: Optimized model
     """
 
+    if tf.keras.backend.backend() != 'tensorflow':
+        raise Exception('Optimization of Keras models requires the TensorFlow backend (KERAS_BACKEND=tensorflow)')
+
     if not isinstance(scheduler, OptimizationScheduler):
         raise Exception(
             'Scheduler must be an instance of from hls4ml.optimization.scheduler.OptimizationScheduler'
@@ -114,7 +117,7 @@ def optimize_model(
 
     # Evaluate baseline performance
     # Use built-in function, and return as list - the metric is the second element (loss if first)
-    model.compile(optimizer, loss_fn, metrics=[validation_metric])
+    model.compile(utils.clone_optimizer(optimizer), loss_fn, metrics=[validation_metric])
     baseline_performance = model.evaluate(validation_dataset, verbose=0, return_dict=False)[-1]
     if verbose:
         print(f'Baseline performance on validation set: {baseline_performance}')
@@ -125,7 +128,7 @@ def optimize_model(
         os.mkdir(directory)
     if not os.path.isdir(f'{directory}/optimization'):
         os.mkdir(f'{directory}/optimization')
-    model.save_weights(f'{directory}/optimization/best_weights.h5')
+    model.save_weights(f'{directory}/optimization/best_weights.weights.h5')
 
     # Identify optimizable layers, given the current objective
     last_optimizable_layer = utils.get_last_layer_with_weights(model)
@@ -181,7 +184,7 @@ def optimize_model(
     while sparsity_conditions:
         # TODO - This might cause OOM issues on large models / data sets, since it is not done in batches
         gradients = (
-            utils.get_model_gradients(optimizable_model, loss_fn, X_train, y_train) if ranking_metric == 'gradients' else {}
+            utils.get_model_gradients(optimizable_model, loss_fn, X_train, y_train) if ranking_metric == 'oracle' else {}
         )
         hessians = (
             utils.get_model_hessians(optimizable_model, loss_fn, X_train, y_train) if ranking_metric == 'saliency' else {}
@@ -211,9 +214,9 @@ def optimize_model(
         # Therefore, even if the gradient for a weight is zero, it might be updated, due to previous gradients
         # Avoid this by resetting the internal variables of an optimizer
         optimizable_model.reset_metrics()
-        optimizable_model.reset_states()
-        for x in optimizable_model.optimizer.variables():
-            x.assign(tf.zeros_like(x))
+        if hasattr(optimizable_model, 'reset_states'):  # Removed in Keras 3
+            optimizable_model.reset_states()
+        utils.reset_optimizer_state(optimizable_model.optimizer)
         masked_backprop.update_masks(masks)
 
         # Train model with weight freezing [pruning]
@@ -245,7 +248,7 @@ def optimize_model(
         if __compare__(pruned_performance, rtol * baseline_performance, not increasing):
             bad_trials = 0
             sparsity_conditions, target_sparsity = scheduler.update_step()
-            optimizable_model.save_weights(f'{directory}/optimization/best_weights.h5')
+            optimizable_model.save_weights(f'{directory}/optimization/best_weights.weights.h5')
         else:
             bad_trials += 1
             sparsity_conditions, target_sparsity = scheduler.repair_step()
@@ -267,17 +270,17 @@ def optimize_model(
         )
 
     # Load best weights
-    optimizable_model.load_weights(f'{directory}/optimization/best_weights.h5')
+    optimizable_model.load_weights(f'{directory}/optimization/best_weights.weights.h5')
 
     # Remove regularizers and save best model
     optimizable_model = remove_custom_regularizers(optimizable_model)
-    optimizable_model.compile(optimizer, loss_fn, metrics=[validation_metric])
+    optimizable_model.compile(utils.clone_optimizer(optimizer), loss_fn, metrics=[validation_metric])
 
     # In GPU FLOP Optimization, remove structures to achieve speed-up & fine-tune the smaller architecture
     # TODO - Extend for Resource strategy in hls4ml FF optimisation
     if objective.__name__ in ('GPUFLOPEstimator'):
         optimizable_model = reduce_model(optimizable_model)
-        optimizable_model.compile(optimizer, loss_fn, metrics=[validation_metric])
+        optimizable_model.compile(utils.clone_optimizer(optimizer), loss_fn, metrics=[validation_metric])
         optimizable_model.fit(
             train_dataset,
             validation_data=validation_dataset,
