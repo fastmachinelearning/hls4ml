@@ -141,6 +141,10 @@
 <h1>Hardware-aware Optimization API<a class="headerlink" href="#hardware-aware-optimization-api" title="Link to this heading"></a></h1>
 <p>Pruning and weight sharing are effective techniques to reduce model footprint and computational requirements. The hls4ml Optimization API introduces hardware-aware pruning and weight sharing.
 By defining custom objectives, the algorithm solves a Knapsack optimization problem aimed at maximizing model performance, while keeping the target resource(s) at a minimum. Out-of-the-box objectives include network sparsity, GPU FLOPs, Vivado DSPs, memory utilization, etc.</p>
+<p>The Optimization API works with Keras 2 and with Keras 3 using the TensorFlow backend. Its dependencies are installed with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hls4ml[optimization]</span></code>.
+QKeras layers (<code class="docutils literal notranslate"><span class="pre">QDense</span></code> and <code class="docutils literal notranslate"><span class="pre">QConv2D</span></code>) can be optimized if QKeras is installed: <code class="docutils literal notranslate"><span class="pre">qkeras</span></code> with Keras 2, or <code class="docutils literal notranslate"><span class="pre">qkeras-v3</span></code> with Keras 3.
+With Keras 3, QKeras v3 currently requires Python 3.12 or older, because of the dependency versions required by OR-Tools and tensorflow-model-optimization.
+With Keras 2, do not use an optimizer with <code class="docutils literal notranslate"><span class="pre">use_ema=True</span></code>. Between pruning steps the optimizer state is reset, and in Keras 2 this also resets the moving averages, so the weights shrink at the end of the following training.</p>
 <p>The code block below showcases three use cases of the hls4ml Optimization API - network sparsity (unstructured pruning), GPU FLOPs (structured pruning) and Vivado DSP utilization (pattern pruning). First, we start with unstructured pruning:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">accuracy_score</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tensorflow.keras.optimizers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Adam</span>
@@ -204,7 +208,8 @@ By defining custom objectives, the algorithm solves a Knapsack optimization prob
 </div>
 <p>In a similar manner, it is possible to target GPU FLOPs or Vivado DSPs. However, in that case, sparsity is not equivalent to model sparsity.
 Instead, it is the sparsity of the target resource. As an example: Starting with a network utilizing 512 DSPs and a final sparsity of 50%; the optimized network will use 256 DSPs.</p>
-<p>To optimize GPU FLOPs, the code is similar to above:</p>
+<p>To optimize GPU FLOPs, the code is similar to above.
+After pruning, the removed neurons and filters are cut from the model with <a class="reference external" href="https://github.com/fastmachinelearning/keras-surgeon">Keras Surgeon</a>, which has to be installed separately and does not support Keras 3:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hls4ml.optimization.dsp_aware_pruning.objectives.gpu_objectives</span><span class="w"> </span><span class="kn">import</span> <span class="n">GPUFLOPEstimator</span>
 
 <span class="c1"># Optimize model</span>
@@ -234,7 +239,7 @@ Instead, it is the sparsity of the target resource. As an example: Starting with
 
 <span class="c1"># Create hls4ml config</span>
 <span class="n">default_reuse_factor</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="n">default_precision</span> <span class="o">=</span> <span class="s1">'ac_fixed&lt;16, 6&gt;'</span>
+<span class="n">default_precision</span> <span class="o">=</span> <span class="s1">'fixed&lt;16,6&gt;'</span>
 <span class="n">hls_config</span> <span class="o">=</span> <span class="n">config_from_keras_model</span><span class="p">(</span><span class="n">baseline_model</span><span class="p">,</span> <span class="n">granularity</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">default_precision</span><span class="o">=</span><span class="n">default_precision</span><span class="p">,</span> <span class="n">default_reuse_factor</span><span class="o">=</span><span class="n">default_reuse_factor</span><span class="p">)</span>
 <span class="n">hls_config</span><span class="p">[</span><span class="s1">'IOType'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'io_parallel'</span>
 <span class="n">hls_config</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">][</span><span class="s1">'Strategy'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Resource'</span>   <span class="c1"># Strategy must be present for optimisation</span>
