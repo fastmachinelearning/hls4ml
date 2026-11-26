@@ -20,16 +20,12 @@ def parse_conv1d_layer(operation, layer_name, input_names, input_shapes, node, c
 
     if is_depthwise_conv(class_object):
         layer['class_name'] = 'DepthwiseConv1D'
-        layer['depthwise_data'] = (
-            class_object.weight.data.numpy().reshape(  # (n_chan, depth_mult, spatial) -> (depth_mult, n_chan, spatial)
-                1,
-                class_object.in_channels,
-                *class_object.kernel_size,
-            )
-        )
+        # (n_chan, 1, width) -> (width, n_chan, 1)
+        layer['depthwise_data'] = class_object.weight.data.numpy().transpose(2, 0, 1)
         layer['depth_multiplier'] = 1
     else:
-        layer['weight_data'] = class_object.weight.data.numpy()
+        # (n_filt, n_chan, width) -> (width, n_chan, n_filt)
+        layer['weight_data'] = class_object.weight.data.numpy().transpose(2, 1, 0)
     if class_object.bias is not None:
         layer['bias_data'] = class_object.bias.data.numpy()
     else:
@@ -76,16 +72,12 @@ def parse_conv2d_layer(operation, layer_name, input_names, input_shapes, node, c
 
     if is_depthwise_conv(class_object):
         layer['class_name'] = 'DepthwiseConv2D'
-        layer['depthwise_data'] = (
-            class_object.weight.data.numpy().reshape(  # (n_chan, depth_mult, spatial) -> (depth_mult, n_chan, spatial)
-                1,
-                class_object.in_channels,
-                *class_object.kernel_size,
-            )
-        )
+        # (n_chan, 1, height, width) -> (height, width, n_chan, 1)
+        layer['depthwise_data'] = class_object.weight.data.numpy().transpose(2, 3, 0, 1)
         layer['depth_multiplier'] = 1
     else:
-        layer['weight_data'] = class_object.weight.data.numpy()
+        # (n_filt, n_chan, height, width) -> (height, width, n_chan, n_filt)
+        layer['weight_data'] = class_object.weight.data.numpy().transpose(2, 3, 1, 0)
     if class_object.bias is not None:
         layer['bias_data'] = class_object.bias.data.numpy()
     else:
@@ -155,7 +147,9 @@ def parse_conv_transpose_layer(operation, layer_name, input_names, input_shapes,
     layer['class_name'] = 'Conv1DTranspose' if operation == 'ConvTranspose1d' else 'Conv2DTranspose'
     layer['data_format'] = 'channels_first'  # Pytorch default (can't change)
 
-    layer['weight_data'] = class_object.weight.data.numpy()
+    # (n_chan, n_filt, *spatial) -> (*spatial, n_filt, n_chan)
+    weight = class_object.weight.data.numpy()
+    layer['weight_data'] = weight.transpose(2, 1, 0) if weight.ndim == 3 else weight.transpose(2, 3, 1, 0)
     if class_object.bias is not None:
         layer['bias_data'] = class_object.bias.data.numpy()
     else:

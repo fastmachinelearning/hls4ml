@@ -416,6 +416,7 @@ class ModelGraph(Serializable):
         self._applied_flows = []  # keep track of the applied flows
         self.index = initial_index
         self.output_vars = {}
+        self.io_layouts = None
         self._top_function_lib = None
 
     @classmethod
@@ -775,6 +776,34 @@ class ModelGraph(Serializable):
 
     def get_layer_output_variable(self, output_name):
         return self.output_vars.get(output_name, None)
+
+    def get_io_layouts(self):
+        """Layouts of the model inputs and outputs.
+
+        Each entry gives the tensor ``name``, its ``layout`` contract ('source' or 'native'), its ``source_shape`` in
+        the source framework's axis order, its ``stored_shape`` as hls4ml expects it, and ``perm``, the permutation
+        from source to stored order (``stored_shape[i] == source_shape[perm[i]]``). ``predict()`` takes inputs and
+        returns outputs in stored order; see ``hls4ml.utils.transpose_utils.to_native_layout``. Models whose
+        layouts were not inferred are reported as stored in source order.
+
+        Returns:
+            dict: Lists of entries under 'inputs' and 'outputs'.
+        """
+        if self.io_layouts is not None:
+            layouts = copy.deepcopy(self.io_layouts)
+        else:
+            layouts = {}
+            for key, names, variables in (
+                ('inputs', self.inputs, self.get_input_variables()),
+                ('outputs', self.outputs, self.get_output_variables()),
+            ):
+                layouts[key] = [
+                    {'name': n, 'layout': 'source', 'source_shape': list(v.shape), 'perm': list(range(len(v.shape)))}
+                    for n, v in zip(names, variables)
+                ]
+        for entry in layouts['inputs'] + layouts['outputs']:
+            entry['stored_shape'] = [entry['source_shape'][i] for i in entry['perm']]
+        return layouts
 
     def get_weight_variables(self):
         variables = []

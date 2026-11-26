@@ -64,6 +64,7 @@ register_flow(
 register_flow(
     'convert',
     [
+        'layout_inference',
         'channels_last_converter',
         'separable_to_depthwise_and_conv',
         'convert_sparse_flatten',

@@ -4,7 +4,20 @@
 
 import numpy as np
 
-from hls4ml.model.layers import GRU, LSTM, Concatenate, Dense, Input, LayerNormalization, Reshape, Transpose
+from hls4ml.model.layers import (
+    GRU,
+    LSTM,
+    Concatenate,
+    Conv1D,
+    Conv1DTranspose,
+    Conv2D,
+    Conv2DTranspose,
+    Dense,
+    Input,
+    LayerNormalization,
+    Reshape,
+    Transpose,
+)
 from hls4ml.model.optimizer import OptimizerPass
 from hls4ml.model.optimizer.passes.hgq_proxy_model import FixedPointQuantizer
 from hls4ml.model.types import WeightVariable
@@ -16,13 +29,20 @@ class ChannelsLastConverter(OptimizerPass):
 
     def match(self, node):
         # If this parameter has not been set, this model does not need to be converted
-        do_convert = node.model.config.config['HLSConfig']['Model'].get('ChannelsLastConversion', 'off')
-        if do_convert == 'off':
+        model_config = node.model.config.config['HLSConfig']['Model']
+        do_convert = model_config.get('ChannelsLastConversion', 'off')
+        if do_convert == 'off' or model_config.get('LayoutInference', False):
             return False
         if not hasattr(node, 'channels_last_converted'):
             return True
 
     def transform(self, model, node):
+        if isinstance(node, Transpose):
+            raise NotImplementedError(
+                f'Layer {node.name}: permute/transpose is only supported with layout inference, '
+                "or with ChannelsLastConversion set to 'off'."
+            )
+
         outshape = node.get_output_variable().shape
 
         if isinstance(node, Input):
@@ -70,8 +90,8 @@ class ChannelsLastConverter(OptimizerPass):
                 node.mask_kbi = tuple(
                     np.transpose(t, transpose_map[t.ndim]) if t.ndim in transpose_map else t for t in node.mask_kbi
                 )
-            else:
-                # Transpose weight tensors
+            elif not isinstance(node, (Dense, Conv1D, Conv2D, Conv1DTranspose, Conv2DTranspose)):
+                # The parser already stores Dense and convolution weights in hls4ml order
                 tensors = ['weight', 'depthwise', 'pointwise', 'zero_bias', 'scale', 'recurrent_weight']
                 for tensor in tensors:
                     try:
@@ -192,13 +212,11 @@ class RemoveTransposeBeforeFlatten(OptimizerPass):
         dense_node = node.get_output_nodes()[0]
         input_shape = transpose_node.get_output_variable().shape
 
-        if len(input_shape) == 2:  # Usually after Conv1D
-            tran_axis = [1, 0, 2]
-        elif len(input_shape) == 3:  # Usually after Conv2D
-            tran_axis = [1, 2, 0, 3]
-        else:  # In this case we bail
+        if len(input_shape) not in (2, 3):  # In this case we bail
             node._channels_last_keep_transpose = True
             return False
+        # Weight rows follow the transposed order; reorder them to follow the order before the Transpose
+        tran_axis = [int(i) for i in np.argsort(transpose_node.get_attr('perm'))] + [len(input_shape)]
 
         weight_var = dense_node.get_weights('weight')
         # Transpose the weights to achieve the same computation with transposed input

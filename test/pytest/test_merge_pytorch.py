@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 
 import hls4ml
+from hls4ml.utils.transpose_utils import to_native_layout, to_source_layout
 
 test_root_path = Path(__file__).parent
 
@@ -61,15 +62,16 @@ def test_merge(test_case_id, merge_op, io_type, backend):
     X_input1 = np.random.rand(100, *input_shape)
     X_input2 = np.random.rand(100, *input_shape)
 
-    X_input1_cl = np.ascontiguousarray(np.transpose(X_input1, axes=[0, 2, 3, 1]))
-    X_input2_cl = np.ascontiguousarray(np.transpose(X_input2, axes=[0, 2, 3, 1]))
+    # With native layouts, the stored order of inputs and outputs is reported by get_io_layouts()
+    layouts = hls_model.get_io_layouts()
+    X_input1_native = to_native_layout(X_input1, layouts['inputs'][0]['perm'])
+    X_input2_native = to_native_layout(X_input2, layouts['inputs'][1]['perm'])
 
     pytorch_prediction = model(torch.Tensor(X_input1), torch.Tensor(X_input2)).detach().numpy()
-    hls_prediction = hls_model.predict([X_input1_cl, X_input2_cl])
+    hls_prediction = hls_model.predict([X_input1_native, X_input2_native])
 
-    output_shape = pytorch_prediction.shape
-    output_shape_cl = [output_shape[0], output_shape[2], output_shape[3], output_shape[1]]
-    hls_prediction = np.transpose(hls_prediction.reshape(output_shape_cl), axes=[0, 3, 1, 2])
+    output = layouts['outputs'][0]
+    hls_prediction = to_source_layout(hls_prediction.reshape(-1, *output['stored_shape']), output['perm'])
 
     np.testing.assert_allclose(hls_prediction, pytorch_prediction, rtol=0, atol=0.001)
 

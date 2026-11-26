@@ -1,4 +1,5 @@
 import json
+import warnings
 
 import hls4ml
 
@@ -290,6 +291,57 @@ def config_from_keras_model(
     return config
 
 
+_input_layout_from_channels_last_conversion = {'full': 'source', 'internal': 'native', 'off': None}
+
+
+def resolve_pytorch_layout_config(model_config):
+    """Translate the deprecated ``ChannelsLastConversion`` and ``TransposeOutputs`` keys of a PyTorch model
+    configuration into ``InputLayout`` and ``OutputLayout``, and fill in the defaults.
+
+    With ``LayoutInference`` set to False, the old keys are kept and the old conversion pass is used instead.
+
+    Args:
+        model_config (dict): The 'Model' section of the HLS config. It is modified in place.
+
+    Returns:
+        dict: The updated 'Model' section.
+    """
+    if not model_config.get('LayoutInference', True):
+        model_config.setdefault('ChannelsLastConversion', 'full')
+        model_config.setdefault('TransposeOutputs', False)
+        return model_config
+
+    channels_last_conversion = model_config.pop('ChannelsLastConversion', None)
+    transpose_outputs = model_config.pop('TransposeOutputs', None)
+    if channels_last_conversion is not None or transpose_outputs is not None:
+        if 'InputLayout' in model_config or 'OutputLayout' in model_config:
+            raise ValueError(
+                'ChannelsLastConversion/TransposeOutputs cannot be combined with InputLayout/OutputLayout; '
+                'remove the first two.'
+            )
+        warnings.warn(
+            'ChannelsLastConversion and TransposeOutputs are deprecated; use InputLayout and OutputLayout '
+            "('source' or 'native') instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        if channels_last_conversion is not None:
+            if channels_last_conversion not in _input_layout_from_channels_last_conversion:
+                raise ValueError(
+                    f"ChannelsLastConversion must be 'full', 'internal' or 'off', got '{channels_last_conversion}'."
+                )
+            input_layout = _input_layout_from_channels_last_conversion[channels_last_conversion]
+            if input_layout is not None:
+                model_config['InputLayout'] = input_layout
+        if transpose_outputs is not None:
+            model_config['OutputLayout'] = 'source' if transpose_outputs else 'native'
+
+    model_config['LayoutInference'] = True
+    model_config.setdefault('InputLayout', 'source')
+    model_config.setdefault('OutputLayout', 'source')
+    return model_config
+
+
 def config_from_pytorch_model(
     model,
     input_shape,
@@ -297,9 +349,11 @@ def config_from_pytorch_model(
     backend=None,
     default_precision='ap_fixed<16,6>',
     default_reuse_factor=1,
-    channels_last_conversion='full',
-    transpose_outputs=False,
+    channels_last_conversion=None,
+    transpose_outputs=None,
     max_precision=None,
+    input_layout=None,
+    output_layout=None,
 ):
     """Create an HLS conversion config given the PyTorch model.
 
@@ -307,14 +361,12 @@ def config_from_pytorch_model(
     Users are advised to inspect the returned object to tweak the conversion configuration.
     The return object can be passed as `hls_config` parameter to `convert_from_pytorch_model`.
 
-    Note that hls4ml internally follows the keras convention for nested tensors known as
-    "channels last", whereas pytorch uses the "channels first" convention.
-    For example, for a tensor encoding an image with 3 channels, pytorch will expect the data
-    to be encoded as (Number_Of_Channels, Height , Width), whereas hls4ml expects
-    (Height , Width, Number_Of_Channels). By default, hls4ml will perform the necessary
-    conversions of the inputs and internal tensors automatically, but will return the output
-    in "channels last" However, this behavior can be controlled by the user using the
-    related arguments discussed below.
+    hls4ml stores each multi-dimensional tensor in the order the layers using it need: convolutions, pooling and
+    similar layers work on "channels last" tensors, while layers such as Linear, LayerNorm and RNNs work on PyTorch's
+    own order. hls4ml infers this per tensor and inserts transposes where needed. The only choice left to the user is
+    the layout at the model inputs and outputs: 'source' (PyTorch's order, the default) or 'native' (the order the
+    adjacent layer uses, which can save a transpose). With 'native', ``hls_model.get_io_layouts()`` reports the
+    layout, and ``predict()`` expects and returns data in that layout.
 
     Args:
         model: PyTorch model
@@ -332,16 +384,16 @@ def config_from_pytorch_model(
         default_precision (str, optional): Default precision to use. Defaults to 'fixed<16,6>'. Note, this must
             be an explicit precision: 'auto' is not allowed.
         default_reuse_factor (int, optional): Default reuse factor. Defaults to 1.
-        channels_last_conversion (string, optional): Configures the conversion of pytorch layers to
-            'channels_last' data format used by hls4ml internally. Can be set to 'full' (default), 'internal',
-            or 'off'. If 'full', both the inputs and internal layers will be converted. If 'internal',
-            only internal layers will be converted; this assumes the inputs are converted by the user.
-            If 'off', no conversion is performed.
-        transpose_outputs (bool, optional): Set to 'False' if the output should not be transposed from
-            channels_last into channels_first data format. Defaults to 'False'. If False, outputs needs
-            to be transposed manually.
+        channels_last_conversion (str, optional): Deprecated, use ``input_layout``. 'full' maps to
+            ``input_layout='source'``, 'internal' to ``input_layout='native'``; 'off' has no effect.
+        transpose_outputs (bool, optional): Deprecated, use ``output_layout``. True maps to
+            ``output_layout='source'``, False to ``output_layout='native'``.
         max_precision (str or None, optional): Maximum width precision to use. Defaults to None, meaning no maximum.
             Note:  Only integer and fixed precisions are supported
+        input_layout (str or dict, optional): Layout of the model inputs, 'source' (default) or 'native'. A dict
+            keyed by input name sets it per input.
+        output_layout (str or dict, optional): Layout of the model outputs, 'source' (default) or 'native'. A dict
+            keyed by output name sets it per output.
 
     Raises:
         Exception: If PyTorch model has layers not supported by hls4ml.
@@ -358,8 +410,22 @@ def config_from_pytorch_model(
     if max_precision is not None:
         model_config['Precision']['maximum'] = max_precision
     model_config['ReuseFactor'] = default_reuse_factor
-    model_config['ChannelsLastConversion'] = channels_last_conversion
-    model_config['TransposeOutputs'] = transpose_outputs
+    if (channels_last_conversion is not None or transpose_outputs is not None) and (
+        input_layout is not None or output_layout is not None
+    ):
+        raise ValueError(
+            'channels_last_conversion/transpose_outputs cannot be combined with input_layout/output_layout; '
+            'remove the first two.'
+        )
+    if channels_last_conversion is not None:
+        model_config['ChannelsLastConversion'] = channels_last_conversion
+    if transpose_outputs is not None:
+        model_config['TransposeOutputs'] = transpose_outputs
+    if input_layout is not None:
+        model_config['InputLayout'] = input_layout
+    if output_layout is not None:
+        model_config['OutputLayout'] = output_layout
+    resolve_pytorch_layout_config(model_config)
     model_config['Strategy'] = 'Latency'
     model_config['BramFactor'] = 1_000_000_000
     model_config['TraceOutput'] = False

@@ -76,11 +76,10 @@ Key Characteristics
 
    ... # Training, evaluation, and anything else you want to do with the model
 
-   hls_config = {'Model': {'ChannelsLastConversion': 'full'}, 'InputShape': (16,)}
+   hls_config = {'InputShape': (16,)}
    hls_model = convert_from_pytorch_model(PQmodel, hls_config=hls_config, ...)
    # Model-wise precision propagation is done automatically for PQuantML models for bit-exactness
    # Do NOT pass precision config if you don't know what you are doing
-   # Note: Model-wise precision propagation needs ChannelsLastConversion to be active in order to work correctly with PyTorch models
 
    hls_model.compile()
 

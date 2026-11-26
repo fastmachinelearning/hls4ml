@@ -1,6 +1,6 @@
 import numpy as np
 
-from hls4ml.converters.pytorch_to_hls import pytorch_handler
+from hls4ml.converters.pytorch_to_hls import get_call_arg, pytorch_handler
 from hls4ml.converters.utils import parse_data_format
 
 reshape_layers = ['View']
@@ -86,6 +86,37 @@ def parse_unsqueeze_layer(operation, layer_name, input_names, input_shapes, node
     layer['target_shape'] = output_shape.copy()
     if layer['target_shape'][0] is None:
         del layer['target_shape'][0]
+
+    return layer, output_shape
+
+
+@pytorch_handler('permute', 'transpose', 'swapaxes', 'swapdims')
+def parse_permute_layer(operation, layer_name, input_names, input_shapes, node, class_object, data_reader, config):
+    assert operation in ['permute', 'transpose', 'swapaxes', 'swapdims']
+
+    layer = {}
+    layer['class_name'] = 'Transpose'
+    layer['name'] = layer_name
+    layer['inputs'] = input_names
+
+    ndim = len(input_shapes[0])
+    if operation == 'permute':
+        dims = node.args[1:] if len(node.args) > 1 else node.kwargs['dims']
+        if len(dims) == 1 and isinstance(dims[0], (tuple, list)):
+            dims = dims[0]
+        perm = [d % ndim for d in dims]
+    else:
+        dim0 = get_call_arg(node, 1, 'axis0' if operation == 'swapaxes' else 'dim0')
+        dim1 = get_call_arg(node, 2, 'axis1' if operation == 'swapaxes' else 'dim1')
+        perm = list(range(ndim))
+        perm[dim0 % ndim], perm[dim1 % ndim] = perm[dim1 % ndim], perm[dim0 % ndim]
+
+    if perm[0] != 0:
+        raise NotImplementedError(f'Layer {layer_name}: {operation} that moves the batch dimension is not supported.')
+
+    # The batch dimension is not part of the hls4ml tensor
+    layer['perm'] = [d - 1 for d in perm[1:]]
+    output_shape = [input_shapes[0][d] for d in perm]
 
     return layer, output_shape
 

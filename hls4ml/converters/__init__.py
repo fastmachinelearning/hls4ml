@@ -286,15 +286,11 @@ def convert_from_pytorch_model(
         Exception: If precision and reuse factor are not present in 'hls_config'.
 
     Notes:
-        Pytorch uses the "channels_first" data format for its tensors, while hls4ml expects the "channels_last" format
-        used by keras. By default, hls4ml will automatically add layers to the model which transpose the inputs to the
-        "channels_last" format. Not that this is not supported for the "io_stream" io_type, for which the user will have
-        to transpose the input by hand before passing it to hls4ml. In that case the "channels_last_conversion" argument of
-        the "config_from_pytorch_model" function needs to be set to "internal". This argument can be used to completely
-        disable this internal conversion. By default, the output of the model remains
-        in the "channels_last" data format. The "transpose_outputs" argument of the "config_from_pytorch_model" can be
-        used to add a layer to the model that transposes back to "channels_first". As before, this will not work for
-        io_stream.
+        PyTorch stores convolutional data channels-first, while hls4ml implements convolutions and pooling on
+        channels-last data. hls4ml infers the stored order of every tensor and inserts transposes only where layers
+        disagree. The layout at the model inputs and outputs is set by the "input_layout" and "output_layout"
+        arguments of "config_from_pytorch_model": 'source' (default) keeps PyTorch's order for "predict()", 'native'
+        uses the order of the adjacent layer, which "hls_model.get_io_layouts()" reports.
 
     Returns:
         ModelGraph: hls4ml model.
