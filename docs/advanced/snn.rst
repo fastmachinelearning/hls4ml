@@ -53,8 +53,8 @@ marker module:
 The marker is an identity in PyTorch and is converted to the hls4ml
 ``SNNReadout`` layer by the PyTorch frontend.
 
-`snntorch` tracing
-==================
+``snntorch`` tracing
+====================
 
 ``snntorch`` modules are treated as leaf modules by the hls4ml PyTorch FX tracer.
 This allows conversion models to use ``snntorch.Leaky`` directly without defining

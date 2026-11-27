@@ -4,8 +4,8 @@ repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.16.10
   hooks:
-    - id: ruff
-      args: [--fix]
+    - id: ruff-check
+      args: [--fix, --show-fixes]
     - id: ruff-format
 
 - repo: https://github.com/tox-dev/pyproject-fmt
@@ -39,6 +39,19 @@ repos:
   hooks:
   - id: check-manifest
     stages: [manual]
+
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.4.3
+  hooks:
+    - id: codespell
+      additional_dependencies: ["tomli; python_version < '3.11'"]
+
+- repo: https://github.com/pre-commit/pygrep-hooks
+  rev: v1.10.0
+  hooks:
+    - id: rst-backticks
+    - id: rst-directive-colons
+    - id: rst-inline-touching-normal
 
 - repo: https://github.com/jmduarte/p-clang-format
   rev: "v1.0.4"

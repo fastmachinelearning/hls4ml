@@ -19,7 +19,7 @@ Distributed Arithmetic (DA) is a strategy for constant-matrix-vector multiplicat
 
 When the DA strategy is used, the CMVM operations will be implemented bit-exactly, and the accumulator precision setting will not be used.
 
-.. [*] Not to be confused with `II=1`. `reuse_factor` is the `II` for one CMVM operation, not one layer. One layer may invoke the same CMVM kernel multiple times and thus has `II>1` while each CMVM operation is unrolled, e.g., convolution layers with more than one partition.
+.. [*] Not to be confused with ``II=1``. ``reuse_factor`` is the ``II`` for one CMVM operation, not one layer. One layer may invoke the same CMVM kernel multiple times and thus has ``II>1`` while each CMVM operation is unrolled, e.g., convolution layers with more than one partition.
 
 Currently, the DA strategy is only available for the Vivado/Vitis HLS backends. The following layers are supported:
 
