@@ -14,10 +14,12 @@ If you use this software in a publication, please cite the software
     title        = {fastmachinelearning/hls4ml},
     year         = 2026,
     publisher    = {Zenodo},
-    version      = {v1.3.0},
-    doi          = {10.5281/zenodo.1201549},
+    version      = {v1.3.1},
+    doi          = {10.5281/zenodo.24467770},
     url          = {https://github.com/fastmachinelearning/hls4ml}
     }
+
+The DOI above is for v1.3.1; `10.5281/zenodo.1201549 <https://doi.org/10.5281/zenodo.1201549>`_ always resolves to the latest release.
 
 first publication:
 
