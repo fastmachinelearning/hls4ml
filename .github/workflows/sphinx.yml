@@ -7,17 +7,25 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
 jobs:
   build:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
+        persist-credentials: false
         ref: ${{ github.event.pull_request.head.sha }}
-    - uses: actions/setup-python@v7
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with:
         python-version: '3.11'
         cache: pip
@@ -30,11 +38,13 @@ jobs:
       run: make -C docs html
     - name: Upload documentation artifact
       if: github.event_name == 'pull_request'
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         path: docs/_build/html
-    - name: Commit Documentation Changes
+    - name: Commit and push documentation changes
       if: github.event_name == 'push'
+      env:
+        GH_TOKEN: ${{ secrets.PAT_HLSML_BUILD_SPHINX }}
       run: |
         git clone https://github.com/fastmachinelearning/hls4ml.git --branch gh-pages --single-branch gh-pages
         cp -r docs/_build/html/* gh-pages/
@@ -43,11 +53,5 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
-        git commit -m "Update Sphinx Documentation" -a || true
-    - name: Push Documentation Changes
-      if: github.event_name == 'push'
-      uses: ad-m/github-push-action@master
-      with:
-        branch: gh-pages
-        directory: gh-pages
-        github_token: ${{ secrets.PAT_HLSML_BUILD_SPHINX }}
+        git commit -m "Update Sphinx Documentation" -a || exit 0
+        git push "https://x-access-token:${GH_TOKEN}@github.com/fastmachinelearning/hls4ml.git" HEAD:gh-pages

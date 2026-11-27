@@ -26,6 +26,11 @@ Pull requests are **squash-merged**, so the individual commits on your branch ar
 You do not need to curate them, but the pull request title and description become the permanent record of
 the change in the project history, so please write them with that in mind.
 
+The test suite runs on CERN GitLab CI and reports back to the pull request as the `ci/gitlab/gitlab.cern.ch` checks.
+For pull requests from forks, a maintainer starts it by adding the `please test` label, which pushes the pull
+request's head commit to the branch `pr/<number>` in this repository. Pushing new commits removes the label, so
+each new revision has to be approved for testing again.
+
 ## Code Reviews
 
 We will review your contribution and, if any additional fixes or modifications are necessary, may provide feedback to guide you.

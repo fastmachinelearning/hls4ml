@@ -1,4 +1,4 @@
-name: Check manifest
+name: Check manifest and workflows
 
 on:
   pull_request:
@@ -6,19 +6,29 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   check-manifest:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
+          persist-credentials: false
 
       # pre-commit.ci runs the default-stage hooks on every pull request, but not
-      # check-manifest, which is manual-stage because it builds an sdist.
+      # check-manifest, which is manual-stage because it builds an sdist, or zizmor,
+      # which is manual-stage because it needs Python 3.11 and hls4ml supports 3.10.
       - name: Pre-commit
-        uses: pre-commit/action@v3.0.1
+        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
         with:
           extra_args: --hook-stage manual --all-files check-manifest
+
+      - name: Zizmor
+        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+        with:
+          extra_args: --hook-stage manual --all-files zizmor

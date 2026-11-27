@@ -1,22 +1,45 @@
 on:
-  pull_request_target:
-    types: [labeled]
+  pull_request_target: # zizmor: ignore[dangerous-triggers] no pull request code is checked out or run here
+    types: [labeled, synchronize]
     branches: [main]
 
 name: Update branch on PR from fork
+
+permissions: {}
+
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
 jobs:
-  test:
+  dispatch-to-gitlab:
+    name: Push PR head to pr/<number> for GitLab CI
+    if: >-
+      github.event.action == 'labeled' && github.event.label.name == 'please test' &&
+      github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v7
-      if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name && github.event.label.name == 'please test' }}
-      with:
-        allow-unsafe-pr-checkout: true
-        ref: ${{ github.event.pull_request.head.sha }}
-        token: ${{ secrets.PAT_HLS4ML_WORKFLOW }}
-    - name: Push changes
-      if: ${{ github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name && github.event.label.name == 'please test' }}
+    - name: Push PR head commit
+      env:
+        GH_TOKEN: ${{ secrets.PAT_HLS4ML_WORKFLOW }}
+        REPO: ${{ github.repository }}
       run: |
-        git checkout -b pr/${{ github.event.pull_request.number }}
-        git push --force origin pr/${{ github.event.pull_request.number }}
+        git init -q
+        git fetch -q --no-tags --depth 1 "https://github.com/${REPO}.git" "+refs/pull/${PR_NUMBER}/head"
+        test "$(git rev-parse FETCH_HEAD)" = "${HEAD_SHA}"
+        git push --force "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "${HEAD_SHA}:refs/heads/pr/${PR_NUMBER}"
+
+  remove-label:
+    name: Remove 'please test' after new commits
+    if: >-
+      github.event.action == 'synchronize' &&
+      contains(github.event.pull_request.labels.*.name, 'please test')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+    - name: Remove label
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+      run: gh api --method DELETE "repos/${REPO}/issues/${PR_NUMBER}/labels/please%20test"

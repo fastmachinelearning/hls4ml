@@ -6,26 +6,48 @@ on:
   release:
     types: [published]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
 jobs:
-  release:
-    name: Upload new release to PyPI
+  build:
+    name: Build SDist and Wheel
     runs-on: ubuntu-latest
     steps:
     - name: Checkout source
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
         fetch-depth: 0
+        persist-credentials: false
 
     - name: Build SDist and Wheel
       run: pipx run build --sdist --wheel
 
-    - uses: actions/upload-artifact@v7
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
+        name: dist
         path: dist/*.*
 
-    - name: Publish 📦 to PyPI
-      if: startsWith(github.ref, 'refs/tags')
-      uses: pypa/gh-action-pypi-publish@release/v1
+  release:
+    name: Upload new release to PyPI
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/hls4ml
+    permissions:
+      id-token: write
+    steps:
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
-        password: ${{ secrets.PYPI_PASSWORD }}
+        name: dist
+        path: dist
+
+    - name: Publish 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3

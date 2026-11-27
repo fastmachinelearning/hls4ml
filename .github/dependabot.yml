@@ -5,3 +5,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
