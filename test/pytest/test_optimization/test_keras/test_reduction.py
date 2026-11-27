@@ -1,16 +1,25 @@
 # Skip Keras Surgeon tests for now, due to conflicting PyTest versions
-import keras
 import pytest
-from packaging import version
-from qkeras import QActivation, QConv2D, QDense, quantized_bits
-from tensorflow.keras.layers import AveragePooling2D, BatchNormalization, Conv2D, Dense, Flatten, MaxPooling2D, ReLU, Softmax
-from tensorflow.keras.models import Sequential
-
-from hls4ml.optimization.dsp_aware_pruning.keras.reduction import reduce_model
-from hls4ml.optimization.dsp_aware_pruning.keras.utils import get_model_sparsity
 
 pytest.skip(allow_module_level=True)
 
+import keras  # noqa: E402
+from packaging import version  # noqa: E402
+from qkeras import QActivation, QConv2D, QDense, quantized_bits  # noqa: E402
+from tensorflow.keras.layers import (  # noqa: E402
+    AveragePooling2D,
+    BatchNormalization,
+    Conv2D,
+    Dense,
+    Flatten,
+    MaxPooling2D,
+    ReLU,
+    Softmax,
+)
+from tensorflow.keras.models import Sequential  # noqa: E402
+
+from hls4ml.optimization.dsp_aware_pruning.keras.reduction import reduce_model  # noqa: E402
+from hls4ml.optimization.dsp_aware_pruning.keras.utils import get_model_sparsity  # noqa: E402
 
 """
 Set some neurons / filters to zero and verify that these are removed
