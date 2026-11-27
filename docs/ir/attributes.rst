@@ -447,6 +447,18 @@ StreamingSNN
 ============
 Base attributes
 ---------------
+* index: int
+
+  * Internal node counter used for bookkeeping and variable/tensor naming.
+
+* n_steps: int
+
+* family: list [dense,conv]
+
+* stages: list
+
+Type attributes
+---------------
 * result_t: NamedType
 
   * The datatype (precision) of the output tensor.
@@ -460,18 +472,6 @@ Base attributes
   * The datatype (precision) used to store intermediate results of the computation within the layer.
 
 * membrane_t: NamedType (Default: fixed<24,12,TRN,WRAP,0>)
-
-Type attributes
----------------
-* index: int
-
-  * Internal node counter used for bookkeeping and variable/tensor naming.
-
-* n_steps: int
-
-* family: list [dense,conv]
-
-* stages: list
 
 Configurable attributes
 -----------------------

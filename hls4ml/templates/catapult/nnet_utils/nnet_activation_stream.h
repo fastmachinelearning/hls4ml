@@ -899,6 +899,8 @@ PReLUActLoop:
 //       Ternary TanH Activation
 // *************************************************
 template <class data_T, class res_T, typename CONFIG_T> void ternary_tanh(ac_channel<data_T> &data, ac_channel<res_T> &res) {
+    // As in QKeras: 1 at or above 0.5, -1 at or below -0.5
+    const ac_fixed<2, 1, true> half = 0.5;
 PReLUActLoop:
     for (int i = 0; i < CONFIG_T::n_in / res_T::size; i++) {
         //#pragma HLS PIPELINE
@@ -910,9 +912,9 @@ PReLUActLoop:
     PReLUPackLoop:
         for (int j = 0; j < res_T::size; j++) {
             //#pragma HLS UNROLL
-            if (in_data[j] > 1)
+            if (in_data[j] >= half)
                 out_data[j] = (typename res_T::value_type)1;
-            else if (in_data[j] <= -1)
+            else if (in_data[j] <= -half)
                 out_data[j] = (typename res_T::value_type) - 1;
             else
                 out_data[j] = (typename res_T::value_type)0;

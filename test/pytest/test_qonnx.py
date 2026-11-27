@@ -21,6 +21,18 @@ import hls4ml
 test_root_path = Path(__file__).parent
 example_model_path = (test_root_path / '../../example-models').resolve()
 
+
+def import_channels_last_domain(model):
+    """
+    The stored channels-last models were made with qonnx 0.4.0 or older, which did not add the channels-last domain to
+    the opset imports. qonnx 1.0.0 then runs these ops at opset 1, where MaxPool has no ceil_mode. Add the domain at the
+    standard ONNX opset, as current qonnx does.
+    """
+    opsets = {opset.domain: opset.version for opset in model.model.opset_import}
+    if 'qonnx.custom_op.channels_last' not in opsets:
+        model.model.opset_import.append(onnx.helper.make_opsetid('qonnx.custom_op.channels_last', opsets['']))
+
+
 # The models
 
 
@@ -101,6 +113,8 @@ def sep_conv_model():
 
     model = ModelWrapper(dl_file)
 
+    import_channels_last_domain(model)
+
     return model
 
 
@@ -114,6 +128,8 @@ def branched_model():
 
     model = ModelWrapper(dl_file)
 
+    import_channels_last_domain(model)
+
     return model
 
 
@@ -126,6 +142,8 @@ def tiny_unet_model():
     assert os.path.isfile(dl_file)
 
     model = ModelWrapper(dl_file)
+
+    import_channels_last_domain(model)
 
     return model
 
@@ -295,6 +313,47 @@ def bnn_fc_small_qonnx_model_scale_nonunit2(bnn_fc_small_qonnx_model):
     model.graph.initializer.append(new_wscale)
     model = qonnx.util.cleanup.cleanup_model(model)
     return model
+
+
+@pytest.fixture(scope='module')
+def bnn_fc_between_activations_qonnx_model():
+    """
+    Make a binarized fully connected layer between two binary activations: batch normalization, BipolarQuant, MatMul
+    with BipolarQuant weights, batch normalization and BipolarQuant. The second batch normalization has scales of both
+    signs and thresholds beyond the range of fixed<16,6>.
+    """
+
+    weights = np.random.default_rng(0).choice([-1.0, 1.0], (64, 6))
+    weights[:, 0] = 1
+    params = {
+        'g0': np.ones(64),
+        'b0': np.zeros(64),
+        'm0': np.zeros(64),
+        'v0': np.ones(64),
+        'g1': np.array([1, 1, -1, -1, 0.5, 1]),
+        'b1': np.zeros(6),
+        'm1': np.array([39, -39, 3, 35, -5, 1]),
+        'v1': np.ones(6),
+        'scale': np.ones(1),
+        'weights': weights,
+    }
+    nodes = [
+        onnx.helper.make_node('BatchNormalization', ['x', 'g0', 'b0', 'm0', 'v0'], ['bn0']),
+        onnx.helper.make_node('BipolarQuant', ['bn0', 'scale'], ['q0'], domain='qonnx.custom_op.general'),
+        onnx.helper.make_node('BipolarQuant', ['weights', 'scale'], ['qw'], domain='qonnx.custom_op.general'),
+        onnx.helper.make_node('MatMul', ['q0', 'qw'], ['mm']),
+        onnx.helper.make_node('BatchNormalization', ['mm', 'g1', 'b1', 'm1', 'v1'], ['bn1']),
+        onnx.helper.make_node('BipolarQuant', ['bn1', 'scale'], ['y'], domain='qonnx.custom_op.general'),
+    ]
+    graph = onnx.helper.make_graph(
+        nodes,
+        'bnn_fc_between_activations',
+        [onnx.helper.make_tensor_value_info('x', onnx.TensorProto.FLOAT, [1, 64])],
+        [onnx.helper.make_tensor_value_info('y', onnx.TensorProto.FLOAT, [1, 6])],
+        [onnx.numpy_helper.from_array(value.astype(np.float32), name) for name, value in params.items()],
+    )
+    model = onnx.helper.make_model(graph, opset_imports=[onnx.helper.make_opsetid('', 13)])
+    return cleanup_model(ModelWrapper(model))
 
 
 # The actual tests
@@ -603,3 +662,29 @@ def test_bnn(test_case_id, request, model_name, io_type, backend, strategy):
         # note, y_hls4ml returns xnor type, so let's interpret it
         y_hls4ml_logical = 2 * y_hls4ml - 1
         np.testing.assert_array_equal(y_qonnx.ravel(), y_hls4ml_logical.ravel())
+
+
+@pytest.mark.parametrize('backend', ['Vitis', 'Catapult', 'Altera'])
+@pytest.mark.parametrize('io_type', ['io_parallel', 'io_stream'])
+def test_bnn_between_activations(test_case_id, bnn_fc_between_activations_qonnx_model, io_type, backend):
+    """
+    Checks a binarized layer between two binary activations, whose output type hls4ml changes to an integer.
+    """
+
+    qonnx_model = bnn_fc_between_activations_qonnx_model
+    config = hls4ml.utils.config.config_from_onnx_model(
+        qonnx_model, granularity='model', backend=backend, default_precision='fixed<16,6>'
+    )
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        qonnx_model, output_dir=str(test_root_path / test_case_id), io_type=io_type, backend=backend, hls_config=config
+    )
+    hls_model.compile()
+
+    # Every even number of positive inputs, so that the sums of the first column, whose weights are all 1, cover their range
+    X = np.where(np.arange(64) < np.arange(0, 65, 2)[:, None], 1.0, -1.0)
+    X = np.concatenate([X, np.random.default_rng(1).choice([-1.0, 1.0], (30, 64))]).astype(np.float32)
+    input_name, output_name = qonnx_model.graph.input[0].name, qonnx_model.graph.output[0].name
+    y_qonnx = np.concatenate([oxe.execute_onnx(qonnx_model, {input_name: x[None]})[output_name] for x in X])
+    # The output is binary, with 0 for -1
+    y_hls4ml = 2 * hls_model.predict(X).reshape(y_qonnx.shape) - 1
+    np.testing.assert_array_equal(y_hls4ml, y_qonnx)

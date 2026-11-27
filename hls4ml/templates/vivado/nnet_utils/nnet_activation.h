@@ -539,6 +539,25 @@ void leaky_relu(data_T data[CONFIG_T::n_in], param_T alpha, res_T res[CONFIG_T::
 }
 
 // *************************************************
+//       Clipped RELU Activation
+// *************************************************
+template <class data_T, class param_T, class res_T, typename CONFIG_T>
+void clippedrelu(data_T data[CONFIG_T::n_in], param_T max_val, res_T res[CONFIG_T::n_in]) {
+    #pragma HLS PIPELINE
+
+    data_T datareg;
+    for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
+        datareg = data[ii];
+        if (datareg < 0)
+            res[ii] = 0;
+        else if (datareg > max_val)
+            res[ii] = max_val;
+        else
+            res[ii] = datareg;
+    }
+}
+
+// *************************************************
 //       Thresholded RELU Activation
 // *************************************************
 template <class data_T, class param_T, class res_T, typename CONFIG_T>
@@ -823,16 +842,18 @@ template <class data_T, class res_T, typename CONFIG_T>
 void ternary_tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]) {
     #pragma HLS PIPELINE
 
+    // As in QKeras: 1 at or above 0.5, -1 at or below -0.5
+    const ap_fixed<2, 1> half = 0.5;
     data_T datareg;
     res_T cache;
     for (int ii = 0; ii < CONFIG_T::n_in; ii++) {
-        datareg = 2 * data[ii];
-        if (datareg > 1)
+        datareg = data[ii];
+        if (datareg >= half)
             cache = 1;
-        else if (datareg > -1 && datareg <= 1)
-            cache = 0;
-        else
+        else if (datareg <= -half)
             cache = -1;
+        else
+            cache = 0;
 
         res[ii] = (res_T)cache;
     }

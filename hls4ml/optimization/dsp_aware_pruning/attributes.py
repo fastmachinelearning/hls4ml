@@ -172,8 +172,8 @@ def get_attributes_from_keras_model(model):
             layer.__class__,
             inbound_layers,
             weight_shape,
-            layer.input_shape[1:],
-            layer.output_shape[1:],
+            __get_shape_without_batch(layer.input),
+            __get_shape_without_batch(layer.output),
             False,
             OptimizationAttributes(),
             {},
@@ -203,22 +203,25 @@ def get_attributes_from_keras_model_and_hls4ml_config(model, config):
     default_reuse_factor = config['Model']['ReuseFactor']
     default_strategy = config['Model']['Strategy']
     default_precision = config['Model']['Precision']
+    if isinstance(default_precision, dict):
+        default_precision = default_precision['default']
 
     # Build dictionary
     for layer in model_attributes:
         if model_attributes[layer].layer_type in SUPPORTED_LAYERS:
             n_in, n_out = __get_layer_mult_size(model_attributes[layer])
-            layer_config = config['LayerName'][layer] if layer in config['LayerName'] else {}
+            layer_config = config.get('LayerName', {}).get(layer, {})
             reuse_factor = layer_config['ReuseFactor'] if 'ReuseFactor' in layer_config else default_reuse_factor
             parallelization_factor = layer_config['ParallelizationFactor'] if 'ParallelizationFactor' in layer_config else 1
             strategy = layer_config['Strategy'] if 'Strategy' in layer_config else default_strategy
-            weight_precision = (
-                layer_config['Precision']['weight'] if 'weight' in layer_config['Precision'] else default_precision
-            )
+            # Precisions set to 'auto' are inferred during conversion, where weights get the default precision
+            layer_precision = layer_config.get('Precision', {})
+            weight_precision = layer_precision.get('weight', 'auto')
+            weight_precision = default_precision if weight_precision == 'auto' else weight_precision
             weight_precision = hls4ml.backends.fpga.fpga_backend.FPGABackend.convert_precision_string(weight_precision)
-            output_precision = (
-                layer_config['Precision']['result'] if 'result' in layer_config['Precision'] else default_precision
-            )
+            # Results set to 'auto' get a wider type during conversion
+            output_precision = layer_precision.get('result', 'auto')
+            output_precision = default_precision if output_precision == 'auto' else output_precision
             output_precision = hls4ml.backends.fpga.fpga_backend.FPGABackend.convert_precision_string(output_precision)
 
             hls4ml_attributes = hls4mlAttributes(
@@ -227,6 +230,16 @@ def get_attributes_from_keras_model_and_hls4ml_config(model, config):
             model_attributes[layer].update_args({'hls4ml_attributes': hls4ml_attributes})
 
     return model_attributes
+
+
+def __get_shape_without_batch(tensors):
+    """
+    Helper function to get tensor shape(s) without the batch dimension
+    Keras 3 removed layer.input_shape and layer.output_shape, so the shape is read from the input / output tensors
+    """
+    if isinstance(tensors, (list, tuple)):
+        return [tuple(tensor.shape[1:]) for tensor in tensors]
+    return tuple(tensors.shape[1:])
 
 
 def __get_layer_mult_size(attributes):
