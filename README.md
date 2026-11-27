@@ -2,7 +2,7 @@
    <img src="https://raw.githubusercontent.com/fastmachinelearning/hls4ml/refs/heads/main/docs/img/hls4ml_logo.svg" alt="hls4ml" width="400"/>
 </p>
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19134628.svg)](https://doi.org/10.5281/zenodo.19134628)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24467770.svg)](https://doi.org/10.5281/zenodo.24467770)
 [![License](https://img.shields.io/badge/License-Apache_2.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Documentation Status](https://github.com/fastmachinelearning/hls4ml/actions/workflows/sphinx.yml/badge.svg)](https://fastmachinelearning.org/hls4ml)
 [![PyPI version](https://badge.fury.io/py/hls4ml.svg)](https://badge.fury.io/py/hls4ml)
@@ -77,13 +77,13 @@ If you use this software in a publication, please cite the software
   title        = {fastmachinelearning/hls4ml},
   year         = 2026,
   publisher    = {Zenodo},
-  version      = {v1.3.0},
-  doi          = {10.5281/zenodo.19134628},
+  version      = {v1.3.1},
+  doi          = {10.5281/zenodo.24467770},
   url          = {https://github.com/fastmachinelearning/hls4ml}
 }
 ```
 
-The DOI above is for v1.3.0; [10.5281/zenodo.1201549](https://doi.org/10.5281/zenodo.1201549) always resolves to the latest release.
+The DOI above is for v1.3.1; [10.5281/zenodo.1201549](https://doi.org/10.5281/zenodo.1201549) always resolves to the latest release.
 
 the first publication:
 ```bibtex
