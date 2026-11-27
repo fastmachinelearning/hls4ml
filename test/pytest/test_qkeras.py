@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import tensorflow as tf
+from jet_tagging_data import fetch_jet_tagging_data
 from keras.layers import GRU, LSTM, BatchNormalization, Bidirectional, Dense, Input, SimpleRNN
 from keras.models import Model, Sequential, model_from_json
 from keras.utils import to_categorical
@@ -22,7 +23,6 @@ from qkeras.quantizers import (
     ternary,
 )
 from qkeras.utils import _add_supported_quantized_objects
-from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
@@ -44,9 +44,7 @@ def get_jettagging_data():
     """
     Download the jet tagging dataset
     """
-    print('Fetching data from openml')
-    data = fetch_openml('hls4ml_lhc_jets_hlf')
-    X, y = data['data'], data['target']
+    X, y = fetch_jet_tagging_data()
     le = LabelEncoder()
     y = le.fit_transform(y)
     y = to_categorical(y, 5)
