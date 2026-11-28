@@ -65,7 +65,7 @@ def validate_config(
             f'board "{board}" is an SoC board with a PYNQ runtime, so driver xrt is not supported on it. '
             'Pass platform and part to target a card that is not listed.'
         )
-    if card and n_ports is not None and n_ports > card['banks']:
+    if card and card['type'] != 'DDR' and n_ports is not None and n_ports > card['banks']:
         raise Exception(
             f'board "{board}" has {card["banks"]} {card["type"]} bank(s) but the model has {n_ports} input and output '
             'tensors, one memory port each. Pass your own platform and connectivity for this model.'

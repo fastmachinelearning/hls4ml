@@ -92,6 +92,8 @@ part_map = {
     'alveo-u55c': 'xcu55c-fsvh2892-2L-e',
     'alveo-u50': 'xcu50-fsvh2104-2-e',
     'alveo-u280': 'xcu280-fsvh2892-2L-e',
+    'alveo-u200': 'xcu200-fsgd2104-2-e',
+    'alveo-u250': 'xcu250-figd2104-2L-e',
 }
 
 
@@ -470,6 +472,58 @@ def test_other_hbm_cards(test_case_id, simple_unet, board):
     assert board.replace('alveo-', 'xilinx_') + '_gen3x16_xdma_' in link
 
 
+@pytest.mark.parametrize(
+    'board, platform',
+    [('alveo-u200', 'xilinx_u200_gen3x16_xdma_2_202110_1'), ('alveo-u250', 'xilinx_u250_gen3x16_xdma_4_1_202210_1')],
+)
+@pytest.mark.parametrize(
+    'model_name, kernel_slr, slr',
+    [
+        ('simple_unet', None, ['SLR0']),
+        ('multi_io_net', None, ['SLR0']),
+        ('simple_unet', 'SLR2', ['SLR2']),
+        ('simple_unet', False, []),
+    ],
+)
+def test_ddr_card(request, test_case_id, board, platform, model_name, kernel_slr, slr):
+    """On a DDR card every pointer goes to the bank in the kernel's SLR."""
+    model = request.getfixturevalue(model_name)
+    output_dir = test_root_path / test_case_id
+    config = hls4ml.utils.config_from_keras_model(model, granularity='name')
+    hls_model = hls4ml.converters.convert_from_keras_model(
+        model,
+        hls_config=config,
+        output_dir=str(output_dir),
+        kernel_slr=kernel_slr,
+        **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board=board, driver='xrt'),
+    )
+    hls_model.write()
+
+    cfg = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.cfg').read_text()
+    sp_lines = [line for line in cfg.splitlines() if line.startswith('sp=')]
+    n_ports = len(hls_model.get_input_variables()) + len(hls_model.get_output_variables())
+    # the U200 has two banks in SLR1, so SLR2 holds DDR[3]
+    bank = {'SLR2': {'alveo-u200': 3, 'alveo-u250': 2}[board]}.get(kernel_slr, 0)
+    assert [line.split(':', 1)[1] for line in sp_lines] == [f'DDR[{bank}]'] * n_ports
+    assert [line.split(':')[-1] for line in cfg.splitlines() if line.startswith('slr=')] == slr
+    assert '[clock]' not in cfg
+    link = (output_dir / 'vitis_workspace' / 'system_link' / 'link_system.sh').read_text()
+    assert f'${{PLATFORM_REPO_PATHS}}/{platform}/{platform}.xpfm' in link
+
+
+@pytest.mark.parametrize('board, slr', [('alveo-u200', 'SLR3'), ('alveo-u250', 'SLR4')])
+def test_ddr_card_rejects_slr_without_bank(test_case_id, simple_unet, board, slr):
+    config = hls4ml.utils.config_from_keras_model(simple_unet, granularity='name')
+    with pytest.raises(Exception, match=f'no DDR bank in {slr}'):
+        hls4ml.converters.convert_from_keras_model(
+            simple_unet,
+            hls_config=config,
+            output_dir=str(test_root_path / test_case_id),
+            kernel_slr=slr,
+            **_vitis_unified_convert_kwargs('io_stream', 'axi_master', board=board, driver='xrt'),
+        )
+
+
 def test_card_driver_and_link(test_case_id, simple_unet):
     """The XRT driver replaces the PYNQ one, and the handoff steps it needs are not emitted."""
     output_dir = test_root_path / test_case_id
@@ -584,6 +638,18 @@ def test_card_rejects_more_ports_than_banks():
     validate_config('alveo-u55c', 'axi_master', 'xrt', 'float', 'float', n_ports=32)
     with pytest.raises(Exception, match='32 HBM bank'):
         validate_config('alveo-u55c', 'axi_master', 'xrt', 'float', 'float', n_ports=33)
+    # DDR ports share one bank
+    validate_config('alveo-u250', 'axi_master', 'xrt', 'float', 'float', n_ports=5)
+
+
+@pytest.mark.parametrize('board', ['alveo-u200', 'alveo-u250'])
+def test_ddr_card_rejects_pynq_and_stream(board):
+    from hls4ml.backends.vitis_unified.vitis_unified_validation import validate_config
+
+    with pytest.raises(Exception, match='driver="xrt"'):
+        validate_config(board, 'axi_master', 'python', 'float', 'float')
+    with pytest.raises(Exception, match='no platform for axi_mode'):
+        validate_config(board, 'axi_stream', 'xrt', 'float', 'float')
 
 
 def test_kernel_clock_read_from_xclbin(tmp_path, monkeypatch):
