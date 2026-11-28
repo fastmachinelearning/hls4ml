@@ -149,7 +149,7 @@ def build_softmax_tables(node: Layer) -> list[XLSLookupTableDefinition]:
         case _:
             raise ValueError(f'Unknown softmax implementation={implementation}')
 
-    inv_in = exp_out
+    inv_in = node.get_attr('inv_inp_t').precision
     inv_out = node.get_attr('inv_table_t').precision
     inv_name = 'INV_TABLE'
 

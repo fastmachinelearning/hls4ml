@@ -39,26 +39,20 @@ class FixedPointEmulator:
     Returns:
         - val : float, the floating point equivalent of the fixed point number
     Description:
-        1. Check if the number is signed, and if so, set intermediate result to -2.0^(I-1) or 0.0
-           otherwise, set intermediate result to +2.0^(I-1) or 0.0
-        2. Traverse through integer bits, incrementing result by 2.0^(i) (using left shift)
-        3. Traverse through decimal bits, incrementing result by 2.0^(-i) (using pow)
-    Note:
-        - This function uses left shifts instead of integer powers of 2.
+        Reads the N stored bits as an integer (two's complement if signed) and scales it by 2.0^(-F).
+        This also works when there are no integer bits.
     """
 
     def to_float(self):
-        val = float(int(self.integer_bits[0]) << (self.I - 1))
-        val = -val if self.signed else val
-
-        for i in range(self.I - 1, 0, -1):
-            val += float(int(self.integer_bits[self.I - i]) << (i - 1))
-
-        for i in range(0, self.F):
-            if self.decimal_bits[i]:
-                val += pow(2, -(i + 1))
-
-        return val
+        # set_msb_bits stores the N bits at the front when F < 0 and at the back when I < 0
+        all_bits = list(self.integer_bits) + list(self.decimal_bits)
+        bits = all_bits[: self.N] if self.F < 0 else all_bits[-self.N :]
+        val = 0
+        for b in bits:
+            val = (val << 1) | int(b)
+        if self.signed and bits[0]:
+            val -= 1 << self.N
+        return float(val) * 2.0**-self.F
 
     """
     Sets the top bits of the current number
