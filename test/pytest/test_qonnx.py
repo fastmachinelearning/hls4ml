@@ -359,6 +359,62 @@ def bnn_fc_between_activations_qonnx_model():
 # The actual tests
 
 
+def make_max_pool1d_model(pad):
+    domain = 'qonnx.custom_op.channels_last'
+    node = onnx.helper.make_node(
+        'MaxPool',
+        ['x'],
+        ['y'],
+        name='pool',
+        domain=domain,
+        kernel_shape=[2],
+        strides=[2],
+        pads=[pad, pad],
+    )
+    graph = onnx.helper.make_graph(
+        [node],
+        'max_pool1d',
+        [onnx.helper.make_tensor_value_info('x', onnx.TensorProto.FLOAT, [1, 6, 3])],
+        [onnx.helper.make_tensor_value_info('y', onnx.TensorProto.FLOAT, [1, 3 + pad, 3])],
+    )
+    return ModelWrapper(
+        onnx.helper.make_model(graph, opset_imports=[onnx.helper.make_opsetid('', 13), onnx.helper.make_opsetid(domain, 1)])
+    )
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+@pytest.mark.parametrize('io_type,pad', [('io_parallel', 0), ('io_parallel', 1), ('io_stream', 0)])
+def test_max_pool1d_channels_last(test_case_id, backend, io_type, pad):
+    model = make_max_pool1d_model(pad)
+    inputs = np.arange(-9, 9, dtype=np.float32).reshape(1, 6, 3)
+    expected = oxe.execute_onnx(model, {'x': inputs})['y']
+
+    hls_model = hls4ml.converters.convert_from_onnx_model(
+        model,
+        hls_config=hls4ml.utils.config_from_onnx_model(model, backend=backend),
+        output_dir=str(test_root_path / test_case_id),
+        backend=backend,
+        io_type=io_type,
+    )
+    assert tuple(hls_model.get_output_variables()[0].shape) == expected.shape[1:]
+    hls_model.compile()
+    np.testing.assert_array_equal(hls_model.predict(inputs), expected.ravel())
+
+
+@pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
+def test_max_pool1d_stream_padding(test_case_id, backend):
+    model = make_max_pool1d_model(pad=1)
+    config = hls4ml.utils.config_from_onnx_model(model, backend=backend)
+    with pytest.raises(NotImplementedError, match='nonzero padding.*io_stream'):
+        hls4ml.converters.convert_from_onnx_model(
+            model,
+            hls_config=config,
+            output_dir=str(test_root_path / test_case_id),
+            backend=backend,
+            io_type='io_stream',
+        )
+
+
 @pytest.mark.parametrize('backend', ['Vivado', 'Vitis'])
 def test_tfc_2w2a(test_case_id, tfc_2w2a_model, backend):
     model = tfc_2w2a_model

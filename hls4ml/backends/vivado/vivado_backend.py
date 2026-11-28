@@ -774,6 +774,13 @@ class VivadoBackend(FPGABackend):
 
     @layer_optimizer(Pooling1D)
     def init_pooling1d(self, layer):
+        if layer.model.config.get_config_value('IOType') == 'io_stream' and (
+            layer.get_attr('pad_left') or layer.get_attr('pad_right')
+        ):
+            raise NotImplementedError(
+                f'Layer "{layer.name}" ({layer.class_name}) does not support nonzero padding with "io_stream". '
+                'Use "io_parallel".'
+            )
         layer.set_attr('implementation', layer.model.config.get_conv_implementation(layer).lower())
 
     @layer_optimizer(Pooling2D)
